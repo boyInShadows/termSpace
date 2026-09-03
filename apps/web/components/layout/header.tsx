@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -15,8 +15,8 @@ import { localePath } from "@/lib/i18n";
 /**
  * The header does two things beyond navigation.
  *
- * It condenses once you leave the hero — the announcement strip retracts and
- * the bar tightens — so the page gives its vertical space back to content as
+ * It condenses once you leave the hero â€” the announcement strip retracts and
+ * the bar tightens â€” so the page gives its vertical space back to content as
  * soon as you have committed to reading.
  *
  * And it carries a plasma read-out of how far through the page you are.
@@ -31,15 +31,16 @@ export function Header() {
   const currentPath = locale === "fa" ? pathname.slice(3) || "/" : pathname;
   const query = searchParams.toString();
   const switchHref = `${locale === "fa" ? currentPath : localePath(currentPath, "fa")}${query ? `?${query}` : ""}`;
+  const session = useMarketplaceSession();
   const NAV = [
     { href: "/explore", label: t.explore },
     { href: "/design-system", label: t.designSystem },
     { href: "/#creators", label: t.sellWork },
-  ] as const;
+    ...(session.email ? [{ href: "/dashboard", label: t.dashboard }] : []),
+  ];
   const [isCondensed, setIsCondensed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const progressRef = useRef<HTMLDivElement | null>(null);
-  const session = useMarketplaceSession();
 
   useEffect(() => {
     let queued = false;
@@ -178,3 +179,4 @@ export function Header() {
     </>
   );
 }
+

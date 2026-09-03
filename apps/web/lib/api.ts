@@ -1,4 +1,4 @@
-import type { MarketplaceHome, ProductDetail, ProductFilters, ProductPageResult } from "./types";
+import type { CreatorProfile, CreatorProfileInput, MarketplaceHome, OwnedProduct, ProductDetail, ProductFilters, ProductPageResult, ProductSubmission, PublishingCategory } from "./types";
 export class ApiError extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }
 function apiBase() { return typeof window === "undefined" ? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001" : process.env.NEXT_PUBLIC_API_URL ?? "/backend"; }
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -25,3 +25,11 @@ export async function getFavorites() { return (await request<{ data: string[] }>
 export async function setFavorite(slug: string, saved: boolean) { return request(`/api/marketplace/products/${encodeURIComponent(slug)}/favorite`, { method: saved ? "PUT" : "DELETE" }); }
 export async function acquireProduct(slug: string, idempotencyKey: string) { return request(`/api/marketplace/products/${encodeURIComponent(slug)}/acquire`, { method: "POST", headers: { "Idempotency-Key": idempotencyKey } }); }
 export async function subscribe(email: string) { return request("/api/newsletter/subscribers", { method: "POST", body: JSON.stringify({ email }) }); }
+export async function getPublishingCategories() { return (await request<{ data: PublishingCategory[] }>("/api/community/categories")).data; }
+export async function getCreatorProfile() { return (await request<{ data: CreatorProfile | null }>("/api/community/creator")).data; }
+export async function createCreatorProfile(input: CreatorProfileInput) { return (await request<{ data: CreatorProfile }>("/api/community/creator", { method: "POST", body: JSON.stringify(input) })).data; }
+export async function updateCreatorProfile(input: Partial<Omit<CreatorProfileInput, "handle">>) { return (await request<{ data: CreatorProfile }>("/api/community/creator", { method: "PATCH", body: JSON.stringify(input) })).data; }
+export async function getMyProducts() { return (await request<{ data: OwnedProduct[] }>("/api/community/products")).data; }
+export async function createMyProduct(input: ProductSubmission) { return (await request<{ data: OwnedProduct }>("/api/community/products", { method: "POST", body: JSON.stringify(input) })).data; }
+export async function setMyProductPublished(slug: string, published: boolean) { return (await request<{ data: OwnedProduct }>(`/api/community/products/${encodeURIComponent(slug)}`, { method: "PATCH", body: JSON.stringify({ published }) })).data; }
+export async function deleteMyProduct(slug: string) { return request(`/api/community/products/${encodeURIComponent(slug)}`, { method: "DELETE" }); }

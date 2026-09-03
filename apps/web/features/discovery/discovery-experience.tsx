@@ -297,7 +297,7 @@ export function DiscoveryExperience({ initial, categories, initialFilters }: { i
                 <ProductCard
                   key={p.id}
                   product={p}
-                  variant={view === "list" ? "list" : "compact"}
+                  variant={view === "list" ? "list" : "card"}
                 />
               ))
             ) : (

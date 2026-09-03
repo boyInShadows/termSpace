@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -17,7 +17,8 @@ import { Process } from "@/components/sections/process";
 import { Reveal } from "@/components/motion/reveal";
 import { TiltCard } from "@/components/motion/tilt-card";
 import { Magnetic } from "@/components/motion/magnetic";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { CreatorIdentity } from "@/components/marketplace/product-parts";
 import { getMarketplaceHome } from "@/lib/api";
@@ -49,7 +50,7 @@ const trustFacts = [
   {
     icon: FileCheck2,
     title: "Human-readable permissions",
-    copy: "Every listing states what it reads, writes and calls out to — in a sentence, not a config file.",
+    copy: "Every listing states what it reads, writes and calls out to â€” in a sentence, not a config file.",
   },
   {
     icon: RefreshCw,
@@ -109,7 +110,7 @@ export default async function Home() {
             {featured.map((product, index) => (
               <Reveal key={product.id} delay={index * 90}>
                 <TiltCard className="h-full rounded-lg" max={5}>
-                  <ProductCard product={product} variant="expanded" />
+                  <ProductCard product={product} />
                 </TiltCard>
               </Reveal>
             ))}
@@ -288,7 +289,7 @@ export default async function Home() {
                       {creator.bio}
                     </p>
                     <p className="mt-5 font-mono text-xs text-muted-foreground">
-                      {creator.products} products ·{" "}
+                      {creator.products} products آ·{" "}
                       {creator.followers.toLocaleString()} followers
                     </p>
                   </TiltCard>
@@ -305,14 +306,21 @@ export default async function Home() {
                   </h3>
                   <p className="mt-3 max-w-lg leading-7 text-muted-foreground">
                     Publish with rich previews, version history, compatibility
-                    metadata and a storefront that respects the craft — not a
+                    metadata and a storefront that respects the craft â€” not a
                     zip file and a hope.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-3 md:justify-end">
                   <Magnetic>
-                    <Link href={localePath("/design-system", locale)} className={`${buttonVariants({ size: "lg" })} shadow-plasma`}>
-                      Read the creator guide
+                    <Link
+                      href={localePath("/dashboard", locale)}
+                      className={cn(
+                        buttonVariants({ variant: "primary", size: "lg" }),
+                        "shadow-plasma",
+                      )}
+                    >
+                      Start publishing
+
                     </Link>
                   </Magnetic>
                 </div>
@@ -354,3 +362,4 @@ export default async function Home() {
     </>
   );
 }
+

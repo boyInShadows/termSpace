@@ -257,6 +257,7 @@ model ReaderUser {
   progress    ReaderReadingProgress[]
   productFavorites MarketplaceFavorite[]
   marketplaceOrders MarketplaceOrder[]
+  creatorProfile    MarketplaceCreator?
 }
 
 model ReaderSession {
@@ -308,6 +309,13 @@ model MarketplaceCreator {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   products  MarketplaceProduct[]
+
+  // A community member's publishing identity. Null for the editorial creators
+  // seeded by the team, which no reader account owns. SetNull rather than
+  // Cascade: deleting an account must not delete listings other people rely on,
+  // and MarketplaceProduct.creatorId restricts deletes anyway.
+  userId    String?     @unique
+  user      ReaderUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([verified, followers])
 }

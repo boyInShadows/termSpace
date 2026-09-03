@@ -108,7 +108,7 @@ export function Hero() {
             </Magnetic>
             <Magnetic strength={9}>
               <Link
-                href="#creators"
+                href="/dashboard"
                 className={buttonVariants({ variant: "secondary", size: "lg" })}
               >
                 <Sparkles size={16} />

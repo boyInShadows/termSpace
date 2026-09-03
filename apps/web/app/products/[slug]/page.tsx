@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   Check,
@@ -68,10 +68,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div>
             <div className="flex flex-wrap gap-2">
               <ProductTypeBadge type={product.type} />
-              {product.verified && <Badge variant="success">
-                <ShieldCheck size={12} />
-                Verified product
-              </Badge>}
+              {product.verified ? (
+                <Badge variant="success">
+                  <ShieldCheck size={12} />
+                  Verified product
+                </Badge>
+              ) : (
+                <Badge variant="warning">Not yet reviewed</Badge>
+              )}
+
             </div>
             <h1 className="editorial mt-5 max-w-3xl text-5xl font-medium leading-none sm:text-6xl">
               {product.name}
@@ -89,7 +94,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <div className="mt-8 grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-3">
               <Meta label="Version" value={product.version} icon={RefreshCw} />
               <Meta label="Updated" value={new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(product.updatedAt))} icon={Clock3} />
-              <Meta label="Package" value={product.packageFileCount && product.packageSizeBytes ? `${product.packageFileCount} files · ${Math.round(product.packageSizeBytes / 1024)} KB` : "See package details"} icon={FileText} />
+              <Meta label="Package" value={product.packageFileCount && product.packageSizeBytes ? `${product.packageFileCount} files آ· ${Math.round(product.packageSizeBytes / 1024)} KB` : "See package details"} icon={FileText} />
             </div>
             <Section title="What it does">
               <p>
@@ -107,6 +112,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ))}
               </div>
             </Section>
+            {(product.useCases ?? []).length > 0 && (
             <Section title="Ideal use cases">
               <div className="grid gap-4 sm:grid-cols-3">
                 {(product.useCases ?? []).map((useCase) => (
@@ -117,7 +123,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ))}
               </div>
             </Section>
-            <Section title="What’s included">
+            )}
+            {included.length > 0 && (
+            <Section title="Whatâ€™s included">
               <div className="overflow-hidden rounded-lg border bg-surface">
                 {included.map((file) => (
                   <div
@@ -132,6 +140,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ))}
               </div>
             </Section>
+            )}
+            {product.exampleInput && (
             <Section title="Example input and output">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
@@ -153,6 +163,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </div>
               </div>
             </Section>
+            )}
+            {product.installationSteps.length > 0 && (
             <Section title="Installation and usage">
               <ol className="space-y-4">
                 {product.installationSteps.map((x, i) => (
@@ -168,6 +180,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 cp -R {product.slug} ~/.agents/skills/
               </pre>
             </Section>
+            )}
+            {versions.length > 0 && (
             <Section title="Version history">
               <div className="space-y-6">
                 {versions.map((v, i) => (
@@ -177,7 +191,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   >
                     <code className="font-mono text-xs text-foreground">
                       v{v.version}
-                      {i === 0 && " · latest"}
+                      {i === 0 && " آ· latest"}
                     </code>
                     <span className="text-xs">{new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(v.releasedAt))}</span>
                     <p className="text-sm">{v.notes}</p>
@@ -185,7 +199,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ))}
               </div>
             </Section>
-            <Section title={`Reviews · ${product.rating}`} id="reviews">
+            )}
+            <Section title={`Reviews آ· ${product.rating}`} id="reviews">
               <div className="space-y-6">
                 {reviews.map((r) => (
                   <article key={r.id} className="border-b pb-6">
@@ -195,7 +210,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                           {r.author}
                         </strong>
                         <p className="mt-1 text-xs">
-                          <Rating rating={r.rating} /> · {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(r.createdAt))}
+                          <Rating rating={r.rating} /> آ· {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(r.createdAt))}
                         </p>
                       </div>
                       {r.verifiedPurchase && (
@@ -216,7 +231,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   issues.
                 </p>
                 <p className="mt-4 text-xs font-semibold text-foreground">
-                  {product.creator.products} products · {product.creator.followers.toLocaleString()} followers
+                  {product.creator.products} products آ· {product.creator.followers.toLocaleString()} followers
                 </p>
               </div>
             </Section>
@@ -238,9 +253,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     limit={5}
                   />
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Models: Claude 4, GPT-5
-                </p>
+                {product.compatibility.models.length > 0 && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Models: {product.compatibility.models.join(", ")}
+                  </p>
+                )}
               </div>
               <TrustRow
                 icon={Download}
@@ -255,7 +272,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <TrustRow
                 icon={ShieldCheck}
                 title="Safety verification"
-                text={product.verified ? "Verified by the TermSpace review process" : "Not independently verified; review permissions before installation"}
+                text={product.verified ? "Package scan passed" : "Not yet reviewed by the team"}
+
                 good={product.verified}
               />
               <TrustRow
@@ -337,3 +355,4 @@ function TrustRow({
     </div>
   );
 }
+
