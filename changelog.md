@@ -103,3 +103,4 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 - Made reader logout idempotent so stale sessions can still be cleared.
 - Pointed the blog homepage subject-browsing CTA to the topics index.
 - Localized public article dates using the active English or Persian locale.
+- Fetched one extra related article so excluding the current article still leaves three recommendations when available.

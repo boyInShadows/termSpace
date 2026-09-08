@@ -83,7 +83,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const displayArticle = locale === "fa" ? localizeArticleFa(article) : article;
 
   const [relatedRes, commentsRes] = await Promise.all([api.listArticles({
-    limit: 3,
+    limit: 4,
     tag: article.tags[0]?.slug,
     category: article.tags.length === 0 ? article.category.slug : undefined,
     published: true,
