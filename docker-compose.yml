@@ -58,11 +58,13 @@ services:
       dockerfile: docker/Dockerfile.web
       args:
         API_URL: ${WEB_BUILD_API_URL:-http://api:4001}
+        NEXT_PUBLIC_BLOG_URL: ${BLOG_SITE_URL:-http://localhost:3001}
     restart: unless-stopped
     environment:
       NODE_ENV: production
       API_URL: http://api:4001
       NEXT_PUBLIC_API_URL: /backend
+      NEXT_PUBLIC_BLOG_URL: ${BLOG_SITE_URL:-http://localhost:3001}
     depends_on:
       api:
         condition: service_healthy

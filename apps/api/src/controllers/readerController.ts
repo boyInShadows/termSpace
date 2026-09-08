@@ -42,17 +42,28 @@ export async function loginReaderWithGoogle(req: Request, res: Response) {
     res.status(503).json({ error: { code: "GOOGLE_NOT_CONFIGURED", message: "Google sign-in is not configured" } });
     return;
   }
+  let payload;
   try {
     const ticket = await googleClient.verifyIdToken({ idToken: req.body.credential, audience: clientId });
-    const payload = ticket.getPayload();
+    payload = ticket.getPayload();
     if (!payload?.sub || !payload.email || !payload.email_verified) throw new Error("Unverified Google account");
-    const email = payload.email.toLowerCase();
+  } catch (error) {
+    req.log?.warn({ err: error }, "Google credential rejected");
+    res.status(401).json({ error: { code: "INVALID_GOOGLE_CREDENTIAL", message: "Google sign-in could not be verified" } });
+    return;
+  }
+
+  const email = payload.email.toLowerCase();
+  try {
     let user = await prisma.readerUser.findFirst({
       where: { OR: [{ googleSubject: payload.sub }, { email }] },
       select: { id: true, email: true, googleSubject: true },
     });
     if (user) {
-      if (user.googleSubject && user.googleSubject !== payload.sub) throw new Error("Account identity mismatch");
+      if (user.googleSubject && user.googleSubject !== payload.sub) {
+        res.status(401).json({ error: { code: "INVALID_GOOGLE_CREDENTIAL", message: "Google sign-in could not be verified" } });
+        return;
+      }
       if (!user.googleSubject) {
         user = await prisma.readerUser.update({
           where: { id: user.id },
@@ -67,8 +78,9 @@ export async function loginReaderWithGoogle(req: Request, res: Response) {
       });
     }
     await createSession(res, user);
-  } catch {
-    res.status(401).json({ error: { code: "INVALID_GOOGLE_CREDENTIAL", message: "Google sign-in could not be verified" } });
+  } catch (error) {
+    req.log?.error({ err: error }, "Google sign-in persistence failed");
+    throw error;
   }
 }
 

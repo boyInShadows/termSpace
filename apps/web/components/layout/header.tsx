@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Logo } from "./logo";
 import { ThemeToggle } from "../ui/theme-toggle";
@@ -25,7 +26,16 @@ import { localePath } from "@/lib/i18n";
  */
 export function Header() {
   const { locale, t } = useLocale();
-  const NAV = [{ href: "/explore", label: t.explore }, { href: "/design-system", label: t.designSystem }] as const;
+  const pathname = usePathname() ?? "/";
+  const searchParams = useSearchParams();
+  const currentPath = locale === "fa" ? pathname.slice(3) || "/" : pathname;
+  const query = searchParams.toString();
+  const switchHref = `${locale === "fa" ? currentPath : localePath(currentPath, "fa")}${query ? `?${query}` : ""}`;
+  const NAV = [
+    { href: "/explore", label: t.explore },
+    { href: "/design-system", label: t.designSystem },
+    { href: "/#creators", label: t.sellWork },
+  ] as const;
   const [isCondensed, setIsCondensed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const progressRef = useRef<HTMLDivElement | null>(null);
@@ -125,7 +135,7 @@ export function Header() {
             <Link href={localePath("/account", locale)} className={cn(buttonVariants({ variant: "ghost" }), "hidden sm:inline-flex")}>
               {session.email ?? t.signIn}
             </Link>
-            <Link href={locale === "fa" ? "/" : "/fa"} className="hidden px-2 text-xs text-muted-foreground hover:text-primary sm:inline-flex">{t.language}</Link>
+            <Link href={switchHref} className="hidden px-2 text-xs text-muted-foreground hover:text-primary sm:inline-flex">{t.language}</Link>
             <Button
               variant="ghost"
               size="icon"

@@ -13,22 +13,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Bug Audit — 2026-08-27
 
-### High Priority
-
-- Make admin authentication work when frontend and API use different hostnames; the API host-only session cookie is currently unavailable to the frontend proxy.
-
-### Medium Priority
-
-- Render the homepage `featured` article or keep it in `latest`; the current destructuring silently drops the newest article and displays nothing when only one article exists.
-- Separate invalid Google credentials from database/session failures and log non-credential failures instead of returning `INVALID_GOOGLE_CREDENTIAL` for every exception.
-- Make article optimistic concurrency atomic and include revision creation and the article update in one transaction.
-- Reject or normalize conflicting article publication state so `published: true` cannot coexist with a future `scheduledAt` and release scheduled content early.
-- Snapshot the current article before restoring an older revision so restoration can be undone.
-- Filter unpublished nested articles from public edition responses, or reject publishing editions that contain drafts.
-- Validate admin sessions rather than checking only for cookie presence, and redirect stale sessions to login instead of rendering a backend 401 as a frontend error.
-- Convert only genuine backend 404 responses to `notFound()` on article and series pages; propagate network and server failures as retryable errors.
-- Make seed reruns preserve administrator credentials, editorial taxonomy changes, and edition ordering unless an explicit reset is requested.
-
 ### Lower Priority
 
 - Replace the 200-article admin edit lookup and edition-selection cap with direct article lookup and paginated/searchable selection.
@@ -41,21 +25,6 @@ This file tracks known improvement work that has not been completed yet. When an
 - Make logout idempotent so expired or invalid session cookies can still be cleared.
 
 ## Bug Audit — 2026-09-02
-
-### High Priority
-
-- Populate the marketplace catalog; `MarketplaceProduct`, `MarketplaceCreator` and `MarketplaceCategory` are all empty, so `/explore` correctly reports zero products and the homepage rails render nothing.
-- Make the API base URL runtime-configurable through a route handler or runtime config so the `/backend` rewrite destination is not frozen into `.next/routes-manifest.json` at build time and can no longer drift from the deployed API.
-
-### Medium Priority
-
-- Surface the underlying failure in the discovery error banner instead of the single generic retry string, which renders a `429 RATE_LIMITED` response identically to a network outage, and give the banner a retry control rather than requiring a page reload.
-- Localize `features/discovery/`, the only feature with hard-coded English strings and no entries in `lib/i18n.ts`; its error, empty-state and filter copy stays English on Persian pages.
-- Localize the footer column headings and link labels, which bypass `t` entirely and remain English in Persian mode.
-- Point the footer links at their real destinations; all nine currently resolve to `/explore`.
-- Give the `Read the creator guide` button in the homepage `#creators` section an `href` or handler; it is presently a `<button>` that does nothing when clicked.
-- Make the locale switcher preserve the current path instead of swapping between `/` and `/fa`, which drops a reader on the homepage when they switch language from any subpage.
-- Restore a creator entry point in the header once seller onboarding exists; the `For creators` nav item and both `Start selling` buttons were removed because they pointed at an anchor with no product behind it.
 
 ### Lower Priority
 

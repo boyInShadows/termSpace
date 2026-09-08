@@ -1,7 +1,7 @@
 import {notFound} from "next/navigation";
 import Link from "next/link";
 import {getTranslations} from "next-intl/server";
-import {api} from "@/lib/api";
+import {ApiClientError, api} from "@/lib/api";
 import {getLocale} from "@/lib/serverLocale";
 import {localePath} from "@/lib/i18n";
 import {localizeArticleFa} from "@/lib/faContent";
@@ -20,7 +20,8 @@ export async function generateMetadata({params}: {params: Promise<{slug: string}
       path: `/blog/series/${series.slug}`,
       locale,
     });
-  } catch {
+  } catch (error) {
+    if (!(error instanceof ApiClientError) || error.status !== 404) throw error;
     return {title: "Series not found", robots: {index: false, follow: false}};
   }
 }
@@ -30,7 +31,8 @@ export default async function SeriesPage({params}: {params: Promise<{slug: strin
   let series;
   try {
     series = (await api.getSeries(slug)).data;
-  } catch {
+  } catch (error) {
+    if (!(error instanceof ApiClientError) || error.status !== 404) throw error;
     notFound();
   }
 

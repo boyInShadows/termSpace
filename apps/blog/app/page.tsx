@@ -23,7 +23,6 @@ export default async function HomePage() {
 
   const articles = articlesRes.data;
   const categories = categoriesRes.data;
-  const [featured, ...latest] = articles;
   const currentEdition = currentEditionRes.data && locale === "fa" ? localizeEditionFa(currentEditionRes.data) : currentEditionRes.data;
 
   return (
@@ -36,11 +35,11 @@ export default async function HomePage() {
         </section>
       )}
 
-      {latest.length > 0 && (
+      {articles.length > 0 && (
         <section className="mx-auto max-w-6xl px-6 py-12">
           <SectionHeading eyebrow={locale === "fa" ? "تازه‌ها" : "Latest"} title={locale === "fa" ? "نوشته‌های تازه" : "Recent writing"} href={localePath("/blog", locale)} linkLabel={locale === "fa" ? "مشاهده همه" : "View all"} />
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {latest.map((article) => (
+            {articles.map((article) => (
               <ArticleCard key={article.id} article={article} />
             ))}
           </div>
@@ -58,7 +57,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      {!featured && latest.length === 0 && (
+      {articles.length === 0 && (
         <section className="mx-auto max-w-6xl px-6 py-12">
           <EmptyState
             title={locale === "fa" ? "هنوز مقاله‌ای منتشر نشده" : "No articles yet"}

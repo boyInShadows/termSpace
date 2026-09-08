@@ -11,6 +11,10 @@ const articleSelect = {
 } as const;
 
 const editionInclude = {
+  articles: { where: { article: { published: true } }, orderBy: { position: "asc" as const }, select: { position: true, article: { select: articleSelect } } },
+};
+
+const adminEditionInclude = {
   articles: { orderBy: { position: "asc" as const }, select: { position: true, article: { select: articleSelect } } },
 };
 
@@ -35,7 +39,7 @@ export async function getEdition(req: Request, res: Response) {
 }
 
 export async function listAdminEditions(_req: Request, res: Response) {
-  const editions = await prisma.edition.findMany({ orderBy: { number: "desc" }, include: editionInclude });
+  const editions = await prisma.edition.findMany({ orderBy: { number: "desc" }, include: adminEditionInclude });
   res.json({ data: editions.map(serialize) });
 }
 
@@ -50,7 +54,7 @@ function editionData(body: Record<string, unknown>, existingPublished = false) {
 }
 
 export async function createEdition(req: Request, res: Response) {
-  const edition = await prisma.edition.create({ data: editionData(req.body) as never, include: editionInclude });
+  const edition = await prisma.edition.create({ data: editionData(req.body) as never, include: adminEditionInclude });
   res.status(201).json({ data: serialize(edition) });
 }
 
@@ -58,7 +62,7 @@ export async function updateEdition(req: Request, res: Response) {
   const id = String(req.params.id);
   const existing = await prisma.edition.findUnique({ where: { id }, select: { published: true } });
   if (!existing) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Edition not found" } }); return; }
-  const edition = await prisma.edition.update({ where: { id }, data: editionData(req.body, existing.published) as never, include: editionInclude });
+  const edition = await prisma.edition.update({ where: { id }, data: editionData(req.body, existing.published) as never, include: adminEditionInclude });
   res.json({ data: serialize(edition) });
 }
 

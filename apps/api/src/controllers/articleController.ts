@@ -63,6 +63,8 @@ type ArticleQuery = {
   sort: "newest" | "oldest" | "title";
 };
 
+class ArticleEditConflictError extends Error {}
+
 export async function listArticles(req: Request, res: Response) {
   const { page, limit, category, tag, series, search, published, sort } = req.query as unknown as ArticleQuery;
   if (published !== true && !(await isAdminRequest(req))) {
@@ -179,9 +181,10 @@ export async function getArticlePreview(req: Request, res: Response) {
 
 export async function createArticle(req: Request, res: Response) {
   const body = req.body;
+  const published = body.published ?? false;
   const publishedAt = body.publishedAt
     ? new Date(body.publishedAt)
-    : body.published
+    : published
       ? new Date()
       : null;
 
@@ -192,9 +195,11 @@ export async function createArticle(req: Request, res: Response) {
       excerpt: body.excerpt ?? null,
       content: body.content,
       heroImage: body.heroImage ?? null,
-      published: body.published ?? false,
+      published,
       publishedAt,
-      scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : null,
+      // A published article is live immediately; never retain a schedule
+      // that could later make its state ambiguous.
+      scheduledAt: published ? null : body.scheduledAt ? new Date(body.scheduledAt) : null,
       previewToken: randomBytes(24).toString("base64url"),
       authorId: body.authorId,
       categoryId: body.categoryId,
@@ -213,56 +218,73 @@ export async function createArticle(req: Request, res: Response) {
 export async function updateArticle(req: Request, res: Response) {
   const id = String(req.params.id);
   const body = req.body;
-  let publishedAtUpdate: Date | null | undefined;
-  const existingSnapshot = await prisma.article.findUnique({
-    where: { id },
-    include: { tags: { select: { tagId: true } } },
-  });
-  if (!existingSnapshot) {
-    res.status(404).json({ error: { code: "NOT_FOUND", message: "Article not found" } });
-    return;
-  }
-  if (body.expectedUpdatedAt && existingSnapshot.updatedAt.toISOString() !== body.expectedUpdatedAt) {
-    res.status(409).json({ error: { code: "EDIT_CONFLICT", message: "This article was changed in another session. Refresh before saving." } });
-    return;
-  }
-  await prisma.articleRevision.create({
-    data: { articleId: id, snapshot: JSON.parse(JSON.stringify(existingSnapshot)) },
-  });
+  try {
+    const article = await prisma.$transaction(async (tx) => {
+      // Lock the row before reading the snapshot. This prevents two editors
+      // with the same expectedUpdatedAt from both creating revisions and
+      // overwriting each other.
+      await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "Article" WHERE "id" = ${id} FOR UPDATE`);
+      const existingSnapshot = await tx.article.findUnique({
+        where: { id },
+        include: { tags: { select: { tagId: true } } },
+      });
+      if (!existingSnapshot) return null;
+      if (body.expectedUpdatedAt && existingSnapshot.updatedAt.toISOString() !== body.expectedUpdatedAt) {
+        throw new ArticleEditConflictError();
+      }
 
-  if (body.publishedAt !== undefined) {
-    publishedAtUpdate = body.publishedAt ? new Date(body.publishedAt) : null;
-  } else if (body.published === true) {
-    const existing = await prisma.article.findUnique({
-      where: { id },
-      select: { publishedAt: true },
+      let publishedAtUpdate: Date | null | undefined;
+      if (body.publishedAt !== undefined) {
+        publishedAtUpdate = body.publishedAt ? new Date(body.publishedAt) : null;
+      } else if (body.published === true) {
+        publishedAtUpdate = existingSnapshot.publishedAt ?? new Date();
+      }
+
+      const effectivePublished = body.published ?? existingSnapshot.published;
+      const scheduledAtUpdate = body.scheduledAt !== undefined
+        ? (body.scheduledAt ? new Date(body.scheduledAt) : null)
+        : undefined;
+      const normalizedScheduledAt = effectivePublished ? null : scheduledAtUpdate;
+
+      await tx.articleRevision.create({
+        data: { articleId: id, snapshot: JSON.parse(JSON.stringify(existingSnapshot)) },
+      });
+
+      return tx.article.update({
+        where: { id },
+        data: {
+          ...(body.title !== undefined ? { title: body.title } : {}),
+          ...(body.slug !== undefined ? { slug: body.slug } : {}),
+          ...(body.excerpt !== undefined ? { excerpt: body.excerpt } : {}),
+          ...(body.content !== undefined ? { content: body.content } : {}),
+          ...(body.heroImage !== undefined ? { heroImage: body.heroImage } : {}),
+          ...(body.published !== undefined ? { published: body.published } : {}),
+          ...(publishedAtUpdate !== undefined ? { publishedAt: publishedAtUpdate } : {}),
+          ...(body.authorId !== undefined ? { authorId: body.authorId } : {}),
+          ...(body.categoryId !== undefined ? { categoryId: body.categoryId } : {}),
+          ...(normalizedScheduledAt !== undefined || effectivePublished ? { scheduledAt: normalizedScheduledAt } : {}),
+          ...(body.seriesId !== undefined ? { seriesId: body.seriesId } : {}),
+          ...(body.seriesOrder !== undefined ? { seriesOrder: body.seriesOrder } : {}),
+          ...(body.tagIds !== undefined
+            ? { tags: { deleteMany: {}, create: body.tagIds.map((tagId: string) => ({ tag: { connect: { id: tagId } } })) } }
+            : {}),
+        },
+        select: articleSelect,
+      });
     });
-    publishedAtUpdate = existing?.publishedAt ?? new Date();
+
+    if (!article) {
+      res.status(404).json({ error: { code: "NOT_FOUND", message: "Article not found" } });
+      return;
+    }
+    res.json({ data: toArticleDetail(article, true) });
+  } catch (error) {
+    if (error instanceof ArticleEditConflictError) {
+      res.status(409).json({ error: { code: "EDIT_CONFLICT", message: "This article was changed in another session. Refresh before saving." } });
+      return;
+    }
+    throw error;
   }
-
-  const article = await prisma.article.update({
-    where: { id },
-    data: {
-      ...(body.title !== undefined ? { title: body.title } : {}),
-      ...(body.slug !== undefined ? { slug: body.slug } : {}),
-      ...(body.excerpt !== undefined ? { excerpt: body.excerpt } : {}),
-      ...(body.content !== undefined ? { content: body.content } : {}),
-      ...(body.heroImage !== undefined ? { heroImage: body.heroImage } : {}),
-      ...(body.published !== undefined ? { published: body.published } : {}),
-      ...(publishedAtUpdate !== undefined ? { publishedAt: publishedAtUpdate } : {}),
-      ...(body.authorId !== undefined ? { authorId: body.authorId } : {}),
-      ...(body.categoryId !== undefined ? { categoryId: body.categoryId } : {}),
-      ...(body.scheduledAt !== undefined ? { scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : null } : {}),
-      ...(body.seriesId !== undefined ? { seriesId: body.seriesId } : {}),
-      ...(body.seriesOrder !== undefined ? { seriesOrder: body.seriesOrder } : {}),
-      ...(body.tagIds !== undefined
-        ? { tags: { deleteMany: {}, create: body.tagIds.map((tagId: string) => ({ tag: { connect: { id: tagId } } })) } }
-        : {}),
-    },
-    select: articleSelect,
-  });
-
-  res.json({ data: toArticleDetail(article, true) });
 }
 
 export async function listArticleRevisions(req: Request, res: Response) {
@@ -275,28 +297,48 @@ export async function listArticleRevisions(req: Request, res: Response) {
 }
 
 export async function restoreArticleRevision(req: Request, res: Response) {
-  const revision = await prisma.articleRevision.findFirst({
-    where: { id: String(req.params.revisionId), articleId: String(req.params.id) },
+  const id = String(req.params.id);
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "Article" WHERE "id" = ${id} FOR UPDATE`);
+    const [revision, current] = await Promise.all([
+      tx.articleRevision.findFirst({ where: { id: String(req.params.revisionId), articleId: id } }),
+      tx.article.findUnique({ where: { id }, include: { tags: { select: { tagId: true } } } }),
+    ]);
+    if (!revision) return { kind: "revision-not-found" as const };
+    if (!current) return { kind: "article-not-found" as const };
+
+    // Preserve the state being replaced so restoring this revision can itself
+    // be undone from the revision history.
+    await tx.articleRevision.create({
+      data: { articleId: id, snapshot: JSON.parse(JSON.stringify(current)) },
+    });
+
+    const snapshot = revision.snapshot as Record<string, unknown> & { tags?: { tagId: string }[] };
+    const article = await tx.article.update({
+      where: { id },
+      data: {
+        title: String(snapshot.title), slug: String(snapshot.slug), excerpt: snapshot.excerpt as string | null,
+        content: String(snapshot.content), heroImage: snapshot.heroImage as string | null,
+        published: Boolean(snapshot.published), publishedAt: snapshot.publishedAt ? new Date(String(snapshot.publishedAt)) : null,
+        scheduledAt: snapshot.scheduledAt ? new Date(String(snapshot.scheduledAt)) : null,
+        authorId: String(snapshot.authorId), categoryId: String(snapshot.categoryId),
+        seriesId: snapshot.seriesId ? String(snapshot.seriesId) : null,
+        seriesOrder: typeof snapshot.seriesOrder === "number" ? snapshot.seriesOrder : null,
+        tags: { deleteMany: {}, create: (snapshot.tags ?? []).map(({ tagId }) => ({ tag: { connect: { id: tagId } } })) },
+      },
+      select: articleSelect,
+    });
+    return { kind: "restored" as const, article };
   });
-  if (!revision) {
+  if (result.kind === "revision-not-found") {
     res.status(404).json({ error: { code: "NOT_FOUND", message: "Revision not found" } });
     return;
   }
-  const snapshot = revision.snapshot as Record<string, unknown> & { tags?: { tagId: string }[] };
-  const article = await prisma.article.update({
-    where: { id: String(req.params.id) },
-    data: {
-      title: String(snapshot.title), slug: String(snapshot.slug), excerpt: snapshot.excerpt as string | null,
-      content: String(snapshot.content), heroImage: snapshot.heroImage as string | null,
-      published: Boolean(snapshot.published), publishedAt: snapshot.publishedAt ? new Date(String(snapshot.publishedAt)) : null,
-      scheduledAt: snapshot.scheduledAt ? new Date(String(snapshot.scheduledAt)) : null,
-      authorId: String(snapshot.authorId), categoryId: String(snapshot.categoryId),
-      seriesId: snapshot.seriesId ? String(snapshot.seriesId) : null,
-      seriesOrder: typeof snapshot.seriesOrder === "number" ? snapshot.seriesOrder : null,
-      tags: { deleteMany: {}, create: (snapshot.tags ?? []).map(({ tagId }) => ({ tag: { connect: { id: tagId } } })) },
-    },
-    select: articleSelect,
-  });
+  if (result.kind === "article-not-found") {
+    res.status(404).json({ error: { code: "NOT_FOUND", message: "Article not found" } });
+    return;
+  }
+  const article = result.article;
   res.json({ data: toArticleDetail(article) });
 }
 

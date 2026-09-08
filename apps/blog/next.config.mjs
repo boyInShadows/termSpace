@@ -16,9 +16,6 @@ const nextConfig = {
       { key: "X-Frame-Options", value: "DENY" },
     ] }];
   },
-  async rewrites() {
-    return [{ source: "/backend/:path*", destination: `${process.env.API_URL ?? "http://localhost:4001"}/:path*` }];
-  },
   images: {
     remotePatterns: [
       ...imageHosts.map((hostname) => ({ protocol: "https", hostname })),
