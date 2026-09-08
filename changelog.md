@@ -112,3 +112,4 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 - Added a direct authenticated article-by-ID endpoint for admin editing instead of scanning the first 200 articles.
 - Paginated article loading for edition selection so older articles are available to editors.
 - Removed the unused web `CountUp` component and its orphaned tests.
+- Pinned all web package dependencies to the versions already resolved in the lockfile.

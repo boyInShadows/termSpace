@@ -19,6 +19,3 @@ This file tracks known improvement work that has not been completed yet. When an
 ## Bug Audit — 2026-09-02
 
 ### Lower Priority
-
-- Copy each app's `next.config` into the runtime container image, or move the settings elsewhere, so `images.remotePatterns` and `reactStrictMode` apply at runtime rather than only at build time.
-- Pin the `apps/web` dependencies currently declared as `latest` so installs are reproducible without relying solely on `package-lock.json`.
