@@ -108,3 +108,4 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 - Paginated sitemap article retrieval so all published articles can be indexed.
 - Added pagination controls to category archives.
 - Added pagination controls to tag archives.
+- Restored local bookmark storage as well as React state when a signed-in bookmark mutation fails.
