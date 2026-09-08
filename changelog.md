@@ -100,3 +100,4 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 - Made the blog admin route guard fail closed when the authentication API is unavailable.
 - Included both frontend Next.js runtime configs in their production images so image and runtime settings are preserved after deployment.
 - Fixed web navigation/lint issues and made CI run lint on both main and development pushes.
+- Made reader logout idempotent so stale sessions can still be cleared.

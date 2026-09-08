@@ -22,7 +22,6 @@ This file tracks known improvement work that has not been completed yet. When an
 - Format article dates with the active locale instead of hard-coded `en-US` on Persian pages.
 - Fetch enough related articles to retain three results after excluding the current article.
 - Point the homepage subject-browsing CTA to `/topics` rather than `/blog`.
-- Make logout idempotent so expired or invalid session cookies can still be cleared.
 
 ## Bug Audit — 2026-09-02
 

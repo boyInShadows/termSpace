@@ -9,7 +9,7 @@ const router = Router();
 router.post("/login", loginRateLimit, validate(readerCredentialsSchema), loginReader);
 router.post("/register", loginRateLimit, validate(readerCredentialsSchema), registerReader);
 router.post("/google", loginRateLimit, validate(googleCredentialSchema), loginReaderWithGoogle);
-router.post("/logout", requireReader, logoutReader);
+router.post("/logout", logoutReader);
 router.get("/session", requireReader, getReaderSession);
 router.get("/profile", requireReader, getReaderProfile);
 router.put("/profile/password", requireReader, loginRateLimit, validate(readerPasswordChangeSchema), changeReaderPassword);
