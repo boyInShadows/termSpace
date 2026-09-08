@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addBookmark, changeReaderPassword, getReaderLibrary, getReaderProfile, getReaderSession, loginReader, loginReaderWithGoogle, logoutReader, removeBookmark, saveProgress, syncReaderLibrary } from "../controllers/readerController.js";
+import { addBookmark, changeReaderPassword, getReaderLibrary, getReaderProfile, getReaderSession, loginReader, loginReaderWithGoogle, logoutReader, registerReader, removeBookmark, saveProgress, syncReaderLibrary } from "../controllers/readerController.js";
 import { requireReader } from "../middleware/auth.js";
 import { loginRateLimit } from "../middleware/security.js";
 import { validate } from "../middleware/validate.js";
@@ -7,6 +7,7 @@ import { googleCredentialSchema, readerCredentialsSchema, readerLibrarySyncSchem
 
 const router = Router();
 router.post("/login", loginRateLimit, validate(readerCredentialsSchema), loginReader);
+router.post("/register", loginRateLimit, validate(readerCredentialsSchema), registerReader);
 router.post("/google", loginRateLimit, validate(googleCredentialSchema), loginReaderWithGoogle);
 router.post("/logout", requireReader, logoutReader);
 router.get("/session", requireReader, getReaderSession);

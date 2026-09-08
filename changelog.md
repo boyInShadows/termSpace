@@ -94,3 +94,6 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 ## 2026-08-27
 
 - Replaced the planned administrator-management expansion with reader profiles that show account details, bookmarks, reading history, and progress; added password setting/changing with current-password verification and invalidation of other reader sessions. Verification: backend type-check, 16 tests, and production build; frontend type-check, 12 tests, and production build.
+# 2026-09-08
+
+- Added the missing reader registration endpoint used by the marketplace account form and covered duplicate-email handling.

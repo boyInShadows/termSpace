@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { compare, hash } from "bcryptjs";
 import { OAuth2Client } from "google-auth-library";
+import { Prisma } from "@prisma/client";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { hashSessionToken, READER_SESSION_COOKIE } from "../middleware/auth.js";
@@ -34,6 +35,25 @@ export async function loginReader(req: Request, res: Response) {
     return;
   }
   await createSession(res, user);
+}
+
+export async function registerReader(req: Request, res: Response) {
+  const email = String(req.body.email).trim().toLowerCase();
+  const passwordHash = await hash(String(req.body.password), 12);
+
+  try {
+    const user = await prisma.readerUser.create({
+      data: { email, passwordHash },
+      select: { id: true, email: true },
+    });
+    await createSession(res, user);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      res.status(409).json({ error: { code: "EMAIL_ALREADY_REGISTERED", message: "An account with this email already exists" } });
+      return;
+    }
+    throw error;
+  }
 }
 
 export async function loginReaderWithGoogle(req: Request, res: Response) {
