@@ -109,3 +109,4 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 - Added pagination controls to category archives.
 - Added pagination controls to tag archives.
 - Restored local bookmark storage as well as React state when a signed-in bookmark mutation fails.
+- Added a direct authenticated article-by-ID endpoint for admin editing instead of scanning the first 200 articles.

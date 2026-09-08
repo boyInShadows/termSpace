@@ -107,6 +107,12 @@ export const api = {
     });
   },
 
+  async getArticleById(id: string, options: { cookie?: string } = {}): Promise<ArticleDetailResponse> {
+    return apiFetch<ArticleDetailResponse>(`/api/articles/id/${encodeURIComponent(id)}`, {
+      headers: options.cookie ? { Cookie: options.cookie } : undefined,
+    });
+  },
+
   async getArticlePreview(token: string, options: { cookie?: string } = {}): Promise<ArticleDetailResponse> {
     return apiFetch<ArticleDetailResponse>(`/api/articles/preview/${encodeURIComponent(token)}`, {
       headers: options.cookie ? { Cookie: options.cookie } : undefined,

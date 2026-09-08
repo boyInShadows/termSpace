@@ -15,7 +15,7 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ### Lower Priority
 
-- Replace the 200-article admin edit lookup and edition-selection cap with direct article lookup and paginated/searchable selection.
+- Replace the edition-selection cap with paginated/searchable selection.
 
 ## Bug Audit — 2026-09-02
 
