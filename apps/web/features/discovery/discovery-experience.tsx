@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Filter,
   Grid2X2,
@@ -47,7 +47,12 @@ export function DiscoveryExperience({ initial, categories, initialFilters }: { i
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
+  const firstLoad = useRef(true);
   useEffect(() => {
+    if (firstLoad.current) {
+      firstLoad.current = false;
+      return;
+    }
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       setLoading(true); setError(null);

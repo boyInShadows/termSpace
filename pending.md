@@ -24,7 +24,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ### Lower Priority
 
-- Skip the redundant client-side product request on first mount in `features/discovery/discovery-experience.tsx`; the effect refetches data the server already rendered into `initial`.
 - Copy each app's `next.config` into the runtime container image, or move the settings elsewhere, so `images.remotePatterns` and `reactStrictMode` apply at runtime rather than only at build time.
 - Remove the `CountUp` component and its tests or adopt it somewhere real; it has no production call sites after the hero stat rail was removed.
 - Pin the `apps/web` dependencies currently declared as `latest` so installs are reproducible without relying solely on `package-lock.json`.
