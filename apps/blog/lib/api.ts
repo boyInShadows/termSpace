@@ -101,6 +101,18 @@ export const api = {
     });
   },
 
+  async listAllArticles(options: { cookie?: string } = {}): Promise<{ data: ArticleSummary[] }> {
+    const data: ArticleSummary[] = [];
+    let page = 1;
+    do {
+      const response = await this.listArticles({ page, limit: 200 }, options);
+      data.push(...response.data);
+      if (!response.meta.hasNextPage) break;
+      page += 1;
+    } while (page <= 1000);
+    return { data };
+  },
+
   async getArticle(slug: string, options: { admin?: boolean; cookie?: string } = {}): Promise<ArticleDetailResponse> {
     return apiFetch<ArticleDetailResponse>(`/api/articles/${encodeURIComponent(slug)}`, {
       headers: options.cookie ? { Cookie: options.cookie } : undefined,

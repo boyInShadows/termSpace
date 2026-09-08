@@ -15,7 +15,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ### Lower Priority
 
-- Replace the edition-selection cap with paginated/searchable selection.
 
 ## Bug Audit — 2026-09-02
 
