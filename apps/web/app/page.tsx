@@ -17,7 +17,7 @@ import { Process } from "@/components/sections/process";
 import { Reveal } from "@/components/motion/reveal";
 import { TiltCard } from "@/components/motion/tilt-card";
 import { Magnetic } from "@/components/motion/magnetic";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { CreatorIdentity } from "@/components/marketplace/product-parts";
 import { getMarketplaceHome } from "@/lib/api";

@@ -63,7 +63,7 @@ export function DiscoveryExperience({ initial, categories, initialFilters }: { i
       finally { if (!controller.signal.aborted) setLoading(false); }
     }, 250);
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [query, type, category, platform, price, verified, minRating, sort, page, retryNonce]);
+  }, [d.connectionError, d.rateLimited, query, type, category, platform, price, verified, minRating, sort, page, retryNonce]);
   const change = (setter: (value: string) => void) => (value: string) => { setPage(1); setter(value); };
   const reset = () => {
     setPage(1);

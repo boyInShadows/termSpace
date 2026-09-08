@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ApiError, getFavorites, getSession, setFavorite } from "@/lib/api";
 
 type SessionState = {
@@ -10,6 +11,7 @@ const anonymousSession: SessionState = { loading: false, email: null, error: nul
 const SessionContext = createContext<SessionState>(anonymousSession);
 
 export function MarketplaceSessionProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set());
@@ -28,17 +30,28 @@ export function MarketplaceSessionProvider({ children }: { children: React.React
       setEmail(null); setFavorites(new Set());
     } finally { setLoading(false); }
   }, []);
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void refresh(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [refresh]);
   const toggleFavorite = useCallback(async (slug: string) => {
-    if (!email) { window.location.assign(`/account?next=${encodeURIComponent(window.location.pathname)}`); return; }
+    if (!email) { router.push(`/account?next=${encodeURIComponent(window.location.pathname)}`); return; }
     const wasSaved = favorites.has(slug);
-    setFavorites((current) => { const next = new Set(current); wasSaved ? next.delete(slug) : next.add(slug); return next; });
+    setFavorites((current) => {
+      const next = new Set(current);
+      if (wasSaved) next.delete(slug); else next.add(slug);
+      return next;
+    });
     try { await setFavorite(slug, !wasSaved); }
     catch (cause) {
-      setFavorites((current) => { const next = new Set(current); wasSaved ? next.add(slug) : next.delete(slug); return next; });
+      setFavorites((current) => {
+        const next = new Set(current);
+        if (wasSaved) next.add(slug); else next.delete(slug);
+        return next;
+      });
       console.error("Favorite update failed", cause); setError("Could not update your saved products.");
     }
-  }, [email, favorites]);
+  }, [email, favorites, router]);
   const value = useMemo(() => ({ loading, email, error, isFavorite: (slug: string) => favorites.has(slug), toggleFavorite, refresh }), [loading, email, error, favorites, toggleFavorite, refresh]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
