@@ -120,7 +120,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             />
           <span className="font-medium text-ink-soft">{article.author.name}</span>
           <span aria-hidden="true">·</span>
-          <span>{formatDate(article.publishedAt)}</span>
+          <span>{formatDate(article.publishedAt, locale)}</span>
           <span aria-hidden="true">·</span>
           <span>{locale === "fa" ? `${minutes} دقیقه مطالعه` : `${minutes} min read`}</span>
         </div>

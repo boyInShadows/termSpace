@@ -48,7 +48,7 @@ export function ArticleCard({ article, featured = false, highlight }: ArticleCar
           <div className="flex items-center gap-2 text-xs text-ink-muted">
             <span className="text-accent font-medium">{display.category.name}</span>
             <span aria-hidden="true">·</span>
-            <span>{formatDate(article.publishedAt)}</span>
+            <span>{formatDate(article.publishedAt, locale)}</span>
           </div>
           <h3 className="mt-3 font-serif text-2xl font-semibold leading-snug group-hover:text-accent">
             {display.title}
@@ -85,7 +85,7 @@ export function ArticleCard({ article, featured = false, highlight }: ArticleCar
         <div className="flex items-center gap-2 text-xs text-ink-muted">
           <span className="text-accent font-medium">{display.category.name}</span>
           <span aria-hidden="true">·</span>
-          <span>{formatDate(article.publishedAt)}</span>
+          <span>{formatDate(article.publishedAt, locale)}</span>
         </div>
         <h3 className="font-serif text-lg font-semibold leading-snug group-hover:text-accent">
           {display.title}

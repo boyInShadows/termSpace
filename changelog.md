@@ -102,3 +102,4 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 - Fixed web navigation/lint issues and made CI run lint on both main and development pushes.
 - Made reader logout idempotent so stale sessions can still be cleared.
 - Pointed the blog homepage subject-browsing CTA to the topics index.
+- Localized public article dates using the active English or Persian locale.
