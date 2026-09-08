@@ -107,3 +107,4 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 - Skipped the redundant first-mount marketplace fetch when server-rendered discovery data is already available.
 - Paginated sitemap article retrieval so all published articles can be indexed.
 - Added pagination controls to category archives.
+- Added pagination controls to tag archives.
