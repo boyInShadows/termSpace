@@ -23,6 +23,7 @@ ENV NODE_ENV=production
 COPY --from=build /app/package.json /app/package-lock.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/apps/blog/package.json apps/blog/package.json
+COPY --from=build /app/apps/blog/next.config.mjs apps/blog/next.config.mjs
 COPY --from=build /app/apps/blog/.next apps/blog/.next
 COPY --from=build /app/apps/blog/public apps/blog/public
 RUN chown -R node:node /app
