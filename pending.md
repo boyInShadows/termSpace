@@ -16,7 +16,6 @@ This file tracks known improvement work that has not been completed yet. When an
 ### Lower Priority
 
 - Replace the 200-article admin edit lookup and edition-selection cap with direct article lookup and paginated/searchable selection.
-- Paginate sitemap article retrieval so published articles after the first 200 are included.
 - Add pagination to category and tag archives instead of silently truncating them at 50 articles.
 - Roll back both React state and `localStorage` when a signed-in bookmark API mutation fails.
 

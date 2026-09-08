@@ -105,3 +105,4 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 - Localized public article dates using the active English or Persian locale.
 - Fetched one extra related article so excluding the current article still leaves three recommendations when available.
 - Skipped the redundant first-mount marketplace fetch when server-rendered discovery data is already available.
+- Paginated sitemap article retrieval so all published articles can be indexed.
