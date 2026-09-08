@@ -111,3 +111,4 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 - Restored local bookmark storage as well as React state when a signed-in bookmark mutation fails.
 - Added a direct authenticated article-by-ID endpoint for admin editing instead of scanning the first 200 articles.
 - Paginated article loading for edition selection so older articles are available to editors.
+- Removed the unused web `CountUp` component and its orphaned tests.
