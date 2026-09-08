@@ -97,3 +97,4 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 # 2026-09-08
 
 - Added the missing reader registration endpoint used by the marketplace account form and covered duplicate-email handling.
+- Made the blog admin route guard fail closed when the authentication API is unavailable.
