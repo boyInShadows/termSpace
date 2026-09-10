@@ -1,4 +1,4 @@
-import request from "supertest";
+﻿import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMock = vi.hoisted(() => ({
@@ -58,6 +58,7 @@ describe("community publishing", () => {
     prismaMock.marketplaceCreator.findUnique.mockResolvedValue(null);
     const response = await request(createApp())
       .post("/api/community/creator")
+      .set("Origin", "http://localhost:3000")
       .set("Cookie", READER_COOKIE)
       .send({ name: "Someone Real", handle: "admin", bio: "A perfectly ordinary bio here." });
     expect(response.status).toBe(400);
@@ -70,6 +71,7 @@ describe("community publishing", () => {
     prismaMock.marketplaceCreator.create.mockResolvedValue(CREATOR);
     const response = await request(createApp())
       .post("/api/community/creator")
+      .set("Origin", "http://localhost:3000")
       .set("Cookie", READER_COOKIE)
       .send({ name: "Ramtin K", handle: "ramtin", bio: "Building practical automation skills." });
     expect(response.status).toBe(201);
@@ -91,6 +93,7 @@ describe("community publishing", () => {
 
     const response = await request(createApp())
       .post("/api/community/products")
+      .set("Origin", "http://localhost:3000")
       .set("Cookie", READER_COOKIE)
       .send({
         ...VALID_SUBMISSION,
@@ -113,6 +116,7 @@ describe("community publishing", () => {
     prismaMock.marketplaceCategory.findFirst.mockResolvedValue(null);
     const response = await request(createApp())
       .post("/api/community/products")
+      .set("Origin", "http://localhost:3000")
       .set("Cookie", READER_COOKIE)
       .send({ ...VALID_SUBMISSION, category: "Nonexistent" });
     expect(response.status).toBe(400);
@@ -127,6 +131,7 @@ describe("community publishing", () => {
     prismaMock.marketplaceProduct.findFirst.mockResolvedValue(null);
     const response = await request(createApp())
       .patch("/api/community/products/someone-elses-listing")
+      .set("Origin", "http://localhost:3000")
       .set("Cookie", READER_COOKIE)
       .send({ name: "Hijacked" });
     expect(response.status).toBe(404);
@@ -138,6 +143,7 @@ describe("community publishing", () => {
     prismaMock.marketplaceCreator.findUnique.mockResolvedValue(null);
     const response = await request(createApp())
       .post("/api/community/products")
+      .set("Origin", "http://localhost:3000")
       .set("Cookie", READER_COOKIE)
       .send(VALID_SUBMISSION);
     expect(response.status).toBe(404);

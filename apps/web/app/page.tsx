@@ -320,9 +320,14 @@ export default async function Home() {
                       )}
                     >
                       Start publishing
-
                     </Link>
                   </Magnetic>
+                  <Link
+                    href={localePath("/design-system", locale)}
+                    className={buttonVariants({ variant: "outline", size: "lg" })}
+                  >
+                    Read the creator guide
+                  </Link>
                 </div>
               </div>
             </Reveal>
@@ -362,4 +367,3 @@ export default async function Home() {
     </>
   );
 }
-
