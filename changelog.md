@@ -43,6 +43,21 @@ Project changes completed from `pending.md` should be recorded here with the dat
   validation; migration applied successfully to an isolated PostgreSQL schema
   and rolled back; all workspace type-checks; 43 tests; API, web, and Blog
   production builds (frontends via webpack); web lint; and `git diff --check`.
+- Added first-party verification for password accounts using 30-minute,
+  single-use HMAC-signed links carried in URL fragments, atomic consumption,
+  account-serialized resend limits, generic resend responses, and bounded
+  verification attempts. Registration now writes a transactional outbox job;
+  a PostgreSQL-safe worker delivers redacted HTML/text messages through
+  Cloudflare Email Service with timeouts, retry classification, stale-job
+  recovery, correlation IDs, and a five-attempt ceiling. Added localized
+  English/Persian verification UI, deployment configuration, provider and DNS
+  onboarding guidance, and disabled Next's experimental TypeScript CLI path to
+  avoid its empty-output build failure while retaining compiler-API checks.
+  Verification: Prisma generation and schema validation; all workspace
+  type-checks; 58 tests; API, web, and Blog production builds (frontends via
+  webpack); web lint; Compose configuration validation; and `git diff --check`.
+  Live migration execution was unavailable because local PostgreSQL was stopped
+  and this host denied Docker daemon access.
 
 ## 2026-09-08
 

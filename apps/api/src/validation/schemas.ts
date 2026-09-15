@@ -110,6 +110,10 @@ export const googleCredentialSchema = z.object({
   credential: z.string().min(100).max(5000),
 });
 
+export const emailVerificationConfirmSchema = z.object({
+  token: z.string().min(40).max(200).regex(/^[A-Za-z0-9._-]+$/, "Invalid verification token"),
+});
+
 const savedArticleSchema = z.object({
   slug: z.string().regex(slugPattern).max(200),
   progress: z.number().int().min(0).max(100).optional().default(0),

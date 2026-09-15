@@ -10,6 +10,7 @@ const imageHosts = (process.env.NEXT_PUBLIC_IMAGE_HOSTS ?? "images.unsplash.com"
 
 const nextConfig = {
   reactStrictMode: true,
+  experimental: { useTypeScriptCli: false },
   async headers() {
     return [{ source: "/:path*", headers: [
       { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },

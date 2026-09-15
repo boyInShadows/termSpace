@@ -9,10 +9,13 @@ const prismaMock = vi.hoisted(() => ({
   article: { findUnique: vi.fn(), updateMany: vi.fn() },
   readerUser: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
   readerSession: { findFirst: vi.fn(), deleteMany: vi.fn(), create: vi.fn() },
+  readerEmailVerification: { findUnique: vi.fn(), findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
+  transactionalEmailOutbox: { updateMany: vi.fn() },
   marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), findFirst: vi.fn() },
   marketplaceCreator: { findMany: vi.fn() },
   marketplaceCategory: { findMany: vi.fn() },
   $transaction: vi.fn(),
+  $executeRaw: vi.fn(),
   $queryRaw: vi.fn(),
 }));
 
@@ -25,7 +28,9 @@ vi.mock("google-auth-library", () => ({
 
 process.env.NODE_ENV = "test";
 process.env.GOOGLE_CLIENT_ID = "test-google-client-id";
+process.env.EMAIL_VERIFICATION_SECRET = "test-secret-that-is-definitely-longer-than-32-bytes";
 const { createApp } = await import("./app.js");
+const { createEmailVerificationToken } = await import("./lib/emailVerification.js");
 
 describe("API", () => {
   beforeEach(() => {
@@ -100,6 +105,25 @@ describe("API", () => {
       .send({ email: "admin@example.com", password: "wrong-password" });
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe("INVALID_CREDENTIALS");
+  });
+
+  it("registers a password account with an atomic verification outbox record", async () => {
+    prismaMock.readerUser.create.mockResolvedValue({
+      id: "reader-1", email: "reader@example.com", emailVerifiedAt: null, marketplaceRoleGrants: [],
+    });
+
+    const response = await request(createApp())
+      .post("/api/readers/register")
+      .send({ email: "reader@example.com", password: "correct-password" });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.user.emailVerified).toBe(false);
+    expect(prismaMock.readerUser.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        email: "reader@example.com",
+        emailVerifications: { create: expect.objectContaining({ expiresAt: expect.any(Date), outbox: { create: { correlationId: expect.any(String) } } }) },
+      }),
+    }));
   });
 
   it("rejects cookie-authenticated mutations without browser provenance", async () => {
@@ -187,6 +211,70 @@ describe("API", () => {
       emailVerified: true,
       marketplaceRoles: ["creator"],
     });
+  });
+
+  it("returns the same accepted response when verification is throttled", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: null, marketplaceRoleGrants: [] },
+    });
+    prismaMock.readerEmailVerification.findFirst.mockResolvedValue({ createdAt: new Date() });
+    prismaMock.readerEmailVerification.count.mockResolvedValue(1);
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/readers/email-verification/request")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(202);
+    expect(response.body).toEqual({ data: { accepted: true } });
+    expect(prismaMock.readerEmailVerification.create).not.toHaveBeenCalled();
+  });
+
+  it("consumes a valid verification once and rejects replay", async () => {
+    const verification = {
+      id: "verification-1",
+      userId: "reader-1",
+      expiresAt: new Date(Date.now() + 60_000),
+      consumedAt: null,
+      user: { emailVerifiedAt: null },
+    };
+    const token = createEmailVerificationToken(verification);
+    prismaMock.readerEmailVerification.findUnique
+      .mockResolvedValueOnce(verification)
+      .mockResolvedValueOnce({ ...verification, consumedAt: new Date() });
+    prismaMock.readerEmailVerification.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.readerUser.update.mockResolvedValue({});
+    prismaMock.transactionalEmailOutbox.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const first = await request(createApp()).post("/api/readers/email-verification/confirm").send({ token });
+    const replay = await request(createApp()).post("/api/readers/email-verification/confirm").send({ token });
+
+    expect(first.status).toBe(200);
+    expect(first.body).toEqual({ data: { verified: true } });
+    expect(replay.status).toBe(400);
+    expect(replay.body.error.code).toBe("INVALID_OR_EXPIRED_VERIFICATION");
+  });
+
+  it("rejects an expired verification without mutating the account", async () => {
+    const verification = {
+      id: "verification-expired",
+      userId: "reader-1",
+      expiresAt: new Date(Date.now() - 1),
+      consumedAt: null,
+      user: { emailVerifiedAt: null },
+    };
+    prismaMock.readerEmailVerification.findUnique.mockResolvedValue(verification);
+    const token = createEmailVerificationToken(verification);
+
+    const response = await request(createApp()).post("/api/readers/email-verification/confirm").send({ token });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("INVALID_OR_EXPIRED_VERIFICATION");
+    expect(prismaMock.readerUser.update).not.toHaveBeenCalled();
   });
 
   it("safely claims an unverified password account with a verified Google identity", async () => {

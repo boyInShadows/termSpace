@@ -22,6 +22,8 @@ export async function getSession() { return request<{ data: { authenticated: tru
 export async function login(email: string, password: string) { return request("/api/readers/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function register(email: string, password: string) { return request("/api/readers/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function logout() { return request("/api/readers/logout", { method: "POST" }); }
+export async function requestEmailVerification() { return request<{ data: { accepted: true } }>("/api/readers/email-verification/request", { method: "POST" }); }
+export async function confirmEmailVerification(token: string) { return request<{ data: { verified: true } }>("/api/readers/email-verification/confirm", { method: "POST", body: JSON.stringify({ token }) }); }
 export async function getFavorites() { return (await request<{ data: string[] }>("/api/marketplace/favorites")).data; }
 export async function setFavorite(slug: string, saved: boolean) { return request(`/api/marketplace/products/${encodeURIComponent(slug)}/favorite`, { method: saved ? "PUT" : "DELETE" }); }
 export async function acquireProduct(slug: string, idempotencyKey: string) { return request(`/api/marketplace/products/${encodeURIComponent(slug)}/acquire`, { method: "POST", headers: { "Idempotency-Key": idempotencyKey } }); }

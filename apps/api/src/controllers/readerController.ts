@@ -6,6 +6,13 @@ import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { hashSessionToken, READER_SESSION_COOKIE } from "../middleware/auth.js";
 import { toPublicMarketplaceRole } from "../lib/marketplaceRoles.js";
+import {
+  EMAIL_VERIFICATION_RESEND_COOLDOWN_MS,
+  EMAIL_VERIFICATION_RESEND_LIMIT,
+  EMAIL_VERIFICATION_RESEND_WINDOW_MS,
+  newVerificationData,
+  verifyEmailVerificationToken,
+} from "../lib/emailVerification.js";
 
 const sessionDays = Math.max(1, Number(process.env.READER_SESSION_DAYS ?? 30));
 const googleClient = new OAuth2Client();
@@ -68,7 +75,7 @@ export async function registerReader(req: Request, res: Response) {
 
   try {
     const user = await prisma.readerUser.create({
-      data: { email, passwordHash },
+      data: { email, passwordHash, emailVerifications: { create: newVerificationData() } },
       select: { id: true, email: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
     });
     await createSession(res, user);
@@ -79,6 +86,74 @@ export async function registerReader(req: Request, res: Response) {
     }
     throw error;
   }
+}
+
+export async function requestReaderEmailVerification(req: Request, res: Response) {
+  const userId = res.locals.reader.id as string;
+  const genericResponse = { data: { accepted: true } };
+  if (res.locals.reader.emailVerified) {
+    res.status(202).json(genericResponse);
+    return;
+  }
+
+  const correlationId = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${userId}, 0))`;
+    const now = new Date();
+    const windowStart = new Date(now.getTime() - EMAIL_VERIFICATION_RESEND_WINDOW_MS);
+    const [mostRecent, recentCount] = await Promise.all([
+      tx.readerEmailVerification.findFirst({ where: { userId }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+      tx.readerEmailVerification.count({ where: { userId, createdAt: { gte: windowStart } } }),
+    ]);
+    if ((mostRecent && mostRecent.createdAt > new Date(now.getTime() - EMAIL_VERIFICATION_RESEND_COOLDOWN_MS)) || recentCount >= EMAIL_VERIFICATION_RESEND_LIMIT) return null;
+
+    const data = newVerificationData(now);
+    await tx.transactionalEmailOutbox.updateMany({
+      where: { verification: { userId }, status: { in: ["PENDING", "PROCESSING", "RETRY"] } },
+      data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "SUPERSEDED" },
+    });
+    await tx.readerEmailVerification.updateMany({ where: { userId, consumedAt: null }, data: { consumedAt: now } });
+    await tx.readerEmailVerification.create({ data: { userId, ...data } });
+    return data.outbox.create.correlationId;
+  });
+  if (correlationId) req.log?.info({ correlationId }, "Email verification queued");
+  res.status(202).json(genericResponse);
+}
+
+export async function confirmReaderEmailVerification(req: Request, res: Response) {
+  const token = String(req.body.token);
+  const id = token.slice(0, token.indexOf("."));
+  const verification = id ? await prisma.readerEmailVerification.findUnique({
+    where: { id },
+    select: { id: true, userId: true, expiresAt: true, consumedAt: true, user: { select: { emailVerifiedAt: true } } },
+  }) : null;
+  if (!verification || verification.user.emailVerifiedAt || verification.consumedAt || verification.expiresAt <= new Date() || !verifyEmailVerificationToken(token, verification)) {
+    res.status(400).json({ error: { code: "INVALID_OR_EXPIRED_VERIFICATION", message: "This verification link is invalid or expired" } });
+    return;
+  }
+
+  const now = new Date();
+  const verified = await prisma.$transaction(async (tx) => {
+    const consumed = await tx.readerEmailVerification.updateMany({
+      where: { id: verification.id, consumedAt: null, expiresAt: { gt: now } },
+      data: { consumedAt: now },
+    });
+    if (consumed.count !== 1) return false;
+    await tx.readerUser.update({ where: { id: verification.userId }, data: { emailVerifiedAt: now } });
+    await tx.readerEmailVerification.updateMany({
+      where: { userId: verification.userId, id: { not: verification.id }, consumedAt: null },
+      data: { consumedAt: now },
+    });
+    await tx.transactionalEmailOutbox.updateMany({
+      where: { verification: { userId: verification.userId }, status: { in: ["PENDING", "PROCESSING", "RETRY"] } },
+      data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "ACCOUNT_VERIFIED" },
+    });
+    return true;
+  });
+  if (!verified) {
+    res.status(400).json({ error: { code: "INVALID_OR_EXPIRED_VERIFICATION", message: "This verification link is invalid or expired" } });
+    return;
+  }
+  res.json({ data: { verified: true } });
 }
 
 export async function loginReaderWithGoogle(req: Request, res: Response) {

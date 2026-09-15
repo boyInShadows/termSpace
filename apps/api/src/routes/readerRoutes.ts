@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { addBookmark, changeReaderPassword, getReaderLibrary, getReaderProfile, getReaderSession, loginReader, loginReaderWithGoogle, logoutReader, registerReader, removeBookmark, saveProgress, syncReaderLibrary } from "../controllers/readerController.js";
+import { addBookmark, changeReaderPassword, confirmReaderEmailVerification, getReaderLibrary, getReaderProfile, getReaderSession, loginReader, loginReaderWithGoogle, logoutReader, registerReader, removeBookmark, requestReaderEmailVerification, saveProgress, syncReaderLibrary } from "../controllers/readerController.js";
 import { requireReader } from "../middleware/auth.js";
-import { loginRateLimit } from "../middleware/security.js";
+import { emailVerificationAttemptRateLimit, emailVerificationRequestRateLimit, loginRateLimit } from "../middleware/security.js";
 import { validate } from "../middleware/validate.js";
-import { googleCredentialSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, readerProgressSchema } from "../validation/schemas.js";
+import { emailVerificationConfirmSchema, googleCredentialSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, readerProgressSchema } from "../validation/schemas.js";
 
 const router = Router();
 router.post("/login", loginRateLimit, validate(readerCredentialsSchema), loginReader);
@@ -12,6 +12,8 @@ router.post("/google", loginRateLimit, validate(googleCredentialSchema), loginRe
 router.post("/logout", logoutReader);
 router.get("/session", requireReader, getReaderSession);
 router.get("/profile", requireReader, getReaderProfile);
+router.post("/email-verification/request", requireReader, emailVerificationRequestRateLimit, requestReaderEmailVerification);
+router.post("/email-verification/confirm", emailVerificationAttemptRateLimit, validate(emailVerificationConfirmSchema), confirmReaderEmailVerification);
 router.put("/profile/password", requireReader, loginRateLimit, validate(readerPasswordChangeSchema), changeReaderPassword);
 router.get("/library", requireReader, getReaderLibrary);
 router.post("/library/sync", requireReader, validate(readerLibrarySyncSchema), syncReaderLibrary);

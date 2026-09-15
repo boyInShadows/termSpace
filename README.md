@@ -48,16 +48,21 @@ npm run build
 Marketplace roles are assigned independently from Blog administration. See
 [Marketplace Role Operations](docs/marketplace-roles.md) for verified-account
 requirements and the audited grant/revoke command.
+Password-account verification delivery and Cloudflare onboarding are documented
+in [Email Verification Operations](docs/email-verification.md).
 
 ## Run the complete stack with Docker
 
-Docker Compose runs PostgreSQL, the shared API, the scheduled-publishing worker,
+Docker Compose runs PostgreSQL, the shared API, the publishing worker,
 the main site, and Blog:
 
 ```bash
 cp .env.example .env # required; replace the example database/admin passwords
 npm run docker:up
 ```
+
+After configuring Cloudflare Email Service, start the transactional email worker
+with `docker compose --profile email up --build -d`.
 
 The services are bound to loopback and available at `http://localhost:3000` (main site),
 `http://localhost:3001` (Blog), and `http://localhost:4001/api/health` (API).

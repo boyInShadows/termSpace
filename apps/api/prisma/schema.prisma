@@ -260,6 +260,48 @@ model ReaderUser {
   marketplaceOrders MarketplaceOrder[]
   marketplaceRoleGrants MarketplaceRoleGrant[]
   marketplaceRoleEvents MarketplaceRoleEvent[]
+  emailVerifications ReaderEmailVerification[]
+}
+
+enum TransactionalEmailStatus {
+  PENDING
+  PROCESSING
+  RETRY
+  SENT
+  FAILED
+  CANCELLED
+}
+
+model ReaderEmailVerification {
+  id         String    @id @default(cuid())
+  userId     String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+  user       ReaderUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outbox     TransactionalEmailOutbox?
+
+  @@index([userId, createdAt])
+  @@index([expiresAt, consumedAt])
+}
+
+model TransactionalEmailOutbox {
+  id             String                   @id @default(cuid())
+  verificationId String                   @unique
+  correlationId  String                   @unique
+  status         TransactionalEmailStatus @default(PENDING)
+  attempts       Int                      @default(0)
+  nextAttemptAt  DateTime                 @default(now())
+  lockedAt       DateTime?
+  sentAt         DateTime?
+  lastStatusCode Int?
+  lastErrorCode  String?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  verification   ReaderEmailVerification  @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@index([lockedAt])
 }
 
 model ReaderSession {

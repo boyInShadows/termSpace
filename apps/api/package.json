@@ -16,6 +16,7 @@
     "seed": "tsx prisma/seed.ts",
     "marketplace:role": "tsx src/scripts/manageMarketplaceRole.ts",
     "publish:scheduled": "tsx src/jobs/publishScheduled.ts",
+    "email:worker": "tsx src/jobs/sendTransactionalEmails.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --coverage.enabled=false"
   },
