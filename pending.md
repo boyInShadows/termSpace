@@ -9,9 +9,6 @@ This file tracks known improvement work that has not been completed yet. When an
 - Build draft creation and editing for listing metadata, documentation,
   screenshots, platform compatibility, community membership, category, item
   type, requirements, permissions, license, and installation instructions.
-- Add submission states and an auditable lifecycle: draft, submitted, changes
-  requested, approved, published, rejected, suspended, and archived, including
-  approved and proposed snapshots as required by ADR 0004.
 - Build the staff moderation queue with preview, approval, rejection, change
   requests, internal notes, and an audit trail.
 - Add creator-controlled release/version management without silently replacing

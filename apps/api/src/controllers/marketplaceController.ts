@@ -35,6 +35,12 @@ function serializeProduct(product: any) {
     creatorId: undefined,
     itemType: undefined,
     classificationRequired: undefined,
+    lifecycleState: undefined,
+    lifecycleVersion: undefined,
+    lifecycleResumeState: undefined,
+    lifecycleResumePublished: undefined,
+    approvedSnapshotId: undefined,
+    proposedSnapshotId: undefined,
   };
 }
 

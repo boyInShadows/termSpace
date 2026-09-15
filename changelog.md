@@ -87,6 +87,23 @@ Project changes completed from `pending.md` should be recorded here with the dat
   webpack); web lint; Compose validation; and `git diff --check`. Live migration
   execution was unavailable because PostgreSQL is stopped and this host cannot
   access the Docker daemon.
+- Added the ADR 0004 listing lifecycle with draft, submitted, changes-requested,
+  approved, published, rejected, suspended, and archived states while keeping
+  review state separate from public availability. Immutable proposed and
+  approved snapshots bind each modern submission to its exact validated
+  manifest and verified release; publication promotes the reviewed snapshot
+  without replacing the last approved public listing during review. Creator and
+  staff transition endpoints enforce ownership, self-moderation separation,
+  source rechecks, public-safe adverse-decision reasons, optimistic concurrency,
+  advisory locking, and atomic append-only audit events. Existing listings are
+  backfilled with legacy approved/proposed snapshots, and fresh seed products
+  now publish through system lifecycle events while reruns preserve managed
+  state. Verification: Prisma client generation and schema validation; all
+  workspace type-checks; 93 tests; API, web, and Blog production builds
+  (frontends via webpack); web lint; Compose validation; `git diff --check`; all
+  14 migrations applied to a clean isolated PostgreSQL 17 database; two
+  successful seed runs; and direct confirmation that append-only and
+  cross-listing snapshot triggers reject invalid mutations.
 
 ## 2026-09-08
 

@@ -54,6 +54,8 @@ Creator identity boundaries and self-service ownership are documented in
 [Creator Onboarding and Ownership](docs/creator-onboarding.md).
 Controlled item types, manifest validation, legacy classification, and immutable
 release storage are documented in [Marketplace Item Types and Manifests](docs/marketplace-manifests.md).
+Listing review states, immutable approved/proposed snapshots, and transition
+authorization are documented in [Marketplace Listing Lifecycle](docs/marketplace-listing-lifecycle.md).
 
 ## Run the complete stack with Docker
 

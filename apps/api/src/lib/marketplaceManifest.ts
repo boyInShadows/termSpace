@@ -140,7 +140,15 @@ export const marketplaceManifestV1Schema = z.discriminatedUnion("type", MARKETPL
   z.object({ manifestVersion: z.literal(1), type: z.literal(type), listing: listingSchema, release: releaseSchema, typeDetails: detailsByType[type] }).strict(),
 ) as unknown as [z.ZodDiscriminatedUnionOption<"type">, ...z.ZodDiscriminatedUnionOption<"type">[]]);
 
-export type MarketplaceManifestV1 = z.infer<typeof marketplaceManifestV1Schema>;
+export type MarketplaceManifestV1 = {
+  [Type in MarketplaceItemTypeKey]: {
+    manifestVersion: 1;
+    type: Type;
+    listing: z.infer<typeof listingSchema>;
+    release: z.infer<typeof releaseSchema>;
+    typeDetails: z.infer<(typeof detailsByType)[Type]>;
+  };
+}[MarketplaceItemTypeKey];
 
 function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalize);
@@ -151,7 +159,7 @@ function canonicalize(value: unknown): unknown {
 }
 
 export function validateMarketplaceManifest(input: unknown): { manifest: MarketplaceManifestV1; snapshot: object; digestSha256: string } {
-  const manifest = marketplaceManifestV1Schema.parse(input);
+  const manifest = marketplaceManifestV1Schema.parse(input) as MarketplaceManifestV1;
   const snapshot = canonicalize(manifest) as object;
   const digestSha256 = createHash("sha256").update(JSON.stringify(snapshot)).digest("hex");
   return { manifest, snapshot, digestSha256 };

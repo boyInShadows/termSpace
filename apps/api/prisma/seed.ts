@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { hash } from "bcryptjs";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { categories as marketplaceCategoryNames, creators as marketplaceCreators, products as marketplaceProducts, reviews as marketplaceReviews, versions as marketplaceVersions } from "./marketplaceData.js";
 import { LEGACY_ITEM_TYPE_MAP, MARKETPLACE_DATABASE_ITEM_TYPES } from "../src/lib/marketplaceManifest.js";
 
@@ -628,25 +628,41 @@ async function main() {
       previewExcerpt: "# Conversion Copywriter\n\nStart with evidence, not adjectives.\n\n1. Identify the audience's current situation.\n2. Extract exact phrases from supplied research.\n3. Map claims to available proof.\n4. Draft the argument before the headline.\n\nNever invent customer evidence.",
       requirements: "Skills support or file upload", permissions: "No network, account, or data access", license: "1 user · commercial use", updatesPolicy: "12 months included", refundPolicy: "14 days if not downloaded",
     } : { benefits: [], installationSteps: [], previewFiles: [] };
-    await prisma.marketplaceProduct.upsert({
-      where: { slug: product.slug }, update: {
-        name: product.name, type: product.type, itemType, classificationRequired, outcome: product.outcome, description: product.description,
-        priceMinor: product.pricing.amount * 100, currency: product.pricing.currency, pricingModel: product.pricing.model,
-        platforms: [...product.compatibility.platforms], models: [...product.compatibility.models], rating: product.rating,
-        reviewCount: product.reviewCount, usageCount: product.usageCount, version: product.version,
-        featured: product.featured ?? false, trending: product.trending ?? false, verified: product.verified, tags: product.tags,
-        creatorId: marketplaceCreatorIds.get(product.creator.handle)!, categoryId: marketplaceCategoryIds.get(product.category)!,
-        published: true, updatedAt: new Date(product.updatedAt), ...productDetails,
-      }, create: {
+    const record = await prisma.marketplaceProduct.upsert({
+      where: { slug: product.slug }, update: {}, create: {
         id: product.id, slug: product.slug, name: product.name, type: product.type, itemType, classificationRequired, outcome: product.outcome,
         description: product.description, priceMinor: product.pricing.amount * 100, currency: product.pricing.currency,
         pricingModel: product.pricing.model, platforms: [...product.compatibility.platforms], models: [...product.compatibility.models],
         rating: product.rating, reviewCount: product.reviewCount, usageCount: product.usageCount, version: product.version,
         featured: product.featured ?? false, trending: product.trending ?? false, verified: product.verified, tags: product.tags,
         creatorId: marketplaceCreatorIds.get(product.creator.handle)!, categoryId: marketplaceCategoryIds.get(product.category)!,
-        updatedAt: new Date(product.updatedAt), published: true, ...productDetails,
+        updatedAt: new Date(product.updatedAt), published: false, ...productDetails,
       },
     });
+    if (!record.approvedSnapshotId && !record.proposedSnapshotId) {
+      const content = { schemaVersion: 0, legacy: true, listing: {
+        slug: product.slug, name: product.name, type: product.type, itemType: itemTypeKey,
+        outcome: product.outcome, description: product.description, category: product.category,
+        platforms: [...product.compatibility.platforms], models: [...product.compatibility.models], tags: product.tags,
+      } };
+      const digestSha256 = createHash("sha256").update(JSON.stringify(content)).digest("hex");
+      await prisma.$transaction(async (tx) => {
+        const snapshot = await tx.marketplaceListingSnapshot.create({
+          data: { productId: record.id, revision: 1, schemaVersion: 0, digestSha256, content, createdByActor: "system:marketplace-seed" },
+        });
+        await tx.marketplaceProduct.update({
+          where: { id: record.id },
+          data: { lifecycleState: "PUBLISHED", lifecycleVersion: { increment: 1 }, approvedSnapshotId: snapshot.id, published: true },
+        });
+        await tx.marketplaceListingLifecycleEvent.create({
+          data: {
+            productId: record.id, snapshotId: snapshot.id, previousState: "DRAFT", resultingState: "PUBLISHED",
+            action: "PUBLISHED", actorType: "SYSTEM", reasonCode: "SEED_BOOTSTRAP",
+            correlationId: `seed-listing-${record.id}`,
+          },
+        });
+      });
+    }
   }
   const detailProduct = await prisma.marketplaceProduct.findUniqueOrThrow({ where: { slug: "conversion-copywriter" } });
   for (const version of marketplaceVersions) {

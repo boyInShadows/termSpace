@@ -150,6 +150,20 @@ export const creatorOnboardingSchema = z.object({
 
 export const creatorProfileUpdateSchema = creatorOnboardingSchema.pick({ name: true, bio: true });
 
+const listingLifecycleBaseSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+  reasonCode: z.string().trim().min(2).max(80).regex(/^[A-Z0-9_]+$/).optional(),
+  publicReason: z.string().trim().min(10).max(1000).optional(),
+}).strict();
+
+export const creatorListingLifecycleSchema = listingLifecycleBaseSchema.extend({
+  action: z.enum(["SUBMIT", "WITHDRAW", "ARCHIVE", "RESTORE"]),
+});
+
+export const moderatedListingLifecycleSchema = listingLifecycleBaseSchema.extend({
+  action: z.enum(["REQUEST_CHANGES", "APPROVE", "PUBLISH", "REJECT", "SUSPEND", "REINSTATE", "ARCHIVE", "RESTORE"]),
+});
+
 export const markdownResourceMetadataSchema = z.object({
   title: z.string().trim().min(3).max(160),
   slug: z.string().regex(slugPattern, "Slug must be lowercase with hyphens").max(160),

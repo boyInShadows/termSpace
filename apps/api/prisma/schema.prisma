@@ -246,22 +246,23 @@ model AdminSession {
 }
 
 model ReaderUser {
-  id                    String                    @id @default(cuid())
-  email                 String                    @unique
-  passwordHash          String?
-  googleSubject         String?                   @unique
-  emailVerifiedAt       DateTime?
-  createdAt             DateTime                  @default(now())
-  updatedAt             DateTime                  @updatedAt
-  sessions              ReaderSession[]
-  bookmarks             ReaderBookmark[]
-  progress              ReaderReadingProgress[]
-  productFavorites      MarketplaceFavorite[]
-  marketplaceOrders     MarketplaceOrder[]
-  marketplaceRoleGrants MarketplaceRoleGrant[]
-  marketplaceRoleEvents MarketplaceRoleEvent[]
-  emailVerifications    ReaderEmailVerification[]
-  marketplaceCreator    MarketplaceCreator?
+  id                     String                             @id @default(cuid())
+  email                  String                             @unique
+  passwordHash           String?
+  googleSubject          String?                            @unique
+  emailVerifiedAt        DateTime?
+  createdAt              DateTime                           @default(now())
+  updatedAt              DateTime                           @updatedAt
+  sessions               ReaderSession[]
+  bookmarks              ReaderBookmark[]
+  progress               ReaderReadingProgress[]
+  productFavorites       MarketplaceFavorite[]
+  marketplaceOrders      MarketplaceOrder[]
+  marketplaceRoleGrants  MarketplaceRoleGrant[]
+  marketplaceRoleEvents  MarketplaceRoleEvent[]
+  emailVerifications     ReaderEmailVerification[]
+  marketplaceCreator     MarketplaceCreator?
+  listingLifecycleEvents MarketplaceListingLifecycleEvent[]
 }
 
 enum TransactionalEmailStatus {
@@ -411,64 +412,153 @@ model MarketplaceCategory {
 }
 
 model MarketplaceProduct {
-  id                     String                        @id @default(cuid())
-  slug                   String                        @unique
-  name                   String
-  type                   String
-  itemType               MarketplaceItemType?
-  classificationRequired Boolean                       @default(false)
-  outcome                String
-  description            String
-  priceMinor             Int
-  currency               String                        @default("USD")
-  pricingModel           String
-  platforms              String[]
-  models                 String[]
-  rating                 Decimal                       @default(0) @db.Decimal(2, 1)
-  reviewCount            Int                           @default(0)
-  usageCount             Int                           @default(0)
-  purchaseCount          Int                           @default(0)
-  version                String
-  featured               Boolean                       @default(false)
-  trending               Boolean                       @default(false)
-  verified               Boolean                       @default(false)
-  tags                   String[]
-  packageFileCount       Int?
-  packageSizeBytes       Int?
-  benefits               String[]
-  useCases               Json?
-  includedFiles          Json?
-  exampleInput           String?
-  exampleOutputTitle     String?
-  exampleOutputBody      String?
-  installationSteps      String[]
-  previewFiles           String[]
-  previewExcerpt         String?
-  requirements           String?
-  permissions            String?
-  license                String?
-  updatesPolicy          String?
-  refundPolicy           String?
-  published              Boolean                       @default(true)
-  createdAt              DateTime                      @default(now())
-  updatedAt              DateTime                      @updatedAt
-  creatorId              String
-  creator                MarketplaceCreator            @relation(fields: [creatorId], references: [id])
-  categoryId             String
-  category               MarketplaceCategory           @relation(fields: [categoryId], references: [id])
-  versions               MarketplaceProductVersion[]
-  reviews                MarketplaceReview[]
-  favorites              MarketplaceFavorite[]
-  orders                 MarketplaceOrder[]
-  manifestSnapshots      MarketplaceManifestSnapshot[]
+  id                       String                             @id @default(cuid())
+  slug                     String                             @unique
+  name                     String
+  type                     String
+  itemType                 MarketplaceItemType?
+  classificationRequired   Boolean                            @default(false)
+  lifecycleState           MarketplaceListingState            @default(DRAFT)
+  lifecycleVersion         Int                                @default(0)
+  lifecycleResumeState     MarketplaceListingState?
+  lifecycleResumePublished Boolean?
+  approvedSnapshotId       String?                            @unique
+  proposedSnapshotId       String?                            @unique
+  outcome                  String
+  description              String
+  priceMinor               Int
+  currency                 String                             @default("USD")
+  pricingModel             String
+  platforms                String[]
+  models                   String[]
+  rating                   Decimal                            @default(0) @db.Decimal(2, 1)
+  reviewCount              Int                                @default(0)
+  usageCount               Int                                @default(0)
+  purchaseCount            Int                                @default(0)
+  version                  String
+  featured                 Boolean                            @default(false)
+  trending                 Boolean                            @default(false)
+  verified                 Boolean                            @default(false)
+  tags                     String[]
+  packageFileCount         Int?
+  packageSizeBytes         Int?
+  benefits                 String[]
+  useCases                 Json?
+  includedFiles            Json?
+  exampleInput             String?
+  exampleOutputTitle       String?
+  exampleOutputBody        String?
+  installationSteps        String[]
+  previewFiles             String[]
+  previewExcerpt           String?
+  requirements             String?
+  permissions              String?
+  license                  String?
+  updatesPolicy            String?
+  refundPolicy             String?
+  published                Boolean                            @default(true)
+  createdAt                DateTime                           @default(now())
+  updatedAt                DateTime                           @updatedAt
+  creatorId                String
+  creator                  MarketplaceCreator                 @relation(fields: [creatorId], references: [id])
+  categoryId               String
+  category                 MarketplaceCategory                @relation(fields: [categoryId], references: [id])
+  versions                 MarketplaceProductVersion[]
+  reviews                  MarketplaceReview[]
+  favorites                MarketplaceFavorite[]
+  orders                   MarketplaceOrder[]
+  manifestSnapshots        MarketplaceManifestSnapshot[]
+  listingSnapshots         MarketplaceListingSnapshot[]       @relation("MarketplaceListingSnapshotHistory")
+  approvedSnapshot         MarketplaceListingSnapshot?        @relation("MarketplaceApprovedListingSnapshot", fields: [approvedSnapshotId], references: [id], onDelete: Restrict)
+  proposedSnapshot         MarketplaceListingSnapshot?        @relation("MarketplaceProposedListingSnapshot", fields: [proposedSnapshotId], references: [id], onDelete: Restrict)
+  lifecycleEvents          MarketplaceListingLifecycleEvent[]
 
   @@index([published, featured, usageCount])
   @@index([published, type])
   @@index([published, itemType])
   @@index([classificationRequired])
+  @@index([creatorId, lifecycleState, updatedAt])
+  @@index([lifecycleState, updatedAt])
   @@index([published, categoryId])
   @@index([published, verified])
   @@index([updatedAt])
+}
+
+enum MarketplaceListingState {
+  DRAFT
+  SUBMITTED
+  CHANGES_REQUESTED
+  APPROVED
+  PUBLISHED
+  REJECTED
+  SUSPENDED
+  ARCHIVED
+}
+
+enum MarketplaceLifecycleActorType {
+  SYSTEM
+  CREATOR
+  MODERATOR
+  ADMINISTRATOR
+}
+
+enum MarketplaceListingLifecycleAction {
+  DRAFT_SAVED
+  SUBMITTED
+  WITHDRAWN
+  CHANGES_REQUESTED
+  APPROVED
+  PUBLISHED
+  REJECTED
+  SUSPENDED
+  REINSTATED
+  ARCHIVED
+  RESTORED
+}
+
+model MarketplaceListingSnapshot {
+  id                 String                             @id @default(cuid())
+  productId          String
+  manifestSnapshotId String?                            @unique
+  releaseManifestId  String?                            @unique
+  revision           Int
+  schemaVersion      Int                                @default(1)
+  digestSha256       String
+  content            Json
+  createdByActor     String
+  createdAt          DateTime                           @default(now())
+  product            MarketplaceProduct                 @relation("MarketplaceListingSnapshotHistory", fields: [productId], references: [id], onDelete: Restrict)
+  manifestSnapshot   MarketplaceManifestSnapshot?       @relation(fields: [manifestSnapshotId], references: [id], onDelete: Restrict)
+  releaseManifest    MarketplaceReleaseManifest?        @relation(fields: [releaseManifestId], references: [id], onDelete: Restrict)
+  approvedFor        MarketplaceProduct?                @relation("MarketplaceApprovedListingSnapshot")
+  proposedFor        MarketplaceProduct?                @relation("MarketplaceProposedListingSnapshot")
+  lifecycleEvents    MarketplaceListingLifecycleEvent[]
+
+  @@unique([productId, revision])
+  @@index([productId, createdAt])
+  @@index([digestSha256])
+}
+
+model MarketplaceListingLifecycleEvent {
+  id             String                            @id @default(cuid())
+  productId      String
+  snapshotId     String?
+  previousState  MarketplaceListingState?
+  resultingState MarketplaceListingState
+  action         MarketplaceListingLifecycleAction
+  actorType      MarketplaceLifecycleActorType
+  actorUserId    String?
+  reasonCode     String
+  publicReason   String?
+  correlationId  String                            @unique
+  createdAt      DateTime                          @default(now())
+  product        MarketplaceProduct                @relation(fields: [productId], references: [id], onDelete: Restrict)
+  snapshot       MarketplaceListingSnapshot?       @relation(fields: [snapshotId], references: [id], onDelete: Restrict)
+  actor          ReaderUser?                       @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([productId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([resultingState, createdAt])
 }
 
 model MarketplaceProductVersion {
@@ -527,14 +617,15 @@ enum MarketplacePermissionCapability {
 }
 
 model MarketplaceManifestSnapshot {
-  id              String              @id @default(cuid())
+  id              String                      @id @default(cuid())
   productId       String
   manifestVersion Int
   itemType        MarketplaceItemType
   digestSha256    String
   snapshot        Json
-  createdAt       DateTime            @default(now())
-  product         MarketplaceProduct  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  createdAt       DateTime                    @default(now())
+  product         MarketplaceProduct          @relation(fields: [productId], references: [id], onDelete: Restrict)
+  listingSnapshot MarketplaceListingSnapshot?
 
   @@unique([productId, digestSha256])
   @@index([productId, createdAt])
@@ -578,6 +669,7 @@ model MarketplaceReleaseManifest {
   hookDetails              MarketplaceHookReleaseDetails?
   templateDetails          MarketplaceTemplateReleaseDetails?
   workflowDetails          MarketplaceWorkflowReleaseDetails?
+  listingSnapshot          MarketplaceListingSnapshot?
 
   @@index([itemType, publishedAt])
   @@index([sourceKind, sourceUrl])
