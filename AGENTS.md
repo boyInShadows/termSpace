@@ -9,6 +9,24 @@ This repository is an npm workspace containing three TypeScript applications:
 - `apps/api/`: shared Express REST API. Keep route definitions in `src/routes/`, request logic in `src/controllers/`, validation in `src/validation/`, and cross-cutting middleware in `src/middleware/`. Keep product and editorial domains in separate route/controller modules. Prisma schema and seed data live in `prisma/`.
 - `docker-compose.yml`: local PostgreSQL 16 service, exposed on port `5433`.
 
+## Product Boundaries
+
+- `apps/web` is the public catalog and creator platform for agentic coding
+  tools. It must support discovery by platform and community, creator-managed
+  submissions, moderation, releases, acquisition, ratings, and reviews.
+- `apps/blog` is a separate TermSpace-managed editorial publication. Marketplace
+  users and creators must never receive blog publishing access through their
+  marketplace role.
+- `apps/api` may share reader identity across both products, but marketplace,
+  creator, moderator, and editorial permissions and data lifecycles must remain
+  explicit and separate.
+- Treat all community-submitted files, code, and agent instructions as untrusted
+  content. Do not design upload or preview paths that execute submissions or
+  expose unapproved artifacts.
+
+The durable product definition and core user journeys are documented in
+`docs/product-direction.md`.
+
 Run shared checks and infrastructure commands from the repository root. Use npm workspace scripts to target an individual application.
 
 ## Build, Test, and Development Commands

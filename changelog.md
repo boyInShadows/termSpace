@@ -2,6 +2,19 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-09-15
+
+- Established the TermSpace product direction: the main application is a
+  community and creator marketplace for agentic coding tools, while the Blog is
+  a separate staff-managed editorial service with no public publishing access.
+- Adopted an external-source-first artifact model for the initial marketplace
+  lifecycle. GitHub repository content, GitHub release assets, and npm packages
+  must resolve to immutable public releases with explicit ownership checks,
+  provenance, availability handling, reconciliation, and auditable takedowns.
+  TermSpace-hosted uploads require a later architecture decision and threat
+  model. Verification: documentation links reviewed and `git diff --check`
+  passes.
+
 ## 2026-09-08
 
 - Restored a localized creator entry point in the desktop and mobile header, linking to the existing creator section while seller onboarding is still in development. Verification: web typecheck and tests pass.

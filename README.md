@@ -3,6 +3,14 @@
 TermSpace is a monorepo containing the main product site, its editorial site,
 and one shared API.
 
+The main product is a discovery and creator platform for agentic coding tools,
+including skills, agents, MCP servers, integrations, rules, prompts, hooks,
+templates, and workflows. Community members can discover, filter, acquire, and
+review published items; creators will manage submissions and releases through a
+dashboard. The Blog is a separate, staff-managed editorial publication and does
+not accept public or creator uploads. See [Product Direction](docs/product-direction.md)
+for the product boundaries and core journeys.
+
 ```text
 apps/
   web/   Main TermSpace frontend (Next.js, port 3000)
