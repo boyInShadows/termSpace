@@ -48,7 +48,7 @@ export default async function HomePage() {
 
       {categories.length > 0 && (
         <section className="mx-auto max-w-6xl px-6 py-12">
-          <SectionHeading eyebrow={t.topics} title={locale === "fa" ? "مرور بر اساس موضوع" : "Browse by subject"} href={localePath("/blog", locale)} linkLabel={locale === "fa" ? "مشاهده همه" : "View all"} />
+          <SectionHeading eyebrow={t.topics} title={locale === "fa" ? "مرور بر اساس موضوع" : "Browse by subject"} href={localePath("/topics", locale)} linkLabel={locale === "fa" ? "مشاهده همه" : "View all"} />
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {categories.map((category) => (
               <CategoryCard key={category.id} category={category} />

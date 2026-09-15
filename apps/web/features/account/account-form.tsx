@@ -6,9 +6,10 @@ import { useMarketplaceSession } from "./marketplace-session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLocale } from "@/lib/locale-context";
+import { localePath } from "@/lib/i18n";
 
 export function AccountForm() {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -21,7 +22,9 @@ export function AccountForm() {
       const email = String(data.get("email")); const password = String(data.get("password"));
       await (mode === "login" ? login(email, password) : register(email, password));
       await session.refresh();
-      const next = params.get("next"); router.replace(next?.startsWith("/") && !next.startsWith("//") ? next : "/"); router.refresh();
+      const next = params.get("next");
+      router.replace(mode === "register" ? localePath("/account/verify-email", locale) : next?.startsWith("/") && !next.startsWith("//") ? next : localePath("/", locale));
+      router.refresh();
     } catch (cause) { setError(cause instanceof ApiError ? cause.message : t.serviceError); }
     finally { setSubmitting(false); }
   }

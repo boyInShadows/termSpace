@@ -26,8 +26,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries = staticPaths.flatMap((path) => entriesForPath(path));
 
   try {
-    const [articles, categories, tags, series, editions, resources] = await Promise.all([
-      api.listArticles({ limit: 200, published: true }),
+    const articles: Awaited<ReturnType<typeof api.listArticles>>["data"] = [];
+    let page = 1;
+    do {
+      const result = await api.listArticles({ page, limit: 200, published: true });
+      articles.push(...result.data);
+      if (!result.meta.hasNextPage) break;
+      page += 1;
+    } while (page <= 1000);
+
+    const [categories, tags, series, editions, resources] = await Promise.all([
       api.listCategories(),
       api.listTags(),
       api.listSeries(),
@@ -36,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]);
 
     entries.push(
-      ...articles.data.flatMap((article) => entriesForPath(`/blog/${article.slug}`, article.updatedAt)),
+      ...articles.flatMap((article) => entriesForPath(`/blog/${article.slug}`, article.updatedAt)),
       ...categories.data.flatMap((category) => entriesForPath(`/blog/category/${category.slug}`)),
       ...tags.data.flatMap((tag) => entriesForPath(`/blog/tag/${tag.slug}`)),
       ...series.data.flatMap((item) => entriesForPath(`/blog/series/${item.slug}`)),

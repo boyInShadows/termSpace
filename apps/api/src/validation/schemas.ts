@@ -110,6 +110,10 @@ export const googleCredentialSchema = z.object({
   credential: z.string().min(100).max(5000),
 });
 
+export const emailVerificationConfirmSchema = z.object({
+  token: z.string().min(40).max(200).regex(/^[A-Za-z0-9._-]+$/, "Invalid verification token"),
+});
+
 const savedArticleSchema = z.object({
   slug: z.string().regex(slugPattern).max(200),
   progress: z.number().int().min(0).max(100).optional().default(0),
@@ -136,6 +140,28 @@ export const marketplaceProductQuerySchema = z.object({
   sort: z.enum(["featured", "rating", "newest", "price-low"]).optional().default("featured"),
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(48).optional().default(12),
+});
+
+export const creatorOnboardingSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  handle: z.string().trim().toLowerCase().min(3).max(40).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Handle must use lowercase letters, numbers, and single hyphens"),
+  bio: z.string().trim().min(20).max(500),
+});
+
+export const creatorProfileUpdateSchema = creatorOnboardingSchema.pick({ name: true, bio: true });
+
+const listingLifecycleBaseSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+  reasonCode: z.string().trim().min(2).max(80).regex(/^[A-Z0-9_]+$/).optional(),
+  publicReason: z.string().trim().min(10).max(1000).optional(),
+}).strict();
+
+export const creatorListingLifecycleSchema = listingLifecycleBaseSchema.extend({
+  action: z.enum(["SUBMIT", "WITHDRAW", "ARCHIVE", "RESTORE"]),
+});
+
+export const moderatedListingLifecycleSchema = listingLifecycleBaseSchema.extend({
+  action: z.enum(["REQUEST_CHANGES", "APPROVE", "PUBLISH", "REJECT", "SUSPEND", "REINSTATE", "ARCHIVE", "RESTORE"]),
 });
 
 export const markdownResourceMetadataSchema = z.object({

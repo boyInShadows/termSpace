@@ -2,11 +2,11 @@
  * Small formatting helpers shared across the frontend.
  */
 
-export function formatDate(iso: string | null | undefined): string {
+export function formatDate(iso: string | null | undefined, locale: "en" | "fa" = "en"): string {
   if (!iso) return "";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale === "fa" ? "fa-IR" : "en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",

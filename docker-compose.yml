@@ -31,6 +31,8 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
       READER_SESSION_DAYS: ${READER_SESSION_DAYS:-30}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET:-}
+      WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
       MEDIA_STORAGE: ${MEDIA_STORAGE:-local}
       MEDIA_PUBLIC_URL: ${MEDIA_PUBLIC_URL:-http://localhost:4001/media}
       IMAGE_HOSTS: ${IMAGE_HOSTS:-images.unsplash.com}
@@ -104,6 +106,27 @@ services:
       api:
         condition: service_healthy
     command: ["sh", "-c", "while true; do node apps/api/dist/jobs/publishScheduled.js; sleep 60; done"]
+
+  email-worker:
+    profiles: ["email"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public
+      EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET:-}
+      WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
+      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
+      CLOUDFLARE_EMAIL_API_TOKEN: ${CLOUDFLARE_EMAIL_API_TOKEN:-}
+      EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-TermSpace}
+      EMAIL_WORKER_BATCH_SIZE: ${EMAIL_WORKER_BATCH_SIZE:-10}
+    depends_on:
+      api:
+        condition: service_healthy
+    command: ["sh", "-c", "while true; do node apps/api/dist/jobs/sendTransactionalEmails.js; sleep 30; done"]
 
 volumes:
   blog_pgdata:

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -35,7 +35,7 @@ export function Header() {
   const NAV = [
     { href: "/explore", label: t.explore },
     { href: "/design-system", label: t.designSystem },
-    { href: "/#creators", label: t.sellWork },
+    { href: "/creator", label: t.sellWork },
     ...(session.email ? [{ href: "/dashboard", label: t.dashboard }] : []),
   ];
   const [isCondensed, setIsCondensed] = useState(false);

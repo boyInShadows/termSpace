@@ -36,7 +36,13 @@ export async function proxy(request: NextRequest) {
   }
 
   const sessionState = await adminSessionState(request);
-  if (sessionState === "valid" || sessionState === "unavailable") {
+  if (sessionState === "unavailable") {
+    return NextResponse.json(
+      { error: { code: "ADMIN_AUTH_UNAVAILABLE", message: "Administrator authentication is temporarily unavailable" } },
+      { status: 503 },
+    );
+  }
+  if (sessionState === "valid") {
     if (!isPersian) return NextResponse.next({ request: { headers: requestHeaders } });
     const rewriteUrl = request.nextUrl.clone(); rewriteUrl.pathname = effectivePath;
     return NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });

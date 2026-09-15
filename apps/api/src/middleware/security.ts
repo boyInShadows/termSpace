@@ -56,6 +56,22 @@ export const loginRateLimit = rateLimit({
   message: rateLimitResponse,
 });
 
+export const emailVerificationRequestRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 12,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: (_req, res) => { res.status(202).json({ data: { accepted: true } }); },
+});
+
+export const emailVerificationAttemptRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 12,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: rateLimitResponse,
+});
+
 export const newsletterRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 5,

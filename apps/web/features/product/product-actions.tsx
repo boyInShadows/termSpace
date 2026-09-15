@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   Eye,
@@ -16,12 +17,13 @@ import { acquireProduct, ApiError } from "@/lib/api";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 export function ProductActions({ product }: { product: ProductDetail }) {
   const session = useMarketplaceSession();
+  const router = useRouter();
   const saved = session.isFavorite(product.slug);
   const [message, setMessage] = useState<string | null>(null);
   const [buying, setBuying] = useState(false);
   const acquisitionKey = useRef<string | null>(null);
   async function acquire() {
-    if (!session.email) { window.location.assign(`/account?next=${encodeURIComponent(window.location.pathname)}`); return; }
+    if (!session.email) { router.push(`/account?next=${encodeURIComponent(window.location.pathname)}`); return; }
     setBuying(true); setMessage(null);
     acquisitionKey.current ??= crypto.randomUUID();
     try { await acquireProduct(product.slug, acquisitionKey.current); setMessage("Added to your account."); acquisitionKey.current = null; }

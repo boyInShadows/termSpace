@@ -1,6 +1,111 @@
-﻿# Changelog
+# Changelog
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
+
+## 2026-09-15
+
+- Integrated `origin/main` into `ramtin` and resolved overlapping marketplace creator, listing lifecycle, dashboard navigation, API client, Prisma ownership, and localization changes while preserving both feature sets. Verification: Prisma client generation, root type-check, 102 tests, and production builds for all three workspaces.
+
+- Established the TermSpace product direction: the main application is a
+  community and creator marketplace for agentic coding tools, while the Blog is
+  a separate staff-managed editorial service with no public publishing access.
+- Adopted an external-source-first artifact model for the initial marketplace
+  lifecycle. GitHub repository content, GitHub release assets, and npm packages
+  must resolve to immutable public releases with explicit ownership checks,
+  provenance, availability handling, reconciliation, and auditable takedowns.
+  TermSpace-hosted uploads require a later architecture decision and threat
+  model. Verification: documentation links reviewed and `git diff --check`
+  passes.
+- Defined communities as staff-created, platform-oriented publishing spaces
+  where any authenticated user can request placement for a canonical listing.
+  Community placement is moderated, supports cross-community sharing without
+  duplicate listings or reputation data, and remains independent from platform
+  compatibility and Blog permissions. Verification: ADR and documentation links
+  reviewed and `git diff --check` passes.
+- Defined nine stable marketplace item types and a versioned submission manifest
+  separating mutable listing metadata from immutable release metadata. The
+  contract includes structured permissions and type-specific installation and
+  compatibility requirements, with explicit handling for existing uncontrolled
+  type strings. Verification: existing API, seed, filter, and frontend type usage
+  audited; ADR and documentation links reviewed; `git diff --check` passes.
+- Defined the marketplace trust and moderation baseline: separate verification
+  signals, risk-based submission review, acquisition-backed user reviews,
+  case-based reporting, scoped reversible enforcement, appeals, ownership
+  transfers, and append-only audit requirements. The policy explicitly isolates
+  marketplace authority from Blog editorial access. Verification: current auth,
+  publication, review, and moderation behavior audited; ADR and documentation
+  links reviewed; `git diff --check` passes.
+- Added verified-email state and explicit, revocable creator, moderator, and
+  marketplace-administrator grants without coupling them to Blog administrator
+  accounts. Reader sessions now expose verification and active roles; privileged
+  marketplace middleware fails closed; and an operator command grants or revokes
+  roles with append-only events. Verified Google claims of matching unverified
+  password accounts now clear the old password and sessions atomically to prevent
+  account pre-hijacking. Verification: Prisma client generation and schema
+  validation; migration applied successfully to an isolated PostgreSQL schema
+  and rolled back; all workspace type-checks; 43 tests; API, web, and Blog
+  production builds (frontends via webpack); web lint; and `git diff --check`.
+- Added first-party verification for password accounts using 30-minute,
+  single-use HMAC-signed links carried in URL fragments, atomic consumption,
+  account-serialized resend limits, generic resend responses, and bounded
+  verification attempts. Registration now writes a transactional outbox job;
+  a PostgreSQL-safe worker delivers redacted HTML/text messages through
+  Cloudflare Email Service with timeouts, retry classification, stale-job
+  recovery, correlation IDs, and a five-attempt ceiling. Added localized
+  English/Persian verification UI, deployment configuration, provider and DNS
+  onboarding guidance, and disabled Next's experimental TypeScript CLI path to
+  avoid its empty-output build failure while retaining compiler-API checks.
+  Verification: Prisma generation and schema validation; all workspace
+  type-checks; 58 tests; API, web, and Blog production builds (frontends via
+  webpack); web lint; Compose configuration validation; and `git diff --check`.
+  Live migration execution was unavailable because local PostgreSQL was stopped
+  and this host denied Docker daemon access.
+- Added verified-user creator onboarding and authenticated creator-profile
+  ownership. User-owned creator records now have a unique, deletion-restricting
+  reader relationship while existing seeded creators remain explicitly
+  system-owned through a null owner. Self-service onboarding serializes requests
+  per account and atomically creates the profile, active creator grant, and
+  append-only role event; revoked grants cannot be self-restored. Owner-derived
+  APIs expose and update only the signed-in creator, stable handles become
+  immutable after creation, and revoked roles immediately block profile edits.
+  Added a responsive English/Persian `/creator` onboarding and profile screen,
+  replaced the dead header creator anchor, and documented ownership and future
+  transfer constraints. Verification: Prisma generation and schema validation;
+  all workspace type-checks; 65 tests; API, web, and Blog production builds
+  (frontends via webpack); web lint; Compose validation; and `git diff --check`.
+  Live migration execution remained unavailable because this host cannot access
+  the stopped PostgreSQL container. Seed reruns now fail loudly instead of
+  overwriting a user-owned profile whose handle conflicts with seeded data.
+- Implemented ADR 0003's controlled nine-type marketplace registry and strict,
+  versioned manifest validator with canonical SHA-256 audit snapshots,
+  type-specific requirements, structured permissions, safe relative paths, and
+  exact GitHub/npm source identities. Added normalized release persistence and
+  database-enforced immutability after publication, while preserving the legacy
+  public `type` field and adding stable `typeKey` responses and filters. The
+  migration directly classifies known legacy values and flags `AI tool`,
+  `Developer utility`, and unknown values for manual review without guessing.
+  Verification: Prisma client generation and schema validation; all workspace
+  type-checks; 81 tests; API, web, and Blog production builds (frontends via
+  webpack); web lint; Compose validation; and `git diff --check`. Live migration
+  execution was unavailable because PostgreSQL is stopped and this host cannot
+  access the Docker daemon.
+- Added the ADR 0004 listing lifecycle with draft, submitted, changes-requested,
+  approved, published, rejected, suspended, and archived states while keeping
+  review state separate from public availability. Immutable proposed and
+  approved snapshots bind each modern submission to its exact validated
+  manifest and verified release; publication promotes the reviewed snapshot
+  without replacing the last approved public listing during review. Creator and
+  staff transition endpoints enforce ownership, self-moderation separation,
+  source rechecks, public-safe adverse-decision reasons, optimistic concurrency,
+  advisory locking, and atomic append-only audit events. Existing listings are
+  backfilled with legacy approved/proposed snapshots, and fresh seed products
+  now publish through system lifecycle events while reruns preserve managed
+  state. Verification: Prisma client generation and schema validation; all
+  workspace type-checks; 93 tests; API, web, and Blog production builds
+  (frontends via webpack); web lint; Compose validation; `git diff --check`; all
+  14 migrations applied to a clean isolated PostgreSQL 17 database; two
+  successful seed runs; and direct confirmation that append-only and
+  cross-listing snapshot triggers reject invalid mutations.
 
 ## 2026-09-08
 
@@ -112,4 +217,23 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 ## 2026-08-27
 
 - Replaced the planned administrator-management expansion with reader profiles that show account details, bookmarks, reading history, and progress; added password setting/changing with current-password verification and invalidation of other reader sessions. Verification: backend type-check, 16 tests, and production build; frontend type-check, 12 tests, and production build.
+# 2026-09-08
+
+- Added the missing reader registration endpoint used by the marketplace account form and covered duplicate-email handling.
+- Made the blog admin route guard fail closed when the authentication API is unavailable.
+- Included both frontend Next.js runtime configs in their production images so image and runtime settings are preserved after deployment.
+- Fixed web navigation/lint issues and made CI run lint on both main and development pushes.
+- Made reader logout idempotent so stale sessions can still be cleared.
+- Pointed the blog homepage subject-browsing CTA to the topics index.
+- Localized public article dates using the active English or Persian locale.
+- Fetched one extra related article so excluding the current article still leaves three recommendations when available.
+- Skipped the redundant first-mount marketplace fetch when server-rendered discovery data is already available.
+- Paginated sitemap article retrieval so all published articles can be indexed.
+- Added pagination controls to category archives.
+- Added pagination controls to tag archives.
+- Restored local bookmark storage as well as React state when a signed-in bookmark mutation fails.
+- Added a direct authenticated article-by-ID endpoint for admin editing instead of scanning the first 200 articles.
+- Paginated article loading for edition selection so older articles are available to editors.
+- Removed the unused web `CountUp` component and its orphaned tests.
+- Pinned all web package dependencies to the versions already resolved in the lockfile.
 

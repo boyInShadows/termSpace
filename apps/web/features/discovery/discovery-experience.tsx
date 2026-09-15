@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Filter,
   Grid2X2,
@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Switch from "@radix-ui/react-switch";
-import type { ProductFilters, ProductPageResult, ProductType } from "@/lib/types";
+import type { MarketplaceItemType, ProductFilters, ProductPageResult } from "@/lib/types";
 import { ApiError, getProducts } from "@/lib/api";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { EmptyState } from "@/components/patterns/empty-state";
@@ -19,18 +19,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
-const types: (ProductType | "All")[] = [
-  "All",
-  "Prompt",
-  "Prompt pack",
-  "Skill",
-  "Agent",
-  "Workflow",
-  "MCP server",
-  "Developer utility",
-];
-export function DiscoveryExperience({ initial, categories, initialFilters }: { initial: ProductPageResult; categories: string[]; initialFilters: ProductFilters }) {
-  const { t } = useLocale();
+export function DiscoveryExperience({ initial, categories, itemTypes, initialFilters }: { initial: ProductPageResult; categories: string[]; itemTypes: MarketplaceItemType[]; initialFilters: ProductFilters }) {
+  const { fa, t } = useLocale();
   const d = t.discovery;
   const [query, setQuery] = useState(initialFilters.q ?? "");
   const [type, setType] = useState<string>(initialFilters.type ?? "All");
@@ -47,7 +37,14 @@ export function DiscoveryExperience({ initial, categories, initialFilters }: { i
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
+  const typeOptions = [{ value: "All", label: d.all }, ...itemTypes.map((item) => ({ value: item.key, label: fa ? item.fa : item.en }))];
+  const selectedTypeLabel = typeOptions.find((option) => option.value === type)?.label ?? type;
+  const firstLoad = useRef(true);
   useEffect(() => {
+    if (firstLoad.current) {
+      firstLoad.current = false;
+      return;
+    }
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       setLoading(true); setError(null);
@@ -63,7 +60,7 @@ export function DiscoveryExperience({ initial, categories, initialFilters }: { i
       finally { if (!controller.signal.aborted) setLoading(false); }
     }, 250);
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [query, type, category, platform, price, verified, minRating, sort, page, retryNonce]);
+  }, [d.connectionError, d.rateLimited, query, type, category, platform, price, verified, minRating, sort, page, retryNonce]);
   const change = (setter: (value: string) => void) => (value: string) => { setPage(1); setter(value); };
   const reset = () => {
     setPage(1);
@@ -76,7 +73,7 @@ export function DiscoveryExperience({ initial, categories, initialFilters }: { i
     setMinRating(0);
   };
   const active = [
-    type !== "All" && type,
+    type !== "All" && selectedTypeLabel,
     category !== "All" && category,
     platform !== "All" && platform,
     price !== "All" && price,
@@ -158,20 +155,20 @@ export function DiscoveryExperience({ initial, categories, initialFilters }: { i
         role="tablist"
         aria-label={d.productType}
       >
-        {types.map((t) => (
+        {typeOptions.map((option) => (
           <button
             role="tab"
-            aria-selected={type === t}
-            key={t}
-            onClick={() => { setPage(1); setType(t); }}
+            aria-selected={type === option.value}
+            key={option.value}
+            onClick={() => { setPage(1); setType(option.value); }}
             className={cn(
               "min-h-10 shrink-0 border-b-2 px-3 text-sm font-medium",
-              type === t
+              type === option.value
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
-            {t === "All" ? d.all : t}
+            {option.label}
           </button>
         ))}
       </div>

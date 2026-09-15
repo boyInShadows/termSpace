@@ -167,6 +167,18 @@ export async function getArticleBySlug(req: Request, res: Response) {
   res.json({ data: toArticleDetail(article, isAdmin) });
 }
 
+export async function getArticleById(req: Request, res: Response) {
+  const article = await prisma.article.findUnique({
+    where: { id: String(req.params.id) },
+    select: { ...articleSelect, content: true, author: { select: { id: true, name: true, bio: true, avatarUrl: true } } },
+  });
+  if (!article) {
+    res.status(404).json({ error: { code: "NOT_FOUND", message: "Article not found" } });
+    return;
+  }
+  res.json({ data: toArticleDetail(article, true) });
+}
+
 export async function getArticlePreview(req: Request, res: Response) {
   const article = await prisma.article.findUnique({
     where: { previewToken: String(req.params.token) },

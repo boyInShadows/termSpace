@@ -5,6 +5,7 @@ import {ArticleCard} from "@/components/ArticleCard";
 import type {Metadata} from "next";
 import {getLocale} from "@/lib/serverLocale";
 import {pageMetadata} from "@/lib/siteMetadata";
+import {localePath} from "@/lib/i18n";
 
 export const revalidate = 60;
 
@@ -20,13 +21,15 @@ export async function generateMetadata({params}: {params: Promise<{slug: string}
   });
 }
 
-export default async function TagPage({params}: {params: Promise<{slug: string}>}) {
-  const [{slug}, t, tags, articles] = await Promise.all([
+export default async function TagPage({params, searchParams}: {params: Promise<{slug: string}>; searchParams: Promise<{page?: string}>}) {
+  const [{slug}, t, locale, tags, articles] = await Promise.all([
     params,
     getTranslations("Common"),
+    getLocale(),
     api.listTags(),
-    params.then(({slug}) => api.listArticles({tag: slug, published: true, limit: 50}))
+    params.then(async ({slug}) => api.listArticles({tag: slug, published: true, page: Math.max(1, Number((await searchParams).page ?? 1) || 1), limit: 50}))
   ]);
+  const page = Math.max(1, Number((await searchParams).page ?? 1) || 1);
   const tag = tags.data.find((item) => item.slug === slug);
   if (!tag) notFound();
 
@@ -38,6 +41,10 @@ export default async function TagPage({params}: {params: Promise<{slug: string}>
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {articles.data.map((article) => <ArticleCard key={article.id} article={article} />)}
       </div>
+      {(articles.meta.hasPrevPage || articles.meta.hasNextPage) && <nav className="mt-10 flex justify-between" aria-label="Pagination">
+        {articles.meta.hasPrevPage ? <a className="text-accent" href={`${localePath(`/blog/tag/${tag.slug}`, locale)}?page=${page - 1}`}>{locale === "fa" ? "قبلی" : "Previous"}</a> : <span />}
+        {articles.meta.hasNextPage ? <a className="text-accent" href={`${localePath(`/blog/tag/${tag.slug}`, locale)}?page=${page + 1}`}>{locale === "fa" ? "بعدی" : "Next"}</a> : <span />}
+      </nav>}
     </div>
   );
 }

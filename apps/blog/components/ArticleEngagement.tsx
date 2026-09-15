@@ -44,7 +44,10 @@ export function ArticleEngagement({ slug, title }: { slug: string; title: string
     const next = bookmarked ? current.filter((entry) => entry.slug !== slug) : [item, ...current];
     localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(next));
     setBookmarked(!bookmarked);
-    if (signedIn) void api.setReaderBookmark(slug, !bookmarked).catch(() => setBookmarked(bookmarked));
+    if (signedIn) void api.setReaderBookmark(slug, !bookmarked).catch(() => {
+      localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(current));
+      setBookmarked(bookmarked);
+    });
   }
 
   async function share() {

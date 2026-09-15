@@ -7,11 +7,13 @@ import {getTranslations} from "next-intl/server";
 import {getLocale} from "@/lib/serverLocale";
 import {categoryNamesFa} from "@/lib/faContent";
 import {localizedAlternates, localizedUrl} from "@/lib/siteMetadata";
+import {localePath} from "@/lib/i18n";
 
 export const revalidate = 60;
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
@@ -47,15 +49,17 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   };
 }
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
+export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
   const [locale, t] = await Promise.all([getLocale(), getTranslations("Common")]);
   const { slug } = await params;
+  const page = Math.max(1, Number((await searchParams).page ?? 1) || 1);
   const categoriesRes = await api.listCategories();
   const category = categoriesRes.data.find((c) => c.slug === slug);
 
   if (!category) notFound();
 
   const articlesRes = await api.listArticles({
+    page,
     limit: 50,
     category: category.slug,
     published: true,
@@ -81,11 +85,17 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           description={t("checkBack")}
         />
       ) : (
+        <>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {articlesRes.data.map((article) => (
             <ArticleCard key={article.id} article={article} />
           ))}
         </div>
+        {(articlesRes.meta.hasPrevPage || articlesRes.meta.hasNextPage) && <nav className="mt-10 flex justify-between" aria-label="Pagination">
+          {articlesRes.meta.hasPrevPage ? <a className="text-accent" href={`${localePath(`/blog/category/${category.slug}`, locale)}?page=${page - 1}`}>{locale === "fa" ? "قبلی" : "Previous"}</a> : <span />}
+          {articlesRes.meta.hasNextPage ? <a className="text-accent" href={`${localePath(`/blog/category/${category.slug}`, locale)}?page=${page + 1}`}>{locale === "fa" ? "بعدی" : "Next"}</a> : <span />}
+        </nav>}
+        </>
       )}
     </div>
   );

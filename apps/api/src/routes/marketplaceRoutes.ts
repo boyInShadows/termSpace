@@ -1,13 +1,21 @@
 import { Router } from "express";
-import { acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceHome, getMarketplaceProduct, listMarketplaceFavorites, listMarketplaceProducts, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
-import { requireReader } from "../middleware/auth.js";
+import { acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceHome, getMarketplaceProduct, listMarketplaceFavorites, listMarketplaceItemTypes, listMarketplaceProducts, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
+import { createOwnedCreatorProfile, getOwnedCreatorProfile, updateOwnedCreatorProfile } from "../controllers/marketplaceCreatorController.js";
+import { transitionModeratedMarketplaceListing, transitionOwnedMarketplaceListing } from "../controllers/marketplaceLifecycleController.js";
+import { requireMarketplaceRole, requireReader, requireVerifiedReader } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
-import { marketplaceProductQuerySchema } from "../validation/schemas.js";
+import { creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceProductQuerySchema, moderatedListingLifecycleSchema } from "../validation/schemas.js";
 
 const router = Router();
 router.get("/home", getMarketplaceHome);
+router.get("/item-types", listMarketplaceItemTypes);
 router.get("/products", validate(marketplaceProductQuerySchema, "query"), listMarketplaceProducts);
 router.get("/products/:slug", getMarketplaceProduct);
+router.get("/creator/profile", requireReader, getOwnedCreatorProfile);
+router.post("/creator/profile", requireReader, requireVerifiedReader, validate(creatorOnboardingSchema), createOwnedCreatorProfile);
+router.patch("/creator/profile", requireMarketplaceRole("creator"), validate(creatorProfileUpdateSchema), updateOwnedCreatorProfile);
+router.post("/creator/products/:id/lifecycle", requireMarketplaceRole("creator"), validate(creatorListingLifecycleSchema), transitionOwnedMarketplaceListing);
+router.post("/moderation/products/:id/lifecycle", requireMarketplaceRole("moderator", "administrator"), validate(moderatedListingLifecycleSchema), transitionModeratedMarketplaceListing);
 router.get("/favorites", requireReader, listMarketplaceFavorites);
 router.put("/products/:slug/favorite", requireReader, addMarketplaceFavorite);
 router.delete("/products/:slug/favorite", requireReader, removeMarketplaceFavorite);

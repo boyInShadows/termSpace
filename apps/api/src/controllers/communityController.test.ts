@@ -1,4 +1,4 @@
-﻿import request from "supertest";
+import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMock = vi.hoisted(() => ({
@@ -17,7 +17,7 @@ const { READER_SESSION_COOKIE } = await import("../middleware/auth.js");
 
 /** A reader cookie long enough to pass the middleware's length guard. */
 const READER_COOKIE = `${READER_SESSION_COOKIE}=${"a".repeat(48)}`;
-const OWNER = { id: "user-1", email: "owner@example.com" };
+const OWNER = { id: "user-1", email: "owner@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] };
 const CREATOR = {
   id: "creator-1", name: "Ramtin K", handle: "ramtin", initials: "RK",
   verified: false, bio: "Building practical automation skills.", followers: 0,

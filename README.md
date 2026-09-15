@@ -3,6 +3,14 @@
 TermSpace is a monorepo containing the main product site, its editorial site,
 and one shared API.
 
+The main product is a discovery and creator platform for agentic coding tools,
+including skills, agents, MCP servers, integrations, rules, prompts, hooks,
+templates, and workflows. Community members can discover, filter, acquire, and
+review published items; creators will manage submissions and releases through a
+dashboard. The Blog is a separate, staff-managed editorial publication and does
+not accept public or creator uploads. See [Product Direction](docs/product-direction.md)
+for the product boundaries and core journeys.
+
 ```text
 apps/
   web/   Main TermSpace frontend (Next.js, port 3000)
@@ -37,15 +45,30 @@ npm test
 npm run build
 ```
 
+Marketplace roles are assigned independently from Blog administration. See
+[Marketplace Role Operations](docs/marketplace-roles.md) for verified-account
+requirements and the audited grant/revoke command.
+Password-account verification delivery and Cloudflare onboarding are documented
+in [Email Verification Operations](docs/email-verification.md).
+Creator identity boundaries and self-service ownership are documented in
+[Creator Onboarding and Ownership](docs/creator-onboarding.md).
+Controlled item types, manifest validation, legacy classification, and immutable
+release storage are documented in [Marketplace Item Types and Manifests](docs/marketplace-manifests.md).
+Listing review states, immutable approved/proposed snapshots, and transition
+authorization are documented in [Marketplace Listing Lifecycle](docs/marketplace-listing-lifecycle.md).
+
 ## Run the complete stack with Docker
 
-Docker Compose runs PostgreSQL, the shared API, the scheduled-publishing worker,
+Docker Compose runs PostgreSQL, the shared API, the publishing worker,
 the main site, and Blog:
 
 ```bash
 cp .env.example .env # required; replace the example database/admin passwords
 npm run docker:up
 ```
+
+After configuring Cloudflare Email Service, start the transactional email worker
+with `docker compose --profile email up --build -d`.
 
 The services are bound to loopback and available at `http://localhost:3000` (main site),
 `http://localhost:3001` (Blog), and `http://localhost:4001/api/health` (API).
