@@ -186,7 +186,12 @@ export interface Comment {
 
 export interface ReaderSession {
   authenticated: true;
-  user: { id?: string; email: string };
+  user: {
+    id?: string;
+    email: string;
+    emailVerified?: boolean;
+    marketplaceRoles?: ("creator" | "moderator" | "administrator")[];
+  };
 }
 
 export interface ReaderProfile {
@@ -194,6 +199,7 @@ export interface ReaderProfile {
   createdAt: string;
   hasPassword: boolean;
   connectedGoogle: boolean;
+  emailVerified: boolean;
 }
 
 export interface ReaderLibraryArticle {

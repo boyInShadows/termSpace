@@ -45,6 +45,10 @@ npm test
 npm run build
 ```
 
+Marketplace roles are assigned independently from Blog administration. See
+[Marketplace Role Operations](docs/marketplace-roles.md) for verified-account
+requirements and the audited grant/revoke command.
+
 ## Run the complete stack with Docker
 
 Docker Compose runs PostgreSQL, the shared API, the scheduled-publishing worker,

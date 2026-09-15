@@ -250,6 +250,7 @@ model ReaderUser {
   email        String                  @unique
   passwordHash String?
   googleSubject String?                @unique
+  emailVerifiedAt DateTime?
   createdAt    DateTime                @default(now())
   updatedAt    DateTime                @updatedAt
   sessions    ReaderSession[]
@@ -257,6 +258,8 @@ model ReaderUser {
   progress    ReaderReadingProgress[]
   productFavorites MarketplaceFavorite[]
   marketplaceOrders MarketplaceOrder[]
+  marketplaceRoleGrants MarketplaceRoleGrant[]
+  marketplaceRoleEvents MarketplaceRoleEvent[]
 }
 
 model ReaderSession {
@@ -295,6 +298,46 @@ model ReaderReadingProgress {
   @@id([userId, articleId])
   @@index([userId, visitedAt])
   @@index([articleId])
+}
+
+enum MarketplaceRole {
+  CREATOR
+  MODERATOR
+  ADMINISTRATOR
+}
+
+enum MarketplaceRoleEventAction {
+  GRANTED
+  REVOKED
+}
+
+model MarketplaceRoleGrant {
+  id        String          @id @default(cuid())
+  userId    String
+  role      MarketplaceRole
+  grantedAt DateTime        @default(now())
+  revokedAt DateTime?
+  updatedAt DateTime        @updatedAt
+  user      ReaderUser      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@index([userId, revokedAt])
+  @@index([role, revokedAt])
+}
+
+model MarketplaceRoleEvent {
+  id            String                     @id @default(cuid())
+  subjectUserId String
+  role          MarketplaceRole
+  action        MarketplaceRoleEventAction
+  actor         String
+  reason        String
+  correlationId String                     @unique
+  createdAt     DateTime                   @default(now())
+  subject       ReaderUser                 @relation(fields: [subjectUserId], references: [id], onDelete: Restrict)
+
+  @@index([subjectUserId, createdAt])
+  @@index([role, createdAt])
 }
 
 model MarketplaceCreator {

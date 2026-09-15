@@ -4,9 +4,10 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Creator and Submission Lifecycle
 
-- Add explicit account roles and authorization for reader, creator, moderator,
-  marketplace administrator, and editorial administrator access without granting
-  creators Blog access, following ADR 0004.
+- Add first-party email verification for password accounts using hashed,
+  single-use, expiring tokens; generic request responses; bounded resend and
+  verification attempts; and a transactional email provider with logged,
+  redacted delivery outcomes.
 - Add creator onboarding and profiles linked to authenticated user accounts;
   replace seed-only creator ownership.
 - Build a creator dashboard showing owned listings, draft/review/published status,

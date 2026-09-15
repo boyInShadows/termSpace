@@ -17,7 +17,8 @@ export async function getProducts(filters: ProductFilters = {}, signal?: AbortSi
   return request<ProductPageResult>(`/api/marketplace/products?${params}`, { signal });
 }
 export async function getProduct(slug: string) { return (await request<{ data: ProductDetail }>(`/api/marketplace/products/${encodeURIComponent(slug)}`)).data; }
-export async function getSession() { return request<{ data: { authenticated: true; user: { id: string; email: string } } }>("/api/readers/session"); }
+export type MarketplaceRole = "creator" | "moderator" | "administrator";
+export async function getSession() { return request<{ data: { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } }>("/api/readers/session"); }
 export async function login(email: string, password: string) { return request("/api/readers/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function register(email: string, password: string) { return request("/api/readers/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function logout() { return request("/api/readers/logout", { method: "POST" }); }

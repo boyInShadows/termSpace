@@ -2,12 +2,13 @@ import { hash } from "bcryptjs";
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const verifyGoogleIdToken = vi.hoisted(() => vi.fn());
 const prismaMock = vi.hoisted(() => ({
   adminUser: { findUnique: vi.fn() },
   adminSession: { findFirst: vi.fn(), deleteMany: vi.fn(), create: vi.fn() },
   article: { findUnique: vi.fn(), updateMany: vi.fn() },
-  readerUser: { findUnique: vi.fn(), update: vi.fn() },
-  readerSession: { findFirst: vi.fn(), deleteMany: vi.fn() },
+  readerUser: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
+  readerSession: { findFirst: vi.fn(), deleteMany: vi.fn(), create: vi.fn() },
   marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), findFirst: vi.fn() },
   marketplaceCreator: { findMany: vi.fn() },
   marketplaceCategory: { findMany: vi.fn() },
@@ -16,8 +17,14 @@ const prismaMock = vi.hoisted(() => ({
 }));
 
 vi.mock("./lib/prisma.js", () => ({ prisma: prismaMock }));
+vi.mock("google-auth-library", () => ({
+  OAuth2Client: class {
+    verifyIdToken = verifyGoogleIdToken;
+  },
+}));
 
 process.env.NODE_ENV = "test";
+process.env.GOOGLE_CLIENT_ID = "test-google-client-id";
 const { createApp } = await import("./app.js");
 
 describe("API", () => {
@@ -137,16 +144,110 @@ describe("API", () => {
     expect(prismaMock.article.findUnique).not.toHaveBeenCalled();
   });
 
+  it("does not treat a marketplace administrator as a Blog administrator", async () => {
+    prismaMock.adminSession.findFirst.mockResolvedValue(null);
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: {
+        id: "reader-1",
+        email: "marketplace-admin@example.com",
+        emailVerifiedAt: new Date("2026-09-15T00:00:00.000Z"),
+        marketplaceRoleGrants: [{ role: "ADMINISTRATOR" }],
+      },
+    });
+
+    const response = await request(createApp())
+      .get("/api/articles/preview/private-preview-token")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(401);
+    expect(prismaMock.adminSession.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.readerSession.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("returns verified-email state and active marketplace roles in the reader session", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: {
+        id: "reader-1",
+        email: "creator@example.com",
+        emailVerifiedAt: new Date("2026-09-15T00:00:00.000Z"),
+        marketplaceRoleGrants: [{ role: "CREATOR" }],
+      },
+    });
+
+    const response = await request(createApp())
+      .get("/api/readers/session")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.user).toEqual({
+      id: "reader-1",
+      email: "creator@example.com",
+      emailVerified: true,
+      marketplaceRoles: ["creator"],
+    });
+  });
+
+  it("safely claims an unverified password account with a verified Google identity", async () => {
+    verifyGoogleIdToken.mockResolvedValue({
+      getPayload: () => ({ sub: "google-subject-1", email: "reader@example.com", email_verified: true }),
+    });
+    prismaMock.readerUser.findFirst.mockResolvedValue({
+      id: "reader-1",
+      email: "reader@example.com",
+      googleSubject: null,
+      emailVerifiedAt: null,
+      marketplaceRoleGrants: [],
+    });
+    const linkedUser = {
+      id: "reader-1",
+      email: "reader@example.com",
+      googleSubject: "google-subject-1",
+      emailVerifiedAt: new Date("2026-09-15T00:00:00.000Z"),
+      marketplaceRoleGrants: [],
+    };
+    prismaMock.readerUser.update.mockReturnValue(Promise.resolve(linkedUser));
+    prismaMock.readerSession.deleteMany.mockReturnValue(Promise.resolve({ count: 1 }));
+    prismaMock.readerSession.create.mockReturnValue(Promise.resolve({ id: "new-session" }));
+    prismaMock.$transaction
+      .mockResolvedValueOnce([linkedUser, { count: 1 }])
+      .mockResolvedValueOnce([]);
+
+    const response = await request(createApp())
+      .post("/api/readers/google")
+      .send({ credential: "v".repeat(120) });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.user).toMatchObject({
+      id: "reader-1",
+      email: "reader@example.com",
+      emailVerified: true,
+      marketplaceRoles: [],
+    });
+    expect(prismaMock.readerUser.update).toHaveBeenCalledWith({
+      where: { id: "reader-1" },
+      data: {
+        googleSubject: "google-subject-1",
+        emailVerifiedAt: expect.any(Date),
+        passwordHash: null,
+      },
+      select: expect.any(Object),
+    });
+    expect(prismaMock.readerSession.deleteMany).toHaveBeenCalledWith({ where: { userId: "reader-1" } });
+  });
+
   it("returns a safe reader profile without authentication secrets", async () => {
     prismaMock.readerSession.findFirst.mockResolvedValue({
       id: "session-1",
-      user: { id: "reader-1", email: "reader@example.com" },
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: null, marketplaceRoleGrants: [] },
     });
     prismaMock.readerUser.findUnique.mockResolvedValue({
       email: "reader@example.com",
       createdAt: new Date("2026-08-25T00:00:00.000Z"),
       passwordHash: "secret-hash",
       googleSubject: null,
+      emailVerifiedAt: null,
     });
 
     const response = await request(createApp())
@@ -158,6 +259,7 @@ describe("API", () => {
       email: "reader@example.com",
       hasPassword: true,
       connectedGoogle: false,
+      emailVerified: false,
     });
     expect(response.body.data.passwordHash).toBeUndefined();
   });
@@ -165,7 +267,7 @@ describe("API", () => {
   it("changes a reader password and invalidates other sessions", async () => {
     prismaMock.readerSession.findFirst.mockResolvedValue({
       id: "session-1",
-      user: { id: "reader-1", email: "reader@example.com" },
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: null, marketplaceRoleGrants: [] },
     });
     prismaMock.readerUser.findUnique.mockResolvedValue({
       passwordHash: await hash("old-password", 4),

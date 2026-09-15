@@ -1,19 +1,21 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ApiError, getFavorites, getSession, setFavorite } from "@/lib/api";
+import { ApiError, getFavorites, getSession, setFavorite, type MarketplaceRole } from "@/lib/api";
 
 type SessionState = {
-  loading: boolean; email: string | null; error: string | null;
+  loading: boolean; email: string | null; emailVerified: boolean; marketplaceRoles: MarketplaceRole[]; error: string | null;
   isFavorite: (slug: string) => boolean; toggleFavorite: (slug: string) => Promise<void>; refresh: () => Promise<void>;
 };
-const anonymousSession: SessionState = { loading: false, email: null, error: null, isFavorite: () => false, toggleFavorite: async () => {}, refresh: async () => {} };
+const anonymousSession: SessionState = { loading: false, email: null, emailVerified: false, marketplaceRoles: [], error: null, isFavorite: () => false, toggleFavorite: async () => {}, refresh: async () => {} };
 const SessionContext = createContext<SessionState>(anonymousSession);
 
 export function MarketplaceSessionProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [marketplaceRoles, setMarketplaceRoles] = useState<MarketplaceRole[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState<string | null>(null);
   const refresh = useCallback(async () => {
@@ -21,13 +23,15 @@ export function MarketplaceSessionProvider({ children }: { children: React.React
     try {
       const session = await getSession();
       setEmail(session.data.user.email);
+      setEmailVerified(session.data.user.emailVerified);
+      setMarketplaceRoles(session.data.user.marketplaceRoles);
       setFavorites(new Set(await getFavorites()));
     } catch (cause) {
       if (!(cause instanceof ApiError && cause.status === 401)) {
         console.error("Marketplace session load failed", cause);
         setError("Account services are temporarily unavailable.");
       }
-      setEmail(null); setFavorites(new Set());
+      setEmail(null); setEmailVerified(false); setMarketplaceRoles([]); setFavorites(new Set());
     } finally { setLoading(false); }
   }, []);
   useEffect(() => {
@@ -52,7 +56,7 @@ export function MarketplaceSessionProvider({ children }: { children: React.React
       console.error("Favorite update failed", cause); setError("Could not update your saved products.");
     }
   }, [email, favorites, router]);
-  const value = useMemo(() => ({ loading, email, error, isFavorite: (slug: string) => favorites.has(slug), toggleFavorite, refresh }), [loading, email, error, favorites, toggleFavorite, refresh]);
+  const value = useMemo(() => ({ loading, email, emailVerified, marketplaceRoles, error, isFavorite: (slug: string) => favorites.has(slug), toggleFavorite, refresh }), [loading, email, emailVerified, marketplaceRoles, error, favorites, toggleFavorite, refresh]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 export function useMarketplaceSession() { return useContext(SessionContext); }

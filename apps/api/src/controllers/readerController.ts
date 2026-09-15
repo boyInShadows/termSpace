@@ -1,10 +1,11 @@
 import { randomBytes } from "node:crypto";
 import { compare, hash } from "bcryptjs";
 import { OAuth2Client } from "google-auth-library";
-import { Prisma } from "@prisma/client";
+import { Prisma, type MarketplaceRole } from "@prisma/client";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { hashSessionToken, READER_SESSION_COOKIE } from "../middleware/auth.js";
+import { toPublicMarketplaceRole } from "../lib/marketplaceRoles.js";
 
 const sessionDays = Math.max(1, Number(process.env.READER_SESSION_DAYS ?? 30));
 const googleClient = new OAuth2Client();
@@ -16,7 +17,28 @@ const cookieOptions = () => ({
   maxAge: sessionDays * 24 * 60 * 60 * 1000,
 });
 
-async function createSession(res: Response, user: { id: string; email: string }) {
+type ReaderAccessUser = {
+  id: string;
+  email: string;
+  emailVerifiedAt: Date | null;
+  marketplaceRoleGrants: { role: MarketplaceRole }[];
+};
+
+const activeMarketplaceRoles = {
+  where: { revokedAt: null },
+  select: { role: true },
+} as const;
+
+function publicReader(user: ReaderAccessUser) {
+  return {
+    id: user.id,
+    email: user.email,
+    emailVerified: Boolean(user.emailVerifiedAt),
+    marketplaceRoles: user.marketplaceRoleGrants.map(({ role }) => toPublicMarketplaceRole(role)),
+  };
+}
+
+async function createSession(res: Response, user: ReaderAccessUser) {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + cookieOptions().maxAge);
   await prisma.$transaction([
@@ -24,12 +46,15 @@ async function createSession(res: Response, user: { id: string; email: string })
     prisma.readerSession.create({ data: { tokenHash: hashSessionToken(token), expiresAt, userId: user.id } }),
   ]);
   res.cookie(READER_SESSION_COOKIE, token, cookieOptions());
-  res.json({ data: { authenticated: true, user: { email: user.email }, expiresAt } });
+  res.json({ data: { authenticated: true, user: publicReader(user), expiresAt } });
 }
 
 export async function loginReader(req: Request, res: Response) {
   const email = String(req.body.email).trim().toLowerCase();
-  const user = await prisma.readerUser.findUnique({ where: { email } });
+  const user = await prisma.readerUser.findUnique({
+    where: { email },
+    include: { marketplaceRoleGrants: activeMarketplaceRoles },
+  });
   if (!user?.passwordHash || !(await compare(String(req.body.password), user.passwordHash))) {
     res.status(401).json({ error: { code: "INVALID_CREDENTIALS", message: "Invalid email or password" } });
     return;
@@ -44,7 +69,7 @@ export async function registerReader(req: Request, res: Response) {
   try {
     const user = await prisma.readerUser.create({
       data: { email, passwordHash },
-      select: { id: true, email: true },
+      select: { id: true, email: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
     });
     await createSession(res, user);
   } catch (error) {
@@ -77,7 +102,7 @@ export async function loginReaderWithGoogle(req: Request, res: Response) {
   try {
     let user = await prisma.readerUser.findFirst({
       where: { OR: [{ googleSubject: payload.sub }, { email }] },
-      select: { id: true, email: true, googleSubject: true },
+      select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
     });
     if (user) {
       if (user.googleSubject && user.googleSubject !== payload.sub) {
@@ -85,16 +110,26 @@ export async function loginReaderWithGoogle(req: Request, res: Response) {
         return;
       }
       if (!user.googleSubject) {
+        const [linkedUser] = await prisma.$transaction([
+          prisma.readerUser.update({
+            where: { id: user.id },
+            data: { googleSubject: payload.sub, emailVerifiedAt: new Date(), passwordHash: null },
+            select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
+          }),
+          prisma.readerSession.deleteMany({ where: { userId: user.id } }),
+        ]);
+        user = linkedUser;
+      } else if (!user.emailVerifiedAt) {
         user = await prisma.readerUser.update({
           where: { id: user.id },
-          data: { googleSubject: payload.sub },
-          select: { id: true, email: true, googleSubject: true },
+          data: { emailVerifiedAt: new Date() },
+          select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
         });
       }
     } else {
       user = await prisma.readerUser.create({
-        data: { email, googleSubject: payload.sub },
-        select: { id: true, email: true, googleSubject: true },
+        data: { email, googleSubject: payload.sub, emailVerifiedAt: new Date() },
+        select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
       });
     }
     await createSession(res, user);
@@ -123,7 +158,7 @@ export function getReaderSession(_req: Request, res: Response) {
 export async function getReaderProfile(_req: Request, res: Response) {
   const user = await prisma.readerUser.findUnique({
     where: { id: res.locals.reader.id as string },
-    select: { email: true, createdAt: true, passwordHash: true, googleSubject: true },
+    select: { email: true, createdAt: true, passwordHash: true, googleSubject: true, emailVerifiedAt: true },
   });
   if (!user) {
     res.status(404).json({ error: { code: "NOT_FOUND", message: "Reader account not found" } });
@@ -135,6 +170,7 @@ export async function getReaderProfile(_req: Request, res: Response) {
       createdAt: user.createdAt,
       hasPassword: Boolean(user.passwordHash),
       connectedGoogle: Boolean(user.googleSubject),
+      emailVerified: Boolean(user.emailVerifiedAt),
     },
   });
 }

@@ -33,6 +33,16 @@ Project changes completed from `pending.md` should be recorded here with the dat
   marketplace authority from Blog editorial access. Verification: current auth,
   publication, review, and moderation behavior audited; ADR and documentation
   links reviewed; `git diff --check` passes.
+- Added verified-email state and explicit, revocable creator, moderator, and
+  marketplace-administrator grants without coupling them to Blog administrator
+  accounts. Reader sessions now expose verification and active roles; privileged
+  marketplace middleware fails closed; and an operator command grants or revokes
+  roles with append-only events. Verified Google claims of matching unverified
+  password accounts now clear the old password and sessions atomically to prevent
+  account pre-hijacking. Verification: Prisma client generation and schema
+  validation; migration applied successfully to an isolated PostgreSQL schema
+  and rolled back; all workspace type-checks; 43 tests; API, web, and Blog
+  production builds (frontends via webpack); web lint; and `git diff --check`.
 
 ## 2026-09-08
 
