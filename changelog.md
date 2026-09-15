@@ -26,6 +26,13 @@ Project changes completed from `pending.md` should be recorded here with the dat
   compatibility requirements, with explicit handling for existing uncontrolled
   type strings. Verification: existing API, seed, filter, and frontend type usage
   audited; ADR and documentation links reviewed; `git diff --check` passes.
+- Defined the marketplace trust and moderation baseline: separate verification
+  signals, risk-based submission review, acquisition-backed user reviews,
+  case-based reporting, scoped reversible enforcement, appeals, ownership
+  transfers, and append-only audit requirements. The policy explicitly isolates
+  marketplace authority from Blog editorial access. Verification: current auth,
+  publication, review, and moderation behavior audited; ADR and documentation
+  links reviewed; `git diff --check` passes.
 
 ## 2026-09-08
 

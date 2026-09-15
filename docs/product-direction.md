@@ -43,6 +43,13 @@ compatibility, and permission metadata. See
 [ADR 0003](architecture/0003-item-types-and-manifests.md) for the canonical type
 keys and manifest boundary.
 
+Marketplace trust is layered: account authentication, verified email, creator
+status, source ownership, identity verification, release review, and community
+reputation are separate signals. Submissions and enforcement use scoped,
+auditable moderation with appeals and controlled ownership transfer. See
+[ADR 0004](architecture/0004-marketplace-trust-and-moderation.md) for the policy
+baseline.
+
 The core consumer journey is:
 
 `discover -> evaluate -> acquire/install -> use -> rate/review`

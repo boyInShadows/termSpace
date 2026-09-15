@@ -2,15 +2,11 @@
 
 This file tracks known improvement work that has not been completed yet. When an item is finished, remove it from this file and add a dated entry to `changelog.md`.
 
-## Marketplace — Product Decisions
-
-- Define creator verification, submission moderation, review moderation,
-  reporting, suspension, appeal, and ownership-transfer policies.
-
 ## Marketplace — P0 Creator and Submission Lifecycle
 
 - Add explicit account roles and authorization for reader, creator, moderator,
-  and editorial administrator access without granting creators Blog access.
+  marketplace administrator, and editorial administrator access without granting
+  creators Blog access, following ADR 0004.
 - Add creator onboarding and profiles linked to authenticated user accounts;
   replace seed-only creator ownership.
 - Build a creator dashboard showing owned listings, draft/review/published status,
@@ -22,7 +18,8 @@ This file tracks known improvement work that has not been completed yet. When an
   type-specific validation defined in ADR 0003. Migrate direct legacy types and
   require manual classification for `AI tool` and `Developer utility` records.
 - Add submission states and an auditable lifecycle: draft, submitted, changes
-  requested, approved, published, rejected, suspended, and archived.
+  requested, approved, published, rejected, suspended, and archived, including
+  approved and proposed snapshots as required by ADR 0004.
 - Build the staff moderation queue with preview, approval, rejection, change
   requests, internal notes, and an audit trail.
 - Add creator-controlled release/version management without silently replacing
@@ -46,7 +43,9 @@ This file tracks known improvement work that has not been completed yet. When an
   compatibility with stable pagination and useful empty/error states.
 - Add creator profile pages and listing collections while excluding drafts and
   suspended items from public responses.
-- Add reporting controls for unsafe, misleading, abandoned, or malicious items.
+- Add reporting controls for unsafe, misleading, abandoned, or malicious items,
+  including case severity, scoped restrictions, appeals, and audit events from
+  ADR 0004.
 
 ## Marketplace — P0 Ratings and Reviews
 
@@ -59,7 +58,7 @@ This file tracks known improvement work that has not been completed yet. When an
 - Add review submission, moderation, reporting, creator responses, and accessible
   rating UI in both English and Persian.
 - Add abuse controls for review spam, coordinated manipulation, and creator
-  conflicts of interest.
+  conflicts of interest, following ADR 0004 review eligibility and hold rules.
 
 ## Marketplace — P1 Operations and Growth
 
