@@ -14,6 +14,12 @@ Project changes completed from `pending.md` should be recorded here with the dat
   TermSpace-hosted uploads require a later architecture decision and threat
   model. Verification: documentation links reviewed and `git diff --check`
   passes.
+- Defined communities as staff-created, platform-oriented publishing spaces
+  where any authenticated user can request placement for a canonical listing.
+  Community placement is moderated, supports cross-community sharing without
+  duplicate listings or reputation data, and remains independent from platform
+  compatibility and Blog permissions. Verification: ADR and documentation links
+  reviewed and `git diff --check` passes.
 
 ## 2026-09-08
 

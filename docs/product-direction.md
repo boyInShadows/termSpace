@@ -28,6 +28,14 @@ The main TermSpace application is the public catalog and creator platform.
 - TermSpace staff moderate submissions, revisions, reports, and reviews before
   or after publication according to the applicable moderation policy.
 
+Communities are staff-created, platform-oriented publishing spaces where any
+authenticated user can submit relevant items. One canonical listing may be
+placed in multiple communities without duplicating its releases, reviews, or
+acquisition history. Community placement and platform compatibility remain
+independent, combinable discovery facets. See
+[ADR 0002](architecture/0002-community-model.md) for the community lifecycle and
+moderation model.
+
 The core consumer journey is:
 
 `discover -> evaluate -> acquire/install -> use -> rate/review`

@@ -4,9 +4,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — Product Decisions
 
-- Define the first-class community taxonomy independently from platform,
-  category, item type, and compatibility. Specify who creates communities and
-  who can assign listings to them.
 - Define supported item types and the required manifest and metadata for each:
   skills, agents, subagents, MCP servers, integrations, rules, prompts, hooks,
   templates, workflows, and other tools.
@@ -40,8 +37,9 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Discovery and Community
 
-- Add community as a persisted relation rather than a free-form tag and expose
-  community browse pages and filters.
+- Add normalized communities and moderated many-to-many listing placements, then
+  expose community browse pages and combinable community/platform filters as
+  defined in ADR 0002.
 - Normalize platform, compatibility, item type, and category values so filters
   cannot fragment through inconsistent creator input.
 - Expand marketplace search across listing metadata, creators, communities, and
