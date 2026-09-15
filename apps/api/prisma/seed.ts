@@ -594,11 +594,11 @@ async function main() {
 
   const marketplaceCreatorIds = new Map<string, string>();
   for (const creator of marketplaceCreators) {
-    const record = await prisma.marketplaceCreator.upsert({
-      where: { handle: creator.handle },
-      update: { name: creator.name, initials: creator.initials, verified: creator.verified, bio: creator.bio, followers: creator.followers },
-      create: { id: creator.id, name: creator.name, handle: creator.handle, initials: creator.initials, verified: creator.verified, bio: creator.bio, followers: creator.followers },
-    });
+    const existing = await prisma.marketplaceCreator.findUnique({ where: { handle: creator.handle }, select: { id: true, ownerUserId: true } });
+    if (existing?.ownerUserId) throw new Error(`Seed creator handle is owned by a reader account: ${creator.handle}`);
+    const record = existing
+      ? await prisma.marketplaceCreator.update({ where: { id: existing.id }, data: { name: creator.name, initials: creator.initials, verified: creator.verified, bio: creator.bio, followers: creator.followers } })
+      : await prisma.marketplaceCreator.create({ data: { id: creator.id, name: creator.name, handle: creator.handle, initials: creator.initials, verified: creator.verified, bio: creator.bio, followers: creator.followers } });
     marketplaceCreatorIds.set(creator.handle, record.id);
   }
 

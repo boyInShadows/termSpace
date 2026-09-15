@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { articleQuerySchema, commentSchema, createArticleSchema, editionSchema, markdownResourceMetadataSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema } from "./schemas.js";
+import { articleQuerySchema, commentSchema, createArticleSchema, creatorOnboardingSchema, editionSchema, markdownResourceMetadataSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema } from "./schemas.js";
 
 const article = {
   title: "A valid title",
@@ -45,6 +45,13 @@ describe("content validation", () => {
   it("validates reader password changes", () => {
     expect(readerPasswordChangeSchema.safeParse({ currentPassword: "old-password", newPassword: "new-password" }).success).toBe(true);
     expect(readerPasswordChangeSchema.safeParse({ currentPassword: "old-password", newPassword: "short" }).success).toBe(false);
+  });
+
+  it("normalizes valid creator handles and rejects unstable forms", () => {
+    const valid = creatorOnboardingSchema.parse({ name: "Tool Builder", handle: "Tool-Builder", bio: "I build dependable agentic coding tools for teams." });
+    expect(valid.handle).toBe("tool-builder");
+    expect(creatorOnboardingSchema.safeParse({ ...valid, handle: "tool--builder" }).success).toBe(false);
+    expect(creatorOnboardingSchema.safeParse({ ...valid, handle: "ابزار" }).success).toBe(false);
   });
 
   it("validates Markdown resource metadata from multipart forms", () => {

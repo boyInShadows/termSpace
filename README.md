@@ -50,6 +50,8 @@ Marketplace roles are assigned independently from Blog administration. See
 requirements and the audited grant/revoke command.
 Password-account verification delivery and Cloudflare onboarding are documented
 in [Email Verification Operations](docs/email-verification.md).
+Creator identity boundaries and self-service ownership are documented in
+[Creator Onboarding and Ownership](docs/creator-onboarding.md).
 
 ## Run the complete stack with Docker
 

@@ -142,6 +142,14 @@ export const marketplaceProductQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(48).optional().default(12),
 });
 
+export const creatorOnboardingSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  handle: z.string().trim().toLowerCase().min(3).max(40).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Handle must use lowercase letters, numbers, and single hyphens"),
+  bio: z.string().trim().min(20).max(500),
+});
+
+export const creatorProfileUpdateSchema = creatorOnboardingSchema.pick({ name: true, bio: true });
+
 export const markdownResourceMetadataSchema = z.object({
   title: z.string().trim().min(3).max(160),
   slug: z.string().regex(slugPattern, "Slug must be lowercase with hyphens").max(160),

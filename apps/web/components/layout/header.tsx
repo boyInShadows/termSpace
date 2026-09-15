@@ -34,7 +34,7 @@ export function Header() {
   const NAV = [
     { href: "/explore", label: t.explore },
     { href: "/design-system", label: t.designSystem },
-    { href: "/#creators", label: t.sellWork },
+    { href: "/creator", label: t.sellWork },
   ] as const;
   const [isCondensed, setIsCondensed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);

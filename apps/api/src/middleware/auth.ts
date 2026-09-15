@@ -93,6 +93,14 @@ export const requireReader: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const requireVerifiedReader: RequestHandler = (_req, res, next) => {
+  if (!res.locals.reader?.emailVerified) {
+    res.status(403).json({ error: { code: "EMAIL_VERIFICATION_REQUIRED", message: "Verify your email before creating a creator profile" } });
+    return;
+  }
+  next();
+};
+
 export function requireMarketplaceRole(...allowedRoles: PublicMarketplaceRole[]): RequestHandler {
   if (!allowedRoles.length) throw new Error("requireMarketplaceRole requires at least one allowed role");
   const allowed = new Set(allowedRoles);

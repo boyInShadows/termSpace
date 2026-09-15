@@ -4,8 +4,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Creator and Submission Lifecycle
 
-- Add creator onboarding and profiles linked to authenticated user accounts;
-  replace seed-only creator ownership.
 - Build a creator dashboard showing owned listings, draft/review/published status,
   moderation feedback, versions, ratings, acquisition counts, and recent updates.
 - Build draft creation and editing for listing metadata, documentation,

@@ -1,4 +1,4 @@
-import type { MarketplaceHome, ProductDetail, ProductFilters, ProductPageResult } from "./types";
+import type { MarketplaceHome, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
 export class ApiError extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }
 function apiBase() { return typeof window === "undefined" ? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001" : process.env.NEXT_PUBLIC_API_URL ?? "/backend"; }
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -24,6 +24,9 @@ export async function register(email: string, password: string) { return request
 export async function logout() { return request("/api/readers/logout", { method: "POST" }); }
 export async function requestEmailVerification() { return request<{ data: { accepted: true } }>("/api/readers/email-verification/request", { method: "POST" }); }
 export async function confirmEmailVerification(token: string) { return request<{ data: { verified: true } }>("/api/readers/email-verification/confirm", { method: "POST", body: JSON.stringify({ token }) }); }
+export async function getOwnedCreatorProfile() { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile")).data; }
+export async function createCreatorProfile(input: { name: string; handle: string; bio: string }) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", { method: "POST", body: JSON.stringify(input) })).data; }
+export async function updateCreatorProfile(input: { name: string; bio: string }) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", { method: "PATCH", body: JSON.stringify(input) })).data; }
 export async function getFavorites() { return (await request<{ data: string[] }>("/api/marketplace/favorites")).data; }
 export async function setFavorite(slug: string, saved: boolean) { return request(`/api/marketplace/products/${encodeURIComponent(slug)}/favorite`, { method: saved ? "PUT" : "DELETE" }); }
 export async function acquireProduct(slug: string, idempotencyKey: string) { return request(`/api/marketplace/products/${encodeURIComponent(slug)}/acquire`, { method: "POST", headers: { "Idempotency-Key": idempotencyKey } }); }

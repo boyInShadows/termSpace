@@ -261,6 +261,7 @@ model ReaderUser {
   marketplaceRoleGrants MarketplaceRoleGrant[]
   marketplaceRoleEvents MarketplaceRoleEvent[]
   emailVerifications ReaderEmailVerification[]
+  marketplaceCreator MarketplaceCreator?
 }
 
 enum TransactionalEmailStatus {
@@ -392,6 +393,8 @@ model MarketplaceCreator {
   followers Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  ownerUserId String? @unique
+  owner     ReaderUser? @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
   products  MarketplaceProduct[]
 
   @@index([verified, followers])

@@ -2,6 +2,7 @@ export type ProductType = "Prompt" | "Prompt pack" | "Skill" | "Agent" | "Workfl
 export type Platform = "ChatGPT" | "Claude" | "Codex" | "Cursor" | "VS Code" | "Gemini" | "API";
 export type AIModel = "GPT-5" | "Claude 4" | "Gemini 2.5" | "Model agnostic";
 export interface Creator { id: string; name: string; handle: string; initials: string; verified: boolean; bio: string; products: number; followers: number; }
+export interface OwnedCreatorProfile extends Creator { createdAt: string; updatedAt: string; accessActive: boolean; }
 export interface Pricing { amountMinor: number; currency: "USD"; model: "one-time" | "free"; }
 export interface Compatibility { platforms: Platform[]; models: AIModel[]; }
 export interface ProductVersion { id: string; version: string; releasedAt: string; notes: string; }

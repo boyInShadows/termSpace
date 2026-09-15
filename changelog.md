@@ -58,6 +58,22 @@ Project changes completed from `pending.md` should be recorded here with the dat
   webpack); web lint; Compose configuration validation; and `git diff --check`.
   Live migration execution was unavailable because local PostgreSQL was stopped
   and this host denied Docker daemon access.
+- Added verified-user creator onboarding and authenticated creator-profile
+  ownership. User-owned creator records now have a unique, deletion-restricting
+  reader relationship while existing seeded creators remain explicitly
+  system-owned through a null owner. Self-service onboarding serializes requests
+  per account and atomically creates the profile, active creator grant, and
+  append-only role event; revoked grants cannot be self-restored. Owner-derived
+  APIs expose and update only the signed-in creator, stable handles become
+  immutable after creation, and revoked roles immediately block profile edits.
+  Added a responsive English/Persian `/creator` onboarding and profile screen,
+  replaced the dead header creator anchor, and documented ownership and future
+  transfer constraints. Verification: Prisma generation and schema validation;
+  all workspace type-checks; 65 tests; API, web, and Blog production builds
+  (frontends via webpack); web lint; Compose validation; and `git diff --check`.
+  Live migration execution remained unavailable because this host cannot access
+  the stopped PostgreSQL container. Seed reruns now fail loudly instead of
+  overwriting a user-owned profile whose handle conflicts with seeded data.
 
 ## 2026-09-08
 

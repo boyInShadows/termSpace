@@ -12,7 +12,9 @@ const prismaMock = vi.hoisted(() => ({
   readerEmailVerification: { findUnique: vi.fn(), findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   transactionalEmailOutbox: { updateMany: vi.fn() },
   marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), findFirst: vi.fn() },
-  marketplaceCreator: { findMany: vi.fn() },
+  marketplaceCreator: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
+  marketplaceRoleGrant: { findUnique: vi.fn(), create: vi.fn() },
+  marketplaceRoleEvent: { create: vi.fn() },
   marketplaceCategory: { findMany: vi.fn() },
   $transaction: vi.fn(),
   $executeRaw: vi.fn(),
@@ -211,6 +213,92 @@ describe("API", () => {
       emailVerified: true,
       marketplaceRoles: ["creator"],
     });
+  });
+
+  it("rejects creator onboarding until the reader email is verified", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: null, marketplaceRoleGrants: [] },
+    });
+
+    const response = await request(createApp())
+      .post("/api/marketplace/creator/profile")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ name: "Reader Creator", handle: "reader-creator", bio: "I build dependable tools for agentic coding workflows." });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("EMAIL_VERIFICATION_REQUIRED");
+    expect(prismaMock.marketplaceCreator.create).not.toHaveBeenCalled();
+  });
+
+  it("creates an owned creator profile and audited creator role atomically", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    prismaMock.marketplaceCreator.findUnique.mockResolvedValue(null);
+    prismaMock.marketplaceRoleGrant.findUnique.mockResolvedValue(null);
+    prismaMock.marketplaceCreator.create.mockResolvedValue({
+      id: "creator-1", name: "Reader Creator", handle: "reader-creator", initials: "RC", verified: false,
+      bio: "I build dependable tools for agentic coding workflows.", followers: 0,
+      createdAt: new Date("2026-09-15T00:00:00.000Z"), updatedAt: new Date("2026-09-15T00:00:00.000Z"), _count: { products: 0 },
+    });
+    prismaMock.marketplaceRoleGrant.create.mockResolvedValue({});
+    prismaMock.marketplaceRoleEvent.create.mockResolvedValue({});
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/creator/profile")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ name: "Reader Creator", handle: "reader-creator", bio: "I build dependable tools for agentic coding workflows." });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data).toMatchObject({ id: "creator-1", handle: "reader-creator", initials: "RC", products: 0 });
+    expect(prismaMock.marketplaceCreator.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ ownerUserId: "reader-1" }) }));
+    expect(prismaMock.marketplaceRoleGrant.create).toHaveBeenCalledWith({ data: { userId: "reader-1", role: "CREATOR" } });
+    expect(prismaMock.marketplaceRoleEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({ subjectUserId: "reader-1", action: "GRANTED", reason: "Self-service creator onboarding" }) });
+  });
+
+  it("does not let a revoked creator self-restore access", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    prismaMock.marketplaceCreator.findUnique.mockResolvedValue(null);
+    prismaMock.marketplaceRoleGrant.findUnique.mockResolvedValue({ revokedAt: new Date() });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/creator/profile")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ name: "Reader Creator", handle: "reader-creator", bio: "I build dependable tools for agentic coding workflows." });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("CREATOR_ACCESS_REVOKED");
+    expect(prismaMock.marketplaceCreator.create).not.toHaveBeenCalled();
+  });
+
+  it("scopes creator profile updates to the authenticated owner", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    prismaMock.marketplaceCreator.findUnique.mockResolvedValue(null);
+
+    const response = await request(createApp())
+      .patch("/api/marketplace/creator/profile")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ name: "Updated Creator", bio: "An updated biography long enough for profile validation." });
+
+    expect(response.status).toBe(404);
+    expect(prismaMock.marketplaceCreator.findUnique).toHaveBeenCalledWith({ where: { ownerUserId: "reader-1" }, select: { id: true } });
+    expect(prismaMock.marketplaceCreator.update).not.toHaveBeenCalled();
   });
 
   it("returns the same accepted response when verification is throttled", async () => {
