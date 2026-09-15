@@ -1,4 +1,4 @@
-import type { MarketplaceHome, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
+import type { MarketplaceHome, MarketplaceItemType, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
 export class ApiError extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }
 function apiBase() { return typeof window === "undefined" ? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001" : process.env.NEXT_PUBLIC_API_URL ?? "/backend"; }
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -11,6 +11,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 export async function getMarketplaceHome() { return (await request<{ data: MarketplaceHome }>("/api/marketplace/home")).data; }
+export async function getMarketplaceItemTypes() { return (await request<{ data: MarketplaceItemType[] }>("/api/marketplace/item-types")).data; }
 export async function getProducts(filters: ProductFilters = {}, signal?: AbortSignal) {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== "" && value !== "All" && value !== false) params.set(key, String(value)); });

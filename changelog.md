@@ -74,6 +74,19 @@ Project changes completed from `pending.md` should be recorded here with the dat
   Live migration execution remained unavailable because this host cannot access
   the stopped PostgreSQL container. Seed reruns now fail loudly instead of
   overwriting a user-owned profile whose handle conflicts with seeded data.
+- Implemented ADR 0003's controlled nine-type marketplace registry and strict,
+  versioned manifest validator with canonical SHA-256 audit snapshots,
+  type-specific requirements, structured permissions, safe relative paths, and
+  exact GitHub/npm source identities. Added normalized release persistence and
+  database-enforced immutability after publication, while preserving the legacy
+  public `type` field and adding stable `typeKey` responses and filters. The
+  migration directly classifies known legacy values and flags `AI tool`,
+  `Developer utility`, and unknown values for manual review without guessing.
+  Verification: Prisma client generation and schema validation; all workspace
+  type-checks; 81 tests; API, web, and Blog production builds (frontends via
+  webpack); web lint; Compose validation; and `git diff --check`. Live migration
+  execution was unavailable because PostgreSQL is stopped and this host cannot
+  access the Docker daemon.
 
 ## 2026-09-08
 

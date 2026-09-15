@@ -41,34 +41,34 @@ model Category {
 // Article
 // ---------------------------------------------------------------------------
 model Article {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  excerpt     String?
-  content     String
-  heroImage   String?
-  published   Boolean  @default(false)
-  publishedAt DateTime?
-  scheduledAt DateTime?
-  previewToken String?  @unique
-  seriesOrder Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String    @id @default(cuid())
+  title        String
+  slug         String    @unique
+  excerpt      String?
+  content      String
+  heroImage    String?
+  published    Boolean   @default(false)
+  publishedAt  DateTime?
+  scheduledAt  DateTime?
+  previewToken String?   @unique
+  seriesOrder  Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  authorId   String
-  author     Author   @relation(fields: [authorId], references: [id])
+  authorId String
+  author   Author @relation(fields: [authorId], references: [id])
 
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
 
-  seriesId  String?
-  series    Series?   @relation(fields: [seriesId], references: [id], onDelete: SetNull)
-  tags      ArticleTag[]
-  revisions ArticleRevision[]
-  comments  Comment[]
-  bookmarks ReaderBookmark[]
+  seriesId        String?
+  series          Series?                 @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  tags            ArticleTag[]
+  revisions       ArticleRevision[]
+  comments        Comment[]
+  bookmarks       ReaderBookmark[]
   readingProgress ReaderReadingProgress[]
-  editions   EditionArticle[]
+  editions        EditionArticle[]
 
   @@index([slug])
   @@index([published])
@@ -121,17 +121,17 @@ model ArticleRevision {
 }
 
 model MediaAsset {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  url       String
-  altText   String
-  mimeType  String
-  size      Int
-  width     Int?
-  height    Int?
+  id                  String    @id @default(cuid())
+  key                 String    @unique
+  url                 String
+  altText             String
+  mimeType            String
+  size                Int
+  width               Int?
+  height              Int?
   deletionRequestedAt DateTime?
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
+  deletedAt           DateTime?
+  createdAt           DateTime  @default(now())
 
   @@index([createdAt])
   @@index([url])
@@ -139,18 +139,18 @@ model MediaAsset {
 }
 
 model MarkdownResource {
-  id           String    @id @default(cuid())
-  title        String
-  slug         String    @unique
-  description  String
-  category     String
-  fileName     String
-  content      String
-  size         Int
-  published    Boolean   @default(false)
-  publishedAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  description String
+  category    String
+  fileName    String
+  content     String
+  size        Int
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([published, publishedAt])
   @@index([category])
@@ -187,15 +187,15 @@ model EditionArticle {
 }
 
 model Comment {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   articleId  String
   name       String
   email      String
   body       String
-  approved   Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  approved   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
   approvedAt DateTime?
-  article    Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  article    Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@index([articleId, approved, createdAt])
   @@index([approved, createdAt])
@@ -246,22 +246,22 @@ model AdminSession {
 }
 
 model ReaderUser {
-  id           String                  @id @default(cuid())
-  email        String                  @unique
-  passwordHash String?
-  googleSubject String?                @unique
-  emailVerifiedAt DateTime?
-  createdAt    DateTime                @default(now())
-  updatedAt    DateTime                @updatedAt
-  sessions    ReaderSession[]
-  bookmarks   ReaderBookmark[]
-  progress    ReaderReadingProgress[]
-  productFavorites MarketplaceFavorite[]
-  marketplaceOrders MarketplaceOrder[]
+  id                    String                    @id @default(cuid())
+  email                 String                    @unique
+  passwordHash          String?
+  googleSubject         String?                   @unique
+  emailVerifiedAt       DateTime?
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+  sessions              ReaderSession[]
+  bookmarks             ReaderBookmark[]
+  progress              ReaderReadingProgress[]
+  productFavorites      MarketplaceFavorite[]
+  marketplaceOrders     MarketplaceOrder[]
   marketplaceRoleGrants MarketplaceRoleGrant[]
   marketplaceRoleEvents MarketplaceRoleEvent[]
-  emailVerifications ReaderEmailVerification[]
-  marketplaceCreator MarketplaceCreator?
+  emailVerifications    ReaderEmailVerification[]
+  marketplaceCreator    MarketplaceCreator?
 }
 
 enum TransactionalEmailStatus {
@@ -274,12 +274,12 @@ enum TransactionalEmailStatus {
 }
 
 model ReaderEmailVerification {
-  id         String    @id @default(cuid())
+  id         String                    @id @default(cuid())
   userId     String
   expiresAt  DateTime
   consumedAt DateTime?
-  createdAt  DateTime  @default(now())
-  user       ReaderUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime                  @default(now())
+  user       ReaderUser                @relation(fields: [userId], references: [id], onDelete: Cascade)
   outbox     TransactionalEmailOutbox?
 
   @@index([userId, createdAt])
@@ -330,13 +330,13 @@ model ReaderBookmark {
 }
 
 model ReaderReadingProgress {
-  userId    String
-  articleId String
-  percentage Int       @default(0)
-  visitedAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  user      ReaderUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  article   Article     @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  userId     String
+  articleId  String
+  percentage Int        @default(0)
+  visitedAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  user       ReaderUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article    Article    @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@id([userId, articleId])
   @@index([userId, visitedAt])
@@ -384,109 +384,360 @@ model MarketplaceRoleEvent {
 }
 
 model MarketplaceCreator {
-  id        String   @id @default(cuid())
-  name      String
-  handle    String   @unique
-  initials  String
-  verified Boolean  @default(false)
-  bio       String
-  followers Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ownerUserId String? @unique
-  owner     ReaderUser? @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
-  products  MarketplaceProduct[]
+  id          String               @id @default(cuid())
+  name        String
+  handle      String               @unique
+  initials    String
+  verified    Boolean              @default(false)
+  bio         String
+  followers   Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  ownerUserId String?              @unique
+  owner       ReaderUser?          @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
+  products    MarketplaceProduct[]
 
   @@index([verified, followers])
 }
 
 model MarketplaceCategory {
-  id       String   @id @default(cuid())
+  id       String               @id @default(cuid())
   name     String
-  slug     String   @unique
-  position Int      @default(0)
+  slug     String               @unique
+  position Int                  @default(0)
   products MarketplaceProduct[]
 
   @@index([position, name])
 }
 
 model MarketplaceProduct {
-  id                 String   @id @default(cuid())
-  slug               String   @unique
-  name               String
-  type               String
-  outcome            String
-  description        String
-  priceMinor         Int
-  currency           String   @default("USD")
-  pricingModel       String
-  platforms          String[]
-  models             String[]
-  rating             Decimal  @default(0) @db.Decimal(2, 1)
-  reviewCount        Int      @default(0)
-  usageCount         Int      @default(0)
-  purchaseCount      Int      @default(0)
-  version            String
-  featured           Boolean  @default(false)
-  trending           Boolean  @default(false)
-  verified           Boolean  @default(false)
-  tags               String[]
-  packageFileCount   Int?
-  packageSizeBytes   Int?
-  benefits           String[]
-  useCases           Json?
-  includedFiles      Json?
-  exampleInput       String?
-  exampleOutputTitle String?
-  exampleOutputBody  String?
-  installationSteps  String[]
-  previewFiles       String[]
-  previewExcerpt     String?
-  requirements       String?
-  permissions        String?
-  license             String?
-  updatesPolicy      String?
-  refundPolicy        String?
-  published          Boolean  @default(true)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  creatorId          String
-  creator            MarketplaceCreator @relation(fields: [creatorId], references: [id])
-  categoryId         String
-  category            MarketplaceCategory @relation(fields: [categoryId], references: [id])
-  versions           MarketplaceProductVersion[]
-  reviews            MarketplaceReview[]
-  favorites          MarketplaceFavorite[]
-  orders             MarketplaceOrder[]
+  id                     String                        @id @default(cuid())
+  slug                   String                        @unique
+  name                   String
+  type                   String
+  itemType               MarketplaceItemType?
+  classificationRequired Boolean                       @default(false)
+  outcome                String
+  description            String
+  priceMinor             Int
+  currency               String                        @default("USD")
+  pricingModel           String
+  platforms              String[]
+  models                 String[]
+  rating                 Decimal                       @default(0) @db.Decimal(2, 1)
+  reviewCount            Int                           @default(0)
+  usageCount             Int                           @default(0)
+  purchaseCount          Int                           @default(0)
+  version                String
+  featured               Boolean                       @default(false)
+  trending               Boolean                       @default(false)
+  verified               Boolean                       @default(false)
+  tags                   String[]
+  packageFileCount       Int?
+  packageSizeBytes       Int?
+  benefits               String[]
+  useCases               Json?
+  includedFiles          Json?
+  exampleInput           String?
+  exampleOutputTitle     String?
+  exampleOutputBody      String?
+  installationSteps      String[]
+  previewFiles           String[]
+  previewExcerpt         String?
+  requirements           String?
+  permissions            String?
+  license                String?
+  updatesPolicy          String?
+  refundPolicy           String?
+  published              Boolean                       @default(true)
+  createdAt              DateTime                      @default(now())
+  updatedAt              DateTime                      @updatedAt
+  creatorId              String
+  creator                MarketplaceCreator            @relation(fields: [creatorId], references: [id])
+  categoryId             String
+  category               MarketplaceCategory           @relation(fields: [categoryId], references: [id])
+  versions               MarketplaceProductVersion[]
+  reviews                MarketplaceReview[]
+  favorites              MarketplaceFavorite[]
+  orders                 MarketplaceOrder[]
+  manifestSnapshots      MarketplaceManifestSnapshot[]
 
   @@index([published, featured, usageCount])
   @@index([published, type])
+  @@index([published, itemType])
+  @@index([classificationRequired])
   @@index([published, categoryId])
   @@index([published, verified])
   @@index([updatedAt])
 }
 
 model MarketplaceProductVersion {
-  id        String   @id @default(cuid())
-  productId String
-  version   String
-  notes     String
-  releasedAt DateTime
-  product   MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id              String                      @id @default(cuid())
+  productId       String
+  version         String
+  notes           String
+  releasedAt      DateTime
+  product         MarketplaceProduct          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  releaseManifest MarketplaceReleaseManifest?
 
   @@unique([productId, version])
   @@index([productId, releasedAt])
 }
 
+enum MarketplaceItemType {
+  SKILL
+  AGENT
+  MCP_SERVER
+  INTEGRATION
+  RULE
+  PROMPT
+  HOOK
+  TEMPLATE
+  WORKFLOW
+}
+
+enum MarketplaceSourceKind {
+  GITHUB_REPOSITORY
+  GITHUB_RELEASE
+  NPM
+}
+
+enum MarketplaceInstallationMethod {
+  MANUAL
+  NPM
+  GIT
+  DOWNLOAD
+  CONTAINER
+  HOSTED
+}
+
+enum MarketplacePermissionCapability {
+  FILESYSTEM_READ
+  FILESYSTEM_WRITE
+  PROCESS_EXECUTION
+  NETWORK_ACCESS
+  ENVIRONMENT_ACCESS
+  SECRET_ACCESS
+  BROWSER_AUTOMATION
+  EXTERNAL_ACCOUNT_ACCESS
+  PERSISTENT_STORAGE
+  BACKGROUND_EXECUTION
+  CODE_MODIFICATION
+  TELEMETRY
+}
+
+model MarketplaceManifestSnapshot {
+  id              String              @id @default(cuid())
+  productId       String
+  manifestVersion Int
+  itemType        MarketplaceItemType
+  digestSha256    String
+  snapshot        Json
+  createdAt       DateTime            @default(now())
+  product         MarketplaceProduct  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([productId, digestSha256])
+  @@index([productId, createdAt])
+}
+
+model MarketplaceReleaseManifest {
+  id                       String                                  @id @default(cuid())
+  productVersionId         String                                  @unique
+  manifestVersion          Int
+  itemType                 MarketplaceItemType
+  sourceKind               MarketplaceSourceKind
+  sourceUrl                String
+  sourceRef                String
+  sourcePath               String?
+  providerIntegrityDigest  String?
+  sourceResolvedAt         DateTime?
+  ownershipVerifiedAt      DateTime?
+  installationMethod       MarketplaceInstallationMethod
+  installationInstructions String[]
+  runtimeRequirements      String[]
+  accountRequirements      String[]
+  operatingSystems         String[]
+  dependencyRequirements   String[]
+  licenseIdentifier        String?
+  customLicenseUrl         String?
+  documentationUrl         String?
+  supportUrl               String?
+  releaseNotes             String
+  publishedAt              DateTime?
+  createdAt                DateTime                                @default(now())
+  productVersion           MarketplaceProductVersion               @relation(fields: [productVersionId], references: [id], onDelete: Restrict)
+  compatibility            MarketplaceReleaseCompatibility[]
+  permissions              MarketplaceReleasePermission[]
+  environmentVariables     MarketplaceReleaseEnvironmentVariable[]
+  skillDetails             MarketplaceSkillReleaseDetails?
+  agentDetails             MarketplaceAgentReleaseDetails?
+  mcpServerDetails         MarketplaceMcpServerReleaseDetails?
+  integrationDetails       MarketplaceIntegrationReleaseDetails?
+  ruleDetails              MarketplaceRuleReleaseDetails?
+  promptDetails            MarketplacePromptReleaseDetails?
+  hookDetails              MarketplaceHookReleaseDetails?
+  templateDetails          MarketplaceTemplateReleaseDetails?
+  workflowDetails          MarketplaceWorkflowReleaseDetails?
+
+  @@index([itemType, publishedAt])
+  @@index([sourceKind, sourceUrl])
+}
+
+model MarketplaceReleaseCompatibility {
+  id                String                     @id @default(cuid())
+  releaseManifestId String
+  platformKey       String
+  models            String[]
+  notes             String?
+  releaseManifest   MarketplaceReleaseManifest @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+
+  @@unique([releaseManifestId, platformKey])
+}
+
+model MarketplaceReleasePermission {
+  id                String                          @id @default(cuid())
+  releaseManifestId String
+  capability        MarketplacePermissionCapability
+  required          Boolean                         @default(true)
+  scope             String?
+  destinations      String[]
+  purpose           String
+  releaseManifest   MarketplaceReleaseManifest      @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+
+  @@unique([releaseManifestId, capability])
+}
+
+model MarketplaceReleaseEnvironmentVariable {
+  id                String                     @id @default(cuid())
+  releaseManifestId String
+  name              String
+  purpose           String
+  required          Boolean                    @default(true)
+  sensitive         Boolean                    @default(false)
+  releaseManifest   MarketplaceReleaseManifest @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+
+  @@unique([releaseManifestId, name])
+}
+
+model MarketplaceSkillReleaseDetails {
+  releaseManifestId  String                     @id
+  format             String
+  entryPath          String
+  activation         String
+  bundledExecutables Boolean
+  inputs             String[]
+  outputs            String[]
+  releaseManifest    MarketplaceReleaseManifest @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+}
+
+model MarketplaceAgentReleaseDetails {
+  releaseManifestId String                     @id
+  scope             String
+  entryPath         String
+  invocation        String
+  tools             String[]
+  capabilities      String[]
+  modelRequirements String[]
+  inputs            String[]
+  outputs           String[]
+  releaseManifest   MarketplaceReleaseManifest @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+}
+
+model MarketplaceMcpServerReleaseDetails {
+  releaseManifestId    String                     @id
+  transport            String
+  connectionMethod     String
+  distributionIdentity String
+  exposedTools         String[]
+  exposedResources     String[]
+  exposedPrompts       String[]
+  authenticationMethod String
+  networkDestinations  String[]
+  dataHandling         String
+  releaseManifest      MarketplaceReleaseManifest @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+}
+
+model MarketplaceIntegrationReleaseDetails {
+  releaseManifestId      String                     @id
+  integrationKind        String
+  hostPlatform           String
+  installationIdentifier String
+  connectedService       String
+  requestedScopes        String[]
+  authentication         String
+  callback               String?
+  dataFlow               String
+  releaseManifest        MarketplaceReleaseManifest @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+}
+
+model MarketplaceRuleReleaseDetails {
+  releaseManifestId String                     @id
+  format            String
+  destinationScope  String
+  entryPath         String
+  activation        String
+  applicablePaths   String[]
+  expectedEffect    String
+  releaseManifest   MarketplaceReleaseManifest @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+}
+
+model MarketplacePromptReleaseDetails {
+  releaseManifestId String                     @id
+  format            String
+  entryPaths        String[]
+  variables         String[]
+  requiredInputs    String[]
+  outputContract    String
+  intendedModels    String[]
+  releaseManifest   MarketplaceReleaseManifest @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+}
+
+model MarketplaceHookReleaseDetails {
+  releaseManifestId String                            @id
+  events            String[]
+  hostPlatform      String
+  entryPaths        String[]
+  runtime           String
+  behavior          String
+  failurePolicy     String
+  effects           MarketplacePermissionCapability[]
+  releaseManifest   MarketplaceReleaseManifest        @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+}
+
+model MarketplaceTemplateReleaseDetails {
+  releaseManifestId    String                     @id
+  templateKind         String
+  includedPaths        String[]
+  outputFormat         String
+  initializationMethod String
+  replacementVariables String[]
+  executesScripts      Boolean
+  releaseManifest      MarketplaceReleaseManifest @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+}
+
+model MarketplaceWorkflowReleaseDetails {
+  releaseManifestId      String                     @id
+  stages                 Json
+  dependencies           String[]
+  executionMethod        String
+  initialInputs          String[]
+  intermediateState      String
+  finalOutputs           String[]
+  retryBehavior          String
+  rollbackBehavior       String
+  partialFailureBehavior String
+  releaseManifest        MarketplaceReleaseManifest @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+}
+
 model MarketplaceReview {
-  id               String   @id @default(cuid())
+  id               String             @id @default(cuid())
   productId        String
   author           String
   rating           Int
   body             String
-  verifiedPurchase Boolean  @default(false)
-  published        Boolean  @default(false)
-  createdAt        DateTime @default(now())
+  verifiedPurchase Boolean            @default(false)
+  published        Boolean            @default(false)
+  createdAt        DateTime           @default(now())
   product          MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId, published, createdAt])
@@ -495,8 +746,8 @@ model MarketplaceReview {
 model MarketplaceFavorite {
   userId    String
   productId String
-  createdAt DateTime @default(now())
-  user      ReaderUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime           @default(now())
+  user      ReaderUser         @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@id([userId, productId])
@@ -505,20 +756,20 @@ model MarketplaceFavorite {
 }
 
 model MarketplaceOrder {
-  id             String   @id @default(cuid())
+  id             String             @id @default(cuid())
   userId         String
   productId      String
-  idempotencyKey String   @unique
+  idempotencyKey String             @unique
   amountMinor    Int
   currency       String
   status         String
   providerRef    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  user           ReaderUser @relation(fields: [userId], references: [id], onDelete: Restrict)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  user           ReaderUser         @relation(fields: [userId], references: [id], onDelete: Restrict)
   product        MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
 
+  @@unique([userId, productId])
   @@index([userId, createdAt])
   @@index([productId, status])
-  @@unique([userId, productId])
 }

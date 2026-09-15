@@ -52,6 +52,8 @@ Password-account verification delivery and Cloudflare onboarding are documented
 in [Email Verification Operations](docs/email-verification.md).
 Creator identity boundaries and self-service ownership are documented in
 [Creator Onboarding and Ownership](docs/creator-onboarding.md).
+Controlled item types, manifest validation, legacy classification, and immutable
+release storage are documented in [Marketplace Item Types and Manifests](docs/marketplace-manifests.md).
 
 ## Run the complete stack with Docker
 

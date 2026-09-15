@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceHome, getMarketplaceProduct, listMarketplaceFavorites, listMarketplaceProducts, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
+import { acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceHome, getMarketplaceProduct, listMarketplaceFavorites, listMarketplaceItemTypes, listMarketplaceProducts, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
 import { createOwnedCreatorProfile, getOwnedCreatorProfile, updateOwnedCreatorProfile } from "../controllers/marketplaceCreatorController.js";
 import { requireMarketplaceRole, requireReader, requireVerifiedReader } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
@@ -7,6 +7,7 @@ import { creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceProduct
 
 const router = Router();
 router.get("/home", getMarketplaceHome);
+router.get("/item-types", listMarketplaceItemTypes);
 router.get("/products", validate(marketplaceProductQuerySchema, "query"), listMarketplaceProducts);
 router.get("/products/:slug", getMarketplaceProduct);
 router.get("/creator/profile", requireReader, getOwnedCreatorProfile);

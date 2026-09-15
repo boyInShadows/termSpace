@@ -1,6 +1,12 @@
 import type { Request, Response } from "express";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
+import {
+  MARKETPLACE_DATABASE_ITEM_TYPES,
+  MARKETPLACE_ITEM_TYPES,
+  MARKETPLACE_ITEM_TYPE_REGISTRY,
+  marketplaceItemTypeKey,
+} from "../lib/marketplaceManifest.js";
 
 const productInclude = {
   creator: { select: { id: true, name: true, handle: true, initials: true, verified: true, bio: true, followers: true, _count: { select: { products: true } } } },
@@ -10,6 +16,7 @@ const productInclude = {
 function serializeProduct(product: any) {
   return {
     ...product,
+    typeKey: marketplaceItemTypeKey(product.itemType),
     rating: Number(product.rating),
     pricing: { amountMinor: product.priceMinor, currency: product.currency, model: product.pricingModel },
     compatibility: { platforms: product.platforms, models: product.models },
@@ -26,7 +33,13 @@ function serializeProduct(product: any) {
     models: undefined,
     categoryId: undefined,
     creatorId: undefined,
+    itemType: undefined,
+    classificationRequired: undefined,
   };
+}
+
+export function listMarketplaceItemTypes(_req: Request, res: Response) {
+  res.json({ data: MARKETPLACE_ITEM_TYPES.map((key) => ({ key, ...MARKETPLACE_ITEM_TYPE_REGISTRY[key] })) });
 }
 
 export async function getMarketplaceHome(_req: Request, res: Response) {
@@ -54,7 +67,10 @@ export async function listMarketplaceProducts(req: Request, res: Response) {
       { description: { contains: q, mode: "insensitive" } },
       { creator: { name: { contains: q, mode: "insensitive" } } },
     ] } : {}),
-    ...(type ? { type } : {}),
+    ...(type ? MARKETPLACE_ITEM_TYPES.includes(type)
+      ? { itemType: MARKETPLACE_DATABASE_ITEM_TYPES[type as keyof typeof MARKETPLACE_DATABASE_ITEM_TYPES] }
+      : { type }
+    : {}),
     ...(category ? { category: { name: category } } : {}),
     ...(platform ? { platforms: { has: platform } } : {}),
     ...(price ? { pricingModel: price === "free" ? "free" : "one-time" } : {}),

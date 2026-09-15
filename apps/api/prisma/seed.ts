@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { hash } from "bcryptjs";
 import { randomBytes } from "node:crypto";
 import { categories as marketplaceCategoryNames, creators as marketplaceCreators, products as marketplaceProducts, reviews as marketplaceReviews, versions as marketplaceVersions } from "./marketplaceData.js";
+import { LEGACY_ITEM_TYPE_MAP, MARKETPLACE_DATABASE_ITEM_TYPES } from "../src/lib/marketplaceManifest.js";
 
 const prisma = new PrismaClient();
 
@@ -612,6 +613,9 @@ async function main() {
   }
 
   for (const product of marketplaceProducts) {
+    const itemTypeKey = LEGACY_ITEM_TYPE_MAP[product.type];
+    const itemType = itemTypeKey ? MARKETPLACE_DATABASE_ITEM_TYPES[itemTypeKey] : null;
+    const classificationRequired = itemType === null;
     const productDetails = product.slug === "conversion-copywriter" ? {
       purchaseCount: 3200, packageFileCount: 6, packageSizeBytes: 86_016,
       benefits: ["Extracts pains, desired outcomes, and objections from research", "Builds a claim-to-proof messaging map", "Drafts complete pages with voice constraints", "Reviews copy for unsupported claims and generic language"],
@@ -626,7 +630,7 @@ async function main() {
     } : { benefits: [], installationSteps: [], previewFiles: [] };
     await prisma.marketplaceProduct.upsert({
       where: { slug: product.slug }, update: {
-        name: product.name, type: product.type, outcome: product.outcome, description: product.description,
+        name: product.name, type: product.type, itemType, classificationRequired, outcome: product.outcome, description: product.description,
         priceMinor: product.pricing.amount * 100, currency: product.pricing.currency, pricingModel: product.pricing.model,
         platforms: [...product.compatibility.platforms], models: [...product.compatibility.models], rating: product.rating,
         reviewCount: product.reviewCount, usageCount: product.usageCount, version: product.version,
@@ -634,7 +638,7 @@ async function main() {
         creatorId: marketplaceCreatorIds.get(product.creator.handle)!, categoryId: marketplaceCategoryIds.get(product.category)!,
         published: true, updatedAt: new Date(product.updatedAt), ...productDetails,
       }, create: {
-        id: product.id, slug: product.slug, name: product.name, type: product.type, outcome: product.outcome,
+        id: product.id, slug: product.slug, name: product.name, type: product.type, itemType, classificationRequired, outcome: product.outcome,
         description: product.description, priceMinor: product.pricing.amount * 100, currency: product.pricing.currency,
         pricingModel: product.pricing.model, platforms: [...product.compatibility.platforms], models: [...product.compatibility.models],
         rating: product.rating, reviewCount: product.reviewCount, usageCount: product.usageCount, version: product.version,

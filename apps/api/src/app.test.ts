@@ -67,6 +67,46 @@ describe("API", () => {
     expect(response.body.data).toEqual({ products: [], creators: [], categories: [], total: 12 });
   });
 
+  it("publishes the controlled marketplace item-type registry", async () => {
+    const response = await request(createApp()).get("/api/marketplace/item-types");
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(9);
+    expect(response.body.data).toContainEqual(expect.objectContaining({ key: "mcp_server", en: "MCP server" }));
+  });
+
+  it("adds stable type keys without leaking classification state", async () => {
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([{
+      id: "product-1", slug: "example-skill", name: "Example Skill", type: "Skill", itemType: "SKILL",
+      classificationRequired: false, rating: 4.5, priceMinor: 0, currency: "USD", pricingModel: "free",
+      platforms: ["Codex"], models: [], categoryId: "category-1", category: { name: "Developer tools" },
+      creatorId: "creator-1", creator: null,
+    }]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(1);
+    prismaMock.marketplaceCreator.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceCategory.findMany.mockResolvedValue([]);
+
+    const response = await request(createApp()).get("/api/marketplace/home");
+    expect(response.status).toBe(200);
+    expect(response.body.data.products[0]).toEqual(expect.objectContaining({ type: "Skill", typeKey: "skill" }));
+    expect(response.body.data.products[0]).not.toHaveProperty("itemType");
+    expect(response.body.data.products[0]).not.toHaveProperty("classificationRequired");
+  });
+
+  it("filters by canonical item type while preserving legacy filters", async () => {
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+
+    expect((await request(createApp()).get("/api/marketplace/products?type=prompt")).status).toBe(200);
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenLastCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ itemType: "PROMPT" }),
+    }));
+
+    expect((await request(createApp()).get("/api/marketplace/products?type=Prompt%20pack")).status).toBe(200);
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenLastCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ type: "Prompt pack" }),
+    }));
+  });
+
   it("rejects invalid newsletter input before database access", async () => {
     const response = await request(createApp())
       .post("/api/newsletter/subscribers")
