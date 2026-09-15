@@ -4,9 +4,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — Product Decisions
 
-- Define supported item types and the required manifest and metadata for each:
-  skills, agents, subagents, MCP servers, integrations, rules, prompts, hooks,
-  templates, workflows, and other tools.
 - Define creator verification, submission moderation, review moderation,
   reporting, suspension, appeal, and ownership-transfer policies.
 
@@ -21,6 +18,9 @@ This file tracks known improvement work that has not been completed yet. When an
 - Build draft creation and editing for listing metadata, documentation,
   screenshots, platform compatibility, community membership, category, item
   type, requirements, permissions, license, and installation instructions.
+- Implement the versioned common manifest, controlled item-type registry, and
+  type-specific validation defined in ADR 0003. Migrate direct legacy types and
+  require manual classification for `AI tool` and `Developer utility` records.
 - Add submission states and an auditable lifecycle: draft, submitted, changes
   requested, approved, published, rejected, suspended, and archived.
 - Build the staff moderation queue with preview, approval, rejection, change

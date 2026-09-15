@@ -20,6 +20,12 @@ Project changes completed from `pending.md` should be recorded here with the dat
   duplicate listings or reputation data, and remains independent from platform
   compatibility and Blog permissions. Verification: ADR and documentation links
   reviewed and `git diff --check` passes.
+- Defined nine stable marketplace item types and a versioned submission manifest
+  separating mutable listing metadata from immutable release metadata. The
+  contract includes structured permissions and type-specific installation and
+  compatibility requirements, with explicit handling for existing uncontrolled
+  type strings. Verification: existing API, seed, filter, and frontend type usage
+  audited; ADR and documentation links reviewed; `git diff --check` passes.
 
 ## 2026-09-08
 

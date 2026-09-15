@@ -36,6 +36,13 @@ independent, combinable discovery facets. See
 [ADR 0002](architecture/0002-community-model.md) for the community lifecycle and
 moderation model.
 
+Marketplace listings use a controlled taxonomy of skills, agents, MCP servers,
+integrations, rules, prompts, hooks, templates, and workflows. Each creator
+submission follows a versioned common manifest plus type-specific installation,
+compatibility, and permission metadata. See
+[ADR 0003](architecture/0003-item-types-and-manifests.md) for the canonical type
+keys and manifest boundary.
+
 The core consumer journey is:
 
 `discover -> evaluate -> acquire/install -> use -> rate/review`
