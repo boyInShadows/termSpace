@@ -3,7 +3,7 @@ import type { MarketplaceManifestV1 } from "./marketplaceManifest.js";
 import { MarketplaceLifecycleError, marketplaceProductProjectionFromManifest, resolveMarketplaceListingTransition } from "./marketplaceListingLifecycle.js";
 
 function context(overrides: Partial<Parameters<typeof resolveMarketplaceListingTransition>[0]> = {}) {
-  return { state: "DRAFT" as const, published: false, hasApprovedSnapshot: false, hasProposedSnapshot: true, resumeState: null, resumePublished: null, ...overrides };
+  return { state: "DRAFT" as const, published: false, hasApprovedSnapshot: false, hasProposedSnapshot: true, resumeState: null, resumePublished: null, archivedBy: null, ...overrides };
 }
 
 describe("marketplace listing lifecycle", () => {
@@ -37,6 +37,15 @@ describe("marketplace listing lifecycle", () => {
     expect(() => resolveMarketplaceListingTransition(context({ state: "SUBMITTED" }), "APPROVE", "CREATOR")).toThrow(MarketplaceLifecycleError);
     expect(() => resolveMarketplaceListingTransition(context({ hasProposedSnapshot: false }), "SUBMIT", "CREATOR")).toThrowError(expect.objectContaining({ code: "PROPOSED_SNAPSHOT_REQUIRED" }));
     expect(() => resolveMarketplaceListingTransition(context(), "PUBLISH", "ADMINISTRATOR")).toThrowError(expect.objectContaining({ code: "INVALID_LISTING_TRANSITION" }));
+  });
+
+  it("allows creators to restore only listings they archived themselves", () => {
+    const creatorArchive = context({ state: "ARCHIVED", resumeState: "PUBLISHED", resumePublished: true, archivedBy: "CREATOR" });
+    expect(resolveMarketplaceListingTransition(creatorArchive, "RESTORE", "CREATOR")).toEqual(expect.objectContaining({ state: "PUBLISHED", published: true }));
+
+    const staffArchive = context({ state: "ARCHIVED", resumeState: "PUBLISHED", resumePublished: true, archivedBy: "MODERATOR" });
+    expect(() => resolveMarketplaceListingTransition(staffArchive, "RESTORE", "CREATOR")).toThrowError(expect.objectContaining({ code: "INVALID_LISTING_TRANSITION" }));
+    expect(resolveMarketplaceListingTransition(staffArchive, "RESTORE", "MODERATOR")).toEqual(expect.objectContaining({ state: "PUBLISHED", published: true }));
   });
 
   it("projects the approved manifest into the public product record", () => {

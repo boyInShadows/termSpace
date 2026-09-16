@@ -2,6 +2,22 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-09-16
+
+- Resolved the Bugbot and Security Review findings against the marketplace
+  listing lifecycle. Publication now atomically timestamps and freezes the exact
+  approved release manifest; new products default to unpublished drafts at both
+  Prisma and database levels; grandfathered legacy publications can return from
+  suspension or creator archival without fabricated modern verification; and
+  creators cannot reverse staff archival. Enforcement audit events now identify
+  the approved public snapshot when a separate edit is pending. Verification:
+  Prisma generation and schema validation; all workspace type-checks; 97 tests;
+  API and web production builds plus the Blog webpack production build; web
+  lint; `git diff --check`; all 15 migrations applied to an isolated PostgreSQL
+  17 database; and direct confirmation that the migrated `published` default is
+  `false`. The Blog's default Turbopack build remained unavailable because this
+  host blocks its internal port binding; its established webpack build passed.
+
 ## 2026-09-15
 
 - Established the TermSpace product direction: the main application is a

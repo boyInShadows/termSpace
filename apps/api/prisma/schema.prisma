@@ -456,7 +456,7 @@ model MarketplaceProduct {
   license                  String?
   updatesPolicy            String?
   refundPolicy             String?
-  published                Boolean                            @default(true)
+  published                Boolean                            @default(false)
   createdAt                DateTime                           @default(now())
   updatedAt                DateTime                           @updatedAt
   creatorId                String

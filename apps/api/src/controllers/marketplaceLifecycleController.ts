@@ -30,10 +30,16 @@ const productLifecycleSelect = {
   approvedSnapshotId: true,
   proposedSnapshotId: true,
   proposedSnapshot: {
-    select: { content: true, releaseManifest: { select: { sourceResolvedAt: true, ownershipVerifiedAt: true } } },
+    select: { content: true, schemaVersion: true, releaseManifest: { select: { id: true, publishedAt: true, sourceResolvedAt: true, ownershipVerifiedAt: true } } },
   },
   approvedSnapshot: {
-    select: { releaseManifest: { select: { sourceResolvedAt: true, ownershipVerifiedAt: true } } },
+    select: { schemaVersion: true, releaseManifest: { select: { sourceResolvedAt: true, ownershipVerifiedAt: true } } },
+  },
+  lifecycleEvents: {
+    where: { action: "ARCHIVED" as const },
+    orderBy: { createdAt: "desc" as const },
+    take: 1,
+    select: { actorType: true },
   },
   creator: { select: { ownerUserId: true } },
 } as const;
@@ -43,6 +49,25 @@ const publicReasonActions = new Set<MarketplaceListingAction>(["REQUEST_CHANGES"
 function actorFor(readerRoles: string[], creatorRequest: boolean): MarketplaceLifecycleActor {
   if (creatorRequest) return "CREATOR";
   return readerRoles.includes("administrator") ? "ADMINISTRATOR" : "MODERATOR";
+}
+
+function lifecycleEventSnapshotId(input: {
+  action: MarketplaceListingAction;
+  previousPublished: boolean;
+  previousApprovedSnapshotId: string | null;
+  previousProposedSnapshotId: string | null;
+  resultingPublished: boolean;
+  resultingApprovedSnapshotId: string | null;
+  resultingProposedSnapshotId: string | null;
+}) {
+  if (input.action === "APPROVE" || input.action === "PUBLISH") return input.previousProposedSnapshotId;
+  if ((input.action === "SUSPEND" || input.action === "ARCHIVE") && input.previousPublished) {
+    return input.previousApprovedSnapshotId;
+  }
+  if ((input.action === "REINSTATE" || input.action === "RESTORE") && input.resultingPublished) {
+    return input.resultingApprovedSnapshotId;
+  }
+  return input.resultingProposedSnapshotId ?? input.resultingApprovedSnapshotId;
 }
 
 async function transitionListing(req: Request, res: Response, creatorRequest: boolean) {
@@ -71,7 +96,11 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
       }
       if (["SUBMIT", "PUBLISH", "REINSTATE"].includes(action) || (action === "RESTORE" && product.lifecycleResumePublished)) {
         const sourceSnapshot = action === "SUBMIT" || action === "PUBLISH" ? product.proposedSnapshot : product.approvedSnapshot;
-        const sourceVerified = Boolean(sourceSnapshot?.releaseManifest?.sourceResolvedAt && sourceSnapshot.releaseManifest.ownershipVerifiedAt);
+        const restoringGrandfatheredLegacyPublication = (action === "REINSTATE" || action === "RESTORE")
+          && product.lifecycleResumePublished
+          && sourceSnapshot?.schemaVersion === 0;
+        const sourceVerified = restoringGrandfatheredLegacyPublication
+          || Boolean(sourceSnapshot?.releaseManifest?.sourceResolvedAt && sourceSnapshot.releaseManifest.ownershipVerifiedAt);
         if (!sourceVerified) {
           throw new LifecycleRequestError(409, "SOURCE_VERIFICATION_REQUIRED", "Resolve the exact release source and verify ownership before this transition");
         }
@@ -84,6 +113,7 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
         hasProposedSnapshot: Boolean(product.proposedSnapshotId),
         resumeState: product.lifecycleResumeState as MarketplaceListingStateValue | null,
         resumePublished: product.lifecycleResumePublished,
+        archivedBy: (product.lifecycleEvents?.[0]?.actorType as MarketplaceLifecycleActor | "SYSTEM" | undefined) ?? null,
       }, action, actorType);
       const approvedSnapshotId = transition.approvedSnapshot === "promote-proposed" ? product.proposedSnapshotId : product.approvedSnapshotId;
       const proposedSnapshotId = transition.proposedSnapshot === "clear" ? null : product.proposedSnapshotId;
@@ -100,6 +130,14 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
         const category = await tx.marketplaceCategory.findUnique({ where: { slug: manifest.listing.categorySlug }, select: { id: true } });
         if (!category) throw new LifecycleRequestError(409, "CATEGORY_NOT_FOUND", "The approved listing category is unavailable");
         publicationProjection = marketplaceProductProjectionFromManifest(manifest, category.id);
+        const releaseManifest = product.proposedSnapshot.releaseManifest;
+        if (!releaseManifest) throw new LifecycleRequestError(409, "RELEASE_MANIFEST_REQUIRED", "The approved publication candidate has no release manifest");
+        if (!releaseManifest.publishedAt) {
+          await tx.marketplaceReleaseManifest.update({
+            where: { id: releaseManifest.id },
+            data: { publishedAt: new Date() },
+          });
+        }
       }
 
       const next = await tx.marketplaceProduct.update({
@@ -119,7 +157,15 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
       await tx.marketplaceListingLifecycleEvent.create({
         data: {
           productId: product.id,
-          snapshotId: action === "APPROVE" ? product.proposedSnapshotId : proposedSnapshotId ?? approvedSnapshotId,
+          snapshotId: lifecycleEventSnapshotId({
+            action,
+            previousPublished: product.published,
+            previousApprovedSnapshotId: product.approvedSnapshotId,
+            previousProposedSnapshotId: product.proposedSnapshotId,
+            resultingPublished: transition.published,
+            resultingApprovedSnapshotId: approvedSnapshotId,
+            resultingProposedSnapshotId: proposedSnapshotId,
+          }),
           previousState: product.lifecycleState,
           resultingState: transition.state,
           action: transition.eventAction,

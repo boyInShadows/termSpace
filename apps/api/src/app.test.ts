@@ -12,11 +12,12 @@ const prismaMock = vi.hoisted(() => ({
   readerEmailVerification: { findUnique: vi.fn(), findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   transactionalEmailOutbox: { updateMany: vi.fn() },
   marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+  marketplaceReleaseManifest: { update: vi.fn() },
   marketplaceListingLifecycleEvent: { create: vi.fn() },
   marketplaceCreator: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceRoleGrant: { findUnique: vi.fn(), create: vi.fn() },
   marketplaceRoleEvent: { create: vi.fn() },
-  marketplaceCategory: { findMany: vi.fn() },
+  marketplaceCategory: { findMany: vi.fn(), findUnique: vi.fn() },
   $transaction: vi.fn(),
   $executeRaw: vi.fn(),
   $queryRaw: vi.fn(),
@@ -34,6 +35,34 @@ process.env.GOOGLE_CLIENT_ID = "test-google-client-id";
 process.env.EMAIL_VERIFICATION_SECRET = "test-secret-that-is-definitely-longer-than-32-bytes";
 const { createApp } = await import("./app.js");
 const { createEmailVerificationToken } = await import("./lib/emailVerification.js");
+
+function marketplaceManifestFixture() {
+  return {
+    manifestVersion: 1,
+    type: "skill",
+    listing: {
+      slug: "owned-skill",
+      name: { en: "Owned Skill" },
+      outcome: { en: "Completes a useful task" },
+      description: { en: "A complete marketplace test item." },
+      categorySlug: "developer-tools",
+      communitySlugs: ["codex"],
+      tags: ["testing"],
+      screenshots: [],
+    },
+    release: {
+      version: "1.0.0",
+      source: { kind: "github_repository", repositoryUrl: "https://github.com/example/item", commitSha: "a".repeat(40) },
+      releaseNotes: "Initial release",
+      compatibility: [{ platform: "codex", models: [] }],
+      installation: { method: "manual", instructions: ["Copy the files"] },
+      requirements: { runtimes: [], accounts: [], operatingSystems: [], dependencies: [], environmentVariables: [] },
+      permissions: [],
+      license: { identifier: "MIT" },
+    },
+    typeDetails: { format: "SKILL.md", entryPath: "SKILL.md", activation: "Install in the skills directory", bundledExecutables: false, inputs: [], outputs: [] },
+  };
+}
 
 describe("API", () => {
   beforeEach(() => {
@@ -375,6 +404,113 @@ describe("API", () => {
     expect(prismaMock.marketplaceListingLifecycleEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({
       productId: "product-1", snapshotId: "snapshot-2", previousState: "DRAFT", resultingState: "SUBMITTED",
       action: "SUBMITTED", actorType: "CREATOR", actorUserId: "reader-1",
+    }) });
+  });
+
+  it("freezes the exact release manifest in the publication transaction", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      id: "product-1", slug: "owned-skill", published: false, lifecycleState: "APPROVED", lifecycleVersion: 4,
+      lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: null, proposedSnapshotId: "snapshot-1",
+      proposedSnapshot: {
+        content: marketplaceManifestFixture(), schemaVersion: 1,
+        releaseManifest: { id: "release-1", publishedAt: null, sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date() },
+      },
+      approvedSnapshot: null,
+      lifecycleEvents: [],
+      creator: { ownerUserId: "reader-1" },
+    });
+    prismaMock.marketplaceCategory.findUnique.mockResolvedValue({ id: "category-1" });
+    prismaMock.marketplaceReleaseManifest.update.mockResolvedValue({});
+    prismaMock.marketplaceProduct.update.mockResolvedValue({
+      id: "product-1", slug: "owned-skill", lifecycleState: "PUBLISHED", lifecycleVersion: 5,
+      published: true, approvedSnapshotId: "snapshot-1", proposedSnapshotId: null,
+    });
+    prismaMock.marketplaceListingLifecycleEvent.create.mockResolvedValue({});
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/moderation/products/product-1/lifecycle")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ action: "PUBLISH", expectedVersion: 4 });
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.marketplaceReleaseManifest.update).toHaveBeenCalledWith({
+      where: { id: "release-1" },
+      data: { publishedAt: expect.any(Date) },
+    });
+    expect(prismaMock.marketplaceListingLifecycleEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({
+      snapshotId: "snapshot-1", action: "PUBLISHED",
+    }) });
+  });
+
+  it("restores a creator-archived legacy publication without inventing modern source verification", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      id: "product-1", slug: "legacy-skill", published: false, lifecycleState: "ARCHIVED", lifecycleVersion: 2,
+      lifecycleResumeState: "PUBLISHED", lifecycleResumePublished: true, approvedSnapshotId: "legacy-snapshot", proposedSnapshotId: null,
+      proposedSnapshot: null,
+      approvedSnapshot: { schemaVersion: 0, releaseManifest: null },
+      lifecycleEvents: [{ actorType: "CREATOR" }],
+      creator: { ownerUserId: "reader-1" },
+    });
+    prismaMock.marketplaceProduct.update.mockResolvedValue({
+      id: "product-1", slug: "legacy-skill", lifecycleState: "PUBLISHED", lifecycleVersion: 3,
+      published: true, approvedSnapshotId: "legacy-snapshot", proposedSnapshotId: null,
+    });
+    prismaMock.marketplaceListingLifecycleEvent.create.mockResolvedValue({});
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/creator/products/product-1/lifecycle")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ action: "RESTORE", expectedVersion: 2 });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toMatchObject({ state: "published", published: true });
+    expect(prismaMock.marketplaceListingLifecycleEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({ snapshotId: "legacy-snapshot" }) });
+  });
+
+  it("audits staff enforcement against the approved public snapshot while an edit is pending", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      id: "product-1", slug: "owned-skill", published: true, lifecycleState: "SUBMITTED", lifecycleVersion: 7,
+      lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: "public-snapshot", proposedSnapshotId: "pending-snapshot",
+      proposedSnapshot: { content: marketplaceManifestFixture(), schemaVersion: 1, releaseManifest: { id: "pending-release", publishedAt: null, sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date() } },
+      approvedSnapshot: { schemaVersion: 1, releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date() } },
+      lifecycleEvents: [],
+      creator: { ownerUserId: "reader-1" },
+    });
+    prismaMock.marketplaceProduct.update.mockResolvedValue({
+      id: "product-1", slug: "owned-skill", lifecycleState: "SUSPENDED", lifecycleVersion: 8,
+      published: false, approvedSnapshotId: "public-snapshot", proposedSnapshotId: "pending-snapshot",
+    });
+    prismaMock.marketplaceListingLifecycleEvent.create.mockResolvedValue({});
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/moderation/products/product-1/lifecycle")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ action: "SUSPEND", expectedVersion: 7, publicReason: "The public release requires a safety review." });
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.marketplaceListingLifecycleEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({
+      snapshotId: "public-snapshot", action: "SUSPENDED",
     }) });
   });
 
