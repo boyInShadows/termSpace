@@ -4,8 +4,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Creator and Submission Lifecycle
 
-- Build a creator dashboard showing owned listings, draft/review/published status,
-  moderation feedback, versions, ratings, acquisition counts, and recent updates.
 - Build draft creation and editing for listing metadata, documentation,
   screenshots, platform compatibility, community membership, category, item
   type, requirements, permissions, license, and installation instructions.

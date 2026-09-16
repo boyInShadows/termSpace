@@ -150,6 +150,11 @@ export const creatorOnboardingSchema = z.object({
 
 export const creatorProfileUpdateSchema = creatorOnboardingSchema.pick({ name: true, bio: true });
 
+export const creatorDashboardQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(24),
+});
+
 const listingLifecycleBaseSchema = z.object({
   expectedVersion: z.number().int().min(0),
   reasonCode: z.string().trim().min(2).max(80).regex(/^[A-Z0-9_]+$/).optional(),

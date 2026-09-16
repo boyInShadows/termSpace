@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { articleQuerySchema, commentSchema, createArticleSchema, creatorOnboardingSchema, editionSchema, markdownResourceMetadataSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema } from "./schemas.js";
+import { articleQuerySchema, commentSchema, createArticleSchema, creatorDashboardQuerySchema, creatorOnboardingSchema, editionSchema, markdownResourceMetadataSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema } from "./schemas.js";
 
 const article = {
   title: "A valid title",
@@ -52,6 +52,12 @@ describe("content validation", () => {
     expect(valid.handle).toBe("tool-builder");
     expect(creatorOnboardingSchema.safeParse({ ...valid, handle: "tool--builder" }).success).toBe(false);
     expect(creatorOnboardingSchema.safeParse({ ...valid, handle: "ابزار" }).success).toBe(false);
+  });
+
+  it("bounds creator dashboard pagination", () => {
+    expect(creatorDashboardQuerySchema.parse({})).toEqual({ page: 1, limit: 24 });
+    expect(creatorDashboardQuerySchema.parse({ page: "2", limit: "12" })).toEqual({ page: 2, limit: 12 });
+    expect(creatorDashboardQuerySchema.safeParse({ limit: 51 }).success).toBe(false);
   });
 
   it("validates Markdown resource metadata from multipart forms", () => {

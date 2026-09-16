@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
+import { CreatorDashboard } from "./creator-dashboard";
 
 export function CreatorHub() {
   const { locale, t } = useLocale();
@@ -59,9 +60,11 @@ export function CreatorHub() {
   if (profile === undefined && !error) return <StatusCard title={t.creatorHub.title} message={t.creatorHub.loading} />;
   if (profile && !profile.accessActive) return <StatusCard title={t.creatorHub.editTitle} message={t.creatorHub.accessRevoked} />;
 
-  return <section className="mx-auto max-w-2xl rounded-xl border bg-surface p-7" aria-labelledby="creator-title">
+  const profileForm = <section className="mx-auto max-w-2xl rounded-xl border bg-surface p-7" aria-labelledby="creator-profile-title">
     <p className="eyebrow">{profile ? t.creatorHub.profileEyebrow : t.creatorHub.onboardingEyebrow}</p>
-    <h1 id="creator-title" className="editorial mt-2 text-4xl">{profile ? t.creatorHub.editTitle : t.creatorHub.title}</h1>
+    {profile
+      ? <h2 id="creator-profile-title" className="editorial mt-2 text-4xl">{t.creatorHub.editTitle}</h2>
+      : <h1 id="creator-profile-title" className="editorial mt-2 text-4xl">{t.creatorHub.title}</h1>}
     <p className="mt-3 text-muted-foreground">{profile ? t.creatorHub.editIntro : t.creatorHub.intro}</p>
     <form className="mt-7 space-y-5" onSubmit={submit}>
       <label className="block text-sm font-medium">{t.creatorHub.name}<Input name="name" required minLength={2} maxLength={80} defaultValue={profile?.name} autoComplete="name" className="mt-2" /></label>
@@ -76,6 +79,12 @@ export function CreatorHub() {
       <Button disabled={submitting}>{submitting ? t.wait : profile ? t.creatorHub.save : t.creatorHub.create}</Button>
     </form>
   </section>;
+
+  if (!profile) return profileForm;
+  return <div className="mx-auto max-w-6xl">
+    <CreatorDashboard />
+    <div className="mt-14 border-t pt-10">{profileForm}</div>
+  </div>;
 }
 
 function StatusCard({ title, message, action }: { title: string; message: string; action?: React.ReactNode }) {

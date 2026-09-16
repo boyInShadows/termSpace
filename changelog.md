@@ -4,6 +4,17 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-16
 
+- Added an authenticated, owner-scoped creator dashboard with bounded listing
+  pagination, lifecycle status, public moderation feedback, release history,
+  ratings, completed-acquisition counts, and recent lifecycle activity. The
+  `/creator` workspace now includes responsive summary and listing views,
+  accessible loading/error/empty states, public-listing links, profile editing,
+  English/Persian copy, RTL-aware navigation, and locale-correct numbers and
+  dates. Dashboard authorization fails closed for accounts without an active
+  creator grant, and acquisition metrics are calculated from completed orders
+  rather than trusting mutable product counters. Verification: all workspace
+  type-checks; 103 tests; API, web, and Blog webpack production builds; web
+  lint; and `git diff --check`.
 - Resolved the Bugbot and Security Review findings against the marketplace
   listing lifecycle. Publication now atomically timestamps and freezes the exact
   approved release manifest; new products default to unpublished drafts at both
