@@ -12,6 +12,7 @@ const copy = {
   version: "Version", rating: "Rating", reviews: "Reviews", acquisitions: "Acquisitions", releases: "Releases", noRating: "Not rated",
   moderationFeedback: "Latest moderation feedback", recentUpdates: "Recent updates", noRecentUpdates: "No updates", updated: "Updated",
   viewPublic: "View public page", paginationLabel: "Creator listings pages", previousPage: "Previous", nextPage: "Next", pageStatus: "Page {page} of {pages}",
+  newListing: "New listing", editDraft: "Edit draft",
   statusDraft: "Draft", statusSubmitted: "Submitted", statusChangesRequested: "Changes requested", statusApproved: "Approved",
   statusPublished: "Published", statusRejected: "Rejected", statusSuspended: "Suspended", statusArchived: "Archived",
   actionDraftSaved: "Draft saved", actionSubmitted: "Submitted for review", actionWithdrawn: "Withdrawn", actionChangesRequested: "Changes requested",
@@ -61,6 +62,8 @@ describe("CreatorDashboard", () => {
     expect(screen.getByText("Clarify network access.")).toBeInTheDocument();
     expect(screen.getByText("27")).toBeInTheDocument();
     expect(screen.getByText("4.5 / 5")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /New listing/ })).toHaveAttribute("href", "/creator/listings/new");
+    expect(screen.getByRole("link", { name: /Edit draft/ })).toHaveAttribute("href", "/creator/listings/product-1/edit");
     expect(screen.getByRole("link", { name: /View public page/ })).toHaveAttribute("href", "/products/owned-skill");
   });
 

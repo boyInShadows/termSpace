@@ -28,6 +28,20 @@ The publication transaction revalidates that candidate and projects its
 approved listing, category, compatibility, installation, permission, and
 license fields into the current public product record.
 
+Creators create and revise drafts through these owner-scoped endpoints:
+
+- `POST /api/marketplace/creator/products`
+- `GET /api/marketplace/creator/products/:id/draft`
+- `PUT /api/marketplace/creator/products/:id/draft`
+
+The update payload includes `expectedVersion`; stale saves fail with
+`409 LISTING_VERSION_CONFLICT` before a snapshot is written. Each successful
+save creates new manifest, normalized release, listing snapshot, community
+placement request, and `DRAFT_SAVED` audit records. Published listings keep
+their approved snapshot and public projection while the replacement draft is
+edited. Public version responses include only versions linked to a release
+whose `publishedAt` timestamp is set, so draft release metadata is not exposed.
+
 Suspension and archival set `published` false and retain both the previous state
 and previous public-availability value. Reinstatement or restoration returns to
 that exact state. Suspension is a staff action; voluntary archival does not
@@ -63,9 +77,10 @@ make snapshots and events append-only and enforce same-listing snapshot,
 manifest, and release references.
 
 Internal moderation notes and queue views are deliberately outside these public
-transition payloads and belong to the staff moderation-queue work. Draft forms
-must use the manifest validator and snapshot helper before setting a proposed
-snapshot.
+transition payloads and belong to the staff moderation-queue work. The creator
+form uses the same strict manifest validator as the API before setting a
+proposal; source resolution and ownership verification remain a separate
+ingestion step and are still required before submission.
 
 ## Seed behavior
 

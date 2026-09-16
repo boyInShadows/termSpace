@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { articleQuerySchema, commentSchema, createArticleSchema, creatorDashboardQuerySchema, creatorOnboardingSchema, editionSchema, markdownResourceMetadataSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema } from "./schemas.js";
+import { articleQuerySchema, commentSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, markdownResourceMetadataSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema } from "./schemas.js";
 
 const article = {
   title: "A valid title",
@@ -7,6 +7,25 @@ const article = {
   content: "Enough article content to pass validation.",
   authorId: "author-1",
   categoryId: "category-1",
+};
+
+const creatorDraftManifest = {
+  manifestVersion: 1,
+  type: "skill",
+  listing: {
+    slug: "review-skill", name: { en: "Review Skill" }, outcome: { en: "Reviews a change" },
+    description: { en: "A complete marketplace draft used for validation." }, categorySlug: "developer-tools",
+    communitySlugs: ["codex"], tags: ["review"], screenshots: [],
+  },
+  release: {
+    version: "1.0.0",
+    source: { kind: "github_repository", repositoryUrl: "https://github.com/example/review-skill", commitSha: "a".repeat(40) },
+    releaseNotes: "Initial release", compatibility: [{ platform: "codex", models: [] }],
+    installation: { method: "manual", instructions: ["Copy the skill"] },
+    requirements: { runtimes: [], accounts: [], operatingSystems: [], dependencies: [], environmentVariables: [] },
+    permissions: [], license: { identifier: "MIT" },
+  },
+  typeDetails: { format: "SKILL.md", entryPath: "SKILL.md", activation: "Install in the skills directory", bundledExecutables: false, inputs: [], outputs: [] },
 };
 
 describe("content validation", () => {
@@ -58,6 +77,14 @@ describe("content validation", () => {
     expect(creatorDashboardQuerySchema.parse({})).toEqual({ page: 1, limit: 24 });
     expect(creatorDashboardQuerySchema.parse({ page: "2", limit: "12" })).toEqual({ page: 2, limit: 12 });
     expect(creatorDashboardQuerySchema.safeParse({ limit: 51 }).success).toBe(false);
+  });
+
+  it("validates complete creator draft writes and optimistic concurrency", () => {
+    const draft = creatorDraftManifest;
+    expect(creatorDraftCreateSchema.safeParse({ manifest: draft }).success).toBe(true);
+    expect(creatorDraftUpdateSchema.safeParse({ expectedVersion: 3, manifest: draft }).success).toBe(true);
+    expect(creatorDraftUpdateSchema.safeParse({ expectedVersion: -1, manifest: draft }).success).toBe(false);
+    expect(creatorDraftCreateSchema.safeParse({ manifest: draft, published: true }).success).toBe(false);
   });
 
   it("validates Markdown resource metadata from multipart forms", () => {

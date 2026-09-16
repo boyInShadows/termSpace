@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Download, ExternalLink, Layers3, Package, RotateCcw, Star } from "lucide-react";
+import { ArrowLeft, ArrowRight, Download, ExternalLink, Layers3, Package, Pencil, Plus, RotateCcw, Star } from "lucide-react";
 import { getCreatorDashboard } from "@/lib/api";
 import type { CreatorDashboardResult, CreatorDashboardListing } from "@/lib/types";
 import { useLocale } from "@/lib/locale-context";
@@ -68,10 +68,15 @@ export function CreatorDashboard() {
   const { summary, listings } = result.data;
 
   return <section aria-labelledby="creator-dashboard-title">
-    <div className="max-w-3xl">
-      <p className="eyebrow">{t.creatorHub.dashboardEyebrow}</p>
-      <h1 id="creator-dashboard-title" className="editorial mt-2 text-4xl sm:text-5xl">{t.creatorHub.dashboardTitle}</h1>
-      <p className="mt-3 text-muted-foreground">{t.creatorHub.dashboardIntro}</p>
+    <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="max-w-3xl">
+        <p className="eyebrow">{t.creatorHub.dashboardEyebrow}</p>
+        <h1 id="creator-dashboard-title" className="editorial mt-2 text-4xl sm:text-5xl">{t.creatorHub.dashboardTitle}</h1>
+        <p className="mt-3 text-muted-foreground">{t.creatorHub.dashboardIntro}</p>
+      </div>
+      <Link className={buttonVariants()} href={localePath("/creator/listings/new", locale)}>
+        <Plus aria-hidden="true" className="size-4" />{t.creatorHub.newListing}
+      </Link>
     </div>
 
     <dl className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -139,9 +144,14 @@ function ListingCard({ listing }: { listing: CreatorDashboardListing }) {
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{listing.type} · {t.creatorHub.version} {listing.currentVersion}</p>
       </div>
-      {listing.published && <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/products/${listing.slug}`, locale)}>
-        {t.creatorHub.viewPublic}<ExternalLink aria-hidden="true" className="size-4" />
-      </Link>}
+      <div className="flex flex-wrap gap-2">
+        {isEditable(listing.state) && <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/creator/listings/${listing.id}/edit`, locale)}>
+          <Pencil aria-hidden="true" className="size-4" />{t.creatorHub.editDraft}
+        </Link>}
+        {listing.published && <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/products/${listing.slug}`, locale)}>
+          {t.creatorHub.viewPublic}<ExternalLink aria-hidden="true" className="size-4" />
+        </Link>}
+      </div>
     </div>
 
     <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 border-y py-4 sm:grid-cols-4">
@@ -184,6 +194,10 @@ function statusClass(state: string) {
   if (state === "submitted" || state === "approved") return "bg-blue-500/10 text-blue-700 dark:text-blue-300";
   if (state === "changes_requested" || state === "suspended" || state === "rejected") return "bg-amber-500/10 text-amber-800 dark:text-amber-300";
   return "bg-muted text-muted-foreground";
+}
+
+function isEditable(state: string) {
+  return state === "draft" || state === "changes_requested" || state === "rejected" || state === "published";
 }
 
 function listingStateLabel(state: string, copy: Record<string, string>) {

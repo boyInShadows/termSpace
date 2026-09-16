@@ -54,6 +54,21 @@ to a release and its normalized children after `publishedAt` is set. Corrections
 therefore require a new product version rather than silently changing what users
 previously evaluated or acquired.
 
+The bilingual creator editor captures every version 1 section for all nine item
+types. Screenshot fields accept external HTTPS references with localized alt
+text; TermSpace does not accept or execute uploaded community artifacts in this
+flow. Categories and active communities come from
+`GET /api/marketplace/draft-options`. A selected community creates an immutable
+placement request tied to that exact listing snapshot. Placement approval and
+public community browse remain part of the separate moderation/discovery work.
+
+A logical product version may have multiple unpublished release-manifest
+revisions while its draft is corrected. Once any release manifest for that
+version is published, creators must choose a new version label for changed
+release metadata. Listing and manifest snapshots may point to an unchanged
+release manifest across metadata-only revisions, but snapshots themselves are
+always append-only.
+
 The flat product fields `platforms`, `models`, `installationSteps`,
 `requirements`, and `permissions` remain transitional so existing public pages
 continue to work. They must only be retired after reads have moved to normalized

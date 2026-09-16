@@ -4,6 +4,24 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-16
 
+- Added the complete creator draft workspace for all nine marketplace item
+  types, with English/Persian metadata, external HTTPS screenshots, category
+  and community placement requests, exact GitHub/npm source references,
+  compatibility, installation, requirements, permissions, licensing, and
+  type-specific fields. Draft APIs are authenticated and owner-scoped, use
+  optimistic concurrency, create immutable manifest/listing/release revisions,
+  and append `DRAFT_SAVED` audit events. Published listings retain their
+  approved public snapshot while replacements are drafted, and public product
+  pages exclude draft-only versions. Added the initial staff-defined community
+  registry and append-only, same-listing placement requests without prematurely
+  exposing unmoderated community browse results. Verification: Prisma client
+  generation and schema validation; all workspace type-checks; 109 tests; API
+  and web production builds plus the Blog webpack production build; web lint;
+  `git diff --check`; all 16 migrations applied to an isolated PostgreSQL 17
+  database; and direct checks of the placement-request append-only and
+  same-listing constraints. The Blog's default Turbopack build remained
+  unavailable because this host blocks its internal port binding; its webpack
+  build passed.
 - Added an authenticated, owner-scoped creator dashboard with bounded listing
   pagination, lifecycle status, public moderation feedback, release history,
   ratings, completed-acquisition counts, and recent lifecycle activity. The

@@ -26,6 +26,17 @@ export interface CreatorDashboardResult {
   data: CreatorDashboard;
   meta: { page: number; limit: number; total: number; totalPages: number };
 }
+export interface MarketplaceDraftOptions {
+  categories: Array<{ slug: string; name: string }>;
+  communities: Array<{
+    slug: string; nameEn: string; nameFa: string | null; descriptionEn: string; descriptionFa: string | null;
+    primaryPlatform: string; rulesEn: string; rulesFa: string | null; submissionGuidanceEn: string; submissionGuidanceFa: string | null;
+  }>;
+}
+export interface MarketplaceDraftRecord {
+  id: string; slug: string; name: string; state: string; version: number; published: boolean;
+  draft: { revision: number; content: Record<string, unknown>; savedAt: string } | null;
+}
 export interface Pricing { amountMinor: number; currency: "USD"; model: "one-time" | "free"; }
 export interface Compatibility { platforms: Platform[]; models: AIModel[]; }
 export interface ProductVersion { id: string; version: string; releasedAt: string; notes: string; }

@@ -99,7 +99,10 @@ export async function getMarketplaceProduct(req: Request, res: Response) {
     where: { slug: String(req.params.slug), published: true },
     include: {
       ...productInclude,
-      versions: { orderBy: { releasedAt: "desc" } },
+      versions: {
+        where: { releaseManifests: { some: { publishedAt: { not: null } } } },
+        orderBy: { releasedAt: "desc" },
+      },
       reviews: { where: { published: true }, orderBy: { createdAt: "desc" } },
     },
   });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { marketplaceManifestV1Schema } from "../lib/marketplaceManifest.js";
 
 /**
  * Validation schemas for request bodies and query parameters.
@@ -154,6 +155,12 @@ export const creatorDashboardQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(50).optional().default(24),
 });
+
+export const creatorDraftCreateSchema = z.object({ manifest: marketplaceManifestV1Schema }).strict();
+export const creatorDraftUpdateSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+  manifest: marketplaceManifestV1Schema,
+}).strict();
 
 const listingLifecycleBaseSchema = z.object({
   expectedVersion: z.number().int().min(0),
