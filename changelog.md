@@ -4,6 +4,15 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-17
 
+- Added an explicit local-only email-verification bypass for browser testing
+  without an external mail provider. New local password registrations are
+  verified without creating outbox work, and older unverified accounts are
+  verified after a successful password login. The bypass fails closed unless
+  `WEB_PUBLIC_URL` uses an exact loopback host and remains disabled by default.
+  Documented the flag and enabled it only in the ignored local environment.
+  Verification: API type-check; 98 API tests; Docker API production build; a
+  registration through the marketplace `/backend` proxy returned a verified
+  session with zero email jobs; and the temporary test account was removed.
 - Updated the project README to reflect the current marketplace, creator,
   moderation, community, and Blog boundaries; distinguish implemented features
   from pending roadmap work; document Node/Docker prerequisites and migration

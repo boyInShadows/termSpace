@@ -230,6 +230,62 @@ describe("API", () => {
     }));
   });
 
+  it("auto-verifies local registrations without creating an email job when explicitly enabled", async () => {
+    const previousBypass = process.env.LOCAL_AUTO_VERIFY_EMAIL;
+    const previousUrl = process.env.WEB_PUBLIC_URL;
+    process.env.LOCAL_AUTO_VERIFY_EMAIL = "true";
+    process.env.WEB_PUBLIC_URL = "http://localhost:3100";
+    prismaMock.readerUser.create.mockResolvedValue({
+      id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [],
+    });
+
+    try {
+      const response = await request(createApp())
+        .post("/api/readers/register")
+        .send({ email: "reader@example.com", password: "correct-password" });
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.user.emailVerified).toBe(true);
+      const createData = prismaMock.readerUser.create.mock.calls[0][0].data;
+      expect(createData.emailVerifiedAt).toBeInstanceOf(Date);
+      expect(createData.emailVerifications).toBeUndefined();
+    } finally {
+      process.env.LOCAL_AUTO_VERIFY_EMAIL = previousBypass;
+      process.env.WEB_PUBLIC_URL = previousUrl;
+    }
+  });
+
+  it("auto-verifies an existing local password account on successful login", async () => {
+    const previousBypass = process.env.LOCAL_AUTO_VERIFY_EMAIL;
+    const previousUrl = process.env.WEB_PUBLIC_URL;
+    process.env.LOCAL_AUTO_VERIFY_EMAIL = "true";
+    process.env.WEB_PUBLIC_URL = "http://127.0.0.1:3100";
+    prismaMock.readerUser.findUnique.mockResolvedValue({
+      id: "reader-1", email: "reader@example.com", passwordHash: await hash("correct-password", 4),
+      emailVerifiedAt: null, marketplaceRoleGrants: [],
+    });
+    prismaMock.readerUser.update.mockResolvedValue({
+      id: "reader-1", email: "reader@example.com", passwordHash: await hash("correct-password", 4),
+      emailVerifiedAt: new Date(), marketplaceRoleGrants: [],
+    });
+
+    try {
+      const response = await request(createApp())
+        .post("/api/readers/login")
+        .send({ email: "reader@example.com", password: "correct-password" });
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.user.emailVerified).toBe(true);
+      expect(prismaMock.readerUser.update).toHaveBeenCalledWith(expect.objectContaining({
+        where: { id: "reader-1" },
+        data: { emailVerifiedAt: expect.any(Date) },
+      }));
+    } finally {
+      process.env.LOCAL_AUTO_VERIFY_EMAIL = previousBypass;
+      process.env.WEB_PUBLIC_URL = previousUrl;
+    }
+  });
+
   it("rejects cookie-authenticated mutations without browser provenance", async () => {
     const response = await request(createApp())
       .put("/api/readers/profile/password")

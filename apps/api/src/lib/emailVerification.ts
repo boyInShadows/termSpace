@@ -5,6 +5,30 @@ export const EMAIL_VERIFICATION_RESEND_COOLDOWN_MS = 60 * 1000;
 export const EMAIL_VERIFICATION_RESEND_WINDOW_MS = 60 * 60 * 1000;
 export const EMAIL_VERIFICATION_RESEND_LIMIT = 5;
 
+const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+export function localEmailVerificationBypassEnabled(): boolean {
+  if (process.env.LOCAL_AUTO_VERIFY_EMAIL !== "true") return false;
+
+  const configured = process.env.WEB_PUBLIC_URL;
+  if (!configured) {
+    throw new Error("LOCAL_AUTO_VERIFY_EMAIL requires an explicit loopback WEB_PUBLIC_URL");
+  }
+
+  let publicUrl: URL;
+  try {
+    publicUrl = new URL(configured);
+  } catch {
+    throw new Error("LOCAL_AUTO_VERIFY_EMAIL requires a valid loopback WEB_PUBLIC_URL");
+  }
+
+  if (!LOCAL_HOSTNAMES.has(publicUrl.hostname)) {
+    throw new Error("LOCAL_AUTO_VERIFY_EMAIL is restricted to loopback WEB_PUBLIC_URL hosts");
+  }
+
+  return true;
+}
+
 type VerificationFields = {
   id: string;
   userId: string;

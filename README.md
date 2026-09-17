@@ -65,6 +65,13 @@ npm run dev:blog
 Run `npm run seed` when you explicitly want development seed data. A clean
 database is intentionally not seeded during normal startup.
 
+For local browser testing without an email provider, set
+`LOCAL_AUTO_VERIFY_EMAIL=true` and keep `WEB_PUBLIC_URL` on a loopback hostname.
+New password accounts will be verified immediately. The API rejects this bypass
+for non-loopback public URLs. Production and staging must use the real email
+verification worker described in
+[Email Verification Operations](docs/email-verification.md).
+
 Run all repository checks from the root with:
 
 ```bash

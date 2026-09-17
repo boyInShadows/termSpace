@@ -10,6 +10,7 @@ import {
   EMAIL_VERIFICATION_RESEND_COOLDOWN_MS,
   EMAIL_VERIFICATION_RESEND_LIMIT,
   EMAIL_VERIFICATION_RESEND_WINDOW_MS,
+  localEmailVerificationBypassEnabled,
   newVerificationData,
   verifyEmailVerificationToken,
 } from "../lib/emailVerification.js";
@@ -58,7 +59,7 @@ async function createSession(res: Response, user: ReaderAccessUser) {
 
 export async function loginReader(req: Request, res: Response) {
   const email = String(req.body.email).trim().toLowerCase();
-  const user = await prisma.readerUser.findUnique({
+  let user = await prisma.readerUser.findUnique({
     where: { email },
     include: { marketplaceRoleGrants: activeMarketplaceRoles },
   });
@@ -66,16 +67,26 @@ export async function loginReader(req: Request, res: Response) {
     res.status(401).json({ error: { code: "INVALID_CREDENTIALS", message: "Invalid email or password" } });
     return;
   }
+  if (!user.emailVerifiedAt && localEmailVerificationBypassEnabled()) {
+    user = await prisma.readerUser.update({
+      where: { id: user.id },
+      data: { emailVerifiedAt: new Date() },
+      include: { marketplaceRoleGrants: activeMarketplaceRoles },
+    });
+  }
   await createSession(res, user);
 }
 
 export async function registerReader(req: Request, res: Response) {
   const email = String(req.body.email).trim().toLowerCase();
   const passwordHash = await hash(String(req.body.password), 12);
+  const autoVerify = localEmailVerificationBypassEnabled();
 
   try {
     const user = await prisma.readerUser.create({
-      data: { email, passwordHash, emailVerifications: { create: newVerificationData() } },
+      data: autoVerify
+        ? { email, passwordHash, emailVerifiedAt: new Date() }
+        : { email, passwordHash, emailVerifications: { create: newVerificationData() } },
       select: { id: true, email: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
     });
     await createSession(res, user);
