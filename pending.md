@@ -14,6 +14,18 @@ This file tracks known improvement work that has not been completed yet. When an
   free model. Keep established internal API and database identifiers until a
   separate migration has a concrete technical benefit.
 
+## Platform Reliability — P0 Error Handling
+
+- Establish consistent error handling across the API, marketplace frontend,
+  Blog, background workers, and scheduled jobs. Standardize stable public error
+  codes and validation details; add localized accessible loading, empty, retry,
+  and failure states plus route-level error boundaries; preserve correlation IDs
+  across requests and jobs; log actionable context without credentials, tokens,
+  submitted artifacts, or personal data; and give every external call explicit
+  timeout, retry, idempotency, and terminal-failure behavior. Add regression
+  tests for expected failures and verify production errors never expose stack
+  traces or internal implementation details.
+
 ## Marketplace — P0 Creator and Submission Lifecycle
 
 - Add creator-controlled release/version management without silently replacing
