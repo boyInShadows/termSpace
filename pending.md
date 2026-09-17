@@ -2,6 +2,18 @@
 
 This file tracks known improvement work that has not been completed yet. When an item is finished, remove it from this file and add a dated entry to `changelog.md`.
 
+## Product Positioning — P0 Free Community Platform
+
+- Audit every user-facing surface and product document to remove marketplace,
+  selling, pricing, checkout, purchasing, and revenue language. Reframe the
+  product around freely sharing, publishing, discovering, installing, and
+  maintaining community resources; replace actions such as `Sell your work`
+  with community-first language in English and Persian; remove obsolete paid
+  roadmap references; and verify that navigation, metadata, empty states,
+  dashboards, filters, calls to action, and accessibility labels all reflect the
+  free model. Keep established internal API and database identifiers until a
+  separate migration has a concrete technical benefit.
+
 ## Marketplace — P0 Creator and Submission Lifecycle
 
 - Add creator-controlled release/version management without silently replacing
@@ -52,8 +64,6 @@ This file tracks known improvement work that has not been completed yet. When an
 - Add dependency, compatibility, deprecation, and abandoned-project indicators.
 - Add curated and community collections without conflating them with Blog
   editorial content.
-- Design paid checkout, creator payouts, refunds, tax handling, fraud controls,
-  and financial reconciliation only after the free lifecycle is proven.
 
 ## Blog — Staff-Managed Editorial
 
