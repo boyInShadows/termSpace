@@ -37,6 +37,40 @@ export interface MarketplaceDraftRecord {
   id: string; slug: string; name: string; state: string; version: number; published: boolean;
   draft: { revision: number; content: Record<string, unknown>; savedAt: string } | null;
 }
+export interface MarketplaceModerationQueueListing {
+  id: string; slug: string; name: string; type: ProductType; typeKey: MarketplaceItemTypeKey | null;
+  state: string; version: number; published: boolean; creator: { name: string; handle: string }; selfOwned: boolean;
+  proposedRevision: number | null; releaseVersion: string | null; sourceResolved: boolean; ownershipVerified: boolean;
+  communityRequestCount: number; updatedAt: string;
+}
+export interface MarketplaceModerationQueueResult {
+  data: {
+    summary: { submitted: number; approved: number; awaitingAction: number };
+    listings: MarketplaceModerationQueueListing[];
+  };
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}
+export interface MarketplaceModerationAuditEvent {
+  id: string; previousState: string | null; resultingState: string; action: string; actorType: string;
+  actorUserId: string | null; reasonCode: string; publicReason: string | null; internalNote: string | null;
+  correlationId: string; createdAt: string;
+}
+export interface MarketplaceModerationPreview {
+  id: string; slug: string; name: string; type: ProductType; typeKey: MarketplaceItemTypeKey | null;
+  state: string; version: number; published: boolean; updatedAt: string; selfOwned: boolean;
+  creator: { id: string; name: string; handle: string };
+  proposedSnapshot: null | {
+    id: string; revision: number; schemaVersion: number; digestSha256: string; content: Record<string, unknown>; createdAt: string;
+    releaseManifest: null | {
+      id: string; sourceKind: string; sourceUrl: string; sourceRef: string; sourcePath: string | null;
+      providerIntegrityDigest: string | null; sourceResolvedAt: string | null; ownershipVerifiedAt: string | null; publishedAt: string | null;
+    };
+    communityRequests: Array<{ createdAt: string; community: { slug: string; nameEn: string; nameFa: string | null; primaryPlatform: string; rulesEn: string; rulesFa: string | null } }>;
+  };
+  approvedSnapshot: null | { id: string; revision: number; content: Record<string, unknown>; createdAt: string };
+  auditTrail: MarketplaceModerationAuditEvent[];
+  auditTrailTruncated: boolean;
+}
 export interface Pricing { amountMinor: number; currency: "USD"; model: "one-time" | "free"; }
 export interface Compatibility { platforms: Platform[]; models: AIModel[]; }
 export interface ProductVersion { id: string; version: string; releasedAt: string; notes: string; }

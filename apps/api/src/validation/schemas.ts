@@ -156,6 +156,18 @@ export const creatorDashboardQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).optional().default(24),
 });
 
+export const moderationQueueQuerySchema = z.object({
+  state: z.enum(["review", "all", "draft", "submitted", "changes_requested", "approved", "published", "rejected", "suspended", "archived"]).optional().default("review"),
+  q: z.string().trim().max(120).optional().default(""),
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(24),
+});
+
+export const moderationNoteSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+  note: z.string().trim().min(2).max(4000),
+}).strict();
+
 export const creatorDraftCreateSchema = z.object({ manifest: marketplaceManifestV1Schema }).strict();
 export const creatorDraftUpdateSchema = z.object({
   expectedVersion: z.number().int().min(0),
@@ -174,6 +186,7 @@ export const creatorListingLifecycleSchema = listingLifecycleBaseSchema.extend({
 
 export const moderatedListingLifecycleSchema = listingLifecycleBaseSchema.extend({
   action: z.enum(["REQUEST_CHANGES", "APPROVE", "PUBLISH", "REJECT", "SUSPEND", "REINSTATE", "ARCHIVE", "RESTORE"]),
+  internalNote: z.string().trim().min(2).max(4000).optional(),
 });
 
 export const markdownResourceMetadataSchema = z.object({

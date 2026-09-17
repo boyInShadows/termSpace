@@ -173,6 +173,7 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
           actorUserId: userId,
           reasonCode: req.body.reasonCode ?? transition.eventAction,
           publicReason: req.body.publicReason,
+          internalNote: req.body.internalNote,
           correlationId,
         },
       });

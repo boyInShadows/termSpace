@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { articleQuerySchema, commentSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, markdownResourceMetadataSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema } from "./schemas.js";
+import { articleQuerySchema, commentSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, markdownResourceMetadataSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema } from "./schemas.js";
 
 const article = {
   title: "A valid title",
@@ -85,6 +85,14 @@ describe("content validation", () => {
     expect(creatorDraftUpdateSchema.safeParse({ expectedVersion: 3, manifest: draft }).success).toBe(true);
     expect(creatorDraftUpdateSchema.safeParse({ expectedVersion: -1, manifest: draft }).success).toBe(false);
     expect(creatorDraftCreateSchema.safeParse({ manifest: draft, published: true }).success).toBe(false);
+  });
+
+  it("bounds moderation queue filters and private notes", () => {
+    expect(moderationQueueQuerySchema.parse({})).toEqual({ state: "review", q: "", page: 1, limit: 24 });
+    expect(moderationQueueQuerySchema.safeParse({ state: "unknown" }).success).toBe(false);
+    expect(moderationNoteSchema.safeParse({ expectedVersion: 2, note: "Check the expanded network scope." }).success).toBe(true);
+    expect(moderationNoteSchema.safeParse({ expectedVersion: 2, note: "x" }).success).toBe(false);
+    expect(moderatedListingLifecycleSchema.safeParse({ action: "APPROVE", expectedVersion: 2, internalNote: "Reviewed source and permissions." }).success).toBe(true);
   });
 
   it("validates Markdown resource metadata from multipart forms", () => {

@@ -467,7 +467,7 @@ describe("API", () => {
       .post("/api/marketplace/moderation/products/product-1/lifecycle")
       .set("Origin", "http://localhost:3000")
       .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
-      .send({ action: "PUBLISH", expectedVersion: 4 });
+      .send({ action: "PUBLISH", expectedVersion: 4, internalNote: "Source and declared permissions reviewed." });
 
     expect(response.status).toBe(200);
     expect(prismaMock.marketplaceReleaseManifest.update).toHaveBeenCalledWith({
@@ -475,7 +475,7 @@ describe("API", () => {
       data: { publishedAt: expect.any(Date) },
     });
     expect(prismaMock.marketplaceListingLifecycleEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({
-      snapshotId: "snapshot-1", action: "PUBLISHED",
+      snapshotId: "snapshot-1", action: "PUBLISHED", internalNote: "Source and declared permissions reviewed.",
     }) });
   });
 
@@ -606,6 +606,7 @@ describe("API", () => {
     expect(response.body.meta).toEqual({ page: 1, limit: 12, total: 1, totalPages: 1 });
     expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { creator: { ownerUserId: "reader-1" } }, skip: 0, take: 12,
+      select: expect.objectContaining({ lifecycleEvents: expect.objectContaining({ where: { action: { not: "INTERNAL_NOTE_ADDED" } } }) }),
     }));
     expect(prismaMock.marketplaceOrder.count).toHaveBeenCalledWith({
       where: { status: "completed", product: { creator: { ownerUserId: "reader-1" } } },
@@ -625,6 +626,148 @@ describe("API", () => {
     expect(response.status).toBe(403);
     expect(response.body.error.code).toBe("MARKETPLACE_ROLE_REQUIRED");
     expect(prismaMock.marketplaceProduct.findMany).not.toHaveBeenCalled();
+  });
+
+  it("returns the staff moderation queue with source readiness and self-review flags", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([{
+      id: "product-1", slug: "review-skill", name: "Review Skill", itemType: "SKILL", type: "Skill",
+      lifecycleState: "SUBMITTED", lifecycleVersion: 3, published: false, updatedAt: new Date("2026-09-17T08:00:00.000Z"),
+      creator: { name: "Creator", handle: "creator", ownerUserId: "reader-1" },
+      proposedSnapshot: {
+        revision: 2, createdAt: new Date("2026-09-17T07:00:00.000Z"), _count: { communityRequests: 1 },
+        releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: null, productVersion: { version: "1.1.0" } },
+      },
+    }]);
+    prismaMock.marketplaceProduct.count.mockResolvedValueOnce(1).mockResolvedValueOnce(1).mockResolvedValueOnce(0);
+
+    const response = await request(createApp())
+      .get("/api/marketplace/moderation/queue?state=review&page=1&limit=24")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.summary).toEqual({ submitted: 1, approved: 0, awaitingAction: 1 });
+    expect(response.body.data.listings[0]).toMatchObject({
+      id: "product-1", state: "submitted", selfOwned: false, sourceResolved: true,
+      ownershipVerified: false, communityRequestCount: 1, releaseVersion: "1.1.0",
+    });
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { lifecycleState: { in: ["SUBMITTED", "APPROVED"] }, NOT: { creator: { ownerUserId: "moderator-1" } } }, skip: 0, take: 24,
+    }));
+  });
+
+  it("does not expose the moderation queue to creators", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+
+    const response = await request(createApp())
+      .get("/api/marketplace/moderation/queue")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("MARKETPLACE_ROLE_REQUIRED");
+    expect(prismaMock.marketplaceProduct.findMany).not.toHaveBeenCalled();
+  });
+
+  it("records a standalone internal note as an append-only staff audit event", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      id: "product-1", lifecycleState: "SUBMITTED", lifecycleVersion: 3,
+      proposedSnapshotId: "snapshot-2", approvedSnapshotId: null, creator: { ownerUserId: "reader-1" },
+    });
+    prismaMock.marketplaceListingLifecycleEvent.create.mockResolvedValue({ id: "event-note", createdAt: new Date("2026-09-17T09:00:00.000Z") });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/moderation/products/product-1/notes")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ expectedVersion: 3, note: "Compare the newly requested network destination." });
+
+    expect(response.status).toBe(201);
+    expect(prismaMock.marketplaceListingLifecycleEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        productId: "product-1", snapshotId: "snapshot-2", previousState: "SUBMITTED", resultingState: "SUBMITTED",
+        action: "INTERNAL_NOTE_ADDED", actorType: "MODERATOR", actorUserId: "moderator-1",
+        internalNote: "Compare the newly requested network destination.",
+      }),
+      select: { id: true, createdAt: true },
+    });
+  });
+
+  it("exposes private notes only through the staff moderation preview", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      id: "product-1", slug: "review-skill", name: "Review Skill", type: "Skill", itemType: "SKILL",
+      lifecycleState: "SUBMITTED", lifecycleVersion: 3, published: false, updatedAt: new Date("2026-09-17T08:00:00.000Z"),
+      creator: { id: "creator-1", name: "Creator", handle: "creator", ownerUserId: "reader-1" },
+      proposedSnapshot: { id: "snapshot-2", revision: 2, schemaVersion: 1, digestSha256: "a".repeat(64), content: marketplaceManifestFixture(), createdAt: new Date(), releaseManifest: null, communityRequests: [] },
+      approvedSnapshot: null,
+      lifecycleEvents: [{
+        id: "event-note", previousState: "SUBMITTED", resultingState: "SUBMITTED", action: "INTERNAL_NOTE_ADDED",
+        actorType: "MODERATOR", actorUserId: "moderator-1", reasonCode: "INTERNAL_NOTE_ADDED", publicReason: null,
+        internalNote: "Private investigation context.", correlationId: "correlation-1", createdAt: new Date("2026-09-17T09:00:00.000Z"),
+      }],
+    });
+
+    const response = await request(createApp())
+      .get("/api/marketplace/moderation/products/product-1")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.auditTrail[0]).toMatchObject({ action: "internal_note_added", internalNote: "Private investigation context." });
+    expect(response.body.data.auditTrailTruncated).toBe(false);
+    expect(response.body.data.proposedSnapshot.content.listing.slug).toBe("owned-skill");
+  });
+
+  it("does not expose private moderation notes to staff reviewing their own listing", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({ id: "product-1", creator: { ownerUserId: "moderator-1" } });
+
+    const response = await request(createApp())
+      .get("/api/marketplace/moderation/products/product-1")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("SELF_MODERATION_FORBIDDEN");
+  });
+
+  it("prevents staff from adding internal notes to their own listing", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      id: "product-1", lifecycleState: "SUBMITTED", lifecycleVersion: 3,
+      proposedSnapshotId: "snapshot-2", approvedSnapshotId: null, creator: { ownerUserId: "moderator-1" },
+    });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/moderation/products/product-1/notes")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ expectedVersion: 3, note: "This should not be accepted." });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("SELF_MODERATION_FORBIDDEN");
+    expect(prismaMock.marketplaceListingLifecycleEvent.create).not.toHaveBeenCalled();
   });
 
   it("returns only the authenticated creator's current draft", async () => {

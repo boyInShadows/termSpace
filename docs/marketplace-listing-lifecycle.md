@@ -72,15 +72,31 @@ correlation ID.
 All state changes and their audit event are written in one transaction under a
 listing-scoped PostgreSQL advisory lock. `MarketplaceListingLifecycleEvent`
 records actor type and user, previous/resulting states, action, reason code,
-public-safe reason, snapshot, timestamp, and correlation ID. Database triggers
-make snapshots and events append-only and enforce same-listing snapshot,
-manifest, and release references.
+public-safe reason, optional private staff note, snapshot, timestamp, and
+correlation ID. Standalone private notes use the `INTERNAL_NOTE_ADDED` action
+without changing listing state or lifecycle version. Database constraints bound
+private notes, while triggers make snapshots and events append-only and enforce
+same-listing snapshot, manifest, and release references.
 
-Internal moderation notes and queue views are deliberately outside these public
-transition payloads and belong to the staff moderation-queue work. The creator
-form uses the same strict manifest validator as the API before setting a
-proposal; source resolution and ownership verification remain a separate
-ingestion step and are still required before submission.
+The staff workspace is available at `/moderation`. Its queue defaults to
+submitted and approved listings, supports bounded search and state filters, and
+shows source and ownership readiness without fetching external artifacts. The
+snapshot preview renders stored text only, provides listing decisions and
+standalone internal notes, and includes the append-only audit trail. The APIs
+are restricted to marketplace moderators and administrators:
+
+- `GET /api/marketplace/moderation/queue`
+- `GET /api/marketplace/moderation/products/:id`
+- `POST /api/marketplace/moderation/products/:id/notes`
+
+Listings owned by the acting staff account are excluded from its queue. Preview,
+notes, and decisions also reject self-moderation on the server. Private notes
+are selected only by the staff preview and are never returned by creator or
+public product APIs. Marketplace roles still grant no Blog editorial access.
+
+The creator form uses the same strict manifest validator as the API before
+setting a proposal; source resolution and ownership verification remain a
+separate ingestion step and are still required before submission.
 
 ## Seed behavior
 

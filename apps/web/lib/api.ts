@@ -1,4 +1,4 @@
-import type { CreatorDashboardResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceItemType, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
+import type { CreatorDashboardResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceItemType, MarketplaceModerationPreview, MarketplaceModerationQueueResult, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
 export class ApiError extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }
 function apiBase() { return typeof window === "undefined" ? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001" : process.env.NEXT_PUBLIC_API_URL ?? "/backend"; }
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -33,6 +33,14 @@ export async function getMarketplaceDraftOptions() { return (await request<{ dat
 export async function getCreatorDraft(id: string) { return (await request<{ data: MarketplaceDraftRecord }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/draft`)).data; }
 export async function createCreatorDraft(manifest: unknown) { return (await request<{ data: MarketplaceDraftRecord }>("/api/marketplace/creator/products", { method: "POST", body: JSON.stringify({ manifest }) })).data; }
 export async function updateCreatorDraft(id: string, expectedVersion: number, manifest: unknown) { return (await request<{ data: MarketplaceDraftRecord }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/draft`, { method: "PUT", body: JSON.stringify({ expectedVersion, manifest }) })).data; }
+export async function getModerationQueue(input: { state?: string; q?: string; page?: number; limit?: number }, signal?: AbortSignal) {
+  const params = new URLSearchParams();
+  Object.entries(input).forEach(([key, value]) => { if (value !== undefined && value !== "") params.set(key, String(value)); });
+  return request<MarketplaceModerationQueueResult>(`/api/marketplace/moderation/queue?${params}`, { signal });
+}
+export async function getModerationPreview(id: string) { return (await request<{ data: MarketplaceModerationPreview }>(`/api/marketplace/moderation/products/${encodeURIComponent(id)}`)).data; }
+export async function addModerationNote(id: string, expectedVersion: number, note: string) { return (await request<{ data: { id: string; createdAt: string; correlationId: string } }>(`/api/marketplace/moderation/products/${encodeURIComponent(id)}/notes`, { method: "POST", body: JSON.stringify({ expectedVersion, note }) })).data; }
+export async function moderateListing(id: string, input: { action: string; expectedVersion: number; reasonCode?: string; publicReason?: string; internalNote?: string }) { return (await request<{ data: { id: string; state: string; version: number; published: boolean; correlationId: string } }>(`/api/marketplace/moderation/products/${encodeURIComponent(id)}/lifecycle`, { method: "POST", body: JSON.stringify(input) })).data; }
 export async function getFavorites() { return (await request<{ data: string[] }>("/api/marketplace/favorites")).data; }
 export async function setFavorite(slug: string, saved: boolean) { return request(`/api/marketplace/products/${encodeURIComponent(slug)}/favorite`, { method: saved ? "PUT" : "DELETE" }); }
 export async function acquireProduct(slug: string, idempotencyKey: string) { return request(`/api/marketplace/products/${encodeURIComponent(slug)}/acquire`, { method: "POST", headers: { "Idempotency-Key": idempotencyKey } }); }

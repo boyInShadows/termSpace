@@ -532,6 +532,7 @@ enum MarketplaceLifecycleActorType {
 
 enum MarketplaceListingLifecycleAction {
   DRAFT_SAVED
+  INTERNAL_NOTE_ADDED
   SUBMITTED
   WITHDRAWN
   CHANGES_REQUESTED
@@ -598,6 +599,7 @@ model MarketplaceListingLifecycleEvent {
   actorUserId    String?
   reasonCode     String
   publicReason   String?
+  internalNote   String?
   correlationId  String                            @unique
   createdAt      DateTime                          @default(now())
   product        MarketplaceProduct                @relation(fields: [productId], references: [id], onDelete: Restrict)

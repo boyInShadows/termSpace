@@ -31,15 +31,17 @@ export function Header() {
   const currentPath = locale === "fa" ? pathname.slice(3) || "/" : pathname;
   const query = searchParams.toString();
   const switchHref = `${locale === "fa" ? currentPath : localePath(currentPath, "fa")}${query ? `?${query}` : ""}`;
+  const session = useMarketplaceSession();
+  const canModerate = session.marketplaceRoles.includes("moderator") || session.marketplaceRoles.includes("administrator");
   const NAV = [
     { href: "/explore", label: t.explore },
     { href: "/design-system", label: t.designSystem },
     { href: "/creator", label: t.sellWork },
-  ] as const;
+    ...(canModerate ? [{ href: "/moderation", label: t.moderation.nav }] : []),
+  ];
   const [isCondensed, setIsCondensed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const progressRef = useRef<HTMLDivElement | null>(null);
-  const session = useMarketplaceSession();
 
   useEffect(() => {
     let queued = false;

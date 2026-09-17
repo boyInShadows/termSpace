@@ -4,8 +4,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Creator and Submission Lifecycle
 
-- Build the staff moderation queue with preview, approval, rejection, change
-  requests, internal notes, and an audit trail.
 - Add creator-controlled release/version management without silently replacing
   artifacts already acquired by users.
 - Implement GitHub and npm source ingestion with authenticated ownership checks,

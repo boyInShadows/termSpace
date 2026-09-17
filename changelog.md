@@ -2,6 +2,27 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-09-17
+
+- Added the role-gated marketplace moderation workspace with an oldest-first,
+  searchable state queue; source and ownership readiness; immutable text-only
+  submission previews; approved-baseline context; community requests; listing
+  approval, publication, change requests, rejection, suspension, archival, and
+  restoration controls; creator-safe public reasons; and private staff notes.
+  Decisions and standalone notes share the append-only lifecycle audit trail,
+  use listing-scoped locking and optimistic concurrency, and preserve unique
+  correlation IDs. Staff-owned listings are excluded from that staff member's
+  queue, while preview, note, and decision APIs independently reject
+  self-moderation so private review context cannot leak to a creator who also
+  holds a staff role. External screenshots and artifacts are never fetched or
+  executed by the preview, private notes are absent from creator/public APIs,
+  and marketplace roles remain isolated from Blog administration. Verification:
+  Prisma generation and schema validation; all workspace type-checks; 118 tests;
+  API and web production builds plus the Blog webpack production build; web
+  lint; `git diff --check`; all 17 migrations applied to an isolated PostgreSQL
+  17 database; and direct checks of private-note validation and append-only
+  audit enforcement.
+
 ## 2026-09-16
 
 - Added the complete creator draft workspace for all nine marketplace item
