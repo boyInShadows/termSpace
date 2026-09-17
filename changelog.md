@@ -4,6 +4,12 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-17
 
+- Fixed clean PostgreSQL provisioning for the marketplace moderation schema by
+  committing the new lifecycle enum value before adding the internal-note
+  constraint that references it. Verification: reset both Compose-managed
+  volumes; rebuilt the affected images without cache; applied all 18 migrations
+  to an empty PostgreSQL 16 database; confirmed every container is running; and
+  received HTTP 200 responses from the web, Blog, and API health endpoints.
 - Added the role-gated marketplace moderation workspace with an oldest-first,
   searchable state queue; source and ownership readiness; immutable text-only
   submission previews; approved-baseline context; community requests; listing
