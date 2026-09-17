@@ -130,7 +130,7 @@ export function marketplaceProductProjectionFromManifest(manifest: MarketplaceMa
     itemType: MARKETPLACE_DATABASE_ITEM_TYPES[manifest.type],
     classificationRequired: false,
     outcome: manifest.listing.outcome.en,
-    description: manifest.listing.description.en,
+    description: manifest.listing.description.en ?? manifest.listing.description.fa!,
     categoryId,
     tags: manifest.listing.tags,
     platforms: manifest.release.compatibility.map(({ platform }) => platform),

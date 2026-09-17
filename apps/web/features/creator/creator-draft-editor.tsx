@@ -163,13 +163,35 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
   const license = release.license ?? {};
   const details = manifest?.typeDetails ?? {};
 
+  function clearDescriptionValidity(form: HTMLFormElement | null) {
+    if (!form) return;
+    for (const name of ["descriptionEn", "descriptionFa"]) {
+      const field = form.elements.namedItem(name);
+      if (field instanceof HTMLTextAreaElement) field.setCustomValidity("");
+    }
+    if (error === copy.descriptionRequired) setError(null);
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    if (!text(data, "descriptionEn") && !text(data, "descriptionFa")) {
+      const fieldName = locale === "fa" ? "descriptionFa" : "descriptionEn";
+      const field = event.currentTarget.elements.namedItem(fieldName);
+      if (field instanceof HTMLTextAreaElement) {
+        field.setCustomValidity(copy.descriptionRequired);
+        field.reportValidity();
+        field.focus();
+      }
+      setError(copy.descriptionRequired);
+      return;
+    }
+    clearDescriptionValidity(event.currentTarget);
     setSaving(true);
     setError(null);
     setSaved(false);
     try {
-      const nextManifest = buildManifest(new FormData(event.currentTarget), type, sourceKind, customLicense);
+      const nextManifest = buildManifest(data, type, sourceKind, customLicense);
       const next = productId && record
         ? await updateCreatorDraft(productId, record.version, nextManifest)
         : await createCreatorDraft(nextManifest);
@@ -215,14 +237,13 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
           <Field label={copy.itemType}><select name="itemType" value={type} onChange={(event) => setType(event.target.value as MarketplaceItemTypeKey)} className={selectClass}>
             {itemTypes.map((item) => <option key={item.key} value={item.key}>{locale === "fa" ? item.fa : item.en}</option>)}
           </select></Field>
-          <Field label={copy.nameEn}><Input name="nameEn" required defaultValue={localized(listing.name).en} /></Field>
-          <Field label={copy.nameFa}><Input name="nameFa" defaultValue={localized(listing.name).fa} dir="rtl" /></Field>
+          <Field label={copy.nameEn} hint={copy.nameHelp}><Input name="nameEn" required pattern="(?=.*[A-Za-z])[\x20-\x7E]+" defaultValue={localized(listing.name).en} lang="en" dir="ltr" /></Field>
           <Field label={copy.outcomeEn}><Input name="outcomeEn" required defaultValue={localized(listing.outcome).en} /></Field>
           <Field label={copy.outcomeFa}><Input name="outcomeFa" defaultValue={localized(listing.outcome).fa} dir="rtl" /></Field>
         </div>
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
-          <Field label={copy.descriptionEn}><Textarea name="descriptionEn" required defaultValue={localized(listing.description).en} /></Field>
-          <Field label={copy.descriptionFa}><Textarea name="descriptionFa" defaultValue={localized(listing.description).fa} dir="rtl" /></Field>
+          <Field label={copy.descriptionEn}><Textarea name="descriptionEn" defaultValue={localized(listing.description).en} lang="en" dir="ltr" onInput={(event) => clearDescriptionValidity(event.currentTarget.form)} /></Field>
+          <Field label={copy.descriptionFa}><Textarea name="descriptionFa" defaultValue={localized(listing.description).fa} dir="rtl" onInput={(event) => clearDescriptionValidity(event.currentTarget.form)} /></Field>
         </div>
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
           <Field label={copy.category}><select name="categorySlug" required defaultValue={stringValue(listing.categorySlug)} className={selectClass}><option value="">{copy.choose}</option>{options.categories.map((category) => <option key={category.slug} value={category.slug}>{category.name}</option>)}</select></Field>
@@ -299,8 +320,9 @@ const rows = (value: string) => value.split(/\r?\n/u).map((item) => item.trim())
 const bool = (value: string | undefined) => value === "true";
 
 function localized(en: string, fa: string) { return fa ? { en, fa } : { en }; }
+function optionalLocalized(en: string, fa: string) { return { ...(en ? { en } : {}), ...(fa ? { fa } : {}) }; }
 
-function buildManifest(data: FormData, type: MarketplaceItemTypeKey, sourceKind: SourceKind, customLicense: boolean) {
+export function buildManifest(data: FormData, type: MarketplaceItemTypeKey, sourceKind: SourceKind, customLicense: boolean) {
   const source = sourceKind === "github_repository" ? {
     kind: sourceKind, repositoryUrl: text(data, "repositoryUrl"), commitSha: text(data, "commitSha"), ...(optionalText(data, "repositoryPath") ? { path: optionalText(data, "repositoryPath") } : {}),
   } : sourceKind === "github_release" ? {
@@ -317,7 +339,7 @@ function buildManifest(data: FormData, type: MarketplaceItemTypeKey, sourceKind:
     manifestVersion: 1,
     type,
     listing: {
-      slug: text(data, "slug"), name: localized(text(data, "nameEn"), text(data, "nameFa")), outcome: localized(text(data, "outcomeEn"), text(data, "outcomeFa")), description: localized(text(data, "descriptionEn"), text(data, "descriptionFa")),
+      slug: text(data, "slug"), name: { en: text(data, "nameEn") }, outcome: localized(text(data, "outcomeEn"), text(data, "outcomeFa")), description: optionalLocalized(text(data, "descriptionEn"), text(data, "descriptionFa")),
       categorySlug: text(data, "categorySlug"), communitySlugs: data.getAll("communitySlugs").map(String), tags: lines(text(data, "tags")),
       screenshots: rows(text(data, "screenshots")).map(([url, altEn, altFa]) => ({ url, alt: localized(altEn, altFa) })),
       ...(optionalText(data, "documentationUrl") ? { documentationUrl: optionalText(data, "documentationUrl") } : {}),

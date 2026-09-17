@@ -69,6 +69,30 @@ describe("marketplace manifest v1", () => {
     expect(marketplaceManifestV1Schema.safeParse(releaseInput).success).toBe(false);
   });
 
+  it("requires English-only listing names", () => {
+    const localizedName = structuredClone(manifest("skill"));
+    localizedName.listing.name = { en: "Example Skill", fa: "مهارت نمونه" } as never;
+    expect(marketplaceManifestV1Schema.safeParse(localizedName).success).toBe(false);
+
+    const persianName = structuredClone(manifest("skill"));
+    persianName.listing.name = { en: "مهارت نمونه" };
+    expect(marketplaceManifestV1Schema.safeParse(persianName).success).toBe(false);
+  });
+
+  it("accepts either or both listing-description languages", () => {
+    const persianOnly = structuredClone(manifest("skill"));
+    persianOnly.listing.description = { fa: "توضیح کامل مورد" } as never;
+    expect(marketplaceManifestV1Schema.safeParse(persianOnly).success).toBe(true);
+
+    const bilingual = structuredClone(manifest("skill"));
+    bilingual.listing.description = { en: "A complete item.", fa: "توضیح کامل مورد" } as never;
+    expect(marketplaceManifestV1Schema.safeParse(bilingual).success).toBe(true);
+
+    const missing = structuredClone(manifest("skill"));
+    missing.listing.description = {} as never;
+    expect(marketplaceManifestV1Schema.safeParse(missing).success).toBe(false);
+  });
+
   it("produces a deterministic canonical digest", () => {
     const first = manifest("prompt");
     const second = { typeDetails: first.typeDetails, release: first.release, listing: first.listing, type: first.type, manifestVersion: first.manifestVersion };

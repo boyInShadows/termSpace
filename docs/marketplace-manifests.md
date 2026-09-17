@@ -54,10 +54,13 @@ to a release and its normalized children after `publishedAt` is set. Corrections
 therefore require a new product version rather than silently changing what users
 previously evaluated or acquired.
 
-The bilingual creator editor captures every version 1 section for all nine item
-types. Screenshot fields accept external HTTPS references with localized alt
-text; TermSpace does not accept or execute uploaded community artifacts in this
-flow. Categories and active communities come from
+The creator editor captures every version 1 section for all nine item types.
+Listing names and creator public names use English characters only. A listing
+description may be English, Persian, or both, but at least one description is
+required. Outcomes retain a required English value with optional Persian text,
+and screenshot fields accept external HTTPS references with localized alt text.
+TermSpace does not accept or execute uploaded community artifacts in this flow.
+Categories and active communities come from
 `GET /api/marketplace/draft-options`. A selected community creates an immutable
 placement request tied to that exact listing snapshot. Placement approval and
 public community browse remain part of the separate moderation/discovery work.

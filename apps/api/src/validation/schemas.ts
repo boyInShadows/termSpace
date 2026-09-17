@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { marketplaceManifestV1Schema } from "../lib/marketplaceManifest.js";
+import { englishDisplayName, marketplaceManifestV1Schema } from "../lib/marketplaceManifest.js";
 
 /**
  * Validation schemas for request bodies and query parameters.
@@ -144,7 +144,7 @@ export const marketplaceProductQuerySchema = z.object({
 });
 
 export const creatorOnboardingSchema = z.object({
-  name: z.string().trim().min(2).max(80),
+  name: englishDisplayName(2, 80),
   handle: z.string().trim().toLowerCase().min(3).max(40).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Handle must use lowercase letters, numbers, and single hyphens"),
   bio: z.string().trim().min(20).max(500),
 });

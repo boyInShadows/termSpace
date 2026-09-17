@@ -4,6 +4,17 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-17
 
+- Simplified creator-facing names and descriptions from the browser-feedback
+  review. Creator public names and listing names now accept English characters
+  only, the Persian listing-name field has been removed, and creators may write
+  a listing description in English, Persian, or both while at least one remains
+  required. Existing Persian descriptions continue to project correctly on
+  public listings. Added matching English/Persian guidance, authoritative API
+  validation, accessible browser validation, regression coverage, and updated
+  manifest documentation. Verification: all workspace type-checks; 128 tests;
+  API and web production builds plus the Blog webpack production build; web
+  lint; and `git diff --check`. The Blog's default Turbopack build remains
+  unavailable because this host blocks its internal port binding.
 - Added an explicit local-only email-verification bypass for browser testing
   without an external mail provider. New local password registrations are
   verified without creating outbox work, and older unverified accounts are

@@ -16,7 +16,7 @@ vi.mock("@/lib/locale-context", () => ({
     creatorHub: {
       title: "Become a TermSpace creator", intro: "Create your identity", onboardingEyebrow: "Creator onboarding",
       profileEyebrow: "Creator profile", editTitle: "Your creator profile", editIntro: "Keep it current",
-      name: "Public name", handle: "Creator handle", handleHelp: "Handle help", handleLocked: "Handle locked",
+      name: "Public name", nameHelp: "Use English characters", handle: "Creator handle", handleHelp: "Handle help", handleLocked: "Handle locked",
       bio: "Biography", create: "Create creator profile", save: "Save profile", saved: "Creator profile saved.",
       loading: "Loading", signInRequired: "Sign in required", verifyRequired: "Verify required",
       handleTaken: "Handle taken", accessRevoked: "Access revoked", loadError: "Load failed", saveError: "Save failed",
@@ -61,5 +61,14 @@ describe("CreatorHub", () => {
     await waitFor(() => expect(apiMocks.create).toHaveBeenCalledWith({ name: "Tool Builder", handle: "tool-builder", bio: "I build dependable agentic coding tools for teams." }));
     expect(await screen.findByText("Creator profile saved.")).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
+  });
+
+  it("marks creator public names as English-only", async () => {
+    render(<CreatorHub />);
+    const input = await screen.findByLabelText("Public name");
+    expect(input).toHaveAttribute("lang", "en");
+    expect(input).toHaveAttribute("dir", "ltr");
+    expect(input).toHaveAttribute("pattern", "(?=.*[A-Za-z])[\\x20-\\x7E]+");
+    expect(screen.getByText("Use English characters")).toBeInTheDocument();
   });
 });

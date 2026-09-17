@@ -69,6 +69,8 @@ describe("content validation", () => {
   it("normalizes valid creator handles and rejects unstable forms", () => {
     const valid = creatorOnboardingSchema.parse({ name: "Tool Builder", handle: "Tool-Builder", bio: "I build dependable agentic coding tools for teams." });
     expect(valid.handle).toBe("tool-builder");
+    expect(creatorOnboardingSchema.safeParse({ ...valid, name: "C++ Tool Builder" }).success).toBe(true);
+    expect(creatorOnboardingSchema.safeParse({ ...valid, name: "سازنده ابزار" }).success).toBe(false);
     expect(creatorOnboardingSchema.safeParse({ ...valid, handle: "tool--builder" }).success).toBe(false);
     expect(creatorOnboardingSchema.safeParse({ ...valid, handle: "ابزار" }).success).toBe(false);
   });

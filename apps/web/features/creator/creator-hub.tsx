@@ -67,7 +67,7 @@ export function CreatorHub() {
       : <h1 id="creator-profile-title" className="editorial mt-2 text-4xl">{t.creatorHub.title}</h1>}
     <p className="mt-3 text-muted-foreground">{profile ? t.creatorHub.editIntro : t.creatorHub.intro}</p>
     <form className="mt-7 space-y-5" onSubmit={submit}>
-      <label className="block text-sm font-medium">{t.creatorHub.name}<Input name="name" required minLength={2} maxLength={80} defaultValue={profile?.name} autoComplete="name" className="mt-2" /></label>
+      <div><label htmlFor="creator-name" className="block text-sm font-medium">{t.creatorHub.name}</label><Input id="creator-name" name="name" required minLength={2} maxLength={80} pattern="(?=.*[A-Za-z])[\x20-\x7E]+" defaultValue={profile?.name} autoComplete="name" lang="en" dir="ltr" aria-describedby="creator-name-help" className="mt-2" /><span id="creator-name-help" className="mt-1 block text-xs text-muted-foreground">{t.creatorHub.nameHelp}</span></div>
       <div>
         <label htmlFor="creator-handle" className="block text-sm font-medium">{t.creatorHub.handle}</label>
         <Input id="creator-handle" name="handle" required={!profile} disabled={Boolean(profile)} minLength={3} maxLength={40} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={profile?.handle} dir="ltr" autoComplete="off" aria-describedby="creator-handle-help" className="mt-2" />

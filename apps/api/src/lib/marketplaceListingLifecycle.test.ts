@@ -68,4 +68,18 @@ describe("marketplace listing lifecycle", () => {
       permissions: "network_access: Fetch pull requests", license: "MIT",
     }));
   });
+
+  it("uses a Persian-only description in the public projection", () => {
+    const manifest = {
+      type: "skill",
+      listing: { slug: "persian-guide", name: { en: "Persian Guide" }, outcome: { en: "Guides a task" }, description: { fa: "راهنمای کامل" }, tags: ["guide"] },
+      release: {
+        version: "1.0.0", compatibility: [], installation: { instructions: [] },
+        requirements: { runtimes: [], accounts: [], operatingSystems: [], dependencies: [], environmentVariables: [] },
+        permissions: [], license: { identifier: "MIT" },
+      },
+    } as unknown as MarketplaceManifestV1;
+
+    expect(marketplaceProductProjectionFromManifest(manifest, "category-1").description).toBe("راهنمای کامل");
+  });
 });

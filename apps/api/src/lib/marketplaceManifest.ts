@@ -48,6 +48,9 @@ export const LEGACY_ITEM_TYPE_MAP: Readonly<Record<string, MarketplaceItemTypeKe
 };
 
 const boundedText = (min = 1, max = 500) => z.string().trim().min(min).max(max);
+export const englishDisplayName = (min = 1, max = 160) => boundedText(min, max)
+  .regex(/^[\x20-\x7E]+$/, "Name must use English letters, numbers, spaces, and standard punctuation")
+  .refine((value) => /[A-Za-z]/.test(value), "Name must include at least one English letter");
 const stringList = (maxItems = 50, maxLength = 160) => z.array(boundedText(1, maxLength)).max(maxItems);
 const httpsUrl = z.string().url().max(2048).refine((value) => {
   const parsed = new URL(value);
@@ -58,6 +61,13 @@ const platformKey = z.string().regex(/^[a-z0-9]+(?:[_-][a-z0-9]+)*$/).max(50);
 const repositoryPath = boundedText(1, 500).refine((value) => !value.startsWith("/") && !value.includes("\\") && value.split("/").every((segment) => segment !== "." && segment !== ".."), "Path must be a safe repository-relative path");
 
 const localizedText = z.object({ en: boundedText(), fa: boundedText().optional() }).strict();
+const englishName = z.object({ en: englishDisplayName() }).strict();
+const localizedDescription = z.object({
+  en: boundedText(1, 10_000).optional(),
+  fa: boundedText(1, 10_000).optional(),
+}).strict().refine((value) => Boolean(value.en || value.fa), {
+  message: "Provide an English description, a Persian description, or both",
+});
 const environmentVariable = z.object({
   name: z.string().regex(/^[A-Z_][A-Z0-9_]*$/).max(100),
   purpose: boundedText(3, 300),
@@ -72,9 +82,9 @@ const permissionCapabilities = [
 
 const listingSchema = z.object({
   slug,
-  name: localizedText,
+  name: englishName,
   outcome: localizedText,
-  description: localizedText,
+  description: localizedDescription,
   categorySlug: slug,
   communitySlugs: z.array(slug).max(20).default([]),
   tags: z.array(slug).max(20),
