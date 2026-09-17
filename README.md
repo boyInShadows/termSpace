@@ -1,25 +1,49 @@
 # TermSpace
 
-TermSpace is a monorepo containing the main product site, its editorial site,
-and one shared API.
+TermSpace is a community marketplace for agentic coding tools. Its catalog is
+designed for skills, agents, MCP servers, integrations, rules, prompts, hooks,
+templates, and workflows contributed by creators and shared across platform
+communities.
 
-The main product is a discovery and creator platform for agentic coding tools,
-including skills, agents, MCP servers, integrations, rules, prompts, hooks,
-templates, and workflows. Community members can discover, filter, acquire, and
-review published items; creators will manage submissions and releases through a
-dashboard. The Blog is a separate, staff-managed editorial publication and does
-not accept public or creator uploads. See [Product Direction](docs/product-direction.md)
-for the product boundaries and core journeys.
+The repository also contains the TermSpace Blog, a separate staff-managed
+publication about agentic coding. Marketplace accounts and creator or moderator
+roles never grant Blog publishing access. See
+[Product Direction](docs/product-direction.md) for the durable product
+boundaries and core user journeys.
+
+## Current product foundation
+
+- A localized English/Persian marketplace with public catalog and item pages.
+- Reader authentication, verified accounts, marketplace role grants, and
+  creator profiles.
+- An owner-scoped creator dashboard and structured drafts for all nine item
+  types, including compatibility, permissions, installation, and source data.
+- Immutable proposed and approved listing snapshots with explicit lifecycle
+  states and audit events.
+- A role-gated moderation workspace with queues, safe text-only previews,
+  private staff notes, decisions, suspension, archival, and restoration.
+- Staff-defined communities and creator placement requests, kept separate from
+  platform compatibility.
+
+The first marketplace milestone is external-source-first: submissions reference
+GitHub or npm artifacts instead of uploading executable packages to TermSpace.
+Source ingestion, creator-controlled release management, acquisition, public
+community browsing, and authenticated ratings/reviews remain active roadmap
+work tracked in [pending.md](pending.md).
+
+## Repository layout
 
 ```text
 apps/
-  web/   Main TermSpace frontend (Next.js, port 3000)
-  blog/  Editorial frontend (Next.js, port 3001)
-  api/   Shared Express/Prisma API (port 4001)
-docs/    Operational documentation
+  web/   Marketplace and creator frontend (Next.js)
+  blog/  Staff-managed editorial frontend (Next.js)
+  api/   Shared Express/Prisma API
+docs/    Product, architecture, and operational documentation
 ```
 
 ## Local development
+
+Prerequisites are Node.js 22 or newer, npm, Docker, and Docker Compose.
 
 Install all workspace dependencies from the repository root:
 
@@ -27,15 +51,19 @@ Install all workspace dependencies from the repository root:
 npm install
 ```
 
-Copy each app's `.env.example` to `.env` in the same directory. Then start
-PostgreSQL and run each application in its own terminal:
+Copy each application's `.env.example` to `.env` in the same directory. Start
+PostgreSQL, apply the migrations, and run each application in its own terminal:
 
 ```bash
 npm run db:up
+npm run prisma:deploy
 npm run dev:api
 npm run dev:web
 npm run dev:blog
 ```
+
+Run `npm run seed` when you explicitly want development seed data. A clean
+database is intentionally not seeded during normal startup.
 
 Run all repository checks from the root with:
 
@@ -59,22 +87,42 @@ authorization are documented in [Marketplace Listing Lifecycle](docs/marketplace
 
 ## Run the complete stack with Docker
 
-Docker Compose runs PostgreSQL, the shared API, the publishing worker,
-the main site, and Blog:
+Docker Compose runs PostgreSQL, the shared API, the scheduled publishing worker,
+the marketplace, and the Blog:
 
 ```bash
 cp .env.example .env # required; replace the example database/admin passwords
 npm run docker:up
 ```
 
+The API applies every committed Prisma migration before it starts. The other
+services wait for the API health check, so a migration failure prevents a
+partially working stack from coming online.
+
 After configuring Cloudflare Email Service, start the transactional email worker
 with `docker compose --profile email up --build -d`.
 
-The services are bound to loopback and available at `http://localhost:3000` (main site),
-`http://localhost:3001` (Blog), and `http://localhost:4001/api/health` (API).
-The API container applies committed Prisma migrations before starting. Persistent
-PostgreSQL data is stored in the `blog_pgdata` volume and local media uploads in
-`api_uploads`. Stop the stack with `npm run docker:down`.
+With the example host ports, the loopback-only services are available at:
+
+- Marketplace: <http://localhost:3000>
+- Blog: <http://localhost:3001>
+- API health: <http://localhost:4001/api/health>
+- PostgreSQL: `localhost:5433`
+
+Confirm startup with `docker compose ps`; the database and API should report as
+healthy. Stop the stack without deleting local data with `npm run docker:down`.
+
+Persistent PostgreSQL data is stored in the `blog_pgdata` volume and local media
+uploads in `api_uploads`. To rebuild from a completely empty local state:
+
+```bash
+docker compose down -v --remove-orphans
+docker compose build --no-cache
+docker compose up -d
+```
+
+The `-v` reset permanently deletes the local database and locally uploaded
+media. It is not a normal restart command and cannot be undone without a backup.
 
 If a host port is already in use, set `DB_HOST_PORT`, `API_HOST_PORT`,
 `WEB_HOST_PORT`, or `BLOG_HOST_PORT` in `.env`; container-to-container addresses
@@ -87,10 +135,10 @@ the exact reverse-proxy hop count in `TRUST_PROXY`. Put TLS and public routing i
 a reverse proxy in front of the three HTTP services. PostgreSQL is bound to
 loopback by default and must not be exposed publicly.
 
-The API is shared infrastructure, but its route modules remain separated by
-domain. Existing article, reader, newsletter, and editorial routes serve the
-blog; TermSpace marketplace routes live in their own modules rather than being
-coupled to editorial controllers.
+The API is shared infrastructure, but its route modules and permissions remain
+separated by domain. Article, reader, newsletter, and editorial routes serve the
+Blog; marketplace routes live in their own modules rather than being coupled to
+editorial controllers.
 
 The main frontend supports English and Persian through the same locale pattern
 as Blog: English uses `/`, while Persian uses `/fa` (for example `/fa/explore`

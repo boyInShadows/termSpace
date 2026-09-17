@@ -4,6 +4,11 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-17
 
+- Updated the project README to reflect the current marketplace, creator,
+  moderation, community, and Blog boundaries; distinguish implemented features
+  from pending roadmap work; document Node/Docker prerequisites and migration
+  startup behavior; and provide verified persistent and clean-reset Compose
+  workflows with explicit data-loss and configurable-port guidance.
 - Fixed clean PostgreSQL provisioning for the marketplace moderation schema by
   committing the new lifecycle enum value before adding the internal-note
   constraint that references it. Verification: reset both Compose-managed
