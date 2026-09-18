@@ -27,9 +27,10 @@ boundaries and core user journeys.
 
 The first community-library milestone is external-source-first: submissions reference
 GitHub or npm artifacts instead of uploading executable packages to TermSpace.
-Source ingestion, creator-controlled release management, add/install flows, public
-community browsing, and authenticated ratings/reviews remain active roadmap
-work tracked in [pending.md](pending.md).
+Authenticated GitHub/npm source ingestion and creator-controlled immutable release
+management are implemented. Add/install flows, public community browsing, and
+authenticated ratings/reviews remain active roadmap work tracked in
+[pending.md](pending.md).
 
 ## Repository layout
 
@@ -72,6 +73,21 @@ for non-loopback public URLs. Production and staging must use the real email
 verification worker described in
 [Email Verification Operations](docs/email-verification.md).
 
+To test creator source verification, generate a stable encryption key and run
+the source worker alongside the API:
+
+```bash
+openssl rand -base64 32
+npm run marketplace:source-worker:watch --workspace @termspace/api
+```
+
+Set the generated value as `MARKETPLACE_PROVIDER_TOKEN_KEY` in
+`apps/api/.env`. In the creator release workspace, connect a fine-grained
+GitHub token with access to the submitted public repository or an npm token for
+the submitted package, then queue the source check. GitHub requires admin or
+maintain repository permission; npm requires authenticated write collaborator
+access. Tokens are encrypted at rest and never returned by the API.
+
 Run all repository checks from the root with:
 
 ```bash
@@ -95,6 +111,7 @@ authorization are documented in [Marketplace Listing Lifecycle](docs/marketplace
 ## Run the complete stack with Docker
 
 Docker Compose runs PostgreSQL, the shared API, the scheduled publishing worker,
+the marketplace source reconciliation worker,
 the community library, and the Blog:
 
 ```bash

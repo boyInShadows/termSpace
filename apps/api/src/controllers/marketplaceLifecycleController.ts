@@ -30,10 +30,10 @@ const productLifecycleSelect = {
   approvedSnapshotId: true,
   proposedSnapshotId: true,
   proposedSnapshot: {
-    select: { content: true, schemaVersion: true, releaseManifest: { select: { id: true, publishedAt: true, sourceResolvedAt: true, ownershipVerifiedAt: true } } },
+    select: { content: true, schemaVersion: true, releaseManifest: { select: { id: true, publishedAt: true, sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true } } },
   },
   approvedSnapshot: {
-    select: { schemaVersion: true, releaseManifest: { select: { sourceResolvedAt: true, ownershipVerifiedAt: true } } },
+    select: { schemaVersion: true, releaseManifest: { select: { sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true } } },
   },
   lifecycleEvents: {
     where: { action: "ARCHIVED" as const },
@@ -100,7 +100,9 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
           && product.lifecycleResumePublished
           && sourceSnapshot?.schemaVersion === 0;
         const sourceVerified = restoringGrandfatheredLegacyPublication
-          || Boolean(sourceSnapshot?.releaseManifest?.sourceResolvedAt && sourceSnapshot.releaseManifest.ownershipVerifiedAt);
+          || Boolean(sourceSnapshot?.releaseManifest?.sourceResolvedAt
+            && sourceSnapshot.releaseManifest.ownershipVerifiedAt
+            && sourceSnapshot.releaseManifest.sourceCheckStatus === "VERIFIED");
         if (!sourceVerified) {
           throw new LifecycleRequestError(409, "SOURCE_VERIFICATION_REQUIRED", "Resolve the exact release source and verify ownership before this transition");
         }

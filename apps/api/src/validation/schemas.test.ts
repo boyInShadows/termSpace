@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { articleQuerySchema, commentSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, marketplaceProductQuerySchema, markdownResourceMetadataSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema } from "./schemas.js";
+import { articleQuerySchema, commentSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, marketplaceProductQuerySchema, marketplaceProviderSchema, markdownResourceMetadataSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, sourceCheckRequestSchema } from "./schemas.js";
 
 const article = {
   title: "A valid title",
@@ -29,6 +29,14 @@ const creatorDraftManifest = {
 };
 
 describe("content validation", () => {
+  it("validates provider credentials and source check requests strictly", () => {
+    expect(marketplaceProviderSchema.safeParse("github").success).toBe(true);
+    expect(marketplaceProviderSchema.safeParse("gitlab").success).toBe(false);
+    expect(providerConnectionSchema.safeParse({ token: "secure-token" }).success).toBe(true);
+    expect(providerConnectionSchema.safeParse({ token: "short" }).success).toBe(false);
+    expect(sourceCheckRequestSchema.safeParse({ expectedVersion: 2 }).success).toBe(true);
+    expect(sourceCheckRequestSchema.safeParse({ expectedVersion: 2, releaseId: "other" }).success).toBe(false);
+  });
   it("preserves an omitted article publication filter", () => {
     expect(articleQuerySchema.parse({}).published).toBeUndefined();
     expect(articleQuerySchema.parse({ published: "true" }).published).toBe(true);

@@ -40,9 +40,15 @@ export interface MarketplaceDraftRecord {
 export interface CreatorReleaseRecord {
   id: string; productVersionId: string; version: string; notes: string; revision: number;
   status: "published" | "proposed" | "superseded_draft";
-  source: { kind: string; url: string; ref: string; path: string | null; integrityDigest: string | null };
+  source: { kind: string; url: string; ref: string; path: string | null; integrityDigest: string | null; artifactSizeBytes: number | null; installationUrl: string | null };
+  sourceCheckStatus: "pending" | "verified" | "stale" | "restricted" | "failed";
+  sourceCheckedAt: string | null; sourceNextCheckAt: string | null; sourceFailureCount: number; lastSourceErrorCode: string | null;
   sourceResolvedAt: string | null; ownershipVerifiedAt: string | null; publishedAt: string | null;
   createdAt: string; listingRevision: number | null; isCurrent: boolean; acquisitionCount: number;
+}
+export interface MarketplaceProviderConnection {
+  id: string; provider: "github" | "npm"; accountLogin: string; lastVerifiedAt: string;
+  revokedAt: string | null; createdAt: string; updatedAt: string;
 }
 export interface CreatorReleaseHistory {
   listing: { id: string; slug: string; name: string; state: string; lifecycleVersion: number; published: boolean };
@@ -74,7 +80,8 @@ export interface MarketplaceModerationPreview {
     id: string; revision: number; schemaVersion: number; digestSha256: string; content: Record<string, unknown>; createdAt: string;
     releaseManifest: null | {
       id: string; sourceKind: string; sourceUrl: string; sourceRef: string; sourcePath: string | null;
-      providerIntegrityDigest: string | null; sourceResolvedAt: string | null; ownershipVerifiedAt: string | null; publishedAt: string | null;
+      providerIntegrityDigest: string | null; sourceResolvedAt: string | null; ownershipVerifiedAt: string | null;
+      sourceCheckStatus: string; sourceCheckedAt: string | null; lastSourceErrorCode: string | null; publishedAt: string | null;
     };
     communityRequests: Array<{ createdAt: string; community: { slug: string; nameEn: string; nameFa: string | null; primaryPlatform: string; rulesEn: string; rulesFa: string | null } }>;
   };

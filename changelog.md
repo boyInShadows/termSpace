@@ -4,6 +4,24 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-18
 
+- Implemented authenticated GitHub and npm source ingestion from ADR 0001.
+  Creators can connect encrypted provider credentials from the bilingual release
+  workspace, verify ownership through repository maintain/admin or package write
+  access, and queue exact commit, release-asset, or package-version checks.
+  Append-only check records preserve provider status, immutable references,
+  canonical installation URLs, integrity digests, artifact sizes, latency, and
+  correlation IDs without logging tokens or response bodies. A bounded worker
+  applies timeouts, one provider-call retry, job-level exponential backoff,
+  GitHub/npm rate-limit handling, stale availability for transient published
+  failures, and acquisition restrictions for confirmed ownership or provenance
+  failures; Docker now runs periodic reconciliation. Submission/publication
+  requires a verified current check, while existing acquisitions remain pinned
+  to their immutable release. Verification: Prisma generation; migration
+  deployment against local PostgreSQL; source-worker database smoke test;
+  Compose validation; all workspace type-checks; 155 tests; web lint; API and web
+  production builds; Blog webpack production build; and `git diff --check`. The
+  Blog's default Turbopack build remains unavailable because this host blocks its
+  internal port binding.
 - Added creator-controlled release/version management without replacing
   artifacts already acquired by users. Creator dashboards now link to an
   English/Persian release workspace that shows immutable source provenance,

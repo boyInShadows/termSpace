@@ -34,6 +34,7 @@ services:
       EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET:-}
       WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
       LOCAL_AUTO_VERIFY_EMAIL: ${LOCAL_AUTO_VERIFY_EMAIL:-false}
+      MARKETPLACE_PROVIDER_TOKEN_KEY: ${MARKETPLACE_PROVIDER_TOKEN_KEY:-}
       MEDIA_STORAGE: ${MEDIA_STORAGE:-local}
       MEDIA_PUBLIC_URL: ${MEDIA_PUBLIC_URL:-http://localhost:4001/media}
       IMAGE_HOSTS: ${IMAGE_HOSTS:-images.unsplash.com}
@@ -128,6 +129,21 @@ services:
       api:
         condition: service_healthy
     command: ["sh", "-c", "while true; do node apps/api/dist/jobs/sendTransactionalEmails.js; sleep 30; done"]
+
+  marketplace-source-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public
+      MARKETPLACE_PROVIDER_TOKEN_KEY: ${MARKETPLACE_PROVIDER_TOKEN_KEY:?Set MARKETPLACE_PROVIDER_TOKEN_KEY in .env}
+      MARKETPLACE_SOURCE_WORKER_BATCH_SIZE: ${MARKETPLACE_SOURCE_WORKER_BATCH_SIZE:-10}
+    depends_on:
+      api:
+        condition: service_healthy
+    command: ["sh", "-c", "while true; do node apps/api/dist/jobs/processMarketplaceSourceChecks.js; sleep 60; done"]
 
 volumes:
   blog_pgdata:

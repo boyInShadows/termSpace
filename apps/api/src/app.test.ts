@@ -14,6 +14,8 @@ const prismaMock = vi.hoisted(() => ({
   marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceProductVersion: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceReleaseManifest: { create: vi.fn(), update: vi.fn() },
+  marketplaceProviderConnection: { findMany: vi.fn(), findUnique: vi.fn(), upsert: vi.fn(), updateMany: vi.fn() },
+  marketplaceSourceCheckJob: { findFirst: vi.fn(), create: vi.fn() },
   marketplaceSkillReleaseDetails: { create: vi.fn() },
   marketplaceListingSnapshot: { aggregate: vi.fn(), create: vi.fn() },
   marketplaceManifestSnapshot: { create: vi.fn() },
@@ -506,7 +508,7 @@ describe("API", () => {
     prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
       id: "product-1", slug: "owned-skill", published: false, lifecycleState: "DRAFT", lifecycleVersion: 2,
       lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: null, proposedSnapshotId: "snapshot-2",
-      proposedSnapshot: { releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date() } },
+      proposedSnapshot: { releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date(), sourceCheckStatus: "VERIFIED" } },
       approvedSnapshot: null,
       creator: { ownerUserId: "reader-1" },
     });
@@ -542,7 +544,7 @@ describe("API", () => {
       lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: null, proposedSnapshotId: "snapshot-1",
       proposedSnapshot: {
         content: marketplaceManifestFixture(), schemaVersion: 1,
-        releaseManifest: { id: "release-1", publishedAt: null, sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date() },
+        releaseManifest: { id: "release-1", publishedAt: null, sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date(), sourceCheckStatus: "VERIFIED" },
       },
       approvedSnapshot: null,
       lifecycleEvents: [],
@@ -614,8 +616,8 @@ describe("API", () => {
     prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
       id: "product-1", slug: "owned-skill", published: true, lifecycleState: "SUBMITTED", lifecycleVersion: 7,
       lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: "public-snapshot", proposedSnapshotId: "pending-snapshot",
-      proposedSnapshot: { content: marketplaceManifestFixture(), schemaVersion: 1, releaseManifest: { id: "pending-release", publishedAt: null, sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date() } },
-      approvedSnapshot: { schemaVersion: 1, releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date() } },
+      proposedSnapshot: { content: marketplaceManifestFixture(), schemaVersion: 1, releaseManifest: { id: "pending-release", publishedAt: null, sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date(), sourceCheckStatus: "VERIFIED" } },
+      approvedSnapshot: { schemaVersion: 1, releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date(), sourceCheckStatus: "VERIFIED" } },
       lifecycleEvents: [],
       creator: { ownerUserId: "reader-1" },
     });
@@ -647,7 +649,7 @@ describe("API", () => {
     prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
       id: "product-2", slug: "other-skill", published: false, lifecycleState: "DRAFT", lifecycleVersion: 0,
       lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: null, proposedSnapshotId: "snapshot-1",
-      proposedSnapshot: { releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date() } },
+      proposedSnapshot: { releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date(), sourceCheckStatus: "VERIFIED" } },
       approvedSnapshot: null,
       creator: { ownerUserId: "reader-2" },
     });
@@ -736,7 +738,9 @@ describe("API", () => {
         releaseManifests: [{
           id: "release-1", revision: 1, sourceKind: "GITHUB_REPOSITORY", sourceUrl: "https://github.com/example/item",
           sourceRef: "a".repeat(40), sourcePath: "skill", providerIntegrityDigest: null,
+          artifactSizeBytes: null, resolvedInstallationUrl: "https://github.com/example/item/archive/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.tar.gz",
           sourceResolvedAt: new Date("2026-09-15T01:00:00.000Z"), ownershipVerifiedAt: new Date("2026-09-15T01:00:00.000Z"),
+          sourceCheckStatus: "VERIFIED", sourceCheckedAt: new Date("2026-09-15T01:00:00.000Z"), sourceNextCheckAt: null, sourceFailureCount: 0, lastSourceErrorCode: null,
           publishedAt: new Date("2026-09-16T00:00:00.000Z"), createdAt: new Date("2026-09-15T00:00:00.000Z"),
           listingSnapshots: [{ id: "snapshot-1", revision: 1 }], _count: { acquisitions: 3 },
         }],
@@ -772,6 +776,57 @@ describe("API", () => {
     expect(response.body.error.code).toBe("LISTING_NOT_FOUND");
   });
 
+  it("lists provider connections without returning encrypted credentials", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    prismaMock.marketplaceCreator.findUnique.mockResolvedValue({ id: "creator-1" });
+    prismaMock.marketplaceProviderConnection.findMany.mockResolvedValue([{
+      id: "connection-1", provider: "GITHUB", accountLogin: "source-owner", lastVerifiedAt: new Date("2026-09-18T10:00:00.000Z"),
+      revokedAt: null, createdAt: new Date("2026-09-18T10:00:00.000Z"), updatedAt: new Date("2026-09-18T10:00:00.000Z"),
+      encryptedToken: "must-not-leak", tokenIv: "must-not-leak", tokenTag: "must-not-leak",
+    }]);
+
+    const response = await request(createApp())
+      .get("/api/marketplace/creator/provider-connections")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data[0]).toMatchObject({ provider: "github", accountLogin: "source-owner" });
+    expect(JSON.stringify(response.body)).not.toContain("must-not-leak");
+  });
+
+  it("queues one idempotent source check for the owned proposed release", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      lifecycleVersion: 4,
+      creator: { id: "creator-1", ownerUserId: "reader-1" },
+      proposedSnapshot: { releaseManifest: { id: "release-2", sourceKind: "GITHUB_REPOSITORY", publishedAt: null } },
+    });
+    prismaMock.marketplaceProviderConnection.findUnique.mockResolvedValue({ id: "connection-1", revokedAt: null });
+    prismaMock.marketplaceSourceCheckJob.findFirst.mockResolvedValue(null);
+    prismaMock.marketplaceSourceCheckJob.create.mockResolvedValue({ id: "job-1", status: "PENDING", correlationId: "source-check-1" });
+    prismaMock.marketplaceReleaseManifest.update.mockResolvedValue({});
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/creator/products/product-1/source-check")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ expectedVersion: 4 });
+
+    expect(response.status).toBe(202);
+    expect(response.body.data).toMatchObject({ id: "job-1", status: "pending", correlationId: "source-check-1" });
+    expect(prismaMock.marketplaceSourceCheckJob.create).toHaveBeenCalledWith({ data: expect.objectContaining({
+      releaseManifestId: "release-2", connectionId: "connection-1", requestedByUserId: "reader-1",
+    }), select: expect.any(Object) });
+  });
+
   it("pins a free acquisition to the exact approved release", async () => {
     prismaMock.readerSession.findFirst.mockResolvedValue({
       id: "session-1",
@@ -779,7 +834,7 @@ describe("API", () => {
     });
     prismaMock.marketplaceProduct.findFirst.mockResolvedValue({
       id: "product-1", slug: "owned-skill", priceMinor: 0, currency: "USD", pricingModel: "free",
-      approvedSnapshot: { releaseManifest: { id: "release-1", publishedAt: new Date("2026-09-16T00:00:00.000Z") } },
+      approvedSnapshot: { releaseManifest: { id: "release-1", publishedAt: new Date("2026-09-16T00:00:00.000Z"), sourceCheckStatus: "VERIFIED" } },
     });
     prismaMock.marketplaceOrder.findUnique.mockResolvedValue(null);
     prismaMock.marketplaceOrder.create.mockResolvedValue({ id: "order-1", releaseManifestId: "release-1" });
@@ -1062,7 +1117,7 @@ describe("API", () => {
     prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
       id: "product-1", slug: "owned-skill", published: false, lifecycleState: "DRAFT", lifecycleVersion: 4,
       lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: null, proposedSnapshotId: "snapshot-1",
-      proposedSnapshot: { releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date() } }, approvedSnapshot: null,
+      proposedSnapshot: { releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date(), sourceCheckStatus: "VERIFIED" } }, approvedSnapshot: null,
       creator: { ownerUserId: "reader-1" },
     });
     prismaMock.$executeRaw.mockResolvedValue(1);
@@ -1112,7 +1167,7 @@ describe("API", () => {
     prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
       id: "product-1", slug: "owned-skill", published: false, lifecycleState: "SUBMITTED", lifecycleVersion: 1,
       lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: null, proposedSnapshotId: "snapshot-1",
-      proposedSnapshot: { releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date() } },
+      proposedSnapshot: { releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date(), sourceCheckStatus: "VERIFIED" } },
       approvedSnapshot: null,
       creator: { ownerUserId: "reader-1" },
     });

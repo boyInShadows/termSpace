@@ -1,4 +1,4 @@
-import type { CreatorDashboardResult, CreatorReleaseHistory, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceItemType, MarketplaceModerationPreview, MarketplaceModerationQueueResult, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
+import type { CreatorDashboardResult, CreatorReleaseHistory, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceItemType, MarketplaceModerationPreview, MarketplaceModerationQueueResult, MarketplaceProviderConnection, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
 
 type ApiErrorDetail = { path: string; code?: string; message: string };
 type ErrorBody = { error?: { code?: string; message?: string; details?: ApiErrorDetail[]; correlationId?: string } };
@@ -79,6 +79,10 @@ export async function getCreatorDashboard(page = 1, limit = 24, signal?: AbortSi
 export async function getMarketplaceDraftOptions() { return (await request<{ data: MarketplaceDraftOptions }>("/api/marketplace/draft-options")).data; }
 export async function getCreatorDraft(id: string) { return (await request<{ data: MarketplaceDraftRecord }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/draft`)).data; }
 export async function getCreatorReleases(id: string, signal?: AbortSignal) { return (await request<{ data: CreatorReleaseHistory }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/releases`, { signal })).data; }
+export async function getProviderConnections(signal?: AbortSignal) { return (await request<{ data: MarketplaceProviderConnection[] }>("/api/marketplace/creator/provider-connections", { signal })).data; }
+export async function connectProvider(provider: "github" | "npm", token: string) { return (await request<{ data: MarketplaceProviderConnection }>(`/api/marketplace/creator/provider-connections/${provider}`, { method: "PUT", body: JSON.stringify({ token }) })).data; }
+export async function revokeProvider(provider: "github" | "npm") { return request(`/api/marketplace/creator/provider-connections/${provider}`, { method: "DELETE" }); }
+export async function requestSourceCheck(id: string, expectedVersion: number) { return (await request<{ data: { id: string; status: string; correlationId: string } }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/source-check`, { method: "POST", body: JSON.stringify({ expectedVersion }) })).data; }
 export async function createCreatorDraft(manifest: unknown) { return (await request<{ data: MarketplaceDraftRecord }>("/api/marketplace/creator/products", { method: "POST", body: JSON.stringify({ manifest }) })).data; }
 export async function updateCreatorDraft(id: string, expectedVersion: number, manifest: unknown) { return (await request<{ data: MarketplaceDraftRecord }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/draft`, { method: "PUT", body: JSON.stringify({ expectedVersion, manifest }) })).data; }
 export async function getModerationQueue(input: { state?: string; q?: string; page?: number; limit?: number }, signal?: AbortSignal) {

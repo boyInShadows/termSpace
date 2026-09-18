@@ -84,7 +84,9 @@ export function ModerationPreview({ productId }: { productId: string }) {
   const release = manifest?.release ?? {};
   const screenshots = Array.isArray(listing.screenshots) ? listing.screenshots as Array<{ url?: string; alt?: { en?: string; fa?: string } }> : [];
   const requiresReason = ["REQUEST_CHANGES", "REJECT", "SUSPEND"].includes(selectedAction);
-  const releaseSourceReady = Boolean(preview.proposedSnapshot?.releaseManifest?.sourceResolvedAt && preview.proposedSnapshot.releaseManifest.ownershipVerifiedAt);
+  const releaseSourceReady = Boolean(preview.proposedSnapshot?.releaseManifest?.sourceResolvedAt
+    && preview.proposedSnapshot.releaseManifest.ownershipVerifiedAt
+    && preview.proposedSnapshot.releaseManifest.sourceCheckStatus === "VERIFIED");
   const actionBlocked = selectedAction === "PUBLISH" && !releaseSourceReady;
   const date = new Intl.DateTimeFormat(locale === "fa" ? "fa-IR" : "en-US", { dateStyle: "medium", timeStyle: "short" });
 
@@ -111,7 +113,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
         <Panel title={t.moderation.listingMetadata}><JsonBlock value={listing} /></Panel>
         <Panel title={t.moderation.screenshots}>{screenshots.length ? <ul className="space-y-3">{screenshots.map((item, index) => <li key={`${item.url}-${index}`} className="rounded-lg border p-3"><a className="break-all text-sm font-semibold text-primary hover:underline" href={item.url} target="_blank" rel="noreferrer">{item.url}<ExternalLink className="ms-1 inline size-3.5" /></a><p className="mt-1 text-xs text-muted-foreground">{locale === "fa" ? item.alt?.fa ?? item.alt?.en : item.alt?.en}</p></li>)}</ul> : <Empty />}</Panel>
         <Panel title={t.moderation.exactSource}>
-          <dl className="grid gap-4 sm:grid-cols-2"><Fact label="Kind" value={preview.proposedSnapshot?.releaseManifest?.sourceKind ?? "—"} /><Fact label="URL" value={preview.proposedSnapshot?.releaseManifest?.sourceUrl ?? "—"} /><Fact label="Reference" value={preview.proposedSnapshot?.releaseManifest?.sourceRef ?? "—"} /><Fact label="Path / asset" value={preview.proposedSnapshot?.releaseManifest?.sourcePath ?? "—"} /><Fact label={t.moderation.sourceResolved} value={preview.proposedSnapshot?.releaseManifest?.sourceResolvedAt ? t.moderation.checkPassed : t.moderation.checkPending} /><Fact label={t.moderation.ownershipVerified} value={preview.proposedSnapshot?.releaseManifest?.ownershipVerifiedAt ? t.moderation.checkPassed : t.moderation.checkPending} /></dl>
+          <dl className="grid gap-4 sm:grid-cols-2"><Fact label="Kind" value={preview.proposedSnapshot?.releaseManifest?.sourceKind ?? "—"} /><Fact label="URL" value={preview.proposedSnapshot?.releaseManifest?.sourceUrl ?? "—"} /><Fact label="Reference" value={preview.proposedSnapshot?.releaseManifest?.sourceRef ?? "—"} /><Fact label="Path / asset" value={preview.proposedSnapshot?.releaseManifest?.sourcePath ?? "—"} /><Fact label={t.moderation.sourceResolved} value={releaseSourceReady ? t.moderation.checkPassed : t.moderation.checkPending} /><Fact label={t.moderation.ownershipVerified} value={releaseSourceReady ? t.moderation.checkPassed : t.moderation.checkPending} /><Fact label="Source check" value={preview.proposedSnapshot?.releaseManifest?.sourceCheckStatus?.toLowerCase() ?? "pending"} /></dl>
         </Panel>
         <Panel title={t.moderation.compatibility}><JsonBlock value={release.compatibility} /></Panel>
         <Panel title={t.moderation.installation}><JsonBlock value={release.installation} /></Panel>

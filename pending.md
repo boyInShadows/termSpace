@@ -4,9 +4,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Creator and Submission Lifecycle
 
-- Implement GitHub and npm source ingestion with authenticated ownership checks,
-  immutable release references, provider integrity metadata, bounded background
-  reconciliation, and safe failure states as defined in ADR 0001.
 - Complete the free-item acquisition/install flow and expose the correct package
   or external installation instructions only to eligible users.
 - Add API and end-to-end authorization tests covering cross-user listing access,

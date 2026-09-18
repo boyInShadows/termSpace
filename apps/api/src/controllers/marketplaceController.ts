@@ -130,7 +130,7 @@ async function findPublishedProduct(slug: string) {
       pricingModel: true,
       approvedSnapshot: {
         select: {
-          releaseManifest: { select: { id: true, publishedAt: true } },
+          releaseManifest: { select: { id: true, publishedAt: true, sourceCheckStatus: true } },
         },
       },
     },
@@ -179,7 +179,7 @@ export async function acquireMarketplaceProduct(req: Request, res: Response) {
     return;
   }
   const releaseManifest = product.approvedSnapshot?.releaseManifest;
-  if (!releaseManifest?.publishedAt) {
+  if (!releaseManifest?.publishedAt || !["VERIFIED", "STALE"].includes(releaseManifest.sourceCheckStatus)) {
     res.status(409).json({ error: { code: "RELEASE_UNAVAILABLE", message: "This resource does not have an approved release available for acquisition" } });
     return;
   }

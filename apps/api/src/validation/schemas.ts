@@ -176,6 +176,14 @@ export const creatorDraftUpdateSchema = z.object({
   manifest: marketplaceManifestV1Schema,
 }).strict();
 
+export const marketplaceProviderSchema = z.enum(["github", "npm"]);
+export const providerConnectionSchema = z.object({
+  token: z.string().trim().min(8).max(1000),
+}).strict();
+export const sourceCheckRequestSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+}).strict();
+
 const listingLifecycleBaseSchema = z.object({
   expectedVersion: z.number().int().min(0),
   reasonCode: z.string().trim().min(2).max(80).regex(/^[A-Z0-9_]+$/).optional(),

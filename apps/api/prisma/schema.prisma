@@ -264,6 +264,7 @@ model ReaderUser {
   marketplaceCreator     MarketplaceCreator?
   listingLifecycleEvents MarketplaceListingLifecycleEvent[]
   communityRequests      MarketplaceCommunityPlacementRequest[]
+  requestedSourceChecks  MarketplaceSourceCheckJob[]
 }
 
 enum TransactionalEmailStatus {
@@ -386,18 +387,19 @@ model MarketplaceRoleEvent {
 }
 
 model MarketplaceCreator {
-  id          String               @id @default(cuid())
-  name        String
-  handle      String               @unique
-  initials    String
-  verified    Boolean              @default(false)
-  bio         String
-  followers   Int                  @default(0)
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
-  ownerUserId String?              @unique
-  owner       ReaderUser?          @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
-  products    MarketplaceProduct[]
+  id                  String                          @id @default(cuid())
+  name                String
+  handle              String                          @unique
+  initials            String
+  verified            Boolean                         @default(false)
+  bio                 String
+  followers           Int                             @default(0)
+  createdAt           DateTime                        @default(now())
+  updatedAt           DateTime                        @updatedAt
+  ownerUserId         String?                         @unique
+  owner               ReaderUser?                     @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
+  products            MarketplaceProduct[]
+  providerConnections MarketplaceProviderConnection[]
 
   @@index([verified, followers])
 }
@@ -642,6 +644,38 @@ enum MarketplaceSourceKind {
   NPM
 }
 
+enum MarketplaceProvider {
+  GITHUB
+  NPM
+}
+
+enum MarketplaceSourceCheckStatus {
+  PENDING
+  VERIFIED
+  STALE
+  RESTRICTED
+  FAILED
+}
+
+enum MarketplaceSourceCheckOutcome {
+  VERIFIED
+  TRANSIENT_FAILURE
+  RATE_LIMITED
+  NOT_FOUND
+  OWNERSHIP_LOST
+  MISMATCH
+  CONFIGURATION_ERROR
+}
+
+enum MarketplaceSourceCheckJobStatus {
+  PENDING
+  PROCESSING
+  RETRY
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
 enum MarketplaceInstallationMethod {
   MANUAL
   NPM
@@ -692,8 +726,16 @@ model MarketplaceReleaseManifest {
   sourceRef                String
   sourcePath               String?
   providerIntegrityDigest  String?
+  artifactSizeBytes        Int?
+  resolvedInstallationUrl  String?
   sourceResolvedAt         DateTime?
   ownershipVerifiedAt      DateTime?
+  sourceCheckStatus        MarketplaceSourceCheckStatus            @default(PENDING)
+  sourceCheckedAt          DateTime?
+  sourceNextCheckAt        DateTime?
+  sourceFailureCount       Int                                     @default(0)
+  lastSourceErrorCode      String?
+  verifiedConnectionId     String?
   installationMethod       MarketplaceInstallationMethod
   installationInstructions String[]
   runtimeRequirements      String[]
@@ -722,10 +764,83 @@ model MarketplaceReleaseManifest {
   workflowDetails          MarketplaceWorkflowReleaseDetails?
   listingSnapshots         MarketplaceListingSnapshot[]
   acquisitions             MarketplaceOrder[]
+  verifiedConnection       MarketplaceProviderConnection?          @relation(fields: [verifiedConnectionId], references: [id], onDelete: Restrict)
+  sourceChecks             MarketplaceSourceCheck[]
+  sourceCheckJobs          MarketplaceSourceCheckJob[]
 
   @@unique([productVersionId, revision])
   @@index([itemType, publishedAt])
   @@index([sourceKind, sourceUrl])
+  @@index([sourceCheckStatus, sourceNextCheckAt])
+  @@index([verifiedConnectionId])
+}
+
+model MarketplaceProviderConnection {
+  id                String                       @id @default(cuid())
+  creatorId         String
+  provider          MarketplaceProvider
+  providerAccountId String
+  accountLogin      String
+  encryptedToken    String
+  tokenIv           String
+  tokenTag          String
+  lastVerifiedAt    DateTime
+  revokedAt         DateTime?
+  createdAt         DateTime                     @default(now())
+  updatedAt         DateTime                     @updatedAt
+  creator           MarketplaceCreator           @relation(fields: [creatorId], references: [id], onDelete: Restrict)
+  verifiedReleases  MarketplaceReleaseManifest[]
+  sourceChecks      MarketplaceSourceCheck[]
+  sourceCheckJobs   MarketplaceSourceCheckJob[]
+
+  @@unique([creatorId, provider])
+  @@index([provider, providerAccountId])
+  @@index([creatorId, revokedAt])
+}
+
+model MarketplaceSourceCheck {
+  id                      String                         @id @default(cuid())
+  releaseManifestId       String
+  connectionId            String?
+  provider                MarketplaceProvider
+  outcome                 MarketplaceSourceCheckOutcome
+  providerStatusCode      Int?
+  resolvedSourceRef       String?
+  resolvedInstallationUrl String?
+  providerIntegrityDigest String?
+  artifactSizeBytes       Int?
+  ownershipVerified       Boolean                        @default(false)
+  errorCode               String?
+  correlationId           String                         @unique
+  latencyMs               Int
+  createdAt               DateTime                       @default(now())
+  releaseManifest         MarketplaceReleaseManifest     @relation(fields: [releaseManifestId], references: [id], onDelete: Restrict)
+  connection              MarketplaceProviderConnection? @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+
+  @@index([releaseManifestId, createdAt])
+  @@index([provider, outcome, createdAt])
+}
+
+model MarketplaceSourceCheckJob {
+  id                String                          @id @default(cuid())
+  releaseManifestId String
+  connectionId      String
+  requestedByUserId String?
+  status            MarketplaceSourceCheckJobStatus @default(PENDING)
+  attempts          Int                             @default(0)
+  nextAttemptAt     DateTime                        @default(now())
+  lockedAt          DateTime?
+  correlationId     String                          @unique
+  lastErrorCode     String?
+  createdAt         DateTime                        @default(now())
+  updatedAt         DateTime                        @updatedAt
+  releaseManifest   MarketplaceReleaseManifest      @relation(fields: [releaseManifestId], references: [id], onDelete: Restrict)
+  connection        MarketplaceProviderConnection   @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  requestedBy       ReaderUser?                     @relation(fields: [requestedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([status, nextAttemptAt])
+  @@index([releaseManifestId, createdAt])
+  @@index([lockedAt])
 }
 
 model MarketplaceReleaseCompatibility {

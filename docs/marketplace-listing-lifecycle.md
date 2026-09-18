@@ -34,6 +34,10 @@ Creators create and revise drafts through these owner-scoped endpoints:
 - `GET /api/marketplace/creator/products/:id/draft`
 - `PUT /api/marketplace/creator/products/:id/draft`
 - `GET /api/marketplace/creator/products/:id/releases`
+- `POST /api/marketplace/creator/products/:id/source-check`
+- `GET /api/marketplace/creator/provider-connections`
+- `PUT /api/marketplace/creator/provider-connections/:provider`
+- `DELETE /api/marketplace/creator/provider-connections/:provider`
 
 The update payload includes `expectedVersion`; stale saves fail with
 `409 LISTING_VERSION_CONFLICT` before a snapshot is written. Each successful
@@ -66,7 +70,13 @@ erase approved data, events, acquisitions, or review history.
 
 Creators can submit, withdraw, archive, and restore only their own listings.
 Submission requires a proposed snapshot whose linked release has both source
-resolution and ownership verification timestamps.
+resolution and ownership verification timestamps and a current `verified`
+source-check state. The source worker resolves immutable GitHub commits/release
+assets or exact npm versions, records append-only check results, retries
+transient failures with bounded backoff, and periodically reconciles published
+releases. A transient failure marks an existing publication `stale`; confirmed
+ownership loss or identity mismatch marks it `restricted` and blocks new
+acquisitions without rewriting its stored provenance.
 
 Marketplace moderators and administrators can request changes, approve,
 publish, reject, suspend, reinstate, archive, and restore. Staff cannot moderate
@@ -110,8 +120,9 @@ are selected only by the staff preview and are never returned by creator or
 public product APIs. Marketplace roles still grant no Blog editorial access.
 
 The creator form uses the same strict manifest validator as the API before
-setting a proposal; source resolution and ownership verification remain a
-separate ingestion step and are still required before submission.
+setting a proposal. Source resolution and ownership verification are performed
+as a separate authenticated ingestion step and remain required before
+submission.
 
 ## Seed behavior
 

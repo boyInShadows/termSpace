@@ -38,7 +38,7 @@ export async function listMarketplaceModerationQueue(req: Request, res: Response
         creator: { select: { name: true, handle: true, ownerUserId: true } },
         proposedSnapshot: { select: {
           revision: true, createdAt: true,
-          releaseManifest: { select: { sourceResolvedAt: true, ownershipVerifiedAt: true, productVersion: { select: { version: true } } } },
+          releaseManifest: { select: { sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true, productVersion: { select: { version: true } } } },
           _count: { select: { communityRequests: true } },
         } },
       },
@@ -67,7 +67,7 @@ export async function listMarketplaceModerationQueue(req: Request, res: Response
         proposedRevision: product.proposedSnapshot?.revision ?? null,
         releaseVersion: product.proposedSnapshot?.releaseManifest?.productVersion.version ?? null,
         sourceResolved: Boolean(product.proposedSnapshot?.releaseManifest?.sourceResolvedAt),
-        ownershipVerified: Boolean(product.proposedSnapshot?.releaseManifest?.ownershipVerifiedAt),
+        ownershipVerified: Boolean(product.proposedSnapshot?.releaseManifest?.ownershipVerifiedAt && product.proposedSnapshot.releaseManifest.sourceCheckStatus === "VERIFIED"),
         communityRequestCount: product.proposedSnapshot?._count.communityRequests ?? 0,
         updatedAt: product.updatedAt,
       })),
@@ -87,7 +87,8 @@ export async function getMarketplaceModerationPreview(req: Request, res: Respons
         id: true, revision: true, schemaVersion: true, digestSha256: true, content: true, createdAt: true,
         releaseManifest: { select: {
           id: true, sourceKind: true, sourceUrl: true, sourceRef: true, sourcePath: true,
-          providerIntegrityDigest: true, sourceResolvedAt: true, ownershipVerifiedAt: true, publishedAt: true,
+          providerIntegrityDigest: true, sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true,
+          sourceCheckedAt: true, lastSourceErrorCode: true, publishedAt: true,
         } },
         communityRequests: { select: {
           createdAt: true,
