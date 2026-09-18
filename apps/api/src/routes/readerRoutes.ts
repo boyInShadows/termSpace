@@ -2,10 +2,11 @@ import { Router } from "express";
 import { addBookmark, changeReaderPassword, confirmReaderEmailVerification, getReaderLibrary, getReaderProfile, getReaderSession, loginReader, loginReaderWithGoogle, logoutReader, registerReader, removeBookmark, requestReaderEmailVerification, saveProgress, syncReaderLibrary } from "../controllers/readerController.js";
 import { requireReader } from "../middleware/auth.js";
 import { emailVerificationAttemptRateLimit, emailVerificationRequestRateLimit, loginRateLimit } from "../middleware/security.js";
-import { validate } from "../middleware/validate.js";
-import { emailVerificationConfirmSchema, googleCredentialSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, readerProgressSchema } from "../validation/schemas.js";
+import { validate, validateRouteParam } from "../middleware/validate.js";
+import { emailVerificationConfirmSchema, googleCredentialSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, readerProgressSchema, routeSlugSchema } from "../validation/schemas.js";
 
 const router = Router();
+router.param("slug", validateRouteParam("slug", routeSlugSchema));
 router.post("/login", loginRateLimit, validate(readerCredentialsSchema), loginReader);
 router.post("/register", loginRateLimit, validate(readerCredentialsSchema), registerReader);
 router.post("/google", loginRateLimit, validate(googleCredentialSchema), loginReaderWithGoogle);

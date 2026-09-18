@@ -5,10 +5,12 @@ import { transitionModeratedMarketplaceListing, transitionOwnedMarketplaceListin
 import { createOwnedMarketplaceDraft, getOwnedMarketplaceDraft, listMarketplaceDraftOptions, updateOwnedMarketplaceDraft } from "../controllers/marketplaceDraftController.js";
 import { addMarketplaceModerationNote, getMarketplaceModerationPreview, listMarketplaceModerationQueue } from "../controllers/marketplaceModerationController.js";
 import { requireMarketplaceRole, requireReader, requireVerifiedReader } from "../middleware/auth.js";
-import { validate } from "../middleware/validate.js";
-import { creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceProductQuerySchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema } from "../validation/schemas.js";
+import { validate, validateRouteParam } from "../middleware/validate.js";
+import { creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceProductQuerySchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, routeIdSchema, routeSlugSchema } from "../validation/schemas.js";
 
 const router = Router();
+router.param("id", validateRouteParam("id", routeIdSchema));
+router.param("slug", validateRouteParam("slug", routeSlugSchema));
 router.get("/home", getMarketplaceHome);
 router.get("/item-types", listMarketplaceItemTypes);
 router.get("/draft-options", listMarketplaceDraftOptions);

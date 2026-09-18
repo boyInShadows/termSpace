@@ -12,17 +12,24 @@ import {
   listPopularSearches,
 } from "../controllers/articleController.js";
 import { requireAdmin } from "../middleware/auth.js";
-import { validate } from "../middleware/validate.js";
+import { validate, validateRouteParam } from "../middleware/validate.js";
 import {
   articleQuerySchema,
   createArticleSchema,
   updateArticleSchema,
+  routeIdSchema,
+  routeSlugSchema,
+  routeTokenSchema,
 } from "../validation/schemas.js";
 import { createComment } from "../controllers/commentController.js";
 import { commentSchema } from "../validation/schemas.js";
 import { commentRateLimit } from "../middleware/security.js";
 
 const router = Router();
+router.param("id", validateRouteParam("id", routeIdSchema));
+router.param("revisionId", validateRouteParam("revisionId", routeIdSchema));
+router.param("slug", validateRouteParam("slug", routeSlugSchema));
+router.param("token", validateRouteParam("token", routeTokenSchema));
 
 router.get("/", validate(articleQuerySchema, "query"), listArticles);
 router.get("/search/popular", listPopularSearches);

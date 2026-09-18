@@ -185,6 +185,45 @@ describe("API", () => {
     expect(response.body.error.code).toBe("PAYLOAD_TOO_LARGE");
   });
 
+  it("returns a stable error for malformed JSON without parser details", async () => {
+    const response = await request(createApp())
+      .post("/api/newsletter/subscribers")
+      .set("Content-Type", "application/json")
+      .send('{"email":');
+    expect(response.status).toBe(400);
+    expect(response.body.error).toEqual(expect.objectContaining({
+      code: "INVALID_JSON",
+      message: "Request body must contain valid JSON",
+      correlationId: expect.any(String),
+    }));
+    expect(JSON.stringify(response.body)).not.toContain("SyntaxError");
+  });
+
+  it("preserves a valid incoming correlation ID on error responses", async () => {
+    const correlationId = "browser-check-12345678";
+    const response = await request(createApp())
+      .get("/api/route-that-does-not-exist")
+      .set("X-Correlation-ID", correlationId);
+    expect(response.status).toBe(404);
+    expect(response.headers["x-correlation-id"]).toBe(correlationId);
+    expect(response.body.error).toEqual({
+      code: "ROUTE_NOT_FOUND",
+      message: "Route not found",
+      correlationId,
+    });
+  });
+
+  it("replaces unsafe correlation IDs and rejects invalid path parameters", async () => {
+    const response = await request(createApp())
+      .get("/api/marketplace/products/invalid!slug")
+      .set("X-Correlation-ID", "unsafe value with spaces");
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+    expect(response.body.error.details[0]).toEqual(expect.objectContaining({ path: "slug" }));
+    expect(response.body.error.correlationId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(prismaMock.marketplaceProduct.findFirst).not.toHaveBeenCalled();
+  });
+
   it("creates an HttpOnly session for valid credentials", async () => {
     prismaMock.adminUser.findUnique.mockResolvedValue({
       id: "admin-1",

@@ -19,6 +19,7 @@ import marketplaceRoutes from "./routes/marketplaceRoutes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { apiRateLimit, csrfProtection } from "./middleware/security.js";
 import { prisma } from "./lib/prisma.js";
+import { requestContext } from "./middleware/requestContext.js";
 
 export function createApp() {
   const app = express();
@@ -29,9 +30,14 @@ export function createApp() {
 
   app.disable("x-powered-by");
   app.use(helmet());
+  app.use(requestContext);
   app.use(pinoHttp({
     level: process.env.NODE_ENV === "test" ? "silent" : "info",
+    genReqId: (req) => (req as typeof req & { id?: string }).id,
     redact: ["req.headers.authorization", "req.headers.cookie", "res.headers.set-cookie"],
+    serializers: {
+      req: (req) => ({ id: req.id, method: req.method, url: String(req.url ?? "").split("?", 1)[0], remoteAddress: req.remoteAddress }),
+    },
   }));
   app.use(express.json({ limit: "100kb" }));
   app.use(cookieParser());

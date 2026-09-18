@@ -1,14 +1,61 @@
 import type { CreatorDashboardResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceItemType, MarketplaceModerationPreview, MarketplaceModerationQueueResult, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
-export class ApiError extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }
-function apiBase() { return typeof window === "undefined" ? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001" : process.env.NEXT_PUBLIC_API_URL ?? "/backend"; }
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiBase()}${path}`, { ...init, credentials: "include", headers: { "Content-Type": "application/json", ...init?.headers }, cache: init?.cache ?? "no-store" });
-  if (!response.ok) {
-    const body = await response.json().catch(() => null) as { error?: { code?: string; message?: string } } | null;
-    throw new ApiError(response.status, body?.error?.code ?? "API_ERROR", body?.error?.message ?? "The request failed");
+
+type ApiErrorDetail = { path: string; code?: string; message: string };
+type ErrorBody = { error?: { code?: string; message?: string; details?: ApiErrorDetail[]; correlationId?: string } };
+
+const REQUEST_TIMEOUT_MS = 12_000;
+const RETRYABLE_STATUSES = new Set([502, 503, 504]);
+
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    public code: string,
+    message: string,
+    public details?: ApiErrorDetail[],
+    public correlationId?: string,
+  ) {
+    super(message);
+    this.name = "ApiError";
   }
-  if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
+}
+
+function apiBase() { return typeof window === "undefined" ? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001" : process.env.NEXT_PUBLIC_API_URL ?? "/backend"; }
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const method = (init?.method ?? "GET").toUpperCase();
+  const attempts = method === "GET" ? 2 : 1;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const timeoutSignal = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+    const signal = init?.signal ? AbortSignal.any([init.signal, timeoutSignal]) : timeoutSignal;
+    try {
+      const response = await fetch(`${apiBase()}${path}`, { ...init, signal, credentials: "include", headers: { "Content-Type": "application/json", ...init?.headers }, cache: init?.cache ?? "no-store" });
+      if (RETRYABLE_STATUSES.has(response.status) && attempt < attempts) {
+        await response.body?.cancel();
+        continue;
+      }
+      if (!response.ok) {
+        const body = await response.json().catch(() => null) as ErrorBody | null;
+        throw new ApiError(
+          response.status,
+          body?.error?.code ?? "API_ERROR",
+          body?.error?.message ?? "The request failed",
+          body?.error?.details,
+          body?.error?.correlationId ?? response.headers.get("x-correlation-id") ?? undefined,
+        );
+      }
+      if (response.status === 204) return undefined as T;
+      return response.json() as Promise<T>;
+    } catch (error) {
+      if (init?.signal?.aborted) throw error;
+      if (error instanceof ApiError) throw error;
+      if (attempt < attempts) continue;
+      if (timeoutSignal.aborted) throw new ApiError(504, "CLIENT_TIMEOUT", "The request timed out");
+      throw new ApiError(0, "NETWORK_ERROR", "The service could not be reached");
+    }
+  }
+
+  throw new ApiError(0, "NETWORK_ERROR", "The service could not be reached");
 }
 export async function getMarketplaceHome() { return (await request<{ data: MarketplaceHome }>("/api/marketplace/home")).data; }
 export async function getMarketplaceItemTypes() { return (await request<{ data: MarketplaceItemType[] }>("/api/marketplace/item-types")).data; }

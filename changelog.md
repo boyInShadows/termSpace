@@ -4,6 +4,24 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-18
 
+- Completed the cross-project reliability and validation pass. API requests now
+  receive validated correlation IDs that are returned on every error and carried
+  through redacted structured request logs; malformed JSON, oversized bodies,
+  unknown routes, invalid path identifiers, upload failures, database conflicts,
+  and unexpected production failures use stable public error codes without
+  exposing parser details, request URLs, stack traces, credentials, or submitted
+  content. All dynamic route parameters are now schema-validated before database
+  access, complementing the existing authoritative body, query, upload, lifecycle,
+  stale-write, and source validation. Marketplace and Blog API clients now apply
+  12-second deadlines, retry transient read failures once, never retry mutations,
+  and expose structured validation details and correlation IDs. Added localized,
+  accessible route and global recovery screens to both frontends, and structured
+  correlation-aware terminal outcomes to scheduled publishing. Verification: all
+  workspace type-checks; 136 tests, including new malformed-input, unsafe-ID,
+  correlation, retry cleanup, and non-retried-mutation coverage; web lint; API,
+  web, and Blog webpack production builds; and `git diff --check`. Bugbot's two
+  retry-response cleanup findings were resolved before commit; Security Review
+  reported no actionable findings.
 - Repositioned the main application as a free community library for agentic
   coding resources. Replaced marketplace, seller, buyer, checkout, purchase,
   and price language across English/Persian navigation, discovery, resource

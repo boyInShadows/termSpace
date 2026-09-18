@@ -2,23 +2,6 @@
 
 This file tracks known improvement work that has not been completed yet. When an item is finished, remove it from this file and add a dated entry to `changelog.md`.
 
-## Platform Reliability — P0 Error Handling
-
-- Establish consistent error handling across the API, marketplace frontend,
-  Blog, background workers, and scheduled jobs. Standardize stable public error
-  codes and validation details; make server-side schemas authoritative for every
-  body, query, path parameter, uploaded file, and environment-dependent action;
-  normalize inputs consistently; provide matching client-side constraints and
-  localized accessible field-level guidance without trusting the browser; and
-  add explicit coverage for malformed, oversized, conflicting, stale, and unsafe
-  values. Add localized loading, empty, retry, and failure states plus route-level
-  error boundaries; preserve correlation IDs across requests and jobs; log
-  actionable context without credentials, tokens, submitted artifacts, or
-  personal data; and give every external call explicit timeout, retry,
-  idempotency, and terminal-failure behavior. Add regression tests for expected
-  failures and verify production errors never expose stack traces or internal
-  implementation details.
-
 ## Marketplace — P0 Creator and Submission Lifecycle
 
 - Add creator-controlled release/version management without silently replacing

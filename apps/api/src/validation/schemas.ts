@@ -7,6 +7,9 @@ import { englishDisplayName, marketplaceManifestV1Schema } from "../lib/marketpl
  */
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const routeIdSchema = z.string().trim().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/, "Invalid resource identifier");
+export const routeSlugSchema = z.string().trim().min(1).max(200).regex(slugPattern, "Invalid slug");
+export const routeTokenSchema = z.string().trim().min(16).max(256).regex(/^[A-Za-z0-9_-]+$/, "Invalid token");
 const allowedImageHosts = new Set(
   (process.env.IMAGE_HOSTS ?? "images.unsplash.com")
     .split(",")
