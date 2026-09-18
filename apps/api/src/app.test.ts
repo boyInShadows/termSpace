@@ -22,7 +22,7 @@ const prismaMock = vi.hoisted(() => ({
   marketplaceCommunity: { findMany: vi.fn() },
   marketplaceCommunityPlacementRequest: { createMany: vi.fn() },
   marketplaceListingLifecycleEvent: { create: vi.fn(), findMany: vi.fn() },
-  marketplaceOrder: { count: vi.fn(), findUnique: vi.fn(), create: vi.fn() },
+  marketplaceOrder: { count: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn() },
   marketplaceCreator: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceRoleGrant: { findUnique: vi.fn(), create: vi.fn() },
   marketplaceRoleEvent: { create: vi.fn() },
@@ -154,6 +154,7 @@ describe("API", () => {
       rating: 0, priceMinor: 0, currency: "USD", pricingModel: "free", platforms: ["Codex"], models: [],
       categoryId: "category-1", category: { name: "Developer tools", slug: "developer-tools" },
       creatorId: "creator-1", creator: { id: "creator-1", name: "Creator", handle: "creator", initials: "CR", verified: true, bio: "Creator biography", followers: 0, _count: { products: 1 } },
+      installationSteps: ["private installation step"],
       versions: [], reviews: [],
     });
     prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
@@ -169,6 +170,8 @@ describe("API", () => {
         },
       }),
     }));
+    expect(response.body.data).not.toHaveProperty("installationSteps");
+    expect(JSON.stringify(response.body)).not.toContain("private installation step");
   });
 
   it("rejects invalid newsletter input before database access", async () => {
@@ -837,7 +840,7 @@ describe("API", () => {
       approvedSnapshot: { releaseManifest: { id: "release-1", publishedAt: new Date("2026-09-16T00:00:00.000Z"), sourceCheckStatus: "VERIFIED" } },
     });
     prismaMock.marketplaceOrder.findUnique.mockResolvedValue(null);
-    prismaMock.marketplaceOrder.create.mockResolvedValue({ id: "order-1", releaseManifestId: "release-1" });
+    prismaMock.marketplaceOrder.create.mockResolvedValue({ id: "order-1", status: "completed", releaseManifestId: "release-1", createdAt: new Date("2026-09-18T10:00:00.000Z"), userId: "reader-1", idempotencyKey: "secret-key" });
     prismaMock.marketplaceProduct.update.mockResolvedValue({});
     prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
 
@@ -851,6 +854,135 @@ describe("API", () => {
     expect(prismaMock.marketplaceOrder.create).toHaveBeenCalledWith({ data: expect.objectContaining({
       productId: "product-1", userId: "reader-1", releaseManifestId: "release-1", status: "completed",
     }) });
+    expect(response.body.data).toMatchObject({ id: "order-1", status: "completed", releaseManifestId: "release-1" });
+    expect(response.body.data).not.toHaveProperty("userId");
+    expect(response.body.data).not.toHaveProperty("idempotencyKey");
+  });
+
+  it("returns installation details for the exact release acquired by the reader", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    prismaMock.marketplaceOrder.findFirst.mockResolvedValue({
+      id: "order-1", status: "completed", createdAt: new Date("2026-09-18T10:00:00.000Z"),
+      product: { id: "product-1", slug: "owned-skill", name: "Owned Skill", published: true },
+      releaseManifest: {
+        id: "release-1", sourceKind: "GITHUB_REPOSITORY", sourceUrl: "https://github.com/example/owned-skill", sourceRef: "a".repeat(40), sourcePath: "skill",
+        providerIntegrityDigest: null, artifactSizeBytes: 4096, resolvedInstallationUrl: `https://github.com/example/owned-skill/archive/${"a".repeat(40)}.tar.gz`,
+        sourceCheckStatus: "VERIFIED", sourceCheckedAt: new Date("2026-09-18T09:00:00.000Z"), installationMethod: "MANUAL",
+        installationInstructions: ["Extract the archive", "Copy the skill directory"], runtimeRequirements: [], accountRequirements: [], operatingSystems: [], dependencyRequirements: [],
+        documentationUrl: "https://github.com/example/owned-skill#readme", supportUrl: null, licenseIdentifier: "MIT", customLicenseUrl: null,
+        publishedAt: new Date("2026-09-17T00:00:00.000Z"), productVersion: { productId: "product-1", version: "1.0.0" },
+      },
+    });
+
+    const response = await request(createApp())
+      .get("/api/marketplace/products/owned-skill/installation")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(200);
+    expect(response.headers["cache-control"]).toBe("private, no-store");
+    expect(response.body.data).toMatchObject({
+      acquisition: { id: "order-1", status: "completed" },
+      product: { slug: "owned-skill" },
+      release: {
+        id: "release-1", version: "1.0.0",
+        source: { kind: "github_repository", ref: "a".repeat(40), status: "verified" },
+        installation: { method: "manual", instructions: ["Extract the archive", "Copy the skill directory"] },
+      },
+    });
+    expect(prismaMock.marketplaceOrder.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: "reader-1", status: "completed", product: { slug: "owned-skill" } },
+    }));
+  });
+
+  it("lists the reader's acquired releases without exposing installation URLs", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    prismaMock.marketplaceOrder.findMany.mockResolvedValue([{
+      id: "order-1", createdAt: new Date("2026-09-18T10:00:00.000Z"),
+      product: { id: "product-1", slug: "owned-skill", name: "Owned Skill", type: "Skill", itemType: "SKILL", outcome: "Completes a task", published: true, creator: { name: "Creator", handle: "creator" } },
+      releaseManifest: { id: "release-1", sourceCheckStatus: "VERIFIED", resolvedInstallationUrl: "must-not-leak", productVersion: { version: "1.0.0" } },
+    }]);
+    prismaMock.marketplaceOrder.count.mockResolvedValue(1);
+
+    const response = await request(createApp())
+      .get("/api/marketplace/library")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data[0]).toMatchObject({
+      acquisitionId: "order-1", product: { slug: "owned-skill", typeKey: "skill" },
+      release: { id: "release-1", version: "1.0.0", sourceStatus: "verified" }, installationAvailable: true,
+    });
+    expect(response.body.meta).toEqual({ page: 1, limit: 24, total: 1, totalPages: 1 });
+    expect(JSON.stringify(response.body)).not.toContain("must-not-leak");
+    expect(prismaMock.marketplaceOrder.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: "reader-1", status: "completed" } }));
+  });
+
+  it("does not reveal installation data without the reader's acquisition", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-2", email: "other@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    prismaMock.marketplaceOrder.findFirst.mockResolvedValue(null);
+
+    const response = await request(createApp())
+      .get("/api/marketplace/products/owned-skill/installation")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe("ACQUISITION_NOT_FOUND");
+    expect(JSON.stringify(response.body)).not.toContain("github.com");
+  });
+
+  it("blocks installation when the acquired release is restricted", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    prismaMock.marketplaceOrder.findFirst.mockResolvedValue({
+      id: "order-1", status: "completed", createdAt: new Date(),
+      product: { id: "product-1", slug: "owned-skill", name: "Owned Skill", published: true },
+      releaseManifest: {
+        id: "release-1", publishedAt: new Date(), sourceCheckStatus: "RESTRICTED", resolvedInstallationUrl: "https://github.com/private-value",
+        productVersion: { productId: "product-1", version: "1.0.0" },
+      },
+    });
+
+    const response = await request(createApp())
+      .get("/api/marketplace/products/owned-skill/installation")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe("INSTALLATION_UNAVAILABLE");
+    expect(JSON.stringify(response.body)).not.toContain("private-value");
+  });
+
+  it("rejects an installation URL outside the verified provider hosts", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    prismaMock.marketplaceOrder.findFirst.mockResolvedValue({
+      id: "order-1", status: "completed", createdAt: new Date(),
+      product: { id: "product-1", slug: "owned-skill", name: "Owned Skill", published: true },
+      releaseManifest: {
+        id: "release-1", sourceKind: "GITHUB_REPOSITORY", publishedAt: new Date(), sourceCheckStatus: "VERIFIED",
+        resolvedInstallationUrl: "https://attacker.example/payload", productVersion: { productId: "product-1", version: "1.0.0" },
+      },
+    });
+
+    const response = await request(createApp())
+      .get("/api/marketplace/products/owned-skill/installation")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe("INSTALLATION_UNAVAILABLE");
+    expect(JSON.stringify(response.body)).not.toContain("attacker.example");
   });
 
   it("refuses acquisition when a public listing has no approved release", async () => {

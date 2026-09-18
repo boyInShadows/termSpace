@@ -4,8 +4,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Creator and Submission Lifecycle
 
-- Complete the free-item acquisition/install flow and expose the correct package
-  or external installation instructions only to eligible users.
 - Add API and end-to-end authorization tests covering cross-user listing access,
   creator ownership, moderation, unpublished artifacts, and Blog isolation.
 

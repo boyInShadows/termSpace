@@ -41,7 +41,25 @@ function serializeProduct(product: any) {
     lifecycleResumePublished: undefined,
     approvedSnapshotId: undefined,
     proposedSnapshotId: undefined,
+    installationSteps: undefined,
   };
+}
+
+function serializeAcquisition(order: { id: string; status: string; releaseManifestId: string | null; createdAt: Date }) {
+  return { id: order.id, status: order.status, releaseManifestId: order.releaseManifestId, acquiredAt: order.createdAt };
+}
+
+function trustedInstallationUrl(sourceKind: string, value: string | null): boolean {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:") return false;
+    if (sourceKind === "NPM") return url.hostname === "registry.npmjs.org";
+    if (["GITHUB_REPOSITORY", "GITHUB_RELEASE"].includes(sourceKind)) return url.hostname === "github.com";
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 export function listMarketplaceItemTypes(_req: Request, res: Response) {
@@ -119,6 +137,43 @@ export async function listMarketplaceFavorites(_req: Request, res: Response) {
   res.json({ data: favorites.map((item) => item.product.slug) });
 }
 
+export async function listMarketplaceLibrary(req: Request, res: Response) {
+  res.set("Cache-Control", "private, no-store");
+  const { page, limit } = req.query as unknown as { page: number; limit: number };
+  const where = { userId: res.locals.reader.id as string, status: "completed" } as const;
+  const select = {
+      id: true,
+      createdAt: true,
+      product: { select: { id: true, slug: true, name: true, type: true, itemType: true, outcome: true, published: true, creator: { select: { name: true, handle: true } } } },
+      releaseManifest: { select: { id: true, sourceCheckStatus: true, productVersion: { select: { version: true } } } },
+  } as const;
+  const [orders, total] = await Promise.all([
+    prisma.marketplaceOrder.findMany({ where, orderBy: [{ createdAt: "desc" }, { id: "desc" }], select, skip: (page - 1) * limit, take: limit }),
+    prisma.marketplaceOrder.count({ where }),
+  ]);
+  res.json({ data: orders.map((order) => ({
+    acquisitionId: order.id,
+    acquiredAt: order.createdAt,
+    product: {
+      id: order.product.id,
+      slug: order.product.slug,
+      name: order.product.name,
+      type: order.product.type,
+      typeKey: marketplaceItemTypeKey(order.product.itemType),
+      outcome: order.product.outcome,
+      creator: order.product.creator,
+    },
+    release: order.releaseManifest ? {
+      id: order.releaseManifest.id,
+      version: order.releaseManifest.productVersion.version,
+      sourceStatus: order.releaseManifest.sourceCheckStatus.toLowerCase(),
+    } : null,
+    installationAvailable: Boolean(order.product.published
+      && order.releaseManifest
+      && ["VERIFIED", "STALE"].includes(order.releaseManifest.sourceCheckStatus)),
+  })), meta: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+}
+
 async function findPublishedProduct(slug: string) {
   return prisma.marketplaceProduct.findFirst({
     where: { slug, published: true },
@@ -150,6 +205,93 @@ export async function removeMarketplaceFavorite(req: Request, res: Response) {
   res.status(204).send();
 }
 
+export async function getMarketplaceInstallation(req: Request, res: Response) {
+  res.set("Cache-Control", "private, no-store");
+  const entitlement = await prisma.marketplaceOrder.findFirst({
+    where: {
+      userId: res.locals.reader.id as string,
+      status: "completed",
+      product: { slug: String(req.params.slug) },
+    },
+    select: {
+      id: true,
+      status: true,
+      createdAt: true,
+      product: { select: { id: true, slug: true, name: true, published: true } },
+      releaseManifest: { select: {
+        id: true,
+        sourceKind: true,
+        sourceUrl: true,
+        sourceRef: true,
+        sourcePath: true,
+        providerIntegrityDigest: true,
+        artifactSizeBytes: true,
+        resolvedInstallationUrl: true,
+        sourceCheckStatus: true,
+        sourceCheckedAt: true,
+        installationMethod: true,
+        installationInstructions: true,
+        runtimeRequirements: true,
+        accountRequirements: true,
+        operatingSystems: true,
+        dependencyRequirements: true,
+        documentationUrl: true,
+        supportUrl: true,
+        licenseIdentifier: true,
+        customLicenseUrl: true,
+        publishedAt: true,
+        productVersion: { select: { productId: true, version: true } },
+      } },
+    },
+  });
+  if (!entitlement) {
+    res.status(404).json({ error: { code: "ACQUISITION_NOT_FOUND", message: "Add this resource to your library before viewing installation details" } });
+    return;
+  }
+  const release = entitlement.releaseManifest;
+  const available = entitlement.product.published
+    && release?.publishedAt
+    && release.productVersion.productId === entitlement.product.id
+    && ["VERIFIED", "STALE"].includes(release.sourceCheckStatus)
+    && trustedInstallationUrl(release.sourceKind, release.resolvedInstallationUrl);
+  if (!available || !release) {
+    res.status(409).json({ error: { code: "INSTALLATION_UNAVAILABLE", message: "Installation is unavailable while this resource or its pinned release is restricted" } });
+    return;
+  }
+  res.json({ data: {
+    acquisition: { id: entitlement.id, status: entitlement.status, acquiredAt: entitlement.createdAt },
+    product: { slug: entitlement.product.slug, name: entitlement.product.name },
+    release: {
+      id: release.id,
+      version: release.productVersion.version,
+      source: {
+        kind: release.sourceKind.toLowerCase(),
+        url: release.sourceUrl,
+        ref: release.sourceRef,
+        path: release.sourcePath,
+        integrityDigest: release.providerIntegrityDigest,
+        artifactSizeBytes: release.artifactSizeBytes,
+        status: release.sourceCheckStatus.toLowerCase(),
+        checkedAt: release.sourceCheckedAt,
+      },
+      installation: {
+        method: release.installationMethod.toLowerCase(),
+        url: release.resolvedInstallationUrl,
+        instructions: release.installationInstructions,
+      },
+      requirements: {
+        runtimes: release.runtimeRequirements,
+        accounts: release.accountRequirements,
+        operatingSystems: release.operatingSystems,
+        dependencies: release.dependencyRequirements,
+      },
+      license: release.licenseIdentifier ?? release.customLicenseUrl,
+      documentationUrl: release.documentationUrl,
+      supportUrl: release.supportUrl,
+    },
+  } });
+}
+
 export async function acquireMarketplaceProduct(req: Request, res: Response) {
   const key = req.header("Idempotency-Key");
   if (!key || key.length < 16 || key.length > 128) {
@@ -164,14 +306,14 @@ export async function acquireMarketplaceProduct(req: Request, res: Response) {
       res.status(409).json({ error: { code: "IDEMPOTENCY_CONFLICT", message: "Idempotency key was already used for another acquisition" } });
       return;
     }
-    res.json({ data: existing });
+    res.json({ data: serializeAcquisition(existing) });
     return;
   }
   const existingEntitlement = await prisma.marketplaceOrder.findUnique({
     where: { userId_productId: { userId: res.locals.reader.id, productId: product.id } },
   });
   if (existingEntitlement) {
-    res.json({ data: existingEntitlement });
+    res.json({ data: serializeAcquisition(existingEntitlement) });
     return;
   }
   if (product.priceMinor > 0 || product.pricingModel !== "free") {
@@ -197,7 +339,7 @@ export async function acquireMarketplaceProduct(req: Request, res: Response) {
       await tx.marketplaceProduct.update({ where: { id: product.id }, data: { purchaseCount: { increment: 1 }, usageCount: { increment: 1 } } });
       return created;
     });
-    res.status(201).json({ data: order });
+    res.status(201).json({ data: serializeAcquisition(order) });
   } catch (error) {
     if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") throw error;
     const [sameKey, sameEntitlement] = await Promise.all([
@@ -210,6 +352,6 @@ export async function acquireMarketplaceProduct(req: Request, res: Response) {
       res.status(409).json({ error: { code: "IDEMPOTENCY_CONFLICT", message: "Idempotency key was already used for another acquisition" } });
       return;
     }
-    res.json({ data: existing });
+    res.json({ data: serializeAcquisition(existing) });
   }
 }

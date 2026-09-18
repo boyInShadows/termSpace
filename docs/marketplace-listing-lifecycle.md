@@ -55,6 +55,14 @@ changes.
 Completed acquisitions store the exact approved release-manifest identifier
 selected at acquisition time. Publishing a newer version updates the listing's
 public approved snapshot but never advances existing acquisition records.
+Public catalog responses omit actionable installation instructions. Authenticated
+readers add a free resource through `POST /api/marketplace/products/:slug/acquire`,
+review their paginated acquisitions through `GET /api/marketplace/library`, and
+retrieve instructions only for their pinned acquisition through
+`GET /api/marketplace/products/:slug/installation`. Installation responses are
+private/no-store, contain only the acquired release, and fail closed when the
+listing is unavailable, its source is restricted, its release is legacy, or its
+resolved URL is outside the supported GitHub/npm provider hosts.
 Database triggers require acquisition releases to be published releases of the
 same listing and prevent mutation of published version identity, release source,
 installation data, compatibility, permissions, requirements, and type-specific

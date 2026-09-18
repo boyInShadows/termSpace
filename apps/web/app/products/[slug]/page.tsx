@@ -156,20 +156,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </div>
               </div>
             </Section>
-            <Section title="Installation and usage">
-              <ol className="space-y-4">
-                {product.installationSteps.map((x, i) => (
-                  <li key={x} className="flex gap-4">
-                    <span className="font-mono text-xs text-primary">
-                      0{i + 1}
-                    </span>
-                    <span>{x}</span>
-                  </li>
-                ))}
-              </ol>
-              <pre className="mt-6 overflow-x-auto rounded-lg bg-foreground p-4 font-mono text-xs text-background">
-                cp -R {product.slug} ~/.agents/skills/
-              </pre>
+            <Section title={fa ? "نصب و استفاده" : "Installation and usage"}>
+              <div className="rounded-lg border bg-surface p-5">
+                <p className="font-semibold text-foreground">{fa ? "راهنمای دقیق به نسخهٔ دریافت‌شده متصل است." : "Exact instructions are tied to the release you acquire."}</p>
+                <p className="mt-2 text-sm">{fa ? "منبع را به کتابخانهٔ خود اضافه کنید تا پیوند تأییدشده، مرجع تغییرناپذیر و مراحل نصب همان نسخه نمایش داده شود." : "Add the resource to your library to reveal the verified provider URL, immutable reference, and installation steps for that exact version."}</p>
+              </div>
             </Section>
             <Section title="Version history">
               <div className="space-y-6">

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceHome, getMarketplaceProduct, listMarketplaceFavorites, listMarketplaceItemTypes, listMarketplaceProducts, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
+import { acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceHome, getMarketplaceInstallation, getMarketplaceProduct, listMarketplaceFavorites, listMarketplaceItemTypes, listMarketplaceLibrary, listMarketplaceProducts, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
 import { createOwnedCreatorProfile, getCreatorDashboard, getOwnedCreatorProfile, listOwnedMarketplaceReleases, updateOwnedCreatorProfile } from "../controllers/marketplaceCreatorController.js";
 import { transitionModeratedMarketplaceListing, transitionOwnedMarketplaceListing } from "../controllers/marketplaceLifecycleController.js";
 import { createOwnedMarketplaceDraft, getOwnedMarketplaceDraft, listMarketplaceDraftOptions, updateOwnedMarketplaceDraft } from "../controllers/marketplaceDraftController.js";
@@ -7,7 +7,7 @@ import { addMarketplaceModerationNote, getMarketplaceModerationPreview, listMark
 import { connectOwnedProvider, enqueueOwnedSourceCheck, listOwnedProviderConnections, revokeOwnedProvider } from "../controllers/marketplaceSourceController.js";
 import { requireMarketplaceRole, requireReader, requireVerifiedReader } from "../middleware/auth.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
-import { creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
+import { creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
 
 const router = Router();
 router.param("id", validateRouteParam("id", routeIdSchema));
@@ -36,7 +36,9 @@ router.get("/moderation/products/:id", requireMarketplaceRole("moderator", "admi
 router.post("/moderation/products/:id/notes", requireMarketplaceRole("moderator", "administrator"), validate(moderationNoteSchema), addMarketplaceModerationNote);
 router.post("/moderation/products/:id/lifecycle", requireMarketplaceRole("moderator", "administrator"), validate(moderatedListingLifecycleSchema), transitionModeratedMarketplaceListing);
 router.get("/favorites", requireReader, listMarketplaceFavorites);
+router.get("/library", requireReader, validate(marketplaceLibraryQuerySchema, "query"), listMarketplaceLibrary);
 router.put("/products/:slug/favorite", requireReader, addMarketplaceFavorite);
 router.delete("/products/:slug/favorite", requireReader, removeMarketplaceFavorite);
+router.get("/products/:slug/installation", requireReader, getMarketplaceInstallation);
 router.post("/products/:slug/acquire", requireReader, acquireMarketplaceProduct);
 export default router;

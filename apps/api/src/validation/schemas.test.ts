@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { articleQuerySchema, commentSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, marketplaceProductQuerySchema, marketplaceProviderSchema, markdownResourceMetadataSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, sourceCheckRequestSchema } from "./schemas.js";
+import { articleQuerySchema, commentSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, markdownResourceMetadataSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, sourceCheckRequestSchema } from "./schemas.js";
 
 const article = {
   title: "A valid title",
@@ -36,6 +36,12 @@ describe("content validation", () => {
     expect(providerConnectionSchema.safeParse({ token: "short" }).success).toBe(false);
     expect(sourceCheckRequestSchema.safeParse({ expectedVersion: 2 }).success).toBe(true);
     expect(sourceCheckRequestSchema.safeParse({ expectedVersion: 2, releaseId: "other" }).success).toBe(false);
+  });
+
+  it("bounds marketplace library pagination", () => {
+    expect(marketplaceLibraryQuerySchema.parse({})).toEqual({ page: 1, limit: 24 });
+    expect(marketplaceLibraryQuerySchema.safeParse({ page: "2", limit: "50" }).success).toBe(true);
+    expect(marketplaceLibraryQuerySchema.safeParse({ page: "0", limit: "51" }).success).toBe(false);
   });
   it("preserves an omitted article publication filter", () => {
     expect(articleQuerySchema.parse({}).published).toBeUndefined();

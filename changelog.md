@@ -4,6 +4,19 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-18
 
+- Completed the free-resource acquisition and installation flow. Public product
+  responses and pages no longer expose actionable installation instructions;
+  authenticated readers can add a resource idempotently, retain the exact
+  approved release in their account library, and reveal only that release's
+  verified package URL, immutable reference, source status, requirements, and
+  installation steps. Installation now fails closed for unpublished products,
+  restricted or mismatched releases, missing legacy release pins, and package
+  URLs outside the approved GitHub/npm hosts. Acquisition responses omit user
+  and idempotency data, private library/install responses disable caching, and
+  the English/Persian account and product interfaces cover existing and new
+  acquisitions. Verification: all workspace type-checks; 165 tests; web lint;
+  API and web production builds; Blog webpack production build; and
+  `git diff --check`.
 - Implemented authenticated GitHub and npm source ingestion from ADR 0001.
   Creators can connect encrypted provider credentials from the bilingual release
   workspace, verify ownership through repository maintain/admin or package write

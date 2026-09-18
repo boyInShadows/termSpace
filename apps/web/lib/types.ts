@@ -104,10 +104,33 @@ export interface ProductDetail extends Product {
   useCases: { title: string; description: string }[] | null;
   includedFiles: { name: string; description: string }[] | null;
   exampleInput: string | null; exampleOutputTitle: string | null; exampleOutputBody: string | null;
-  installationSteps: string[]; previewFiles: string[]; previewExcerpt: string | null;
+  previewFiles: string[]; previewExcerpt: string | null;
   requirements: string | null; permissions: string | null; license: string | null;
   updatesPolicy: string | null; refundPolicy: string | null;
   versions: ProductVersion[]; reviews: Review[]; related: Product[];
+}
+export interface MarketplaceInstallation {
+  acquisition: { id: string; status: string; acquiredAt: string };
+  product: { slug: string; name: string };
+  release: {
+    id: string; version: string;
+    source: {
+      kind: string; url: string; ref: string; path: string | null; integrityDigest: string | null;
+      artifactSizeBytes: number | null; status: "verified" | "stale"; checkedAt: string | null;
+    };
+    installation: { method: string; url: string; instructions: string[] };
+    requirements: { runtimes: string[]; accounts: string[]; operatingSystems: string[]; dependencies: string[] };
+    license: string | null; documentationUrl: string | null; supportUrl: string | null;
+  };
+}
+export interface MarketplaceLibraryEntry {
+  acquisitionId: string; acquiredAt: string;
+  product: {
+    id: string; slug: string; name: string; type: ProductType; typeKey: MarketplaceItemTypeKey | null;
+    outcome: string; creator: { name: string; handle: string };
+  };
+  release: { id: string; version: string; sourceStatus: string } | null;
+  installationAvailable: boolean;
 }
 export interface MarketplaceCategory { name: string; slug: string; products: number; }
 export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; total: number; }

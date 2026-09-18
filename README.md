@@ -24,12 +24,14 @@ boundaries and core user journeys.
   private staff notes, decisions, suspension, archival, and restoration.
 - Staff-defined communities and creator placement requests, kept separate from
   platform compatibility.
+- Idempotent free-resource acquisition, an account library, and entitlement-
+  gated installation details pinned to the exact verified release acquired.
 
 The first community-library milestone is external-source-first: submissions reference
 GitHub or npm artifacts instead of uploading executable packages to TermSpace.
-Authenticated GitHub/npm source ingestion and creator-controlled immutable release
-management are implemented. Add/install flows, public community browsing, and
-authenticated ratings/reviews remain active roadmap work tracked in
+Authenticated GitHub/npm source ingestion, creator-controlled immutable release
+management, and free add/install flows are implemented. Public community
+browsing and authenticated ratings/reviews remain active roadmap work tracked in
 [pending.md](pending.md).
 
 ## Repository layout
