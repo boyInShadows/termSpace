@@ -148,6 +148,9 @@ function ListingCard({ listing }: { listing: CreatorDashboardListing }) {
         {isEditable(listing.state) && <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/creator/listings/${listing.id}/edit`, locale)}>
           <Pencil aria-hidden="true" className="size-4" />{t.creatorHub.editDraft}
         </Link>}
+        <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/creator/listings/${listing.id}/releases`, locale)}>
+          <Layers3 aria-hidden="true" className="size-4" />{t.creatorHub.manageReleases}
+        </Link>
         {listing.published && <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/products/${listing.slug}`, locale)}>
           {t.creatorHub.viewPublic}<ExternalLink aria-hidden="true" className="size-4" />
         </Link>}

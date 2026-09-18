@@ -4,8 +4,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Creator and Submission Lifecycle
 
-- Add creator-controlled release/version management without silently replacing
-  artifacts already acquired by users.
 - Implement GitHub and npm source ingestion with authenticated ownership checks,
   immutable release references, provider integrity metadata, bounded background
   reconciliation, and safe failure states as defined in ADR 0001.

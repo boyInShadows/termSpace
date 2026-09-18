@@ -4,6 +4,21 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-18
 
+- Added creator-controlled release/version management without replacing
+  artifacts already acquired by users. Creator dashboards now link to an
+  English/Persian release workspace that shows immutable source provenance,
+  draft/public status, and the number of acquisitions pinned to every release;
+  preparing an update continues through the moderated listing-draft lifecycle.
+  New acquisitions persist the exact approved release manifest, fail safely
+  when no modern approved release exists, and retain that reference when newer
+  versions are published. Forward-only migrations add the acquisition-release
+  relationship and database triggers that enforce same-listing published
+  releases and prevent direct or indirect mutation of published release data.
+  Verification: Prisma generation; all workspace type-checks; 141 tests,
+  including owner-scoped history, exact release pinning, unavailable-release,
+  dashboard navigation, and release-provenance UI coverage; web lint; migration
+  deployment against local PostgreSQL; API, web, and Blog webpack production
+  builds; and `git diff --check`.
 - Completed the cross-project reliability and validation pass. API requests now
   receive validated correlation IDs that are returned on every error and carried
   through redacted structured request logs; malformed JSON, oversized bodies,

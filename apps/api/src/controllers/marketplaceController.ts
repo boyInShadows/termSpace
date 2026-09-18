@@ -120,7 +120,21 @@ export async function listMarketplaceFavorites(_req: Request, res: Response) {
 }
 
 async function findPublishedProduct(slug: string) {
-  return prisma.marketplaceProduct.findFirst({ where: { slug, published: true }, select: { id: true, slug: true, priceMinor: true, currency: true, pricingModel: true } });
+  return prisma.marketplaceProduct.findFirst({
+    where: { slug, published: true },
+    select: {
+      id: true,
+      slug: true,
+      priceMinor: true,
+      currency: true,
+      pricingModel: true,
+      approvedSnapshot: {
+        select: {
+          releaseManifest: { select: { id: true, publishedAt: true } },
+        },
+      },
+    },
+  });
 }
 
 export async function addMarketplaceFavorite(req: Request, res: Response) {
@@ -164,9 +178,22 @@ export async function acquireMarketplaceProduct(req: Request, res: Response) {
     res.status(409).json({ error: { code: "RESOURCE_NOT_FREE", message: "This resource is not available for community installation" } });
     return;
   }
+  const releaseManifest = product.approvedSnapshot?.releaseManifest;
+  if (!releaseManifest?.publishedAt) {
+    res.status(409).json({ error: { code: "RELEASE_UNAVAILABLE", message: "This resource does not have an approved release available for acquisition" } });
+    return;
+  }
   try {
     const order = await prisma.$transaction(async (tx) => {
-      const created = await tx.marketplaceOrder.create({ data: { userId: res.locals.reader.id, productId: product.id, idempotencyKey: key, amountMinor: 0, currency: product.currency, status: "completed" } });
+      const created = await tx.marketplaceOrder.create({ data: {
+        userId: res.locals.reader.id,
+        productId: product.id,
+        releaseManifestId: releaseManifest.id,
+        idempotencyKey: key,
+        amountMinor: 0,
+        currency: product.currency,
+        status: "completed",
+      } });
       await tx.marketplaceProduct.update({ where: { id: product.id }, data: { purchaseCount: { increment: 1 }, usageCount: { increment: 1 } } });
       return created;
     });

@@ -37,6 +37,17 @@ export interface MarketplaceDraftRecord {
   id: string; slug: string; name: string; state: string; version: number; published: boolean;
   draft: { revision: number; content: Record<string, unknown>; savedAt: string } | null;
 }
+export interface CreatorReleaseRecord {
+  id: string; productVersionId: string; version: string; notes: string; revision: number;
+  status: "published" | "proposed" | "superseded_draft";
+  source: { kind: string; url: string; ref: string; path: string | null; integrityDigest: string | null };
+  sourceResolvedAt: string | null; ownershipVerifiedAt: string | null; publishedAt: string | null;
+  createdAt: string; listingRevision: number | null; isCurrent: boolean; acquisitionCount: number;
+}
+export interface CreatorReleaseHistory {
+  listing: { id: string; slug: string; name: string; state: string; lifecycleVersion: number; published: boolean };
+  releases: CreatorReleaseRecord[];
+}
 export interface MarketplaceModerationQueueListing {
   id: string; slug: string; name: string; type: ProductType; typeKey: MarketplaceItemTypeKey | null;
   state: string; version: number; published: boolean; creator: { name: string; handle: string }; selfOwned: boolean;

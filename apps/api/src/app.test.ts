@@ -723,6 +723,102 @@ describe("API", () => {
     expect(prismaMock.marketplaceProduct.findMany).not.toHaveBeenCalled();
   });
 
+  it("returns immutable release history only to the listing owner", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      id: "product-1", slug: "owned-skill", name: "Owned Skill", lifecycleState: "PUBLISHED", lifecycleVersion: 4,
+      published: true, approvedSnapshotId: "snapshot-1", proposedSnapshotId: "snapshot-2", creator: { ownerUserId: "reader-1" },
+      versions: [{
+        id: "version-1", version: "1.0.0", notes: "Initial release", releasedAt: new Date("2026-09-15T00:00:00.000Z"),
+        releaseManifests: [{
+          id: "release-1", revision: 1, sourceKind: "GITHUB_REPOSITORY", sourceUrl: "https://github.com/example/item",
+          sourceRef: "a".repeat(40), sourcePath: "skill", providerIntegrityDigest: null,
+          sourceResolvedAt: new Date("2026-09-15T01:00:00.000Z"), ownershipVerifiedAt: new Date("2026-09-15T01:00:00.000Z"),
+          publishedAt: new Date("2026-09-16T00:00:00.000Z"), createdAt: new Date("2026-09-15T00:00:00.000Z"),
+          listingSnapshots: [{ id: "snapshot-1", revision: 1 }], _count: { acquisitions: 3 },
+        }],
+      }],
+    });
+
+    const response = await request(createApp())
+      .get("/api/marketplace/creator/products/product-1/releases")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.releases[0]).toMatchObject({
+      id: "release-1", version: "1.0.0", status: "published", isCurrent: true, acquisitionCount: 3,
+      source: { kind: "github_repository", url: "https://github.com/example/item", path: "skill" },
+    });
+  });
+
+  it("does not reveal release provenance to another creator", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      id: "product-2", slug: "other-skill", name: "Other Skill", lifecycleState: "DRAFT", lifecycleVersion: 1,
+      published: false, approvedSnapshotId: null, proposedSnapshotId: "snapshot-2", creator: { ownerUserId: "reader-2" }, versions: [],
+    });
+
+    const response = await request(createApp())
+      .get("/api/marketplace/creator/products/product-2/releases")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe("LISTING_NOT_FOUND");
+  });
+
+  it("pins a free acquisition to the exact approved release", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue({
+      id: "product-1", slug: "owned-skill", priceMinor: 0, currency: "USD", pricingModel: "free",
+      approvedSnapshot: { releaseManifest: { id: "release-1", publishedAt: new Date("2026-09-16T00:00:00.000Z") } },
+    });
+    prismaMock.marketplaceOrder.findUnique.mockResolvedValue(null);
+    prismaMock.marketplaceOrder.create.mockResolvedValue({ id: "order-1", releaseManifestId: "release-1" });
+    prismaMock.marketplaceProduct.update.mockResolvedValue({});
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/products/owned-skill/acquire")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .set("Idempotency-Key", "acquire-owned-skill-0001");
+
+    expect(response.status).toBe(201);
+    expect(prismaMock.marketplaceOrder.create).toHaveBeenCalledWith({ data: expect.objectContaining({
+      productId: "product-1", userId: "reader-1", releaseManifestId: "release-1", status: "completed",
+    }) });
+  });
+
+  it("refuses acquisition when a public listing has no approved release", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue({
+      id: "product-1", slug: "legacy-skill", priceMinor: 0, currency: "USD", pricingModel: "free", approvedSnapshot: null,
+    });
+    prismaMock.marketplaceOrder.findUnique.mockResolvedValue(null);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/products/legacy-skill/acquire")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .set("Idempotency-Key", "acquire-legacy-skill-0001");
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe("RELEASE_UNAVAILABLE");
+    expect(prismaMock.marketplaceOrder.create).not.toHaveBeenCalled();
+  });
+
   it("returns the staff moderation queue with source readiness and self-review flags", async () => {
     prismaMock.readerSession.findFirst.mockResolvedValue({
       id: "session-1",

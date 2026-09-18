@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceHome, getMarketplaceProduct, listMarketplaceFavorites, listMarketplaceItemTypes, listMarketplaceProducts, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
-import { createOwnedCreatorProfile, getCreatorDashboard, getOwnedCreatorProfile, updateOwnedCreatorProfile } from "../controllers/marketplaceCreatorController.js";
+import { createOwnedCreatorProfile, getCreatorDashboard, getOwnedCreatorProfile, listOwnedMarketplaceReleases, updateOwnedCreatorProfile } from "../controllers/marketplaceCreatorController.js";
 import { transitionModeratedMarketplaceListing, transitionOwnedMarketplaceListing } from "../controllers/marketplaceLifecycleController.js";
 import { createOwnedMarketplaceDraft, getOwnedMarketplaceDraft, listMarketplaceDraftOptions, updateOwnedMarketplaceDraft } from "../controllers/marketplaceDraftController.js";
 import { addMarketplaceModerationNote, getMarketplaceModerationPreview, listMarketplaceModerationQueue } from "../controllers/marketplaceModerationController.js";
@@ -22,6 +22,7 @@ router.patch("/creator/profile", requireMarketplaceRole("creator"), validate(cre
 router.get("/creator/dashboard", requireMarketplaceRole("creator"), validate(creatorDashboardQuerySchema, "query"), getCreatorDashboard);
 router.post("/creator/products", requireMarketplaceRole("creator"), validate(creatorDraftCreateSchema), createOwnedMarketplaceDraft);
 router.get("/creator/products/:id/draft", requireMarketplaceRole("creator"), getOwnedMarketplaceDraft);
+router.get("/creator/products/:id/releases", requireMarketplaceRole("creator"), listOwnedMarketplaceReleases);
 router.put("/creator/products/:id/draft", requireMarketplaceRole("creator"), validate(creatorDraftUpdateSchema), updateOwnedMarketplaceDraft);
 router.post("/creator/products/:id/lifecycle", requireMarketplaceRole("creator"), validate(creatorListingLifecycleSchema), transitionOwnedMarketplaceListing);
 router.get("/moderation/queue", requireMarketplaceRole("moderator", "administrator"), validate(moderationQueueQuerySchema, "query"), listMarketplaceModerationQueue);

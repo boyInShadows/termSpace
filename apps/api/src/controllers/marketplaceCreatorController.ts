@@ -220,3 +220,89 @@ export async function getCreatorDashboard(req: Request, res: Response) {
     meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
   });
 }
+
+export async function listOwnedMarketplaceReleases(req: Request, res: Response) {
+  const product = await prisma.marketplaceProduct.findUnique({
+    where: { id: String(req.params.id) },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      lifecycleState: true,
+      lifecycleVersion: true,
+      published: true,
+      approvedSnapshotId: true,
+      proposedSnapshotId: true,
+      creator: { select: { ownerUserId: true } },
+      versions: {
+        orderBy: [{ releasedAt: "desc" }, { id: "desc" }],
+        select: {
+          id: true,
+          version: true,
+          notes: true,
+          releasedAt: true,
+          releaseManifests: {
+            orderBy: { revision: "desc" },
+            select: {
+              id: true,
+              revision: true,
+              sourceKind: true,
+              sourceUrl: true,
+              sourceRef: true,
+              sourcePath: true,
+              providerIntegrityDigest: true,
+              sourceResolvedAt: true,
+              ownershipVerifiedAt: true,
+              publishedAt: true,
+              createdAt: true,
+              listingSnapshots: { select: { id: true, revision: true } },
+              _count: { select: { acquisitions: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!product || product.creator.ownerUserId !== res.locals.reader.id) {
+    res.status(404).json({ error: { code: "LISTING_NOT_FOUND", message: "Marketplace listing not found" } });
+    return;
+  }
+
+  res.json({ data: {
+    listing: {
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      state: product.lifecycleState.toLowerCase(),
+      lifecycleVersion: product.lifecycleVersion,
+      published: product.published,
+    },
+    releases: product.versions.flatMap((version) => version.releaseManifests.map((release) => {
+      const snapshot = release.listingSnapshots[0] ?? null;
+      const isApproved = snapshot?.id === product.approvedSnapshotId;
+      const isProposed = snapshot?.id === product.proposedSnapshotId;
+      return {
+        id: release.id,
+        productVersionId: version.id,
+        version: version.version,
+        notes: version.notes,
+        revision: release.revision,
+        status: release.publishedAt ? "published" : isProposed ? "proposed" : "superseded_draft",
+        source: {
+          kind: release.sourceKind.toLowerCase(),
+          url: release.sourceUrl,
+          ref: release.sourceRef,
+          path: release.sourcePath,
+          integrityDigest: release.providerIntegrityDigest,
+        },
+        sourceResolvedAt: release.sourceResolvedAt,
+        ownershipVerifiedAt: release.ownershipVerifiedAt,
+        publishedAt: release.publishedAt,
+        createdAt: release.createdAt,
+        listingRevision: snapshot?.revision ?? null,
+        isCurrent: isApproved,
+        acquisitionCount: release._count.acquisitions,
+      };
+    })),
+  } });
+}

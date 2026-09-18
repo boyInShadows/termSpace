@@ -33,6 +33,7 @@ Creators create and revise drafts through these owner-scoped endpoints:
 - `POST /api/marketplace/creator/products`
 - `GET /api/marketplace/creator/products/:id/draft`
 - `PUT /api/marketplace/creator/products/:id/draft`
+- `GET /api/marketplace/creator/products/:id/releases`
 
 The update payload includes `expectedVersion`; stale saves fail with
 `409 LISTING_VERSION_CONFLICT` before a snapshot is written. Each successful
@@ -41,6 +42,20 @@ placement request, and `DRAFT_SAVED` audit records. Published listings keep
 their approved snapshot and public projection while the replacement draft is
 edited. Public version responses include only versions linked to a release
 whose `publishedAt` timestamp is set, so draft release metadata is not exposed.
+The creator release workspace at `/creator/listings/:id/releases` shows the
+immutable source identity, moderation status, and acquisition count for each
+release. Preparing a new release starts from the listing's controlled draft
+editor and requires a new version label whenever published release metadata
+changes.
+
+Completed acquisitions store the exact approved release-manifest identifier
+selected at acquisition time. Publishing a newer version updates the listing's
+public approved snapshot but never advances existing acquisition records.
+Database triggers require acquisition releases to be published releases of the
+same listing and prevent mutation of published version identity, release source,
+installation data, compatibility, permissions, requirements, and type-specific
+details. Legacy acquisition rows may remain without a release identifier; new
+acquisitions fail safely when a listing has no modern approved release.
 
 Suspension and archival set `published` false and retain both the previous state
 and previous public-availability value. Reinstatement or restoration returns to
