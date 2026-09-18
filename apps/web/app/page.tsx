@@ -59,7 +59,7 @@ const trustFacts = [
   {
     icon: ScrollText,
     title: "Licence on the label",
-    copy: "Commercial use, redistribution and attribution answered before you reach checkout.",
+    copy: "Use, redistribution and attribution are clear before you install anything.",
   },
 ];
 

@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   CompatibilityBadges,
   CreatorIdentity,
-  PriceDisplay,
   ProductTypeBadge,
   Rating,
 } from "./product-parts";
@@ -91,10 +90,7 @@ export function ProductCard({
               {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(product.updatedAt))}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <PriceDisplay pricing={product.pricing} />
-            <ArrowUpRight size={15} className="text-muted-foreground" />
-          </div>
+          <ArrowUpRight size={15} className="text-muted-foreground" aria-hidden="true" />
         </div>
       </div>
     </article>

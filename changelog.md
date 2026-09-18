@@ -2,6 +2,25 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-09-18
+
+- Repositioned the main application as a free community library for agentic
+  coding resources. Replaced marketplace, seller, buyer, checkout, purchase,
+  and price language across English/Persian navigation, discovery, resource
+  cards, item actions, moderation copy, accessibility labels, the design-system
+  prototype, README, product direction, and architecture guidance. Removed
+  pricing filters, price sorting, and price displays; changed the primary flow
+  to sharing and adding resources to a library; and relabeled usage eligibility
+  as verified use. Added a forward-only migration and database constraint that
+  normalize every existing listing to free and prevent future non-free product
+  rows while preserving legacy internal identifiers. Development fixtures and
+  seed data now contain free resources only. Verification: Prisma generation;
+  all workspace type-checks; 130 tests; web lint; API and web production builds;
+  Blog webpack production build; `git diff --check`; and all 19 migrations,
+  including the free-resource normalization and constraint, applied successfully
+  to the local PostgreSQL database, where all 12 existing resources now report
+  zero non-free records.
+
 ## 2026-09-17
 
 - Simplified creator-facing names and descriptions from the browser-feedback

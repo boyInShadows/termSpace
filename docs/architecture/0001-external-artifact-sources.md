@@ -113,9 +113,9 @@ the provider and last successful source check. Installation actions must fail
 clearly when the pinned source is unavailable; they must never fall back to a
 different version or mutable branch.
 
-The initial lifecycle supports public, free items. Paid access is deferred
-because an externally accessible public artifact cannot be treated as protected
-paid inventory.
+The lifecycle supports public, free community resources only. Source ownership
+and immutable release identity protect users and creators; they are not a path
+to paid inventory.
 
 ## Takedowns and source compromise
 
@@ -137,8 +137,8 @@ or reporter identity.
 
 This decision reduces the initial security and operational burden and gives
 users provider-verifiable provenance. It also means TermSpace depends on provider
-availability, cannot guarantee permanent downloads, cannot safely sell access to
-otherwise public artifacts, and must integrate provider authentication and
+availability, cannot guarantee permanent downloads or provider access, and must
+integrate provider authentication and
 reconciliation.
 
 ## Future hosted artifacts

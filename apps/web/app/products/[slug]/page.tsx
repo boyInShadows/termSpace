@@ -23,10 +23,11 @@ import {
 } from "@/components/marketplace/product-parts";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { ApiError, getProduct } from "@/lib/api";
+import { getLocale } from "@/lib/serverLocale";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   try { const product = await getProduct((await params).slug); return { title: product.name, description: product.outcome }; }
-  catch { return { title: "Product" }; }
+  catch { return { title: "Resource" }; }
 }
 
 function Section({
@@ -49,6 +50,8 @@ function Section({
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const locale = await getLocale();
+  const fa = locale === "fa";
   let product;
   try { product = await getProduct((await params).slug); }
   catch (error) { if (error instanceof ApiError && error.status === 404) notFound(); throw error; }
@@ -70,7 +73,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <ProductTypeBadge type={product.type} />
               {product.verified && <Badge variant="success">
                 <ShieldCheck size={12} />
-                Verified product
+                {fa ? "منبع تأییدشده" : "Verified resource"}
               </Badge>}
             </div>
             <h1 className="editorial mt-5 max-w-3xl text-5xl font-medium leading-none sm:text-6xl">
@@ -83,7 +86,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <CreatorIdentity creator={product.creator} />
               <Rating rating={product.rating} count={product.reviewCount} />
               <span className="text-xs text-muted-foreground">
-                {product.purchaseCount.toLocaleString()} purchases
+                {product.usageCount.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")} {fa ? "استفاده" : "uses"}
               </span>
             </div>
             <div className="mt-8 grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-3">
@@ -199,7 +202,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                         </p>
                       </div>
                       {r.verifiedPurchase && (
-                        <Badge variant="success">Verified purchase</Badge>
+                        <Badge variant="success">{fa ? "استفادهٔ تأییدشده" : "Verified use"}</Badge>
                       )}
                     </div>
                     <p className="mt-3 max-w-2xl">{r.body}</p>
@@ -216,19 +219,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   issues.
                 </p>
                 <p className="mt-4 text-xs font-semibold text-foreground">
-                  {product.creator.products} products · {product.creator.followers.toLocaleString()} followers
+                  {product.creator.products} {fa ? "منبع" : "resources"} · {product.creator.followers.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")} {fa ? "دنبال‌کننده" : "followers"}
                 </p>
               </div>
             </Section>
           </div>
           <aside>
             <div className="sticky top-24 space-y-5 rounded-xl border border-border-strong bg-surface-raised p-5 shadow-soft">
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  One-time license
-                </p>
-                <p className="mt-1 text-3xl font-semibold">{product.pricing.model === "free" ? "Free" : new Intl.NumberFormat("en-US", { style: "currency", currency: product.pricing.currency }).format(product.pricing.amountMinor / 100)}</p>
-              </div>
+              <div><p className="text-xs text-muted-foreground">{fa ? "اشتراک‌گذاری جامعه" : "Community sharing"}</p><p className="mt-1 text-2xl font-semibold">{fa ? "رایگان برای همه" : "Free for everyone"}</p></div>
               <ProductActions product={product} />
               <div className="border-t pt-5">
                 <p className="eyebrow">Compatibility</p>

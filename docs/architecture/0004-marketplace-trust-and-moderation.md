@@ -51,13 +51,13 @@ high ratings do not imply staff approval. UI labels must name the actual signal
 instead of using one ambiguous `verified` badge.
 
 Any authenticated user with a verified email may create a creator profile.
-Identity verification is optional unless required by a later paid-product or
-risk policy. Source ownership verification is required before a listing can be
+Identity verification is optional unless required by a later high-risk
+distribution policy. Source ownership verification is required before a listing can be
 submitted for moderation.
 
 ## Roles and separation of duties
 
-- **Reader**: browse, acquire, favorite, report, and submit eligible reviews.
+- **Reader**: browse, add or install, favorite, report, and submit eligible reviews.
 - **Creator**: manage only creator profiles and listings they own, request
   community placement, submit releases, respond to reviews, and appeal decisions.
 - **Marketplace moderator**: review submissions, placements, reviews, and
@@ -101,7 +101,7 @@ require staff approval.
 
 Minor edits may publish without full staff review when they are limited to
 spelling, localization, screenshots, examples, or documentation and do not alter
-security, compatibility, source, installation, pricing, identity, or ownership
+security, compatibility, source, installation, free availability, identity, or ownership
 claims. The server classifies protected fields; clients cannot label their own
 change as minor.
 

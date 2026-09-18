@@ -5,7 +5,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import {
   Eye,
   Heart,
-  ShoppingBag,
+  LibraryBig,
   X,
   FileText,
   Folder,
@@ -13,35 +13,48 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ProductDetail } from "@/lib/types";
-import { acquireProduct, ApiError } from "@/lib/api";
+import { acquireProduct } from "@/lib/api";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
+import { useLocale } from "@/lib/locale-context";
 export function ProductActions({ product }: { product: ProductDetail }) {
+  const { fa } = useLocale();
+  const copy = fa ? {
+    added: "به کتابخانهٔ شما افزوده شد.", failed: "افزودن منبع انجام نشد. دوباره تلاش کنید.", adding: "در حال افزودن…", add: "افزودن به کتابخانه",
+    preview: "پیش‌نمایش", inside: "محتوای", previewDescription: "پیش‌نمایش فقط‌خواندنی ساختار بسته و یک نمونه.", close: "بستن پیش‌نمایش",
+    excerpt: "بخشی از SKILL.md", unavailable: "برای این منبع پیش‌نمایشی وجود ندارد.", copyExcerpt: "کپی بخش نمونه", saved: "ذخیره‌شده", save: "ذخیره",
+    free: "منبع رایگان جامعه", license: "جزئیات مجوز در بالا",
+  } : {
+    added: "Added to your library.", failed: "Could not add this resource. Please try again.", adding: "Adding…", add: "Add to library",
+    preview: "Preview", inside: "Inside", previewDescription: "A read-only preview of the package structure and one example.", close: "Close preview",
+    excerpt: "Excerpt · SKILL.md", unavailable: "No preview is available for this resource.", copyExcerpt: "Copy excerpt", saved: "Saved", save: "Save",
+    free: "Free community resource", license: "License details above",
+  };
   const session = useMarketplaceSession();
   const router = useRouter();
   const saved = session.isFavorite(product.slug);
   const [message, setMessage] = useState<string | null>(null);
-  const [buying, setBuying] = useState(false);
+  const [adding, setAdding] = useState(false);
   const acquisitionKey = useRef<string | null>(null);
   async function acquire() {
     if (!session.email) { router.push(`/account?next=${encodeURIComponent(window.location.pathname)}`); return; }
-    setBuying(true); setMessage(null);
+    setAdding(true); setMessage(null);
     acquisitionKey.current ??= crypto.randomUUID();
-    try { await acquireProduct(product.slug, acquisitionKey.current); setMessage("Added to your account."); acquisitionKey.current = null; }
-    catch (cause) { setMessage(cause instanceof ApiError ? cause.message : "Acquisition failed. No charge was made."); console.error("Product acquisition failed", cause); }
-    finally { setBuying(false); }
+    try { await acquireProduct(product.slug, acquisitionKey.current); setMessage(copy.added); acquisitionKey.current = null; }
+    catch (cause) { setMessage(copy.failed); console.error("Resource library add failed", cause); }
+    finally { setAdding(false); }
   }
   return (
     <div className="space-y-3">
-      <Button size="lg" className="w-full" disabled={buying} onClick={() => void acquire()}>
-        <ShoppingBag size={18} />
-        {buying ? "Processing…" : product.pricing.model === "free" ? "Add for free" : `Buy for ${new Intl.NumberFormat("en-US", { style: "currency", currency: product.pricing.currency }).format(product.pricing.amountMinor / 100)}`}
+      <Button size="lg" className="w-full" disabled={adding} onClick={() => void acquire()}>
+        <LibraryBig size={18} />
+        {adding ? copy.adding : copy.add}
       </Button>
       <div className="grid grid-cols-2 gap-2">
         <Dialog.Root>
           <Dialog.Trigger asChild>
             <Button variant="secondary">
               <Eye size={17} />
-              Preview
+              {copy.preview}
             </Button>
           </Dialog.Trigger>
           <Dialog.Portal>
@@ -50,18 +63,17 @@ export function ProductActions({ product }: { product: ProductDetail }) {
               <div className="flex items-start justify-between">
                 <div>
                   <Dialog.Title className="editorial text-3xl">
-                    Inside {product.name}
+                    {copy.inside} {product.name}
                   </Dialog.Title>
                   <Dialog.Description className="mt-1 text-sm text-muted-foreground">
-                    A read-only preview of the package structure and one
-                    example.
+                    {copy.previewDescription}
                   </Dialog.Description>
                 </div>
                 <Dialog.Close asChild>
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label="Close preview"
+                    aria-label={copy.close}
                   >
                     <X />
                   </Button>
@@ -81,11 +93,11 @@ export function ProductActions({ product }: { product: ProductDetail }) {
                   ))}
                 </div>
                 <div>
-                  <p className="eyebrow">Excerpt · SKILL.md</p>
-                  <pre className="mt-3 whitespace-pre-wrap rounded-lg border bg-surface p-4 font-mono text-xs leading-6 text-muted-foreground">{product.previewExcerpt ?? "No preview is available for this product."}</pre>
+                  <p className="eyebrow">{copy.excerpt}</p>
+                  <pre className="mt-3 whitespace-pre-wrap rounded-lg border bg-surface p-4 font-mono text-xs leading-6 text-muted-foreground">{product.previewExcerpt ?? copy.unavailable}</pre>
                   <Button variant="ghost" size="sm" className="mt-2" onClick={() => void navigator.clipboard.writeText(product.previewExcerpt ?? "")} disabled={!product.previewExcerpt}>
                     <Copy size={14} />
-                    Copy excerpt
+                    {copy.copyExcerpt}
                   </Button>
                 </div>
               </div>
@@ -101,11 +113,11 @@ export function ProductActions({ product }: { product: ProductDetail }) {
             size={17}
             className={saved ? "fill-primary text-primary" : ""}
           />
-          {saved ? "Saved" : "Save"}
+          {saved ? copy.saved : copy.save}
         </Button>
       </div>
       <p className="text-center text-xs text-muted-foreground">
-        {product.pricing.model === "free" ? "Free acquisition" : "One-time purchase"} · {product.license ?? "License details above"}
+        {copy.free} · {product.license ?? copy.license}
       </p>
       {message && <p role="status" className="text-center text-xs text-muted-foreground">{message}</p>}
     </div>

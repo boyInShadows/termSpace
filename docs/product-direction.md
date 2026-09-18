@@ -15,14 +15,14 @@ The product should help people answer three questions:
 
 ## Product surfaces
 
-### Marketplace and community (`apps/web`)
+### Community library and publishing (`apps/web`)
 
 The main TermSpace application is the public catalog and creator platform.
 
 - Visitors can browse, search, and filter published items.
 - Filtering treats platform and community as distinct first-class facets, in
-  addition to item type, category, pricing, compatibility, and rating.
-- Signed-in users can favorite, acquire or install, rate, and review items.
+  addition to item type, category, compatibility, and rating.
+- Signed-in users can favorite, add or install, rate, and review items.
 - Creators can submit items and manage their listings, releases, documentation,
   compatibility, and publication state from a dashboard.
 - TermSpace staff moderate submissions, revisions, reports, and reviews before
@@ -31,19 +31,19 @@ The main TermSpace application is the public catalog and creator platform.
 Communities are staff-created, platform-oriented publishing spaces where any
 authenticated user can submit relevant items. One canonical listing may be
 placed in multiple communities without duplicating its releases, reviews, or
-acquisition history. Community placement and platform compatibility remain
+installation history. Community placement and platform compatibility remain
 independent, combinable discovery facets. See
 [ADR 0002](architecture/0002-community-model.md) for the community lifecycle and
 moderation model.
 
-Marketplace listings use a controlled taxonomy of skills, agents, MCP servers,
+Community listings use a controlled taxonomy of skills, agents, MCP servers,
 integrations, rules, prompts, hooks, templates, and workflows. Each creator
 submission follows a versioned common manifest plus type-specific installation,
 compatibility, and permission metadata. See
 [ADR 0003](architecture/0003-item-types-and-manifests.md) for the canonical type
 keys and manifest boundary.
 
-Marketplace trust is layered: account authentication, verified email, creator
+Community trust is layered: account authentication, verified email, creator
 status, source ownership, identity verification, release review, and community
 reputation are separate signals. Submissions and enforcement use scoped,
 auditable moderation with appeals and controlled ownership transfer. See
@@ -52,7 +52,7 @@ baseline.
 
 The core consumer journey is:
 
-`discover -> evaluate -> acquire/install -> use -> rate/review`
+`discover -> evaluate -> add/install -> use -> rate/review`
 
 The core creator journey is:
 
@@ -61,20 +61,21 @@ The core creator journey is:
 ### Editorial publication (`apps/blog`)
 
 The TermSpace Blog is a separate, staff-managed editorial service about agentic
-coding. Public users and marketplace creators cannot upload or publish blog
+coding. Public users and community creators cannot upload or publish blog
 content. Blog authorship and administration remain restricted to TermSpace
 staff.
 
 Editorial work includes guides, analysis, comparisons, curated resources, and
 recurring series such as the planned vibe-coding checklist series. The Blog may
-link to relevant marketplace items, but marketplace submission never grants
+link to relevant community resources, but community submission never grants
 editorial publishing access.
 
 ### Shared API (`apps/api`)
 
-The API serves both applications, but marketplace and editorial authorization,
-routes, controllers, and data lifecycles must remain separate. Sharing reader
-identity does not imply sharing creator, moderator, or editorial permissions.
+The API serves both applications, but community-platform and editorial
+authorization, routes, controllers, and data lifecycles must remain separate.
+Sharing reader identity does not imply sharing creator, moderator, or editorial
+permissions.
 
 ## Trust and safety
 
@@ -96,15 +97,16 @@ untrusted content.
 
 ## Current scope boundary
 
-The first complete milestone should support a trustworthy free-item lifecycle.
-Paid checkout, payouts, subscriptions, and refunds should follow only after
-submission, moderation, versioning, acquisition, and review flows work end to
-end.
+Every published community resource is free. TermSpace does not provide paid
+checkout, payouts, subscriptions, or creator revenue features. Legacy internal
+pricing and order identifiers remain implementation details until a dedicated
+migration can remove them safely; they must not reintroduce paid behavior or
+user-facing commerce language.
 
-The first marketplace lifecycle uses external artifact sources rather than
-TermSpace-hosted uploads. Creators submit metadata pointing to supported GitHub
-or npm sources, and every published release resolves to an immutable source
-identity. See
+The first community-resource lifecycle uses external artifact sources rather
+than TermSpace-hosted uploads. Creators submit metadata pointing to supported
+GitHub or npm sources, and every published release resolves to an immutable
+source identity. See
 [ADR 0001](architecture/0001-external-artifact-sources.md) for ownership,
 provenance, availability, failure, and takedown requirements. Hosted artifacts
 remain a possible later phase and require a separate threat model and

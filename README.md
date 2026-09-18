@@ -1,19 +1,19 @@
 # TermSpace
 
-TermSpace is a community marketplace for agentic coding tools. Its catalog is
-designed for skills, agents, MCP servers, integrations, rules, prompts, hooks,
-templates, and workflows contributed by creators and shared across platform
-communities.
+TermSpace is a community publishing and discovery platform for agentic coding
+tools. Its catalog is designed for skills, agents, MCP servers, integrations,
+rules, prompts, hooks, templates, and workflows contributed by creators and
+shared across platform communities.
 
 The repository also contains the TermSpace Blog, a separate staff-managed
-publication about agentic coding. Marketplace accounts and creator or moderator
+publication about agentic coding. Community accounts and creator or moderator
 roles never grant Blog publishing access. See
 [Product Direction](docs/product-direction.md) for the durable product
 boundaries and core user journeys.
 
 ## Current product foundation
 
-- A localized English/Persian marketplace with public catalog and item pages.
+- A localized English/Persian community library with public catalog and item pages.
 - Reader authentication, verified accounts, marketplace role grants, and
   creator profiles.
 - An owner-scoped creator dashboard and structured drafts for all nine item
@@ -25,9 +25,9 @@ boundaries and core user journeys.
 - Staff-defined communities and creator placement requests, kept separate from
   platform compatibility.
 
-The first marketplace milestone is external-source-first: submissions reference
+The first community-library milestone is external-source-first: submissions reference
 GitHub or npm artifacts instead of uploading executable packages to TermSpace.
-Source ingestion, creator-controlled release management, acquisition, public
+Source ingestion, creator-controlled release management, add/install flows, public
 community browsing, and authenticated ratings/reviews remain active roadmap
 work tracked in [pending.md](pending.md).
 
@@ -35,7 +35,7 @@ work tracked in [pending.md](pending.md).
 
 ```text
 apps/
-  web/   Marketplace and creator frontend (Next.js)
+  web/   Community library and creator frontend (Next.js)
   blog/  Staff-managed editorial frontend (Next.js)
   api/   Shared Express/Prisma API
 docs/    Product, architecture, and operational documentation
@@ -95,7 +95,7 @@ authorization are documented in [Marketplace Listing Lifecycle](docs/marketplace
 ## Run the complete stack with Docker
 
 Docker Compose runs PostgreSQL, the shared API, the scheduled publishing worker,
-the marketplace, and the Blog:
+the community library, and the Blog:
 
 ```bash
 cp .env.example .env # required; replace the example database/admin passwords
@@ -111,7 +111,7 @@ with `docker compose --profile email up --build -d`.
 
 With the example host ports, the loopback-only services are available at:
 
-- Marketplace: <http://localhost:3000>
+- Community library: <http://localhost:3000>
 - Blog: <http://localhost:3001>
 - API health: <http://localhost:4001/api/health>
 - PostgreSQL: `localhost:5433`
@@ -144,8 +144,8 @@ loopback by default and must not be exposed publicly.
 
 The API is shared infrastructure, but its route modules and permissions remain
 separated by domain. Article, reader, newsletter, and editorial routes serve the
-Blog; marketplace routes live in their own modules rather than being coupled to
-editorial controllers.
+Blog; community-catalog routes retain their internal `marketplace` module names
+and remain separate from editorial controllers.
 
 The main frontend supports English and Persian through the same locale pattern
 as Blog: English uses `/`, while Persian uses `/fa` (for example `/fa/explore`

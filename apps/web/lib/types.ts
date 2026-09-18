@@ -94,4 +94,4 @@ export interface ProductDetail extends Product {
 export interface MarketplaceCategory { name: string; slug: string; products: number; }
 export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; total: number; }
 export interface ProductPageResult { data: Product[]; meta: { page: number; limit: number; total: number; totalPages: number }; }
-export interface ProductFilters { q?: string; type?: string; category?: string; platform?: string; price?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }
+export interface ProductFilters { q?: string; type?: string; category?: string; platform?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }

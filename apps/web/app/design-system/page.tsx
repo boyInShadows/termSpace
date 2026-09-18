@@ -19,11 +19,11 @@ const colors = [
 ];
 const checks = [
   "Brand fit",
-  "Marketplace clarity",
+  "Community-library clarity",
   "Product-card quality",
   "Trust",
-  "Seller appeal",
-  "Buyer appeal",
+  "Creator appeal",
+  "User appeal",
   "Mobile quality",
   "Accessibility",
   "Originality",
@@ -43,8 +43,8 @@ export default function DesignSystemPage() {
               Clarity for the choice.
             </h1>
             <p className="self-end text-base leading-7 text-muted-foreground">
-              An editorial marketplace system built to make technical products
-              feel understandable, comparable, and worthy of trust — on a
+              An editorial community-library system built to make technical resources
+              understandable, comparable, and worthy of trust — on a
               violet-cast void that reads as emission rather than paint.
             </p>
           </div>
@@ -199,7 +199,7 @@ export default function DesignSystemPage() {
                     title="Risks to test"
                     items={[
                       "Serif density on small screens",
-                      "How much metadata buyers need",
+                      "How much metadata users need",
                       "Terracotta action salience",
                       "Meaning of verified status",
                     ]}
@@ -207,17 +207,17 @@ export default function DesignSystemPage() {
                   <Decision
                     title="User tests"
                     items={[
-                      "Can buyers judge compatibility?",
-                      "Can sellers imagine publishing?",
-                      "Does price feel credible?",
+                      "Can users judge compatibility?",
+                      "Can creators imagine publishing?",
+                      "Is the free-sharing model obvious?",
                       "Can users explain safety status?",
                     ]}
                   />
                   <Decision
                     title="Next phase"
                     items={[
-                      "Seller publishing flow",
-                      "Checkout and library",
+                      "Creator publishing flow",
+                      "Install and library flow",
                       "Search relevance model",
                       "Moderation and review operations",
                     ]}

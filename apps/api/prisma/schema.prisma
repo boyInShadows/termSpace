@@ -453,9 +453,9 @@ model MarketplaceProduct {
   proposedSnapshotId       String?                            @unique
   outcome                  String
   description              String
-  priceMinor               Int
+  priceMinor               Int                                @default(0)
   currency                 String                             @default("USD")
-  pricingModel             String
+  pricingModel             String                             @default("free")
   platforms                String[]
   models                   String[]
   rating                   Decimal                            @default(0) @db.Decimal(2, 1)

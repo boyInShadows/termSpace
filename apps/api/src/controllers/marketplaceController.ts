@@ -64,7 +64,7 @@ export async function getMarketplaceHome(_req: Request, res: Response) {
 }
 
 export async function listMarketplaceProducts(req: Request, res: Response) {
-  const { q, type, category, platform, price, verified, minRating, sort, page, limit } = req.query as any;
+  const { q, type, category, platform, verified, minRating, sort, page, limit } = req.query as any;
   const where: any = {
     published: true,
     ...(q ? { OR: [
@@ -79,14 +79,12 @@ export async function listMarketplaceProducts(req: Request, res: Response) {
     : {}),
     ...(category ? { category: { name: category } } : {}),
     ...(platform ? { platforms: { has: platform } } : {}),
-    ...(price ? { pricingModel: price === "free" ? "free" : "one-time" } : {}),
     ...(verified ? { verified: true } : {}),
     ...(minRating ? { rating: { gte: minRating } } : {}),
   };
   const orderBy: any = sort === "rating" ? [{ rating: "desc" }, { reviewCount: "desc" }]
     : sort === "newest" ? [{ updatedAt: "desc" }]
-      : sort === "price-low" ? [{ priceMinor: "asc" }, { usageCount: "desc" }]
-        : [{ featured: "desc" }, { usageCount: "desc" }];
+      : [{ featured: "desc" }, { usageCount: "desc" }];
   const [products, total] = await Promise.all([
     prisma.marketplaceProduct.findMany({ where, include: productInclude, orderBy, skip: (page - 1) * limit, take: limit }),
     prisma.marketplaceProduct.count({ where }),
@@ -163,7 +161,7 @@ export async function acquireMarketplaceProduct(req: Request, res: Response) {
     return;
   }
   if (product.priceMinor > 0 || product.pricingModel !== "free") {
-    res.status(503).json({ error: { code: "PAYMENT_PROVIDER_NOT_CONFIGURED", message: "Paid checkout is not available yet" } });
+    res.status(409).json({ error: { code: "RESOURCE_NOT_FREE", message: "This resource is not available for community installation" } });
     return;
   }
   try {

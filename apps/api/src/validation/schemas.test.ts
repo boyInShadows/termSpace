@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { articleQuerySchema, commentSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, markdownResourceMetadataSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema } from "./schemas.js";
+import { articleQuerySchema, commentSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, marketplaceProductQuerySchema, markdownResourceMetadataSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema } from "./schemas.js";
 
 const article = {
   title: "A valid title",
@@ -79,6 +79,11 @@ describe("content validation", () => {
     expect(creatorDashboardQuerySchema.parse({})).toEqual({ page: 1, limit: 24 });
     expect(creatorDashboardQuerySchema.parse({ page: "2", limit: "12" })).toEqual({ page: 2, limit: 12 });
     expect(creatorDashboardQuerySchema.safeParse({ limit: 51 }).success).toBe(false);
+  });
+
+  it("keeps community discovery free of commerce filters", () => {
+    expect(marketplaceProductQuerySchema.parse({ price: "paid" })).not.toHaveProperty("price");
+    expect(marketplaceProductQuerySchema.safeParse({ sort: "price-low" }).success).toBe(false);
   });
 
   it("validates complete creator draft writes and optimistic concurrency", () => {

@@ -112,7 +112,7 @@ export function Hero() {
                 className={buttonVariants({ variant: "secondary", size: "lg" })}
               >
                 <Sparkles size={16} />
-                {t.sellWork}
+                {t.shareWork}
               </Link>
             </Magnetic>
           </div>

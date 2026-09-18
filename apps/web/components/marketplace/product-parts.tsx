@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { CheckCircle2, ShieldCheck, Star } from "lucide-react";
-import type { Compatibility, Creator, Pricing, ProductType } from "@/lib/types";
+import type { Compatibility, Creator, ProductType } from "@/lib/types";
 export function ProductTypeBadge({ type }: { type: ProductType }) {
   return <Badge variant="info">{type}</Badge>;
 }
@@ -37,21 +37,6 @@ export function Rating({ rating, count }: { rating: number; count?: number }) {
       {count !== undefined && (
         <span className="text-muted-foreground">({count})</span>
       )}
-    </span>
-  );
-}
-export function PriceDisplay({
-  pricing,
-  large = false,
-}: {
-  pricing: Pricing;
-  large?: boolean;
-}) {
-  return (
-    <span
-      className={large ? "text-3xl font-semibold" : "text-sm font-semibold"}
-    >
-      {pricing.model === "free" ? "Free" : new Intl.NumberFormat("en-US", { style: "currency", currency: pricing.currency, maximumFractionDigits: 2 }).format(pricing.amountMinor / 100)}
     </span>
   );
 }
