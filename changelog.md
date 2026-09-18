@@ -19,7 +19,8 @@ Project changes completed from `pending.md` should be recorded here with the dat
   Blog webpack production build; `git diff --check`; and all 19 migrations,
   including the free-resource normalization and constraint, applied successfully
   to the local PostgreSQL database, where all 12 existing resources now report
-  zero non-free records.
+  zero non-free records. Rebuilt and recreated the local API and web containers;
+  the API health endpoint and the home and explore pages returned HTTP 200.
 
 ## 2026-09-17
 
