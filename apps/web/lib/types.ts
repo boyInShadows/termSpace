@@ -1,7 +1,7 @@
 export type ProductType = "Prompt" | "Prompt pack" | "Skill" | "Agent" | "Workflow" | "MCP server" | "Integration" | "Rule" | "Hook" | "Template" | "AI tool" | "Developer utility";
 export type MarketplaceItemTypeKey = "skill" | "agent" | "mcp_server" | "integration" | "rule" | "prompt" | "hook" | "template" | "workflow";
 export interface MarketplaceItemType { key: MarketplaceItemTypeKey; en: string; fa: string; definition: string; }
-export type Platform = "ChatGPT" | "Claude" | "Codex" | "Cursor" | "VS Code" | "Gemini" | "API";
+export type Platform = "API" | "ChatGPT" | "Claude" | "Claude Code" | "Codex" | "Cursor" | "Gemini" | "Gemini CLI" | "VS Code";
 export type AIModel = "GPT-5" | "Claude 4" | "Gemini 2.5" | "Model agnostic";
 export interface Creator { id: string; name: string; handle: string; initials: string; verified: boolean; bio: string; products: number; followers: number; }
 export interface OwnedCreatorProfile extends Creator { createdAt: string; updatedAt: string; accessActive: boolean; }
@@ -28,6 +28,7 @@ export interface CreatorDashboardResult {
 }
 export interface MarketplaceDraftOptions {
   categories: Array<{ slug: string; name: string }>;
+  platforms: MarketplacePlatform[];
   communities: Array<{
     slug: string; nameEn: string; nameFa: string | null; descriptionEn: string; descriptionFa: string | null;
     primaryPlatform: string; rulesEn: string; rulesFa: string | null; submissionGuidanceEn: string; submissionGuidanceFa: string | null;
@@ -83,14 +84,18 @@ export interface MarketplaceModerationPreview {
       providerIntegrityDigest: string | null; sourceResolvedAt: string | null; ownershipVerifiedAt: string | null;
       sourceCheckStatus: string; sourceCheckedAt: string | null; lastSourceErrorCode: string | null; publishedAt: string | null;
     };
-    communityRequests: Array<{ createdAt: string; community: { slug: string; nameEn: string; nameFa: string | null; primaryPlatform: string; rulesEn: string; rulesFa: string | null } }>;
+    communityRequests: Array<{
+      createdAt: string;
+      community: { slug: string; nameEn: string; nameFa: string | null; primaryPlatform: string; rulesEn: string; rulesFa: string | null };
+      placement: null | { id: string; state: "REQUESTED" | "APPROVED" | "REJECTED" | "REMOVED"; version: number; publicReason: string | null };
+    }>;
   };
   approvedSnapshot: null | { id: string; revision: number; content: Record<string, unknown>; createdAt: string };
   auditTrail: MarketplaceModerationAuditEvent[];
   auditTrailTruncated: boolean;
 }
 export interface Pricing { amountMinor: number; currency: "USD"; model: "one-time" | "free"; }
-export interface Compatibility { platforms: Platform[]; models: AIModel[]; }
+export interface Compatibility { platforms: Platform[]; platformKeys?: string[]; models: AIModel[]; }
 export interface ProductVersion { id: string; version: string; releasedAt: string; notes: string; }
 export interface Review { id: string; author: string; rating: number; createdAt: string; body: string; verifiedPurchase: boolean; }
 export interface Product {
@@ -98,6 +103,7 @@ export interface Product {
   creator: Creator; pricing: Pricing; compatibility: Compatibility; category: string; rating: number;
   reviewCount: number; usageCount: number; purchaseCount: number; updatedAt: string; version: string;
   featured?: boolean; trending?: boolean; verified: boolean; tags: string[];
+  communities: Array<{ slug: string; nameEn: string; nameFa: string | null; primaryPlatform: string }>;
 }
 export interface ProductDetail extends Product {
   packageFileCount: number | null; packageSizeBytes: number | null; benefits: string[];
@@ -133,6 +139,13 @@ export interface MarketplaceLibraryEntry {
   installationAvailable: boolean;
 }
 export interface MarketplaceCategory { name: string; slug: string; products: number; }
-export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; total: number; }
+export interface MarketplacePlatform { key: string; nameEn: string; nameFa: string | null; }
+export interface MarketplaceCommunity {
+  slug: string; nameEn: string; nameFa: string | null; descriptionEn: string; descriptionFa: string | null;
+  primaryPlatform: string; rulesEn: string; rulesFa: string | null;
+  submissionGuidanceEn: string; submissionGuidanceFa: string | null; state: "active" | "archived"; products?: number;
+}
+export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; platforms: MarketplacePlatform[]; total: number; }
 export interface ProductPageResult { data: Product[]; meta: { page: number; limit: number; total: number; totalPages: number }; }
-export interface ProductFilters { q?: string; type?: string; category?: string; platform?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }
+export interface MarketplaceCommunityPageResult { data: { community: MarketplaceCommunity; products: Product[] }; meta: ProductPageResult["meta"]; }
+export interface ProductFilters { q?: string; type?: string; category?: string; community?: string; platform?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }

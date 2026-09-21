@@ -4,6 +4,33 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-21
 
+- Normalized marketplace discovery taxonomy end to end: controlled platform
+  keys now back relational platform, product-compatibility, release-
+  compatibility, and community records; manifests reject creator-defined
+  platforms; item-type, category, and platform filters accept stable keys only;
+  and English/Persian labels remain at the presentation boundary. Added a
+  forward-only legacy backfill that fails safely on ambiguous platform alias
+  collisions instead of discarding compatibility metadata. Verification:
+  Prisma generation and schema validation; all workspace type-checks; 176
+  tests; web lint; API and web production builds; Blog webpack production
+  build; and `git diff --check`. Runtime migration deployment remains pending
+  because the local PostgreSQL service is stopped and Docker access requires
+  elevated host privileges.
+
+- Completed ADR 0002 community discovery and moderated placement lifecycle.
+  Immutable per-snapshot creator requests now feed canonical, versioned
+  many-to-many placements; moderator approval, rejection, and removal decisions
+  append actor-attributed audit events and independently block self-moderation.
+  Public APIs expose active communities and only approved placements attached
+  to published listings, with explicit archived-community responses and
+  combinable community, platform, category, item-type, rating, and search
+  filters. Added bilingual community browse pages, discovery controls,
+  canonical listing links, community badges, and placement decisions in the
+  moderation preview. Verification: Prisma validation and client generation;
+  all workspace type-checks; 174 tests; web lint; API and web production builds;
+  Blog webpack production build; and `git diff --check`. Runtime migration
+  deployment was not exercised because local PostgreSQL was stopped and this
+  host requires an interactive sudo password to start Docker.
 - Completed the Marketplace creator and submission lifecycle authorization test
   pass. Route-level Supertest coverage now verifies cross-owner draft reads,
   writes, release access, and lifecycle transitions; creator-only and

@@ -1,4 +1,4 @@
-import type { CreatorDashboardResult, CreatorReleaseHistory, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceInstallation, MarketplaceItemType, MarketplaceLibraryEntry, MarketplaceModerationPreview, MarketplaceModerationQueueResult, MarketplaceProviderConnection, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
+import type { CreatorDashboardResult, CreatorReleaseHistory, MarketplaceCommunity, MarketplaceCommunityPageResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceInstallation, MarketplaceItemType, MarketplaceLibraryEntry, MarketplaceModerationPreview, MarketplaceModerationQueueResult, MarketplaceProviderConnection, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
 
 type ApiErrorDetail = { path: string; code?: string; message: string };
 type ErrorBody = { error?: { code?: string; message?: string; details?: ApiErrorDetail[]; correlationId?: string } };
@@ -59,6 +59,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 export async function getMarketplaceHome() { return (await request<{ data: MarketplaceHome }>("/api/marketplace/home")).data; }
 export async function getMarketplaceItemTypes() { return (await request<{ data: MarketplaceItemType[] }>("/api/marketplace/item-types")).data; }
+export async function getMarketplaceCommunities() { return (await request<{ data: MarketplaceCommunity[] }>("/api/marketplace/communities")).data; }
+export async function getMarketplaceCommunity(slug: string, filters: ProductFilters = {}) {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => { if (key !== "community" && value !== undefined && value !== "" && value !== "All" && value !== false) params.set(key, String(value)); });
+  return request<MarketplaceCommunityPageResult>(`/api/marketplace/communities/${encodeURIComponent(slug)}?${params}`);
+}
 export async function getProducts(filters: ProductFilters = {}, signal?: AbortSignal) {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== "" && value !== "All" && value !== false) params.set(key, String(value)); });
@@ -92,6 +98,7 @@ export async function getModerationQueue(input: { state?: string; q?: string; pa
 }
 export async function getModerationPreview(id: string) { return (await request<{ data: MarketplaceModerationPreview }>(`/api/marketplace/moderation/products/${encodeURIComponent(id)}`)).data; }
 export async function addModerationNote(id: string, expectedVersion: number, note: string) { return (await request<{ data: { id: string; createdAt: string; correlationId: string } }>(`/api/marketplace/moderation/products/${encodeURIComponent(id)}/notes`, { method: "POST", body: JSON.stringify({ expectedVersion, note }) })).data; }
+export async function moderateCommunityPlacement(id: string, communitySlug: string, input: { expectedVersion: number; action: "APPROVE" | "REJECT" | "REMOVE"; publicReason?: string; internalNote?: string }) { return (await request<{ data: { id: string; state: string; version: number; publicReason: string | null; decidedAt: string; correlationId: string } }>(`/api/marketplace/moderation/products/${encodeURIComponent(id)}/community-placements/${encodeURIComponent(communitySlug)}`, { method: "POST", body: JSON.stringify(input) })).data; }
 export async function moderateListing(id: string, input: { action: string; expectedVersion: number; reasonCode?: string; publicReason?: string; internalNote?: string }) { return (await request<{ data: { id: string; state: string; version: number; published: boolean; correlationId: string } }>(`/api/marketplace/moderation/products/${encodeURIComponent(id)}/lifecycle`, { method: "POST", body: JSON.stringify(input) })).data; }
 export async function getFavorites() { return (await request<{ data: string[] }>("/api/marketplace/favorites")).data; }
 export async function getMarketplaceLibrary(page = 1, limit = 24, signal?: AbortSignal) { return request<{ data: MarketplaceLibraryEntry[]; meta: { page: number; limit: number; total: number; totalPages: number } }>(`/api/marketplace/library?page=${page}&limit=${limit}`, { signal }); }

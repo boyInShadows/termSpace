@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { englishDisplayName, marketplaceManifestV1Schema } from "../lib/marketplaceManifest.js";
+import { MARKETPLACE_PLATFORM_KEYS } from "../lib/marketplacePlatforms.js";
+import { MARKETPLACE_ITEM_TYPES } from "../lib/marketplaceManifest.js";
 
 /**
  * Validation schemas for request bodies and query parameters.
@@ -135,9 +137,10 @@ export const readerProgressSchema = z.object({
 
 export const marketplaceProductQuerySchema = z.object({
   q: z.string().trim().max(120).optional().default(""),
-  type: z.string().trim().max(40).optional(),
-  category: z.string().trim().max(80).optional(),
-  platform: z.string().trim().max(40).optional(),
+  type: z.enum(MARKETPLACE_ITEM_TYPES).optional(),
+  category: z.string().trim().regex(slugPattern).max(160).optional(),
+  community: z.string().trim().regex(slugPattern).max(100).optional(),
+  platform: z.enum(MARKETPLACE_PLATFORM_KEYS).optional(),
   verified: z.enum(["true", "false"]).optional().transform((value) => value === "true" ? true : undefined),
   minRating: z.coerce.number().min(0).max(5).optional().default(0),
   sort: z.enum(["featured", "rating", "newest"]).optional().default("featured"),
@@ -174,6 +177,17 @@ export const moderationNoteSchema = z.object({
   expectedVersion: z.number().int().min(0),
   note: z.string().trim().min(2).max(4000),
 }).strict();
+
+export const communityPlacementDecisionSchema = z.object({
+  expectedVersion: z.number().int().min(1),
+  action: z.enum(["APPROVE", "REJECT", "REMOVE"]),
+  publicReason: z.string().trim().min(2).max(1000).optional(),
+  internalNote: z.string().trim().min(2).max(4000).optional(),
+}).strict().superRefine((value, context) => {
+  if (["REJECT", "REMOVE"].includes(value.action) && !value.publicReason) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["publicReason"], message: "A public-safe reason is required" });
+  }
+});
 
 export const creatorDraftCreateSchema = z.object({ manifest: marketplaceManifestV1Schema }).strict();
 export const creatorDraftUpdateSchema = z.object({

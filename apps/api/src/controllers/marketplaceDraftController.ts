@@ -100,6 +100,36 @@ async function saveDraftRevision(input: {
         requestedByUserId: userId,
       })),
     });
+    for (const community of communities) {
+      const placement = await tx.marketplaceCommunityPlacement.findUnique({
+        where: { productId_communityId: { productId: product.id, communityId: community.id } },
+        select: { id: true, state: true },
+      });
+      if (!placement) {
+        await tx.marketplaceCommunityPlacement.create({
+          data: {
+            productId: product.id,
+            communityId: community.id,
+            requestedSnapshotId: listingSnapshot.id,
+            requestedByUserId: userId,
+          },
+        });
+      } else if (placement.state !== "APPROVED") {
+        await tx.marketplaceCommunityPlacement.update({
+          where: { id: placement.id },
+          data: {
+            state: "REQUESTED",
+            version: { increment: 1 },
+            requestedSnapshotId: listingSnapshot.id,
+            requestedByUserId: userId,
+            requestedAt: new Date(),
+            moderatedByUserId: null,
+            decidedAt: null,
+            publicReason: null,
+          },
+        });
+      }
+    }
   }
 
   const projection = marketplaceProductProjectionFromManifest(manifest, categoryId);
@@ -212,7 +242,7 @@ export async function getOwnedMarketplaceDraft(req: Request, res: Response) {
 }
 
 export async function listMarketplaceDraftOptions(_req: Request, res: Response) {
-  const [categories, communities] = await Promise.all([
+  const [categories, communities, platforms] = await Promise.all([
     prisma.marketplaceCategory.findMany({ select: { slug: true, name: true }, orderBy: [{ position: "asc" }, { name: "asc" }] }),
     prisma.marketplaceCommunity.findMany({
       where: { state: "ACTIVE" },
@@ -222,8 +252,12 @@ export async function listMarketplaceDraftOptions(_req: Request, res: Response) 
       },
       orderBy: { nameEn: "asc" },
     }),
+    prisma.marketplacePlatform.findMany({
+      select: { key: true, nameEn: true, nameFa: true },
+      orderBy: [{ position: "asc" }, { nameEn: "asc" }],
+    }),
   ]);
-  res.json({ data: { categories, communities } });
+  res.json({ data: { categories, communities, platforms } });
 }
 
 function serializeDraft(result: Awaited<ReturnType<typeof saveDraftRevision>>) {

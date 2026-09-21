@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { articleQuerySchema, commentSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, markdownResourceMetadataSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, sourceCheckRequestSchema } from "./schemas.js";
+import { articleQuerySchema, commentSchema, communityPlacementDecisionSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, markdownResourceMetadataSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, sourceCheckRequestSchema } from "./schemas.js";
 
 const article = {
   title: "A valid title",
@@ -100,6 +100,13 @@ describe("content validation", () => {
     expect(marketplaceProductQuerySchema.safeParse({ sort: "price-low" }).success).toBe(false);
   });
 
+  it("accepts only normalized marketplace taxonomy keys", () => {
+    expect(marketplaceProductQuerySchema.safeParse({ type: "prompt", category: "developer-tools", platform: "codex" }).success).toBe(true);
+    expect(marketplaceProductQuerySchema.safeParse({ type: "Prompt pack" }).success).toBe(false);
+    expect(marketplaceProductQuerySchema.safeParse({ category: "Developer tools" }).success).toBe(false);
+    expect(marketplaceProductQuerySchema.safeParse({ platform: "Codex" }).success).toBe(false);
+  });
+
   it("validates complete creator draft writes and optimistic concurrency", () => {
     const draft = creatorDraftManifest;
     expect(creatorDraftCreateSchema.safeParse({ manifest: draft }).success).toBe(true);
@@ -114,6 +121,9 @@ describe("content validation", () => {
     expect(moderationNoteSchema.safeParse({ expectedVersion: 2, note: "Check the expanded network scope." }).success).toBe(true);
     expect(moderationNoteSchema.safeParse({ expectedVersion: 2, note: "x" }).success).toBe(false);
     expect(moderatedListingLifecycleSchema.safeParse({ action: "APPROVE", expectedVersion: 2, internalNote: "Reviewed source and permissions." }).success).toBe(true);
+    expect(communityPlacementDecisionSchema.safeParse({ action: "APPROVE", expectedVersion: 1 }).success).toBe(true);
+    expect(communityPlacementDecisionSchema.safeParse({ action: "REJECT", expectedVersion: 1 }).success).toBe(false);
+    expect(communityPlacementDecisionSchema.safeParse({ action: "REMOVE", expectedVersion: 2, publicReason: "No longer relevant to this community." }).success).toBe(true);
   });
 
   it("validates Markdown resource metadata from multipart forms", () => {

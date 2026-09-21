@@ -116,6 +116,7 @@ export function listingSnapshotFromManifest(input: unknown) {
 }
 
 export function marketplaceProductProjectionFromManifest(manifest: MarketplaceManifestV1, categoryId: string) {
+  const platformKeys = manifest.release.compatibility.map(({ platform }) => platform);
   const requirementLabels = [
     ...manifest.release.requirements.runtimes,
     ...manifest.release.requirements.accounts,
@@ -133,7 +134,11 @@ export function marketplaceProductProjectionFromManifest(manifest: MarketplaceMa
     description: manifest.listing.description.en ?? manifest.listing.description.fa!,
     categoryId,
     tags: manifest.listing.tags,
-    platforms: manifest.release.compatibility.map(({ platform }) => platform),
+    platforms: platformKeys,
+    compatibility: {
+      deleteMany: {},
+      create: platformKeys.map((platformKey) => ({ platformKey })),
+    },
     models: [...new Set(manifest.release.compatibility.flatMap(({ models }) => models))],
     version: manifest.release.version,
     installationSteps: manifest.release.installation.instructions,

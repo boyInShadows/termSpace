@@ -72,6 +72,15 @@ export function ProductCard({
             {product.description}
           </p>
         )}
+        {product.communities.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2" aria-label="Communities">
+            {product.communities.slice(0, 3).map((community) => (
+              <Link key={community.slug} href={`/communities/${community.slug}`} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Badge variant="outline">{community.nameEn}</Badge>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
       <div
         className={cn(

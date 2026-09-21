@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   Filter,
   Grid2X2,
@@ -10,7 +11,7 @@ import {
 } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Switch from "@radix-ui/react-switch";
-import type { MarketplaceItemType, ProductFilters, ProductPageResult } from "@/lib/types";
+import type { MarketplaceCategory, MarketplaceCommunity, MarketplaceItemType, MarketplacePlatform, ProductFilters, ProductPageResult } from "@/lib/types";
 import { ApiError, getProducts } from "@/lib/api";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { EmptyState } from "@/components/patterns/empty-state";
@@ -19,12 +20,21 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
-export function DiscoveryExperience({ initial, categories, itemTypes, initialFilters }: { initial: ProductPageResult; categories: string[]; itemTypes: MarketplaceItemType[]; initialFilters: ProductFilters }) {
+export function DiscoveryExperience({ initial, categories, platforms, communities, itemTypes, initialFilters, context }: {
+  initial: ProductPageResult;
+  categories: MarketplaceCategory[];
+  platforms: MarketplacePlatform[];
+  communities: MarketplaceCommunity[];
+  itemTypes: MarketplaceItemType[];
+  initialFilters: ProductFilters;
+  context?: { eyebrow: string; title: string; intro: string; rules?: string; archived?: boolean };
+}) {
   const { fa, t } = useLocale();
   const d = t.discovery;
   const [query, setQuery] = useState(initialFilters.q ?? "");
   const [type, setType] = useState<string>(initialFilters.type ?? "All");
   const [category, setCategory] = useState(initialFilters.category ?? "All");
+  const [community, setCommunity] = useState(initialFilters.community ?? "All");
   const [platform, setPlatform] = useState(initialFilters.platform ?? "All");
   const [verified, setVerified] = useState(false);
   const [minRating, setMinRating] = useState(0);
@@ -38,6 +48,11 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
   const [retryNonce, setRetryNonce] = useState(0);
   const typeOptions = [{ value: "All", label: d.all }, ...itemTypes.map((item) => ({ value: item.key, label: fa ? item.fa : item.en }))];
   const selectedTypeLabel = typeOptions.find((option) => option.value === type)?.label ?? type;
+  const selectedCommunity = communities.find((item) => item.slug === community);
+  const selectedCommunityLabel = selectedCommunity ? (fa ? selectedCommunity.nameFa ?? selectedCommunity.nameEn : selectedCommunity.nameEn) : community;
+  const selectedCategoryLabel = categories.find((item) => item.slug === category)?.name ?? category;
+  const selectedPlatform = platforms.find((item) => item.key === platform);
+  const selectedPlatformLabel = selectedPlatform ? (fa ? selectedPlatform.nameFa ?? selectedPlatform.nameEn : selectedPlatform.nameEn) : platform;
   const firstLoad = useRef(true);
   useEffect(() => {
     if (firstLoad.current) {
@@ -48,7 +63,7 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
     const timer = window.setTimeout(async () => {
       setLoading(true); setError(null);
       try {
-        const next = await getProducts({ q: query, type, category, platform, verified, minRating, sort, page, limit: 12 }, controller.signal);
+        const next = await getProducts({ q: query, type, category, community, platform, verified, minRating, sort, page, limit: 12 }, controller.signal);
         setResult((current) => page === 1 ? next.data : [...current, ...next.data]); setMeta(next.meta);
       } catch (cause) {
         if (!controller.signal.aborted) {
@@ -59,46 +74,54 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
       finally { if (!controller.signal.aborted) setLoading(false); }
     }, 250);
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [d.connectionError, d.rateLimited, query, type, category, platform, verified, minRating, sort, page, retryNonce]);
+  }, [d.connectionError, d.rateLimited, query, type, category, community, platform, verified, minRating, sort, page, retryNonce]);
   const change = (setter: (value: string) => void) => (value: string) => { setPage(1); setter(value); };
   const reset = () => {
     setPage(1);
     setQuery("");
     setType("All");
     setCategory("All");
+    setCommunity(context ? initialFilters.community ?? "All" : "All");
     setPlatform("All");
     setVerified(false);
     setMinRating(0);
   };
   const active = [
     type !== "All" && selectedTypeLabel,
-    category !== "All" && category,
-    platform !== "All" && platform,
+    category !== "All" && selectedCategoryLabel,
+    community !== "All" && selectedCommunityLabel,
+    platform !== "All" && selectedPlatformLabel,
     verified && "Verified",
     minRating > 0 && `${minRating}+ ${d.rating}`,
   ].filter(Boolean) as string[];
   const filters = (
     <div className="space-y-7">
-      <FilterGroup
-        label={d.category}
-        options={["All", ...categories]}
-        value={category}
-        setValue={change(setCategory)}
-      />
-      <FilterGroup
-        label={d.compatibility}
-        options={[
-          "All",
-          "Claude",
-          "ChatGPT",
-          "Codex",
-          "Cursor",
-          "VS Code",
-          "Gemini",
-        ]}
-        value={platform}
-        setValue={change(setPlatform)}
-      />
+      <label className="block text-sm font-semibold">
+        {d.category}
+        <select value={category} onChange={(event) => change(setCategory)(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+          <option value="All">{d.all}</option>
+          {categories.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
+        </select>
+      </label>
+      {!context && <label className="block text-sm font-semibold">
+        {fa ? "جامعه" : "Community"}
+        <select
+          value={community}
+          onChange={(event) => change(setCommunity)(event.target.value)}
+          className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+        >
+          <option value="All">{d.all}</option>
+          {communities.map((item) => <option key={item.slug} value={item.slug}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
+        </select>
+        <Link href="/communities" className="mt-2 inline-flex text-xs font-semibold text-primary hover:underline">{fa ? "مشاهدهٔ همهٔ جامعه‌ها" : "Browse all communities"}</Link>
+      </label>}
+      <label className="block text-sm font-semibold">
+        {d.compatibility}
+        <select value={platform} onChange={(event) => change(setPlatform)(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+          <option value="All">{d.all}</option>
+          {platforms.map((item) => <option key={item.key} value={item.key}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
+        </select>
+      </label>
       <FilterGroup
         label={d.rating}
         options={["Any", "4.5+", "4.8+"]}
@@ -123,11 +146,13 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
   return (
     <main className="container-page py-10">
       <div className="max-w-2xl">
-        <p className="eyebrow">{d.marketplace}</p>
-        <h1 className="editorial mt-2 text-5xl">{d.title}</h1>
+        <p className="eyebrow">{context?.eyebrow ?? d.marketplace}</p>
+        <h1 className="editorial mt-2 text-5xl">{context?.title ?? d.title}</h1>
         <p className="mt-3 text-muted-foreground">
-          {d.intro}
+          {context?.intro ?? d.intro}
         </p>
+        {context?.rules && <p className="mt-4 rounded-lg border bg-surface p-4 text-sm leading-6"><strong>{fa ? "قوانین:" : "Rules:"}</strong> {context.rules}</p>}
+        {context?.archived && <p role="status" className="mt-4 rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm">{fa ? "این جامعه بایگانی شده و فهرست‌های آن در نتایج عمومی نمایش داده نمی‌شوند." : "This community is archived, so its placements are not shown in public discovery."}</p>}
       </div>
       <div className="relative mt-8 max-w-4xl">
         <Search

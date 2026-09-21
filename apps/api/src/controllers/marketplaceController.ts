@@ -11,6 +11,15 @@ import {
 const productInclude = {
   creator: { select: { id: true, name: true, handle: true, initials: true, verified: true, bio: true, followers: true, _count: { select: { products: true } } } },
   category: { select: { name: true, slug: true } },
+  compatibility: {
+    select: { platformKey: true, platform: { select: { nameEn: true, nameFa: true } } },
+    orderBy: { platform: { position: "asc" as const } },
+  },
+  communityPlacements: {
+    where: { state: "APPROVED" as const, community: { state: "ACTIVE" as const } },
+    select: { community: { select: { slug: true, nameEn: true, nameFa: true, primaryPlatform: true } } },
+    orderBy: { community: { nameEn: "asc" as const } },
+  },
 } as const;
 
 function serializeProduct(product: any) {
@@ -19,7 +28,12 @@ function serializeProduct(product: any) {
     typeKey: marketplaceItemTypeKey(product.itemType),
     rating: Number(product.rating),
     pricing: { amountMinor: product.priceMinor, currency: product.currency, model: product.pricingModel },
-    compatibility: { platforms: product.platforms, models: product.models },
+    compatibility: {
+      platforms: product.compatibility?.map((entry: any) => entry.platform.nameEn) ?? product.platforms,
+      platformKeys: product.compatibility?.map((entry: any) => entry.platformKey) ?? product.platforms,
+      models: product.models,
+    },
+    communities: product.communityPlacements?.map((placement: any) => placement.community) ?? [],
     category: product.category.name,
     creator: product.creator ? {
       ...product.creator,
@@ -42,7 +56,34 @@ function serializeProduct(product: any) {
     approvedSnapshotId: undefined,
     proposedSnapshotId: undefined,
     installationSteps: undefined,
+    communityPlacements: undefined,
   };
+}
+
+function marketplaceProductWhere(filters: any, communitySlug?: string): Prisma.MarketplaceProductWhereInput {
+  const { q, type, category, community, platform, verified, minRating } = filters;
+  const selectedCommunity = communitySlug ?? community;
+  return {
+    published: true,
+    ...(q ? { OR: [
+      { name: { contains: q, mode: "insensitive" as const } },
+      { outcome: { contains: q, mode: "insensitive" as const } },
+      { description: { contains: q, mode: "insensitive" as const } },
+      { creator: { name: { contains: q, mode: "insensitive" as const } } },
+    ] } : {}),
+    ...(type ? { itemType: MARKETPLACE_DATABASE_ITEM_TYPES[type as keyof typeof MARKETPLACE_DATABASE_ITEM_TYPES] } : {}),
+    ...(category ? { category: { slug: category } } : {}),
+    ...(selectedCommunity ? { communityPlacements: { some: { state: "APPROVED", community: { slug: selectedCommunity, state: "ACTIVE" } } } } : {}),
+    ...(platform ? { compatibility: { some: { platformKey: platform } } } : {}),
+    ...(verified ? { verified: true } : {}),
+    ...(minRating ? { rating: { gte: minRating } } : {}),
+  };
+}
+
+function productOrderBy(sort: string) {
+  return sort === "rating" ? [{ rating: "desc" as const }, { reviewCount: "desc" as const }]
+    : sort === "newest" ? [{ updatedAt: "desc" as const }]
+      : [{ featured: "desc" as const }, { usageCount: "desc" as const }];
 }
 
 function serializeAcquisition(order: { id: string; status: string; releaseManifestId: string | null; createdAt: Date }) {
@@ -67,47 +108,72 @@ export function listMarketplaceItemTypes(_req: Request, res: Response) {
 }
 
 export async function getMarketplaceHome(_req: Request, res: Response) {
-  const [products, creators, categories, total] = await Promise.all([
+  const [products, creators, categories, platforms, total] = await Promise.all([
     prisma.marketplaceProduct.findMany({ where: { published: true, featured: true }, include: productInclude, orderBy: [{ usageCount: "desc" }], take: 3 }),
     prisma.marketplaceCreator.findMany({ where: { products: { some: { published: true } } }, select: { id: true, name: true, handle: true, initials: true, verified: true, bio: true, followers: true, _count: { select: { products: { where: { published: true } } } } }, orderBy: [{ verified: "desc" }, { followers: "desc" }], take: 3 }),
     prisma.marketplaceCategory.findMany({ where: { products: { some: { published: true } } }, select: { name: true, slug: true, _count: { select: { products: { where: { published: true } } } } }, orderBy: [{ position: "asc" }, { name: "asc" }] }),
+    prisma.marketplacePlatform.findMany({ select: { key: true, nameEn: true, nameFa: true }, orderBy: [{ position: "asc" }, { nameEn: "asc" }] }),
     prisma.marketplaceProduct.count({ where: { published: true } }),
   ]);
   res.json({ data: {
     products: products.map(serializeProduct),
     creators: creators.map((creator) => ({ ...creator, products: creator._count.products, _count: undefined })),
     categories: categories.map((category) => ({ name: category.name, slug: category.slug, products: category._count.products })),
+    platforms,
     total,
   } });
 }
 
 export async function listMarketplaceProducts(req: Request, res: Response) {
-  const { q, type, category, platform, verified, minRating, sort, page, limit } = req.query as any;
-  const where: any = {
-    published: true,
-    ...(q ? { OR: [
-      { name: { contains: q, mode: "insensitive" } },
-      { outcome: { contains: q, mode: "insensitive" } },
-      { description: { contains: q, mode: "insensitive" } },
-      { creator: { name: { contains: q, mode: "insensitive" } } },
-    ] } : {}),
-    ...(type ? MARKETPLACE_ITEM_TYPES.includes(type)
-      ? { itemType: MARKETPLACE_DATABASE_ITEM_TYPES[type as keyof typeof MARKETPLACE_DATABASE_ITEM_TYPES] }
-      : { type }
-    : {}),
-    ...(category ? { category: { name: category } } : {}),
-    ...(platform ? { platforms: { has: platform } } : {}),
-    ...(verified ? { verified: true } : {}),
-    ...(minRating ? { rating: { gte: minRating } } : {}),
-  };
-  const orderBy: any = sort === "rating" ? [{ rating: "desc" }, { reviewCount: "desc" }]
-    : sort === "newest" ? [{ updatedAt: "desc" }]
-      : [{ featured: "desc" }, { usageCount: "desc" }];
+  const { sort, page, limit } = req.query as any;
+  const where = marketplaceProductWhere(req.query);
+  const orderBy = productOrderBy(sort);
   const [products, total] = await Promise.all([
     prisma.marketplaceProduct.findMany({ where, include: productInclude, orderBy, skip: (page - 1) * limit, take: limit }),
     prisma.marketplaceProduct.count({ where }),
   ]);
   res.json({ data: products.map(serializeProduct), meta: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+}
+
+export async function listMarketplaceCommunities(_req: Request, res: Response) {
+  const communities = await prisma.marketplaceCommunity.findMany({
+    where: { state: "ACTIVE" },
+    select: {
+      slug: true, nameEn: true, nameFa: true, descriptionEn: true, descriptionFa: true,
+      primaryPlatform: true, rulesEn: true, rulesFa: true, submissionGuidanceEn: true, submissionGuidanceFa: true, state: true,
+      _count: { select: { placements: { where: { state: "APPROVED", product: { published: true } } } } },
+    },
+    orderBy: { nameEn: "asc" },
+  });
+  res.json({ data: communities.map(({ _count, state, ...community }) => ({ ...community, state: state.toLowerCase(), products: _count.placements })) });
+}
+
+export async function getMarketplaceCommunity(req: Request, res: Response) {
+  const community = await prisma.marketplaceCommunity.findUnique({
+    where: { slug: String(req.params.slug) },
+    select: {
+      slug: true, nameEn: true, nameFa: true, descriptionEn: true, descriptionFa: true,
+      primaryPlatform: true, rulesEn: true, rulesFa: true, submissionGuidanceEn: true, submissionGuidanceFa: true, state: true,
+    },
+  });
+  if (!community) {
+    res.status(404).json({ error: { code: "COMMUNITY_NOT_FOUND", message: "Community not found" } });
+    return;
+  }
+  const { sort, page, limit } = req.query as any;
+  if (community.state === "ARCHIVED") {
+    res.json({ data: { community: { ...community, state: "archived" }, products: [] }, meta: { page, limit, total: 0, totalPages: 0 } });
+    return;
+  }
+  const where = marketplaceProductWhere(req.query, community.slug);
+  const [products, total] = await Promise.all([
+    prisma.marketplaceProduct.findMany({ where, include: productInclude, orderBy: productOrderBy(sort), skip: (page - 1) * limit, take: limit }),
+    prisma.marketplaceProduct.count({ where }),
+  ]);
+  res.json({
+    data: { community: { ...community, state: "active" }, products: products.map(serializeProduct) },
+    meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  });
 }
 
 export async function getMarketplaceProduct(req: Request, res: Response) {

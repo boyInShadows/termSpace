@@ -264,6 +264,9 @@ model ReaderUser {
   marketplaceCreator     MarketplaceCreator?
   listingLifecycleEvents MarketplaceListingLifecycleEvent[]
   communityRequests      MarketplaceCommunityPlacementRequest[]
+  communityPlacementsRequested MarketplaceCommunityPlacement[]      @relation("CommunityPlacementRequester")
+  communityPlacementsModerated MarketplaceCommunityPlacement[]      @relation("CommunityPlacementModerator")
+  communityPlacementEvents     MarketplaceCommunityPlacementEvent[] @relation("CommunityPlacementEventActor")
   requestedSourceChecks  MarketplaceSourceCheckJob[]
 }
 
@@ -414,6 +417,18 @@ model MarketplaceCategory {
   @@index([position, name])
 }
 
+model MarketplacePlatform {
+  key                  String                            @id
+  nameEn               String
+  nameFa               String?
+  position             Int                               @default(0)
+  communities          MarketplaceCommunity[]
+  productCompatibility MarketplaceProductCompatibility[]
+  releaseCompatibility MarketplaceReleaseCompatibility[]
+
+  @@index([position, nameEn])
+}
+
 enum MarketplaceCommunityState {
   ACTIVE
   ARCHIVED
@@ -427,6 +442,7 @@ model MarketplaceCommunity {
   descriptionEn        String
   descriptionFa        String?
   primaryPlatform      String
+  platform             MarketplacePlatform                    @relation(fields: [primaryPlatform], references: [key], onDelete: Restrict)
   rulesEn              String
   rulesFa              String?
   submissionGuidanceEn String
@@ -435,6 +451,7 @@ model MarketplaceCommunity {
   createdAt            DateTime                               @default(now())
   updatedAt            DateTime                               @updatedAt
   placementRequests    MarketplaceCommunityPlacementRequest[]
+  placements           MarketplaceCommunityPlacement[]
 
   @@index([state, nameEn])
   @@index([primaryPlatform, state])
@@ -502,6 +519,8 @@ model MarketplaceProduct {
   proposedSnapshot         MarketplaceListingSnapshot?            @relation("MarketplaceProposedListingSnapshot", fields: [proposedSnapshotId], references: [id], onDelete: Restrict)
   lifecycleEvents          MarketplaceListingLifecycleEvent[]
   communityRequests        MarketplaceCommunityPlacementRequest[]
+  communityPlacements      MarketplaceCommunityPlacement[]
+  compatibility            MarketplaceProductCompatibility[]
 
   @@index([published, featured, usageCount])
   @@index([published, type])
@@ -512,6 +531,16 @@ model MarketplaceProduct {
   @@index([published, categoryId])
   @@index([published, verified])
   @@index([updatedAt])
+}
+
+model MarketplaceProductCompatibility {
+  productId   String
+  platformKey String
+  product     MarketplaceProduct  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  platform    MarketplacePlatform @relation(fields: [platformKey], references: [key], onDelete: Restrict)
+
+  @@id([productId, platformKey])
+  @@index([platformKey, productId])
 }
 
 enum MarketplaceListingState {
@@ -565,6 +594,8 @@ model MarketplaceListingSnapshot {
   proposedFor        MarketplaceProduct?                    @relation("MarketplaceProposedListingSnapshot")
   lifecycleEvents    MarketplaceListingLifecycleEvent[]
   communityRequests  MarketplaceCommunityPlacementRequest[]
+  communityPlacements MarketplaceCommunityPlacement[]
+  communityPlacementEvents MarketplaceCommunityPlacementEvent[]
 
   @@unique([productId, revision])
   @@index([productId, createdAt])
@@ -588,6 +619,67 @@ model MarketplaceCommunityPlacementRequest {
   @@index([productId, createdAt])
   @@index([communityId, createdAt])
   @@index([requestedByUserId, createdAt])
+}
+
+enum MarketplaceCommunityPlacementState {
+  REQUESTED
+  APPROVED
+  REJECTED
+  REMOVED
+}
+
+enum MarketplaceCommunityPlacementAction {
+  APPROVED
+  REJECTED
+  REMOVED
+}
+
+model MarketplaceCommunityPlacement {
+  id                  String                              @id @default(cuid())
+  productId           String
+  communityId         String
+  state               MarketplaceCommunityPlacementState @default(REQUESTED)
+  version             Int                                 @default(1)
+  requestedSnapshotId String
+  requestedByUserId   String
+  requestedAt         DateTime                            @default(now())
+  moderatedByUserId   String?
+  decidedAt           DateTime?
+  publicReason        String?
+  createdAt           DateTime                            @default(now())
+  updatedAt           DateTime                            @updatedAt
+  product             MarketplaceProduct                  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  community           MarketplaceCommunity                @relation(fields: [communityId], references: [id], onDelete: Restrict)
+  requestedSnapshot   MarketplaceListingSnapshot          @relation(fields: [requestedSnapshotId], references: [id], onDelete: Restrict)
+  requestedBy         ReaderUser                          @relation("CommunityPlacementRequester", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  moderatedBy         ReaderUser?                         @relation("CommunityPlacementModerator", fields: [moderatedByUserId], references: [id], onDelete: Restrict)
+  events              MarketplaceCommunityPlacementEvent[]
+
+  @@unique([productId, communityId])
+  @@index([communityId, state, updatedAt])
+  @@index([productId, state])
+  @@index([requestedByUserId, requestedAt])
+}
+
+model MarketplaceCommunityPlacementEvent {
+  id             String                              @id @default(cuid())
+  placementId    String
+  snapshotId     String
+  previousState  MarketplaceCommunityPlacementState
+  resultingState MarketplaceCommunityPlacementState
+  action         MarketplaceCommunityPlacementAction
+  actorType      MarketplaceLifecycleActorType
+  actorUserId    String
+  publicReason   String?
+  internalNote   String?
+  correlationId  String                              @unique
+  createdAt      DateTime                            @default(now())
+  placement      MarketplaceCommunityPlacement       @relation(fields: [placementId], references: [id], onDelete: Restrict)
+  snapshot       MarketplaceListingSnapshot          @relation(fields: [snapshotId], references: [id], onDelete: Restrict)
+  actor          ReaderUser                          @relation("CommunityPlacementEventActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([placementId, createdAt])
+  @@index([actorUserId, createdAt])
 }
 
 model MarketplaceListingLifecycleEvent {
@@ -850,6 +942,7 @@ model MarketplaceReleaseCompatibility {
   models            String[]
   notes             String?
   releaseManifest   MarketplaceReleaseManifest @relation(fields: [releaseManifestId], references: [id], onDelete: Cascade)
+  platform          MarketplacePlatform        @relation(fields: [platformKey], references: [key], onDelete: Restrict)
 
   @@unique([releaseManifestId, platformKey])
 }

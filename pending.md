@@ -4,11 +4,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Discovery and Community
 
-- Add normalized communities and moderated many-to-many listing placements, then
-  expose community browse pages and combinable community/platform filters as
-  defined in ADR 0002.
-- Normalize platform, compatibility, item type, and category values so filters
-  cannot fragment through inconsistent creator input.
 - Expand marketplace search across listing metadata, creators, communities, and
   compatibility with stable pagination and useful empty/error states.
 - Add creator profile pages and listing collections while excluding drafts and

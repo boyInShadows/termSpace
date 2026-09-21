@@ -4,6 +4,7 @@ import { hash } from "bcryptjs";
 import { createHash, randomBytes } from "node:crypto";
 import { categories as marketplaceCategoryNames, creators as marketplaceCreators, products as marketplaceProducts, reviews as marketplaceReviews, versions as marketplaceVersions } from "./marketplaceData.js";
 import { LEGACY_ITEM_TYPE_MAP, MARKETPLACE_DATABASE_ITEM_TYPES } from "../src/lib/marketplaceManifest.js";
+import { MARKETPLACE_PLATFORM_KEYS, MARKETPLACE_PLATFORM_REGISTRY, marketplacePlatformKey } from "../src/lib/marketplacePlatforms.js";
 
 const prisma = new PrismaClient();
 
@@ -594,6 +595,15 @@ async function main() {
   }
 
   const marketplaceCreatorIds = new Map<string, string>();
+  for (const [position, key] of MARKETPLACE_PLATFORM_KEYS.entries()) {
+    const platform = MARKETPLACE_PLATFORM_REGISTRY[key];
+    await prisma.marketplacePlatform.upsert({
+      where: { key },
+      update: { ...platform, position },
+      create: { key, ...platform, position },
+    });
+  }
+
   for (const creator of marketplaceCreators) {
     const existing = await prisma.marketplaceCreator.findUnique({ where: { handle: creator.handle }, select: { id: true, ownerUserId: true } });
     if (existing?.ownerUserId) throw new Error(`Seed creator handle is owned by a reader account: ${creator.handle}`);
@@ -613,6 +623,11 @@ async function main() {
   }
 
   for (const product of marketplaceProducts) {
+    const platformKeys = product.compatibility.platforms.map((platform) => {
+      const key = marketplacePlatformKey(platform);
+      if (!key) throw new Error(`Unknown seeded marketplace platform: ${platform}`);
+      return key;
+    });
     const itemTypeKey = LEGACY_ITEM_TYPE_MAP[product.type];
     const itemType = itemTypeKey ? MARKETPLACE_DATABASE_ITEM_TYPES[itemTypeKey] : null;
     const classificationRequired = itemType === null;
@@ -632,10 +647,11 @@ async function main() {
       where: { slug: product.slug }, update: {}, create: {
         id: product.id, slug: product.slug, name: product.name, type: product.type, itemType, classificationRequired, outcome: product.outcome,
         description: product.description, priceMinor: product.pricing.amount * 100, currency: product.pricing.currency,
-        pricingModel: product.pricing.model, platforms: [...product.compatibility.platforms], models: [...product.compatibility.models],
+        pricingModel: product.pricing.model, platforms: platformKeys, models: [...product.compatibility.models],
         rating: product.rating, reviewCount: product.reviewCount, usageCount: product.usageCount, version: product.version,
         featured: product.featured ?? false, trending: product.trending ?? false, verified: product.verified, tags: product.tags,
         creatorId: marketplaceCreatorIds.get(product.creator.handle)!, categoryId: marketplaceCategoryIds.get(product.category)!,
+        compatibility: { create: platformKeys.map((platformKey) => ({ platformKey })) },
         updatedAt: new Date(product.updatedAt), published: false, ...productDetails,
       },
     });

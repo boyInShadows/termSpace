@@ -1,20 +1,23 @@
 import { Router } from "express";
-import { acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceHome, getMarketplaceInstallation, getMarketplaceProduct, listMarketplaceFavorites, listMarketplaceItemTypes, listMarketplaceLibrary, listMarketplaceProducts, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
+import { acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceCommunity, getMarketplaceHome, getMarketplaceInstallation, getMarketplaceProduct, listMarketplaceCommunities, listMarketplaceFavorites, listMarketplaceItemTypes, listMarketplaceLibrary, listMarketplaceProducts, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
 import { createOwnedCreatorProfile, getCreatorDashboard, getOwnedCreatorProfile, listOwnedMarketplaceReleases, updateOwnedCreatorProfile } from "../controllers/marketplaceCreatorController.js";
 import { transitionModeratedMarketplaceListing, transitionOwnedMarketplaceListing } from "../controllers/marketplaceLifecycleController.js";
 import { createOwnedMarketplaceDraft, getOwnedMarketplaceDraft, listMarketplaceDraftOptions, updateOwnedMarketplaceDraft } from "../controllers/marketplaceDraftController.js";
-import { addMarketplaceModerationNote, getMarketplaceModerationPreview, listMarketplaceModerationQueue } from "../controllers/marketplaceModerationController.js";
+import { addMarketplaceModerationNote, getMarketplaceModerationPreview, listMarketplaceModerationQueue, moderateMarketplaceCommunityPlacement } from "../controllers/marketplaceModerationController.js";
 import { connectOwnedProvider, enqueueOwnedSourceCheck, listOwnedProviderConnections, revokeOwnedProvider } from "../controllers/marketplaceSourceController.js";
 import { requireMarketplaceRole, requireReader, requireVerifiedReader } from "../middleware/auth.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
-import { creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
+import { communityPlacementDecisionSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
 
 const router = Router();
 router.param("id", validateRouteParam("id", routeIdSchema));
 router.param("slug", validateRouteParam("slug", routeSlugSchema));
 router.param("provider", validateRouteParam("provider", marketplaceProviderSchema));
+router.param("communitySlug", validateRouteParam("communitySlug", routeSlugSchema));
 router.get("/home", getMarketplaceHome);
 router.get("/item-types", listMarketplaceItemTypes);
+router.get("/communities", listMarketplaceCommunities);
+router.get("/communities/:slug", validate(marketplaceProductQuerySchema, "query"), getMarketplaceCommunity);
 router.get("/draft-options", listMarketplaceDraftOptions);
 router.get("/products", validate(marketplaceProductQuerySchema, "query"), listMarketplaceProducts);
 router.get("/products/:slug", getMarketplaceProduct);
@@ -34,6 +37,7 @@ router.post("/creator/products/:id/lifecycle", requireMarketplaceRole("creator")
 router.get("/moderation/queue", requireMarketplaceRole("moderator", "administrator"), validate(moderationQueueQuerySchema, "query"), listMarketplaceModerationQueue);
 router.get("/moderation/products/:id", requireMarketplaceRole("moderator", "administrator"), getMarketplaceModerationPreview);
 router.post("/moderation/products/:id/notes", requireMarketplaceRole("moderator", "administrator"), validate(moderationNoteSchema), addMarketplaceModerationNote);
+router.post("/moderation/products/:id/community-placements/:communitySlug", requireMarketplaceRole("moderator", "administrator"), validate(communityPlacementDecisionSchema), moderateMarketplaceCommunityPlacement);
 router.post("/moderation/products/:id/lifecycle", requireMarketplaceRole("moderator", "administrator"), validate(moderatedListingLifecycleSchema), transitionModeratedMarketplaceListing);
 router.get("/favorites", requireReader, listMarketplaceFavorites);
 router.get("/library", requireReader, validate(marketplaceLibraryQuerySchema, "query"), listMarketplaceLibrary);
