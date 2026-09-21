@@ -4,8 +4,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Discovery and Community
 
-- Expand marketplace search across listing metadata, creators, communities, and
-  compatibility with stable pagination and useful empty/error states.
 - Add creator profile pages and listing collections while excluding drafts and
   suspended items from public responses.
 - Add reporting controls for unsafe, misleading, abandoned, or malicious items,

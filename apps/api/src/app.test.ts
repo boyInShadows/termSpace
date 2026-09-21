@@ -165,6 +165,41 @@ describe("API", () => {
     }));
   });
 
+  it("searches public listing, creator, category, community, and compatibility metadata", async () => {
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+
+    const response = await request(createApp()).get("/api/marketplace/products?q=codex%20review&sort=rating&page=2&limit=10");
+
+    expect(response.status).toBe(200);
+    const call = prismaMock.marketplaceProduct.findMany.mock.calls.at(-1)?.[0];
+    expect(call).toMatchObject({
+      skip: 10,
+      take: 10,
+      orderBy: [{ rating: "desc" }, { reviewCount: "desc" }, { id: "asc" }],
+      where: { published: true },
+    });
+    expect(call.where.AND).toHaveLength(2);
+    expect(call.where.AND[0].OR).toEqual(expect.arrayContaining([
+      { tags: { has: "codex" } },
+      { creator: { OR: expect.any(Array) } },
+      { category: { OR: expect.any(Array) } },
+      { compatibility: { some: { OR: expect.any(Array) } } },
+      { communityPlacements: { some: expect.objectContaining({ state: "APPROVED", community: expect.objectContaining({ state: "ACTIVE" }) }) } },
+    ]));
+  });
+
+  it.each([
+    ["featured", [{ featured: "desc" }, { usageCount: "desc" }, { id: "asc" }]],
+    ["newest", [{ updatedAt: "desc" }, { id: "asc" }]],
+  ])("uses deterministic %s pagination ordering", async (sort, orderBy) => {
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+
+    expect((await request(createApp()).get(`/api/marketplace/products?sort=${sort}`)).status).toBe(200);
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenLastCalledWith(expect.objectContaining({ orderBy }));
+  });
+
   it("lists active communities with approved published placement counts", async () => {
     prismaMock.marketplaceCommunity.findMany.mockResolvedValue([{
       slug: "codex", nameEn: "Codex", nameFa: "کودکس", descriptionEn: "Codex tools", descriptionFa: null,

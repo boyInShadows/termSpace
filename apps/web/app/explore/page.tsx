@@ -9,8 +9,10 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   const raw = await searchParams;
   const first = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] : value;
   const filters: ProductFilters = { q: first(raw.q), type: first(raw.type), category: first(raw.category), community: first(raw.community), platform: first(raw.platform), sort: first(raw.sort) ?? "featured", page: 1, limit: 12 };
-  const [initial, home, communities, itemTypes] = await Promise.all([
-    getProducts(filters).catch(() => ({ data: [], meta: { page: 1, limit: 12, total: 0, totalPages: 0 } })),
+  const [initialState, home, communities, itemTypes] = await Promise.all([
+    getProducts(filters)
+      .then((result) => ({ result, error: false }))
+      .catch(() => ({ result: { data: [], meta: { page: 1, limit: 12, total: 0, totalPages: 0 } }, error: true })),
     getMarketplaceHome().catch(() => null),
     getMarketplaceCommunities().catch(() => []),
     getMarketplaceItemTypes().catch(() => []),
@@ -18,7 +20,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   return (
     <>
       <Header />
-      <DiscoveryExperience initial={initial} categories={home?.categories ?? []} platforms={home?.platforms ?? []} communities={communities} itemTypes={itemTypes} initialFilters={filters} />
+      <DiscoveryExperience initial={initialState.result} initialError={initialState.error} categories={home?.categories ?? []} platforms={home?.platforms ?? []} communities={communities} itemTypes={itemTypes} initialFilters={filters} />
       <Footer />
     </>
   );

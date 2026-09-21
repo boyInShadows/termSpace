@@ -63,14 +63,51 @@ function serializeProduct(product: any) {
 function marketplaceProductWhere(filters: any, communitySlug?: string): Prisma.MarketplaceProductWhereInput {
   const { q, type, category, community, platform, verified, minRating } = filters;
   const selectedCommunity = communitySlug ?? community;
+  const searchTerms = q ? String(q).split(/\s+/).filter(Boolean).slice(0, 8) : [];
   return {
     published: true,
-    ...(q ? { OR: [
-      { name: { contains: q, mode: "insensitive" as const } },
-      { outcome: { contains: q, mode: "insensitive" as const } },
-      { description: { contains: q, mode: "insensitive" as const } },
-      { creator: { name: { contains: q, mode: "insensitive" as const } } },
-    ] } : {}),
+    ...(searchTerms.length ? { AND: searchTerms.map((term) => {
+      const tag = term.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      return { OR: [
+        { slug: { contains: term, mode: "insensitive" as const } },
+        { name: { contains: term, mode: "insensitive" as const } },
+        { outcome: { contains: term, mode: "insensitive" as const } },
+        { description: { contains: term, mode: "insensitive" as const } },
+        { type: { contains: term, mode: "insensitive" as const } },
+        { version: { contains: term, mode: "insensitive" as const } },
+        ...(tag ? [{ tags: { has: tag } }] : []),
+        { models: { has: term } },
+        { creator: { OR: [
+          { name: { contains: term, mode: "insensitive" as const } },
+          { handle: { contains: term, mode: "insensitive" as const } },
+          { bio: { contains: term, mode: "insensitive" as const } },
+        ] } },
+        { category: { OR: [
+          { name: { contains: term, mode: "insensitive" as const } },
+          { slug: { contains: term, mode: "insensitive" as const } },
+        ] } },
+        { compatibility: { some: { OR: [
+          { platformKey: { contains: term, mode: "insensitive" as const } },
+          { platform: { OR: [
+            { nameEn: { contains: term, mode: "insensitive" as const } },
+            { nameFa: { contains: term, mode: "insensitive" as const } },
+          ] } },
+        ] } } },
+        { communityPlacements: { some: {
+          state: "APPROVED" as const,
+          community: {
+            state: "ACTIVE" as const,
+            OR: [
+              { slug: { contains: term, mode: "insensitive" as const } },
+              { nameEn: { contains: term, mode: "insensitive" as const } },
+              { nameFa: { contains: term, mode: "insensitive" as const } },
+              { descriptionEn: { contains: term, mode: "insensitive" as const } },
+              { descriptionFa: { contains: term, mode: "insensitive" as const } },
+            ],
+          },
+        } } },
+      ] };
+    }) } : {}),
     ...(type ? { itemType: MARKETPLACE_DATABASE_ITEM_TYPES[type as keyof typeof MARKETPLACE_DATABASE_ITEM_TYPES] } : {}),
     ...(category ? { category: { slug: category } } : {}),
     ...(selectedCommunity ? { communityPlacements: { some: { state: "APPROVED", community: { slug: selectedCommunity, state: "ACTIVE" } } } } : {}),
@@ -81,9 +118,9 @@ function marketplaceProductWhere(filters: any, communitySlug?: string): Prisma.M
 }
 
 function productOrderBy(sort: string) {
-  return sort === "rating" ? [{ rating: "desc" as const }, { reviewCount: "desc" as const }]
-    : sort === "newest" ? [{ updatedAt: "desc" as const }]
-      : [{ featured: "desc" as const }, { usageCount: "desc" as const }];
+  return sort === "rating" ? [{ rating: "desc" as const }, { reviewCount: "desc" as const }, { id: "asc" as const }]
+    : sort === "newest" ? [{ updatedAt: "desc" as const }, { id: "asc" as const }]
+      : [{ featured: "desc" as const }, { usageCount: "desc" as const }, { id: "asc" as const }];
 }
 
 function serializeAcquisition(order: { id: string; status: string; releaseManifestId: string | null; createdAt: Date }) {

@@ -4,6 +4,15 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-21
 
+- Expanded public marketplace search across multi-term listing metadata, tags,
+  creator profiles, categories, approved active communities, platform labels,
+  and model compatibility. All discovery sort modes now use a unique product-ID
+  tie-breaker for deterministic offset pagination. The bilingual discovery UI
+  distinguishes unavailable search, loading, filtered-empty, query-empty, and
+  catalog-empty states instead of silently converting initial API failures into
+  zero results. Verification: all workspace type-checks; 181 tests; web lint;
+  API and web production builds; and the Blog webpack production build.
+
 - Normalized marketplace discovery taxonomy end to end: controlled platform
   keys now back relational platform, product-compatibility, release-
   compatibility, and community records; manifests reject creator-defined

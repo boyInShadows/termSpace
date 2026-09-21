@@ -20,8 +20,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
-export function DiscoveryExperience({ initial, categories, platforms, communities, itemTypes, initialFilters, context }: {
+export function DiscoveryExperience({ initial, initialError = false, categories, platforms, communities, itemTypes, initialFilters, context }: {
   initial: ProductPageResult;
+  initialError?: boolean;
   categories: MarketplaceCategory[];
   platforms: MarketplacePlatform[];
   communities: MarketplaceCommunity[];
@@ -36,15 +37,15 @@ export function DiscoveryExperience({ initial, categories, platforms, communitie
   const [category, setCategory] = useState(initialFilters.category ?? "All");
   const [community, setCommunity] = useState(initialFilters.community ?? "All");
   const [platform, setPlatform] = useState(initialFilters.platform ?? "All");
-  const [verified, setVerified] = useState(false);
-  const [minRating, setMinRating] = useState(0);
+  const [verified, setVerified] = useState(initialFilters.verified ?? false);
+  const [minRating, setMinRating] = useState(initialFilters.minRating ?? 0);
   const [sort, setSort] = useState(initialFilters.sort ?? "featured");
   const [view, setView] = useState<"grid" | "list">("grid");
   const [result, setResult] = useState(initial.data);
   const [meta, setMeta] = useState(initial.meta);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError ? d.connectionError : null);
   const [retryNonce, setRetryNonce] = useState(0);
   const typeOptions = [{ value: "All", label: d.all }, ...itemTypes.map((item) => ({ value: item.key, label: fa ? item.fa : item.en }))];
   const selectedTypeLabel = typeOptions.find((option) => option.value === type)?.label ?? type;
@@ -198,7 +199,7 @@ export function DiscoveryExperience({ initial, categories, platforms, communitie
             {filters}
           </div>
         </aside>
-        <section>
+        <section aria-busy={loading}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <p className="text-sm">
@@ -312,9 +313,11 @@ export function DiscoveryExperience({ initial, categories, platforms, communitie
                   variant={view === "list" ? "list" : "compact"}
                 />
               ))
-            ) : (
-              <EmptyState onReset={reset} />
-            )}
+            ) : loading && !error ? (
+              <p role="status" className="col-span-full py-12 text-center text-sm text-muted-foreground">{d.loading}</p>
+            ) : !error ? (
+              <EmptyState onReset={reset} query={query.trim() || undefined} filtered={active.length > 0} />
+            ) : null}
           </div>
           {meta.page < meta.totalPages && (
             <div className="mt-10 flex justify-center">
