@@ -174,6 +174,18 @@ describe("API", () => {
     expect(JSON.stringify(response.body)).not.toContain("private installation step");
   });
 
+  it("does not expose an unpublished listing through the public product route", async () => {
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue(null);
+
+    const response = await request(createApp()).get("/api/marketplace/products/private-skill");
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe("NOT_FOUND");
+    expect(prismaMock.marketplaceProduct.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: { slug: "private-skill", published: true },
+    }));
+  });
+
   it("rejects invalid newsletter input before database access", async () => {
     const response = await request(createApp())
       .post("/api/newsletter/subscribers")
@@ -391,6 +403,23 @@ describe("API", () => {
     expect(response.status).toBe(401);
     expect(prismaMock.adminSession.findFirst).not.toHaveBeenCalled();
     expect(prismaMock.readerSession.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("does not treat a Blog administrator as a marketplace moderator", async () => {
+    prismaMock.adminSession.findFirst.mockResolvedValue({
+      id: "admin-session-1",
+      user: { id: "admin-1", email: "blog-admin@example.com" },
+    });
+
+    const response = await request(createApp())
+      .get("/api/marketplace/moderation/queue")
+      .set("Cookie", "term_academy_session=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe("UNAUTHORIZED");
+    expect(prismaMock.adminSession.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.readerSession.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.marketplaceProduct.findMany).not.toHaveBeenCalled();
   });
 
   it("returns verified-email state and active marketplace roles in the reader session", async () => {
@@ -1216,6 +1245,31 @@ describe("API", () => {
 
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe("LISTING_NOT_FOUND");
+  });
+
+  it("does not let a creator replace another creator's draft", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      id: "product-2", published: false, lifecycleState: "DRAFT", lifecycleVersion: 1,
+      creator: { ownerUserId: "reader-2" }, approvedSnapshot: null,
+    });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .put("/api/marketplace/creator/products/product-2/draft")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ expectedVersion: 1, manifest: marketplaceManifestFixture() });
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe("LISTING_NOT_FOUND");
+    expect(prismaMock.marketplaceManifestSnapshot.create).not.toHaveBeenCalled();
+    expect(prismaMock.marketplaceListingSnapshot.create).not.toHaveBeenCalled();
+    expect(prismaMock.marketplaceProduct.update).not.toHaveBeenCalled();
   });
 
   it("rejects stale draft saves before creating an immutable snapshot", async () => {

@@ -2,6 +2,16 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-09-21
+
+- Completed the Marketplace creator and submission lifecycle authorization test
+  pass. Route-level Supertest coverage now verifies cross-owner draft reads,
+  writes, release access, and lifecycle transitions; creator-only and
+  moderator-only role boundaries; self-moderation rejection; unpublished
+  listing and draft-artifact isolation; and bidirectional separation between
+  marketplace authority and Blog administration. Verification: API tests,
+  workspace type-checks, and `git diff --check`.
+
 ## 2026-09-18
 
 - Completed the free-resource acquisition and installation flow. Public product

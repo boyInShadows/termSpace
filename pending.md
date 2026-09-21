@@ -2,11 +2,6 @@
 
 This file tracks known improvement work that has not been completed yet. When an item is finished, remove it from this file and add a dated entry to `changelog.md`.
 
-## Marketplace — P0 Creator and Submission Lifecycle
-
-- Add API and end-to-end authorization tests covering cross-user listing access,
-  creator ownership, moderation, unpublished artifacts, and Blog isolation.
-
 ## Marketplace — P0 Discovery and Community
 
 - Add normalized communities and moderated many-to-many listing placements, then
