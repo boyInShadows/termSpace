@@ -50,7 +50,7 @@ const trustFacts = [
   {
     icon: FileCheck2,
     title: "Human-readable permissions",
-    copy: "Every listing states what it reads, writes and calls out to â€” in a sentence, not a config file.",
+    copy: "Every listing states what it reads, writes and calls out to — in a sentence, not a config file.",
   },
   {
     icon: RefreshCw,
@@ -306,7 +306,7 @@ export default async function Home() {
                   </h3>
                   <p className="mt-3 max-w-lg leading-7 text-muted-foreground">
                     Publish with rich previews, version history, compatibility
-                    metadata and a storefront that respects the craft â€” not a
+                    metadata and a storefront that respects the craft — not a
                     zip file and a hope.
                   </p>
                 </div>

@@ -127,7 +127,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </Section>
             )}
             {included.length > 0 && (
-            <Section title="Whatâ€™s included">
+            <Section title="What’s included">
               <div className="overflow-hidden rounded-lg border bg-surface">
                 {included.map((file) => (
                   <div

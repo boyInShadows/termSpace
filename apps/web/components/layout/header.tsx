@@ -15,8 +15,8 @@ import { localePath } from "@/lib/i18n";
 /**
  * The header does two things beyond navigation.
  *
- * It condenses once you leave the hero â€” the announcement strip retracts and
- * the bar tightens â€” so the page gives its vertical space back to content as
+ * It condenses once you leave the hero — the announcement strip retracts and
+ * the bar tightens — so the page gives its vertical space back to content as
  * soon as you have committed to reading.
  *
  * And it carries a plasma read-out of how far through the page you are.
