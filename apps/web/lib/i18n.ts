@@ -461,6 +461,9 @@ export const copy = {
         "Could not reach the community library. Check your connection and try again.",
     },
     homePage: {
+      worksWithModels: "Models",
+      worksWithEditors: "Editors & CLIs",
+      worksWithProtocols: "Protocols",
       degradedTitle: "Showing an example catalogue.",
       degradedBody:
         "The community library could not be reached, so these listings are placeholders.",
@@ -902,6 +905,9 @@ export const copy = {
         "ارتباط با کتابخانهٔ جامعه برقرار نشد. اتصال خود را بررسی و دوباره تلاش کنید.",
     },
     homePage: {
+      worksWithModels: "مدل‌ها",
+      worksWithEditors: "ویرایشگرها و خط فرمان",
+      worksWithProtocols: "پروتکل‌ها",
       degradedTitle: "فهرست نمونه نمایش داده می‌شود.",
       degradedBody:
         "دسترسی به کتابخانهٔ جامعه ممکن نشد، بنابراین این فهرست‌ها نمونه هستند.",

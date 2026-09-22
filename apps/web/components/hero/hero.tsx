@@ -11,15 +11,17 @@ import { buttonVariants } from "@/components/ui/button";
 import { useScrollProgress } from "@/lib/hooks/use-scroll-progress";
 import { useLocale } from "@/lib/locale-context";
 
-const PLATFORMS = [
-  "Claude",
-  "ChatGPT",
-  "Cursor",
-  "Codex",
-  "VS Code",
-  "Gemini",
-  "MCP",
-  "Raw API",
+/**
+ * The ticker's source of truth: unique names, grouped by what they actually
+ * are. MCP and "Raw API" are protocols, not products, and listing them beside
+ * Claude and Cursor invited the reader to read the whole strip as a list of
+ * apps. Group labels also make the loop legible — when "Models" comes back
+ * round it reads as the list repeating, not as a duplicated entry.
+ */
+const WORKS_WITH = [
+  { key: "worksWithModels", items: ["Claude", "ChatGPT", "Gemini"] },
+  { key: "worksWithEditors", items: ["Cursor", "VS Code", "Codex"] },
+  { key: "worksWithProtocols", items: ["MCP", "Raw API"] },
 ] as const;
 
 export function Hero() {
@@ -135,14 +137,21 @@ export function Hero() {
           <span className="eyebrow hidden shrink-0 sm:block">
             {t.worksWith}
           </span>
-          <Marquee duration={38} className="min-w-0 flex-1">
-            {PLATFORMS.map((platform) => (
-              <span
-                key={platform}
-                className="flex items-center gap-2 whitespace-nowrap px-4 font-mono text-sm text-muted-foreground"
-              >
-                <span className="size-1 rounded-full bg-accent/70" />
-                {platform}
+          <Marquee duration={64} className="min-w-0 flex-1">
+            {WORKS_WITH.map((group) => (
+              <span key={group.key} className="flex items-center">
+                <span className="eyebrow whitespace-nowrap px-4 text-[0.65rem] text-muted-foreground/70">
+                  {t.homePage[group.key]}
+                </span>
+                {group.items.map((platform) => (
+                  <span
+                    key={platform}
+                    className="flex items-center gap-2 whitespace-nowrap px-4 font-mono text-sm text-muted-foreground"
+                  >
+                    <span className="size-1 rounded-full bg-accent/70" />
+                    {platform}
+                  </span>
+                ))}
               </span>
             ))}
           </Marquee>
