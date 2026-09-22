@@ -100,7 +100,10 @@ export function Header() {
   }, []);
 
   return (
-    <>
+    /* One landmark. The announcement strip and the mobile menu used to sit
+       outside <header> as siblings, which left banner content in no landmark
+       at all. The bar inside stays sticky; the wrapper does not need to be. */
+    <header>
       {/* --- announcement strip, retracts on scroll, dismissible ---------- */}
       {isAnnouncementVisible && (
         <div
@@ -138,7 +141,7 @@ export function Header() {
         </div>
       )}
 
-      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+      <div className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl">
         <div
           className={cn(
             "container-page flex items-center justify-between transition-[height] duration-500",
@@ -223,7 +226,7 @@ export function Header() {
           className="rule-plasma absolute inset-x-0 bottom-0 h-px origin-left"
           style={{ transform: "scaleX(var(--scrolled, 0))" }}
         />
-      </header>
+      </div>
 
       {/* --- mobile menu -------------------------------------------------- */}
       {isMenuOpen && (
@@ -265,6 +268,6 @@ export function Header() {
           </nav>
         </div>
       )}
-    </>
+    </header>
   );
 }

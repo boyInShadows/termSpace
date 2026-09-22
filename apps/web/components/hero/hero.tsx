@@ -143,7 +143,7 @@ export function Hero({
           <Marquee duration={64} className="min-w-0 flex-1">
             {WORKS_WITH.map((group) => (
               <span key={group.key} className="flex items-center">
-                <span className="eyebrow whitespace-nowrap px-4 text-[0.65rem] text-muted-foreground/70">
+                <span className="eyebrow whitespace-nowrap px-4">
                   {t.homePage[group.key]}
                 </span>
                 {group.items.map((platform) => (

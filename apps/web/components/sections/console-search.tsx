@@ -196,7 +196,7 @@ export function ConsoleSearch({
             // list unmounts.
             onBlur={() => window.setTimeout(() => setIsFocused(false), 120)}
             className={cn(
-              "min-w-0 flex-1 bg-transparent px-4 text-base placeholder:text-muted-foreground/80 focus:outline-none",
+              "min-w-0 flex-1 bg-transparent px-4 text-base placeholder:text-muted-foreground focus:outline-none",
               isHero ? "h-14" : "h-16",
             )}
           />
@@ -327,7 +327,7 @@ function ScopeChips({
           >
             {label}
             {count !== null && (
-              <span className="font-mono text-[11px] opacity-70">· {count}</span>
+              <span className="font-mono text-xs">· {count}</span>
             )}
             {isActive && <X size={12} aria-hidden />}
           </button>

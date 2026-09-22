@@ -115,8 +115,12 @@ select {
 
 .eyebrow {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.7rem;
-  line-height: 1rem;
+  /* 12px, not 11.2px. --muted-foreground itself is comfortably AA on every
+     surface it is used on here (8.25:1 dark, 6.98:1 light), so the problem
+     with these labels was never colour — it is 0.16em of tracking on type
+     small enough that the letterforms stop carrying it. */
+  font-size: 0.75rem;
+  line-height: 1.1rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 600;
