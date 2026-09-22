@@ -26,7 +26,7 @@ export function Footer() {
     ] },
   ];
   return (
-    <footer className="relative isolate mt-24 overflow-hidden border-t border-border bg-surface/40">
+    <footer className="relative isolate mt-12 overflow-hidden border-t border-border bg-surface/40">
       {/* A last, quiet echo of the hero's plasma so the page closes on the
           same note it opened with. */}
       <div
