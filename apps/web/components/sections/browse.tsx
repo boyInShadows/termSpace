@@ -123,13 +123,18 @@ export function Browse({
         id="browse-panel-collections"
         aria-labelledby="browse-tab-collections"
         hidden={active !== "collections"}
-        className="mt-10 grid gap-4 md:grid-cols-3"
+        /* Below md these are a snap-scrolling row rather than a stack: three
+           full-width cards make the reader scroll past the whole section to
+           reach the next one, and the negative margin lets the row bleed to
+           the screen edge so the third card is visibly cut off and therefore
+           visibly reachable. */
+        className="mt-10 -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:snap-none md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0"
       >
         {collections.map((collection, index) => (
           <Link
             key={collection.title}
             href={`${exploreHref}?category=${encodeURIComponent(collection.category)}`}
-            className="group flex h-full flex-col rounded-xl border border-border bg-surface/50 p-7 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-plasma"
+            className="group flex h-full w-[78vw] shrink-0 snap-start flex-col rounded-xl border border-border bg-surface/50 p-7 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-plasma sm:w-[60vw] md:w-auto md:shrink"
           >
             <div className="flex items-start justify-between">
               <span className="font-mono text-xs text-muted-foreground">

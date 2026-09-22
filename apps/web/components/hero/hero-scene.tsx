@@ -188,7 +188,10 @@ type ChipProps = {
 function FloatChip({ className, z, delay, icon, label, sub }: ChipProps) {
   return (
     <div
-      className={cn("absolute", className)}
+      // Hidden below md. On a phone the card fills the column and there is no
+      // margin for a chip to sit outside it without landing on the manifest
+      // text — and every claim these make is already a row in that manifest.
+      className={cn("absolute hidden md:block", className)}
       style={{ transform: `translateZ(${z}px)` }}
     >
       <div

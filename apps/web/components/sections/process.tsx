@@ -115,7 +115,6 @@ export function Process() {
   }, []);
 
   const current = STEPS[active];
-  const PanelIcon = PANEL_ICONS[active];
 
   return (
     <section className="border-y border-border bg-surface/40">
@@ -177,6 +176,12 @@ export function Process() {
                     <p className="mt-3 max-w-md leading-7 text-muted-foreground">
                       {step.copy}
                     </p>
+
+                    {/* Below lg there is no column to pin a panel in, so each
+                        step carries its own. */}
+                    <div className="mt-6 max-w-md lg:hidden" aria-hidden>
+                      <StepPanel step={step} index={index} />
+                    </div>
                   </div>
                 </li>
               );
@@ -185,56 +190,78 @@ export function Process() {
 
           {/* --- pinned panel --------------------------------------------- */}
           <div className="hidden lg:block">
-            <div className="sticky top-28" aria-hidden>
-              <div className="panel overflow-hidden rounded-2xl shadow-lift">
-                <div className="flex items-center gap-2.5 border-b border-border/80 bg-surface-raised/60 px-4 py-3">
-                  <PanelIcon size={14} className="text-primary" />
-                  <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                    {current.id}
-                  </span>
-                  <span className="ml-auto flex gap-1">
-                    {STEPS.map((step, index) => (
-                      <span
-                        key={step.id}
-                        className={cn(
-                          "h-1 rounded-full transition-all duration-500",
-                          index === active
-                            ? "w-6 bg-primary"
-                            : "w-1.5 bg-border-strong",
-                        )}
-                      />
-                    ))}
-                  </span>
-                </div>
-
-                <div className="min-h-56 p-5 font-mono text-[13px] leading-7">
-                  {current.lines.map((line, index) => (
-                    <div
-                      key={line.label + line.value}
-                      className="ts-panel-line flex gap-4"
-                      style={{ animationDelay: `${index * 70}ms` }}
-                    >
-                      <span className="w-24 shrink-0 text-muted-foreground">
-                        {line.label}
-                      </span>
-                      <span
-                        className={cn(
-                          "min-w-0 flex-1",
-                          line.tone === "verified" && "text-verified",
-                          line.tone === "accent" && "text-accent",
-                        )}
-                      >
-                        {line.value}
-                      </span>
-                    </div>
-                  ))}
-                  <span className="mt-2 inline-block h-4 w-2 animate-pulse bg-accent align-middle" />
-                </div>
-              </div>
+            <div
+              className="sticky top-28"
+              aria-hidden
+              /* The panel is decoration with no accessible role, so there is
+                 nothing to query it by. This is what the escape hatch is for. */
+              data-testid="pinned-panel"
+            >
+              <StepPanel step={current} index={active} />
             </div>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * One panel state.
+ *
+ * Rendered twice: pinned beside the steps on wide screens, and inline under
+ * each step below `lg`, where there is no second column to pin anything in
+ * and a sticky panel would cover the text it is illustrating.
+ *
+ * Decorative in both placements — every line it shows is already stated in
+ * the step's own prose — so it is `aria-hidden` and nothing is lost if the
+ * observer never fires.
+ */
+function StepPanel({ step, index }: { step: Step; index: number }) {
+  const PanelIcon = PANEL_ICONS[index];
+  return (
+    <div className="panel overflow-hidden rounded-2xl shadow-lift">
+      <div className="flex items-center gap-2.5 border-b border-border/80 bg-surface-raised/60 px-4 py-3">
+        <PanelIcon size={14} className="text-primary" />
+        <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+          {step.id}
+        </span>
+        <span className="ml-auto flex gap-1">
+          {STEPS.map((candidate, position) => (
+            <span
+              key={candidate.id}
+              className={cn(
+                "h-1 rounded-full transition-all duration-500",
+                position === index ? "w-6 bg-primary" : "w-1.5 bg-border-strong",
+              )}
+            />
+          ))}
+        </span>
+      </div>
+
+      <div className="p-5 font-mono text-[13px] leading-7 lg:min-h-56">
+        {step.lines.map((line, position) => (
+          <div
+            key={line.label + line.value}
+            className="ts-panel-line flex gap-4"
+            style={{ animationDelay: `${position * 70}ms` }}
+          >
+            <span className="w-24 shrink-0 text-muted-foreground">
+              {line.label}
+            </span>
+            <span
+              className={cn(
+                "min-w-0 flex-1 break-words",
+                line.tone === "verified" && "text-verified",
+                line.tone === "accent" && "text-accent",
+              )}
+            >
+              {line.value}
+            </span>
+          </div>
+        ))}
+        <span className="mt-2 inline-block h-4 w-2 animate-pulse bg-accent align-middle" />
+      </div>
+    </div>
   );
 }

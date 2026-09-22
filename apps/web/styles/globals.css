@@ -53,6 +53,15 @@
   border-color: var(--border);
 }
 
+/* The `hidden` attribute must win.
+   Tailwind's display utilities are real class selectors, so a `flex` or `grid`
+   class out-specifies the user-agent rule for `[hidden]` and an element marked
+   hidden stays on screen. Any component that toggles a laid-out element with
+   `hidden` — the browse tab panels, for one — is broken without this. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
   color-scheme: dark;
