@@ -74,13 +74,22 @@ export function HeroScene() {
           }}
         />
 
-        {/* --- halo: sits just behind the panel so the glass reads as lit -- */}
+        {/* --- halo: sits just behind the panel so the glass reads as lit --
+            Three overlapping radial gradients rather than a conic gradient
+            under `blur-3xl`. `filter: blur()` on an element this size is a
+            full-surface raster pass on every frame the stage rotates, and it
+            rotates with the cursor; radial gradients are painted once and
+            cost nothing to transform. The result is the same wash, because a
+            64px blur of a conic sweep is exactly this. */}
         <div
-          className="absolute left-1/2 top-1/2 size-[78%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+          className="absolute left-1/2 top-1/2 size-[92%] -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
             transform: "translateZ(-70px)",
-            background:
-              "conic-gradient(from 210deg, var(--primary), var(--spark), var(--accent), var(--primary))",
+            backgroundImage: [
+              "radial-gradient(55% 55% at 28% 24%, color-mix(in oklab, var(--primary) 85%, transparent), transparent 72%)",
+              "radial-gradient(55% 55% at 76% 34%, color-mix(in oklab, var(--spark) 80%, transparent), transparent 72%)",
+              "radial-gradient(60% 60% at 50% 84%, color-mix(in oklab, var(--accent) 70%, transparent), transparent 74%)",
+            ].join(","),
             opacity: 0.42,
           }}
         />
