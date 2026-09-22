@@ -343,10 +343,14 @@ export default async function Home() {
           id="collections"
           className="relative isolate overflow-hidden border-y border-border bg-background-deep py-20 lg:py-28"
         >
+          {/* The nebula belongs to the hero. This is a far quieter echo of it,
+              scaled by --nebula-opacity so the light theme does not end up
+              with a pastel wash fighting the white cards on top of it. */}
           <div
             aria-hidden
-            className="absolute inset-0 -z-10 opacity-70"
+            className="absolute inset-0 -z-10"
             style={{
+              opacity: "var(--nebula-opacity)",
               backgroundImage:
                 "radial-gradient(60% 70% at 12% 0%, color-mix(in oklab, var(--primary) 26%, transparent), transparent 70%), radial-gradient(55% 65% at 88% 100%, color-mix(in oklab, var(--spark) 20%, transparent), transparent 72%)",
             }}

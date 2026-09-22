@@ -119,9 +119,12 @@ select {
   color: var(--muted-foreground);
 }
 
-/* Plasma → Ion sweep. The single signature gradient of the brand. */
+/* Plasma → Ion sweep. The single signature gradient of the brand.
+   Uses the dedicated --plasma-text-* stops, not the UI colours: this is the
+   only place the brand gradient carries readable text, so the stops are tuned
+   for contrast rather than for fills. */
 .text-plasma {
-  background: linear-gradient(102deg, var(--primary) 0%, var(--spark) 52%, var(--accent) 100%);
+  background: linear-gradient(102deg, var(--plasma-text-1) 0%, var(--plasma-text-2) 52%, var(--plasma-text-3) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -290,7 +293,10 @@ html.light [data-theme-icon="moon"] {
 /* Kept to opacity only: the headline it runs on is gradient-clipped text,
    and setting `color` there would knock out the background-clip. */
 [data-decoding] {
-  opacity: 0.86;
+  /* 0.9, not lower: the decode runs on the gradient headline, and dropping
+     it further composites the stops toward the background far enough to push
+     the light theme under 4.5:1 while the animation is playing. */
+  opacity: 0.9;
 }
 
 /* --- accessibility ------------------------------------------------------- */

@@ -64,6 +64,19 @@
   --spark: oklch(72% 0.215 340);
   --verified: oklch(82% 0.175 152);
 
+  /* Headline gradient. Separate from --primary/--spark/--accent because those
+     are UI colours that also have to work as fills, borders and small icons,
+     whereas these only ever carry large display text and can be pushed for
+     contrast. Every point along the sweep clears 9:1 here, and still clears
+     AA while the decode animation holds the line at 90% opacity. */
+  --plasma-text-1: oklch(80% 0.150 292);
+  --plasma-text-2: oklch(78% 0.170 340);
+  --plasma-text-3: oklch(84% 0.120 200);
+
+  /* How strongly the decorative nebula reads. Dark absorbs it; on paper the
+     same energy competes with the cards sitting on top of it. */
+  --nebula-opacity: 0.7;
+
   --success: oklch(82% 0.175 152);
   --warning: oklch(83% 0.15 85);
   --destructive: oklch(66% 0.205 22);
@@ -110,6 +123,14 @@
 
   --spark: oklch(55% 0.235 340);
   --verified: oklch(48% 0.135 152);
+
+  /* Darkened rather than inverted: the sweep clears 6.5:1 on the light
+     background at every point, and AA at 90% opacity mid-decode. */
+  --plasma-text-1: oklch(45% 0.230 292);
+  --plasma-text-2: oklch(46% 0.210 340);
+  --plasma-text-3: oklch(44% 0.110 210);
+
+  --nebula-opacity: 0.3;
 
   --success: oklch(48% 0.135 152);
   --warning: oklch(56% 0.135 75);

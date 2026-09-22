@@ -31,8 +31,9 @@ export function Footer() {
           same note it opened with. */}
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 -z-10 h-64 opacity-40"
+        className="absolute inset-x-0 top-0 -z-10 h-64"
         style={{
+          opacity: "calc(var(--nebula-opacity) * 0.6)",
           backgroundImage:
             "radial-gradient(50% 100% at 20% 0%, color-mix(in oklab, var(--primary) 20%, transparent), transparent 70%), radial-gradient(45% 100% at 82% 0%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 72%)",
         }}
