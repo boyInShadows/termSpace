@@ -2,6 +2,80 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-09-22
+
+- Completed the homepage design and UX pass, landed as fourteen commits on
+  `ramtin`. Resilience first: the page no longer needs the API to render. One
+  cached loader feeds every section, a failed fetch degrades to a new
+  `apps/web/lib/mock-home.ts` fixture instead of throwing, each data-driven
+  section streams behind a skeleton sized to the real component, empty states
+  are distinct from the "could not load" notice, the page-wide red banner
+  became an inline notice with a working Retry, and "View all 0 listings" is
+  never rendered. `NEXT_PUBLIC_USE_MOCK=1` serves the same fixture for
+  front-end work with no database. A session refresh that 401s, times out or
+  cannot reach the API now leaves the visitor anonymous silently.
+- Reworked the hero and information architecture. Search moved into the hero
+  as the primary action and the standalone search band was removed; the copy
+  grid drops to `min-h-[66vh]`, landing near 80vh with the header and ticker.
+  The floating chips went from five to three (price and rating removed — "$38
+  one-time" contradicted the freely-shared positioning) and are now anchored
+  to the card's corners. Curated collections and Browse by practice merged
+  into one tabbed Browse section whose active tab lives in `?browse=`;
+  Featured creators absorbed the creator CTA as its fourth tile; Trust became
+  the page's one inverted full-bleed section; and a new `--section-y` scale
+  replaced nine per-section padding decisions.
+- Measured rather than assumed on contrast. The gradient headline already
+  cleared AA at rest (6.35:1 dark, 5.12:1 light across the sampled sweep); the
+  real failure was the decode animation holding it at 86% opacity, which put
+  the light theme at 3.98:1. New `--plasma-text-*` stops now clear 9.11:1 and
+  6.59:1, and the decode holds AA. `--muted-foreground` also passes
+  comfortably, so the eyebrow labels were a type-size problem, not a colour
+  one — every reduced-alpha use of that token (`/70`, `/75`, `/80`) did fail
+  and was removed. The plan's own suggested light stop `#c026d3` measures
+  4.39:1 and was not used.
+- Search shortcuts became scoped filters in the body sans with real listing
+  counts. `/api/marketplace/home` now returns `types`, grouped on the public
+  `type` label so a count can never disagree with the page it links to. The
+  field gained a stable `aria-label`, an icon-only submit on narrow screens,
+  and a suggestions listbox offering this browser's recent searches or popular
+  queries. A new `useStoredString` hook wraps `localStorage` in
+  `useSyncExternalStore` with an empty server snapshot.
+- Rebuilt the header's controls: a proper language button with a globe and
+  `lang`, a visible and `aria-current` active route, a dismissible
+  announcement persisted against an announcement id, a theme toggle named by
+  its destination, Sign in and the language switch added to the mobile menu,
+  and a blinking terminal caret in the logo. `buttonVariants` carried
+  `focus-visible:outline-none` with no replacement, leaving every button with
+  no visible focus; it now draws a ring. One `<header>` landmark now wraps the
+  strip, the bar and the menu.
+- Newsletter success and failure are separate states with distinct roles;
+  failure keeps the typed address and names the cause. The form still never
+  reports "already subscribed", preserving the API's non-enumerable 202.
+- Fixed two bugs found while working rather than reported: the how-it-works
+  panel decided from `entries` alone, so a step still inside the observer band
+  that had not re-fired could never win and the panel could lag behind the
+  reader; and Tailwind's display utilities out-specify the user-agent rule for
+  `[hidden]`, which would have rendered both browse tab panels in a browser
+  (jsdom applies no stylesheet, so no DOM test could see it).
+- Phone widths: per-step panels below `lg`, snap-scrolling collection cards
+  below `md`, hero chips hidden below `md`. Performance: the hero halo's
+  `blur-3xl` conic gradient became three radial gradients, removing the last
+  full-surface raster pass from an element that rotates with the cursor.
+- Also repaired cp1252 mojibake in four files and added `plan.md` to
+  `.gitignore` as session scratch.
+- Verification: root `typecheck` clean across all three workspaces; 201 tests
+  passing (136 API, 15 Blog, 50 web — 27 of the web tests are new, covering
+  the retry notice, browse tabs and their URL round-trip, search scoping and
+  suggestions, newsletter states, header route/announcement/theme behaviour,
+  and the process panels); `apps/web` lint clean; API, web and Blog production
+  builds; `git diff --check` clean. Contrast was computed in oklch→sRGB and
+  sampled across the full gradient in both themes at rest and mid-decode.
+  Still outstanding and not runnable in this environment: Lighthouse and axe,
+  so the plan's numeric Performance ≥ 90 / Accessibility ≥ 95 targets and the
+  375px browser walkthrough remain unverified. Preloading the display serif on
+  the LCP element would need the fonts moved to `next/font/local` and was left
+  for a deliberate change.
+
 ## 2026-09-18
 
 - Completed the free-resource acquisition and installation flow. Public product
