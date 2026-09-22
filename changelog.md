@@ -2,6 +2,187 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-09-18
+
+- Completed the free-resource acquisition and installation flow. Public product
+  responses and pages no longer expose actionable installation instructions;
+  authenticated readers can add a resource idempotently, retain the exact
+  approved release in their account library, and reveal only that release's
+  verified package URL, immutable reference, source status, requirements, and
+  installation steps. Installation now fails closed for unpublished products,
+  restricted or mismatched releases, missing legacy release pins, and package
+  URLs outside the approved GitHub/npm hosts. Acquisition responses omit user
+  and idempotency data, private library/install responses disable caching, and
+  the English/Persian account and product interfaces cover existing and new
+  acquisitions. Verification: all workspace type-checks; 165 tests; web lint;
+  API and web production builds; Blog webpack production build; and
+  `git diff --check`.
+- Implemented authenticated GitHub and npm source ingestion from ADR 0001.
+  Creators can connect encrypted provider credentials from the bilingual release
+  workspace, verify ownership through repository maintain/admin or package write
+  access, and queue exact commit, release-asset, or package-version checks.
+  Append-only check records preserve provider status, immutable references,
+  canonical installation URLs, integrity digests, artifact sizes, latency, and
+  correlation IDs without logging tokens or response bodies. A bounded worker
+  applies timeouts, one provider-call retry, job-level exponential backoff,
+  GitHub/npm rate-limit handling, stale availability for transient published
+  failures, and acquisition restrictions for confirmed ownership or provenance
+  failures; Docker now runs periodic reconciliation. Submission/publication
+  requires a verified current check, while existing acquisitions remain pinned
+  to their immutable release. Verification: Prisma generation; migration
+  deployment against local PostgreSQL; source-worker database smoke test;
+  Compose validation; all workspace type-checks; 155 tests; web lint; API and web
+  production builds; Blog webpack production build; and `git diff --check`. The
+  Blog's default Turbopack build remains unavailable because this host blocks its
+  internal port binding.
+- Added creator-controlled release/version management without replacing
+  artifacts already acquired by users. Creator dashboards now link to an
+  English/Persian release workspace that shows immutable source provenance,
+  draft/public status, and the number of acquisitions pinned to every release;
+  preparing an update continues through the moderated listing-draft lifecycle.
+  New acquisitions persist the exact approved release manifest, fail safely
+  when no modern approved release exists, and retain that reference when newer
+  versions are published. Forward-only migrations add the acquisition-release
+  relationship and database triggers that enforce same-listing published
+  releases and prevent direct or indirect mutation of published release data.
+  Verification: Prisma generation; all workspace type-checks; 141 tests,
+  including owner-scoped history, exact release pinning, unavailable-release,
+  dashboard navigation, and release-provenance UI coverage; web lint; migration
+  deployment against local PostgreSQL; API, web, and Blog webpack production
+  builds; and `git diff --check`.
+- Completed the cross-project reliability and validation pass. API requests now
+  receive validated correlation IDs that are returned on every error and carried
+  through redacted structured request logs; malformed JSON, oversized bodies,
+  unknown routes, invalid path identifiers, upload failures, database conflicts,
+  and unexpected production failures use stable public error codes without
+  exposing parser details, request URLs, stack traces, credentials, or submitted
+  content. All dynamic route parameters are now schema-validated before database
+  access, complementing the existing authoritative body, query, upload, lifecycle,
+  stale-write, and source validation. Marketplace and Blog API clients now apply
+  12-second deadlines, retry transient read failures once, never retry mutations,
+  and expose structured validation details and correlation IDs. Added localized,
+  accessible route and global recovery screens to both frontends, and structured
+  correlation-aware terminal outcomes to scheduled publishing. Verification: all
+  workspace type-checks; 136 tests, including new malformed-input, unsafe-ID,
+  correlation, retry cleanup, and non-retried-mutation coverage; web lint; API,
+  web, and Blog webpack production builds; and `git diff --check`. Bugbot's two
+  retry-response cleanup findings were resolved before commit; Security Review
+  reported no actionable findings.
+- Repositioned the main application as a free community library for agentic
+  coding resources. Replaced marketplace, seller, buyer, checkout, purchase,
+  and price language across English/Persian navigation, discovery, resource
+  cards, item actions, moderation copy, accessibility labels, the design-system
+  prototype, README, product direction, and architecture guidance. Removed
+  pricing filters, price sorting, and price displays; changed the primary flow
+  to sharing and adding resources to a library; and relabeled usage eligibility
+  as verified use. Added a forward-only migration and database constraint that
+  normalize every existing listing to free and prevent future non-free product
+  rows while preserving legacy internal identifiers. Development fixtures and
+  seed data now contain free resources only. Verification: Prisma generation;
+  all workspace type-checks; 130 tests; web lint; API and web production builds;
+  Blog webpack production build; `git diff --check`; and all 19 migrations,
+  including the free-resource normalization and constraint, applied successfully
+  to the local PostgreSQL database, where all 12 existing resources now report
+  zero non-free records. Rebuilt and recreated the local API and web containers;
+  the API health endpoint and the home and explore pages returned HTTP 200.
+
+## 2026-09-17
+
+- Simplified creator-facing names and descriptions from the browser-feedback
+  review. Creator public names and listing names now accept English characters
+  only, the Persian listing-name field has been removed, and creators may write
+  a listing description in English, Persian, or both while at least one remains
+  required. Existing Persian descriptions continue to project correctly on
+  public listings. Added matching English/Persian guidance, authoritative API
+  validation, accessible browser validation, regression coverage, and updated
+  manifest documentation. Verification: all workspace type-checks; 128 tests;
+  API and web production builds plus the Blog webpack production build; web
+  lint; and `git diff --check`. The Blog's default Turbopack build remains
+  unavailable because this host blocks its internal port binding.
+- Added an explicit local-only email-verification bypass for browser testing
+  without an external mail provider. New local password registrations are
+  verified without creating outbox work, and older unverified accounts are
+  verified after a successful password login. The bypass fails closed unless
+  `WEB_PUBLIC_URL` uses an exact loopback host and remains disabled by default.
+  Documented the flag and enabled it only in the ignored local environment.
+  Verification: API type-check; 98 API tests; Docker API production build; a
+  registration through the marketplace `/backend` proxy returned a verified
+  session with zero email jobs; and the temporary test account was removed.
+- Updated the project README to reflect the current marketplace, creator,
+  moderation, community, and Blog boundaries; distinguish implemented features
+  from pending roadmap work; document Node/Docker prerequisites and migration
+  startup behavior; and provide verified persistent and clean-reset Compose
+  workflows with explicit data-loss and configurable-port guidance.
+- Fixed clean PostgreSQL provisioning for the marketplace moderation schema by
+  committing the new lifecycle enum value before adding the internal-note
+  constraint that references it. Verification: reset both Compose-managed
+  volumes; rebuilt the affected images without cache; applied all 18 migrations
+  to an empty PostgreSQL 16 database; confirmed every container is running; and
+  received HTTP 200 responses from the web, Blog, and API health endpoints.
+- Added the role-gated marketplace moderation workspace with an oldest-first,
+  searchable state queue; source and ownership readiness; immutable text-only
+  submission previews; approved-baseline context; community requests; listing
+  approval, publication, change requests, rejection, suspension, archival, and
+  restoration controls; creator-safe public reasons; and private staff notes.
+  Decisions and standalone notes share the append-only lifecycle audit trail,
+  use listing-scoped locking and optimistic concurrency, and preserve unique
+  correlation IDs. Staff-owned listings are excluded from that staff member's
+  queue, while preview, note, and decision APIs independently reject
+  self-moderation so private review context cannot leak to a creator who also
+  holds a staff role. External screenshots and artifacts are never fetched or
+  executed by the preview, private notes are absent from creator/public APIs,
+  and marketplace roles remain isolated from Blog administration. Verification:
+  Prisma generation and schema validation; all workspace type-checks; 118 tests;
+  API and web production builds plus the Blog webpack production build; web
+  lint; `git diff --check`; all 17 migrations applied to an isolated PostgreSQL
+  17 database; and direct checks of private-note validation and append-only
+  audit enforcement.
+
+## 2026-09-16
+
+- Added the complete creator draft workspace for all nine marketplace item
+  types, with English/Persian metadata, external HTTPS screenshots, category
+  and community placement requests, exact GitHub/npm source references,
+  compatibility, installation, requirements, permissions, licensing, and
+  type-specific fields. Draft APIs are authenticated and owner-scoped, use
+  optimistic concurrency, create immutable manifest/listing/release revisions,
+  and append `DRAFT_SAVED` audit events. Published listings retain their
+  approved public snapshot while replacements are drafted, and public product
+  pages exclude draft-only versions. Added the initial staff-defined community
+  registry and append-only, same-listing placement requests without prematurely
+  exposing unmoderated community browse results. Verification: Prisma client
+  generation and schema validation; all workspace type-checks; 109 tests; API
+  and web production builds plus the Blog webpack production build; web lint;
+  `git diff --check`; all 16 migrations applied to an isolated PostgreSQL 17
+  database; and direct checks of the placement-request append-only and
+  same-listing constraints. The Blog's default Turbopack build remained
+  unavailable because this host blocks its internal port binding; its webpack
+  build passed.
+- Added an authenticated, owner-scoped creator dashboard with bounded listing
+  pagination, lifecycle status, public moderation feedback, release history,
+  ratings, completed-acquisition counts, and recent lifecycle activity. The
+  `/creator` workspace now includes responsive summary and listing views,
+  accessible loading/error/empty states, public-listing links, profile editing,
+  English/Persian copy, RTL-aware navigation, and locale-correct numbers and
+  dates. Dashboard authorization fails closed for accounts without an active
+  creator grant, and acquisition metrics are calculated from completed orders
+  rather than trusting mutable product counters. Verification: all workspace
+  type-checks; 103 tests; API, web, and Blog webpack production builds; web
+  lint; and `git diff --check`.
+- Resolved the Bugbot and Security Review findings against the marketplace
+  listing lifecycle. Publication now atomically timestamps and freezes the exact
+  approved release manifest; new products default to unpublished drafts at both
+  Prisma and database levels; grandfathered legacy publications can return from
+  suspension or creator archival without fabricated modern verification; and
+  creators cannot reverse staff archival. Enforcement audit events now identify
+  the approved public snapshot when a separate edit is pending. Verification:
+  Prisma generation and schema validation; all workspace type-checks; 97 tests;
+  API and web production builds plus the Blog webpack production build; web
+  lint; `git diff --check`; all 15 migrations applied to an isolated PostgreSQL
+  17 database; and direct confirmation that the migrated `published` default is
+  `false`. The Blog's default Turbopack build remained unavailable because this
+  host blocks its internal port binding; its established webpack build passed.
+
 ## 2026-09-15
 
 - Integrated `origin/main` into `ramtin` and resolved overlapping marketplace creator, listing lifecycle, dashboard navigation, API client, Prisma ownership, and localization changes while preserving both feature sets. Verification: Prisma client generation, root type-check, 102 tests, and production builds for all three workspaces.

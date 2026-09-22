@@ -4,7 +4,6 @@ import { products, creators, productDetail } from "@/lib/fixtures";
 import {
   CompatibilityBadges,
   CreatorIdentity,
-  PriceDisplay,
   ProductTypeBadge,
   Rating,
   TrustStatus,
@@ -12,7 +11,7 @@ import {
 import { EmptyState } from "@/components/patterns/empty-state";
 import { ProductActions } from "@/features/product/product-actions";
 const meta = {
-  title: "Marketplace/ProductCard",
+  title: "Community library/ResourceCard",
   component: ProductCard,
   tags: ["autodocs"],
   args: { product: products[0] },
@@ -44,14 +43,6 @@ export const Ratings: Story = {
     <div className="flex gap-6">
       <Rating rating={4.9} count={184} />
       <Rating rating={3.8} count={12} />
-    </div>
-  ),
-};
-export const Pricing: Story = {
-  render: () => (
-    <div className="flex gap-8">
-      <PriceDisplay pricing={products[0].pricing} large />
-      <PriceDisplay pricing={products[6].pricing} large />
     </div>
   ),
 };

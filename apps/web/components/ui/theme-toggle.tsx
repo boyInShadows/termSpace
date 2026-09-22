@@ -22,7 +22,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       aria-label="Toggle color theme"
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
     >
       <span className="relative grid size-[18px] place-items-center">
         <Sun size={18} className="ts-theme-icon" data-theme-icon="sun" />

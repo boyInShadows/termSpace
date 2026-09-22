@@ -26,7 +26,6 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
   const [type, setType] = useState<string>(initialFilters.type ?? "All");
   const [category, setCategory] = useState(initialFilters.category ?? "All");
   const [platform, setPlatform] = useState(initialFilters.platform ?? "All");
-  const [price, setPrice] = useState(initialFilters.price === "free" ? "Free" : initialFilters.price === "paid" ? "Paid" : "All");
   const [verified, setVerified] = useState(false);
   const [minRating, setMinRating] = useState(0);
   const [sort, setSort] = useState(initialFilters.sort ?? "featured");
@@ -49,7 +48,7 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
     const timer = window.setTimeout(async () => {
       setLoading(true); setError(null);
       try {
-        const next = await getProducts({ q: query, type, category, platform, price: price === "Free" ? "free" : price === "Paid" ? "paid" : undefined, verified, minRating, sort, page, limit: 12 }, controller.signal);
+        const next = await getProducts({ q: query, type, category, platform, verified, minRating, sort, page, limit: 12 }, controller.signal);
         setResult((current) => page === 1 ? next.data : [...current, ...next.data]); setMeta(next.meta);
       } catch (cause) {
         if (!controller.signal.aborted) {
@@ -60,7 +59,7 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
       finally { if (!controller.signal.aborted) setLoading(false); }
     }, 250);
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [d.connectionError, d.rateLimited, query, type, category, platform, price, verified, minRating, sort, page, retryNonce]);
+  }, [d.connectionError, d.rateLimited, query, type, category, platform, verified, minRating, sort, page, retryNonce]);
   const change = (setter: (value: string) => void) => (value: string) => { setPage(1); setter(value); };
   const reset = () => {
     setPage(1);
@@ -68,7 +67,6 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
     setType("All");
     setCategory("All");
     setPlatform("All");
-    setPrice("All");
     setVerified(false);
     setMinRating(0);
   };
@@ -76,7 +74,6 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
     type !== "All" && selectedTypeLabel,
     category !== "All" && category,
     platform !== "All" && platform,
-    price !== "All" && price,
     verified && "Verified",
     minRating > 0 && `${minRating}+ ${d.rating}`,
   ].filter(Boolean) as string[];
@@ -101,12 +98,6 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
         ]}
         value={platform}
         setValue={change(setPlatform)}
-      />
-      <FilterGroup
-        label={d.pricing}
-        options={["All", "Free", "Paid"]}
-        value={price}
-        setValue={change(setPrice)}
       />
       <FilterGroup
         label={d.rating}
@@ -234,7 +225,6 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
                 <option value="featured">{d.featured}</option>
                 <option value="rating">{d.topRated}</option>
                 <option value="newest">{d.recentlyUpdated}</option>
-                <option value="price-low">{d.priceLow}</option>
               </select>
               <div className="flex rounded-md border bg-surface p-0.5">
                 <button

@@ -9,7 +9,6 @@ import { useLocale } from "@/lib/locale-context";
 import {
   CompatibilityBadges,
   CreatorIdentity,
-  PriceDisplay,
   ProductTypeBadge,
   Rating,
 } from "./product-parts";
@@ -31,7 +30,7 @@ export function ProductCard({
   product: Product;
   variant?: "card" | "list";
 }) {
-  const { t } = useLocale();
+  const { t, fa } = useLocale();
   const { isFavorite, toggleFavorite } = useMarketplaceSession();
   const saved = isFavorite(product.slug);
   const href = `/products/${product.slug}`;
@@ -99,17 +98,18 @@ export function ProductCard({
         )}
       >
         <CompatibilityBadges compatibility={product.compatibility} />
-
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
           <Rating rating={product.rating} count={product.reviewCount} />
           <span className="inline-flex items-center gap-1">
             <Clock3 size={12} />
             {formatCount(product.usageCount)} uses
           </span>
+          <span dir="ltr">
+            {new Intl.DateTimeFormat(fa ? "fa-IR" : "en-US", { month: "short", day: "numeric" }).format(new Date(product.updatedAt))}
+          </span>
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <PriceDisplay pricing={product.pricing} />
+        <div className="mt-4 flex items-center justify-end">
           <Link
             href={href}
             aria-label={`${t.viewDetails}: ${product.name}`}

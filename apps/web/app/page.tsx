@@ -60,7 +60,7 @@ const trustFacts = [
   {
     icon: ScrollText,
     title: "Licence on the label",
-    copy: "Commercial use, redistribution and attribution answered before you reach checkout.",
+    copy: "Use, redistribution and attribution are clear before you install anything.",
   },
 ];
 
@@ -289,7 +289,7 @@ export default async function Home() {
                       {creator.bio}
                     </p>
                     <p className="mt-5 font-mono text-xs text-muted-foreground">
-                      {creator.products} products آ·{" "}
+                      {creator.products} products ·{" "}
                       {creator.followers.toLocaleString()} followers
                     </p>
                   </TiltCard>

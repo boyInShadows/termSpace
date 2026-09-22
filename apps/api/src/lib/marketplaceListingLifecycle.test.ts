@@ -3,7 +3,7 @@ import type { MarketplaceManifestV1 } from "./marketplaceManifest.js";
 import { MarketplaceLifecycleError, marketplaceProductProjectionFromManifest, resolveMarketplaceListingTransition } from "./marketplaceListingLifecycle.js";
 
 function context(overrides: Partial<Parameters<typeof resolveMarketplaceListingTransition>[0]> = {}) {
-  return { state: "DRAFT" as const, published: false, hasApprovedSnapshot: false, hasProposedSnapshot: true, resumeState: null, resumePublished: null, ...overrides };
+  return { state: "DRAFT" as const, published: false, hasApprovedSnapshot: false, hasProposedSnapshot: true, resumeState: null, resumePublished: null, archivedBy: null, ...overrides };
 }
 
 describe("marketplace listing lifecycle", () => {
@@ -39,6 +39,15 @@ describe("marketplace listing lifecycle", () => {
     expect(() => resolveMarketplaceListingTransition(context(), "PUBLISH", "ADMINISTRATOR")).toThrowError(expect.objectContaining({ code: "INVALID_LISTING_TRANSITION" }));
   });
 
+  it("allows creators to restore only listings they archived themselves", () => {
+    const creatorArchive = context({ state: "ARCHIVED", resumeState: "PUBLISHED", resumePublished: true, archivedBy: "CREATOR" });
+    expect(resolveMarketplaceListingTransition(creatorArchive, "RESTORE", "CREATOR")).toEqual(expect.objectContaining({ state: "PUBLISHED", published: true }));
+
+    const staffArchive = context({ state: "ARCHIVED", resumeState: "PUBLISHED", resumePublished: true, archivedBy: "MODERATOR" });
+    expect(() => resolveMarketplaceListingTransition(staffArchive, "RESTORE", "CREATOR")).toThrowError(expect.objectContaining({ code: "INVALID_LISTING_TRANSITION" }));
+    expect(resolveMarketplaceListingTransition(staffArchive, "RESTORE", "MODERATOR")).toEqual(expect.objectContaining({ state: "PUBLISHED", published: true }));
+  });
+
   it("projects the approved manifest into the public product record", () => {
     const manifest = {
       type: "prompt",
@@ -58,5 +67,19 @@ describe("marketplace listing lifecycle", () => {
       platforms: ["codex", "cursor"], models: ["gpt-5"], version: "2.0", requirements: "API_TOKEN",
       permissions: "network_access: Fetch pull requests", license: "MIT",
     }));
+  });
+
+  it("uses a Persian-only description in the public projection", () => {
+    const manifest = {
+      type: "skill",
+      listing: { slug: "persian-guide", name: { en: "Persian Guide" }, outcome: { en: "Guides a task" }, description: { fa: "راهنمای کامل" }, tags: ["guide"] },
+      release: {
+        version: "1.0.0", compatibility: [], installation: { instructions: [] },
+        requirements: { runtimes: [], accounts: [], operatingSystems: [], dependencies: [], environmentVariables: [] },
+        permissions: [], license: { identifier: "MIT" },
+      },
+    } as unknown as MarketplaceManifestV1;
+
+    expect(marketplaceProductProjectionFromManifest(manifest, "category-1").description).toBe("راهنمای کامل");
   });
 });

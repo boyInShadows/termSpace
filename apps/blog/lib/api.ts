@@ -37,42 +37,73 @@ const API_URL = typeof window === "undefined"
 
 export class ApiClientError extends Error {
   status: number;
-  details?: { path: string; message: string }[];
+  code: string;
+  details?: { path: string; code?: string; message: string }[];
+  correlationId?: string;
 
-  constructor(status: number, message: string, details?: { path: string; message: string }[]) {
+  constructor(status: number, message: string, details?: { path: string; code?: string; message: string }[], code = "API_ERROR", correlationId?: string) {
     super(message);
+    this.name = "ApiClientError";
     this.status = status;
+    this.code = code;
     this.details = details;
+    this.correlationId = correlationId;
   }
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const isFormData = typeof FormData !== "undefined" && init?.body instanceof FormData;
-  const res = await fetch(`${API_URL}${path}`, {
-    ...init,
-    credentials: "include",
-    headers: {
-      ...(isFormData ? {} : { "Content-Type": "application/json" }),
-      ...(init?.headers ?? {}),
-    },
-    cache: init?.cache ?? "no-store",
-  });
+  const method = (init?.method ?? "GET").toUpperCase();
+  const attempts = method === "GET" ? 2 : 1;
 
-  if (!res.ok) {
-    let message = `Request failed with status ${res.status}`;
-    let details: { path: string; message: string }[] | undefined;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const timeoutSignal = AbortSignal.timeout(12_000);
+    const signal = init?.signal ? AbortSignal.any([init.signal, timeoutSignal]) : timeoutSignal;
     try {
-      const body = await res.json();
-      if (body?.error?.message) message = body.error.message;
-      details = body?.error?.details;
-    } catch {
-      // Non-JSON error body; keep the default message.
+      const res = await fetch(`${API_URL}${path}`, {
+        ...init,
+        signal,
+        credentials: "include",
+        headers: {
+          ...(isFormData ? {} : { "Content-Type": "application/json" }),
+          ...(init?.headers ?? {}),
+        },
+        cache: init?.cache ?? "no-store",
+      });
+
+      if ([502, 503, 504].includes(res.status) && attempt < attempts) {
+        await res.body?.cancel();
+        continue;
+      }
+      if (!res.ok) {
+        let message = `Request failed with status ${res.status}`;
+        let code = "API_ERROR";
+        let details: { path: string; code?: string; message: string }[] | undefined;
+        let correlationId = res.headers.get("x-correlation-id") ?? undefined;
+        try {
+          const body = await res.json();
+          if (body?.error?.message) message = body.error.message;
+          if (body?.error?.code) code = body.error.code;
+          details = body?.error?.details;
+          correlationId = body?.error?.correlationId ?? correlationId;
+        } catch {
+          // Non-JSON error body; keep the stable fallback.
+        }
+        throw new ApiClientError(res.status, message, details, code, correlationId);
+      }
+
+      if (res.status === 204) return undefined as T;
+      return (await res.json()) as T;
+    } catch (error) {
+      if (init?.signal?.aborted) throw error;
+      if (error instanceof ApiClientError) throw error;
+      if (attempt < attempts) continue;
+      if (timeoutSignal.aborted) throw new ApiClientError(504, "The request timed out", undefined, "CLIENT_TIMEOUT");
+      throw new ApiClientError(0, "The service could not be reached", undefined, "NETWORK_ERROR");
     }
-    throw new ApiClientError(res.status, message, details);
   }
 
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  throw new ApiClientError(0, "The service could not be reached", undefined, "NETWORK_ERROR");
 }
 
 function toQuery(params: Record<string, string | number | boolean | undefined>): string {

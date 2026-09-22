@@ -53,3 +53,17 @@ Sign in to the main TermSpace application with Google first, then grant that
 reader account the `administrator` role using the operator command. Do not reuse
 the Blog administrator password or insert a hidden role during application
 startup.
+
+## Moderation workspace
+
+Readers with an active `moderator` or `administrator` marketplace grant can use
+the main application's `/moderation` workspace. The queue and preview APIs
+recheck the grant on every request. A marketplace staff member cannot view
+private moderation context for, add notes to, or decide a listing owned by their
+own creator account. Assign a different authorized staff account when a reviewer
+has a creator conflict.
+
+Internal notes are append-only audit data. They must not contain credentials,
+provider tokens, private artifact contents, or unnecessary personal data. Only
+public-safe reasons are returned to creators. Marketplace moderation access does
+not authenticate the separate Blog administration service.

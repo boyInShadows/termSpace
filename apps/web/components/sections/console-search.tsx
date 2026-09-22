@@ -93,7 +93,7 @@ export function ConsoleSearch() {
           />
           <input
             name="q"
-            aria-label="Search the marketplace by outcome"
+            aria-label="Search community resources by outcome"
             placeholder={placeholder}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}

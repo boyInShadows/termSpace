@@ -23,10 +23,11 @@ import {
 } from "@/components/marketplace/product-parts";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { ApiError, getProduct } from "@/lib/api";
+import { getLocale } from "@/lib/serverLocale";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   try { const product = await getProduct((await params).slug); return { title: product.name, description: product.outcome }; }
-  catch { return { title: "Product" }; }
+  catch { return { title: "Resource" }; }
 }
 
 function Section({
@@ -49,6 +50,8 @@ function Section({
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const locale = await getLocale();
+  const fa = locale === "fa";
   let product;
   try { product = await getProduct((await params).slug); }
   catch (error) { if (error instanceof ApiError && error.status === 404) notFound(); throw error; }
@@ -71,12 +74,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               {product.verified ? (
                 <Badge variant="success">
                   <ShieldCheck size={12} />
-                  Verified product
+                  {fa ? "منبع تأییدشده" : "Verified resource"}
                 </Badge>
               ) : (
-                <Badge variant="warning">Not yet reviewed</Badge>
+                <Badge variant="warning">{fa ? "هنوز بررسی نشده" : "Not yet reviewed"}</Badge>
               )}
-
             </div>
             <h1 className="editorial mt-5 max-w-3xl text-5xl font-medium leading-none sm:text-6xl">
               {product.name}
@@ -88,13 +90,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <CreatorIdentity creator={product.creator} />
               <Rating rating={product.rating} count={product.reviewCount} />
               <span className="text-xs text-muted-foreground">
-                {product.purchaseCount.toLocaleString()} purchases
+                {product.usageCount.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")} {fa ? "استفاده" : "uses"}
               </span>
             </div>
             <div className="mt-8 grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-3">
               <Meta label="Version" value={product.version} icon={RefreshCw} />
               <Meta label="Updated" value={new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(product.updatedAt))} icon={Clock3} />
-              <Meta label="Package" value={product.packageFileCount && product.packageSizeBytes ? `${product.packageFileCount} files آ· ${Math.round(product.packageSizeBytes / 1024)} KB` : "See package details"} icon={FileText} />
+              <Meta label="Package" value={product.packageFileCount && product.packageSizeBytes ? `${product.packageFileCount} files · ${Math.round(product.packageSizeBytes / 1024)} KB` : "See package details"} icon={FileText} />
             </div>
             <Section title="What it does">
               <p>
@@ -164,23 +166,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
             </Section>
             )}
-            {product.installationSteps.length > 0 && (
-            <Section title="Installation and usage">
-              <ol className="space-y-4">
-                {product.installationSteps.map((x, i) => (
-                  <li key={x} className="flex gap-4">
-                    <span className="font-mono text-xs text-primary">
-                      0{i + 1}
-                    </span>
-                    <span>{x}</span>
-                  </li>
-                ))}
-              </ol>
-              <pre className="mt-6 overflow-x-auto rounded-lg bg-foreground p-4 font-mono text-xs text-background">
-                cp -R {product.slug} ~/.agents/skills/
-              </pre>
+            <Section title={fa ? "نصب و استفاده" : "Installation and usage"}>
+              <div className="rounded-lg border bg-surface p-5">
+                <p className="font-semibold text-foreground">{fa ? "راهنمای دقیق به نسخهٔ دریافت‌شده متصل است." : "Exact instructions are tied to the release you acquire."}</p>
+                <p className="mt-2 text-sm">{fa ? "منبع را به کتابخانهٔ خود اضافه کنید تا پیوند تأییدشده، مرجع تغییرناپذیر و مراحل نصب همان نسخه نمایش داده شود." : "Add the resource to your library to reveal the verified provider URL, immutable reference, and installation steps for that exact version."}</p>
+              </div>
             </Section>
-            )}
             {versions.length > 0 && (
             <Section title="Version history">
               <div className="space-y-6">
@@ -191,7 +182,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   >
                     <code className="font-mono text-xs text-foreground">
                       v{v.version}
-                      {i === 0 && " آ· latest"}
+                      {i === 0 && " · latest"}
                     </code>
                     <span className="text-xs">{new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(v.releasedAt))}</span>
                     <p className="text-sm">{v.notes}</p>
@@ -200,7 +191,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
             </Section>
             )}
-            <Section title={`Reviews آ· ${product.rating}`} id="reviews">
+            <Section title={`Reviews · ${product.rating}`} id="reviews">
               <div className="space-y-6">
                 {reviews.map((r) => (
                   <article key={r.id} className="border-b pb-6">
@@ -210,11 +201,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                           {r.author}
                         </strong>
                         <p className="mt-1 text-xs">
-                          <Rating rating={r.rating} /> آ· {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(r.createdAt))}
+                          <Rating rating={r.rating} /> · {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(r.createdAt))}
                         </p>
                       </div>
                       {r.verifiedPurchase && (
-                        <Badge variant="success">Verified purchase</Badge>
+                        <Badge variant="success">{fa ? "استفادهٔ تأییدشده" : "Verified use"}</Badge>
                       )}
                     </div>
                     <p className="mt-3 max-w-2xl">{r.body}</p>
@@ -231,19 +222,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   issues.
                 </p>
                 <p className="mt-4 text-xs font-semibold text-foreground">
-                  {product.creator.products} products آ· {product.creator.followers.toLocaleString()} followers
+                  {product.creator.products} {fa ? "منبع" : "resources"} · {product.creator.followers.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")} {fa ? "دنبال‌کننده" : "followers"}
                 </p>
               </div>
             </Section>
           </div>
           <aside>
             <div className="sticky top-24 space-y-5 rounded-xl border border-border-strong bg-surface-raised p-5 shadow-soft">
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  One-time license
-                </p>
-                <p className="mt-1 text-3xl font-semibold">{product.pricing.model === "free" ? "Free" : new Intl.NumberFormat("en-US", { style: "currency", currency: product.pricing.currency }).format(product.pricing.amountMinor / 100)}</p>
-              </div>
+              <div><p className="text-xs text-muted-foreground">{fa ? "اشتراک‌گذاری جامعه" : "Community sharing"}</p><p className="mt-1 text-2xl font-semibold">{fa ? "رایگان برای همه" : "Free for everyone"}</p></div>
               <ProductActions product={product} />
               <div className="border-t pt-5">
                 <p className="eyebrow">Compatibility</p>

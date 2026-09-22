@@ -62,7 +62,7 @@ const products = [
     description:
       "A structured writing skill that researches the offer, identifies the strongest argument, and drafts landing pages without empty hype.",
     creator: mara,
-    pricing: { amount: 38, currency: "USD", model: "one-time" },
+    pricing: { amount: 0, currency: "USD", model: "free" },
     compatibility: {
       platforms: ["Claude", "ChatGPT", "Codex"],
       models: ["Claude 4", "GPT-5"],
@@ -85,7 +85,7 @@ const products = [
     outcome: "Review pull requests for regressions, risk, and missing tests.",
     description: "An opinionated code-review agent for engineering teams.",
     creator: ellis,
-    pricing: { amount: 49, currency: "USD", model: "one-time" },
+    pricing: { amount: 0, currency: "USD", model: "free" },
     compatibility: {
       platforms: ["Codex", "Cursor", "VS Code"],
       models: ["GPT-5", "Claude 4"],
@@ -110,7 +110,7 @@ const products = [
     description:
       "A reproducible evidence-search workflow with quality guardrails.",
     creator: amara,
-    pricing: { amount: 64, currency: "USD", model: "one-time" },
+    pricing: { amount: 0, currency: "USD", model: "free" },
     compatibility: {
       platforms: ["Claude", "ChatGPT"],
       models: ["Claude 4", "GPT-5"],
@@ -134,7 +134,7 @@ const products = [
     description:
       "Interview prompts, analysis rubrics, and production templates.",
     creator: studio,
-    pricing: { amount: 28, currency: "USD", model: "one-time" },
+    pricing: { amount: 0, currency: "USD", model: "free" },
     compatibility: {
       platforms: ["Claude", "ChatGPT", "Gemini"],
       models: ["Model agnostic"],
@@ -157,7 +157,7 @@ const products = [
       "Classify, prioritize, and draft replies for customer support queues.",
     description: "A configurable support operations agent.",
     creator: jon,
-    pricing: { amount: 35, currency: "USD", model: "one-time" },
+    pricing: { amount: 0, currency: "USD", model: "free" },
     compatibility: { platforms: ["ChatGPT", "API"], models: ["GPT-5"] },
     category: "Operations",
     rating: 4.5,
@@ -177,7 +177,7 @@ const products = [
       "Spot assumption gaps and formula risks before stakeholder review.",
     description: "A skeptical second pass for forecasts and operating models.",
     creator: amara,
-    pricing: { amount: 55, currency: "USD", model: "one-time" },
+    pricing: { amount: 0, currency: "USD", model: "free" },
     compatibility: {
       platforms: ["Claude", "ChatGPT"],
       models: ["Claude 4", "GPT-5"],
@@ -225,7 +225,7 @@ const products = [
     description:
       "A careful prompt for better research questions and source criteria.",
     creator: amara,
-    pricing: { amount: 12, currency: "USD", model: "one-time" },
+    pricing: { amount: 0, currency: "USD", model: "free" },
     compatibility: {
       platforms: ["Claude", "ChatGPT", "Gemini"],
       models: ["Model agnostic"],
@@ -248,7 +248,7 @@ const products = [
     description:
       "A documented MCP server with permission controls and audit logs.",
     creator: ellis,
-    pricing: { amount: 72, currency: "USD", model: "one-time" },
+    pricing: { amount: 0, currency: "USD", model: "free" },
     compatibility: {
       platforms: ["Claude", "Codex", "VS Code"],
       models: ["Model agnostic"],
@@ -273,7 +273,7 @@ const products = [
     description:
       "A strategy skill for framing bets, assumptions, and decision criteria.",
     creator: jon,
-    pricing: { amount: 24, currency: "USD", model: "one-time" },
+    pricing: { amount: 0, currency: "USD", model: "free" },
     compatibility: {
       platforms: ["Claude", "ChatGPT"],
       models: ["Claude 4", "GPT-5"],
@@ -321,7 +321,7 @@ const products = [
     description:
       "Art-direction frameworks for composition, lighting, and continuity.",
     creator: studio,
-    pricing: { amount: 32, currency: "USD", model: "one-time" },
+    pricing: { amount: 0, currency: "USD", model: "free" },
     compatibility: {
       platforms: ["ChatGPT", "Gemini"],
       models: ["Model agnostic"],

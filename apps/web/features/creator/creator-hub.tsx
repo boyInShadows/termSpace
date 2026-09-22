@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
+import { CreatorDashboard } from "./creator-dashboard";
 
 export function CreatorHub() {
   const { locale, t } = useLocale();
@@ -59,12 +60,14 @@ export function CreatorHub() {
   if (profile === undefined && !error) return <StatusCard title={t.creatorHub.title} message={t.creatorHub.loading} />;
   if (profile && !profile.accessActive) return <StatusCard title={t.creatorHub.editTitle} message={t.creatorHub.accessRevoked} />;
 
-  return <section className="mx-auto max-w-2xl rounded-xl border bg-surface p-7" aria-labelledby="creator-title">
+  const profileForm = <section className="mx-auto max-w-2xl rounded-xl border bg-surface p-7" aria-labelledby="creator-profile-title">
     <p className="eyebrow">{profile ? t.creatorHub.profileEyebrow : t.creatorHub.onboardingEyebrow}</p>
-    <h1 id="creator-title" className="editorial mt-2 text-4xl">{profile ? t.creatorHub.editTitle : t.creatorHub.title}</h1>
+    {profile
+      ? <h2 id="creator-profile-title" className="editorial mt-2 text-4xl">{t.creatorHub.editTitle}</h2>
+      : <h1 id="creator-profile-title" className="editorial mt-2 text-4xl">{t.creatorHub.title}</h1>}
     <p className="mt-3 text-muted-foreground">{profile ? t.creatorHub.editIntro : t.creatorHub.intro}</p>
     <form className="mt-7 space-y-5" onSubmit={submit}>
-      <label className="block text-sm font-medium">{t.creatorHub.name}<Input name="name" required minLength={2} maxLength={80} defaultValue={profile?.name} autoComplete="name" className="mt-2" /></label>
+      <div><label htmlFor="creator-name" className="block text-sm font-medium">{t.creatorHub.name}</label><Input id="creator-name" name="name" required minLength={2} maxLength={80} pattern="(?=.*[A-Za-z])[\x20-\x7E]+" defaultValue={profile?.name} autoComplete="name" lang="en" dir="ltr" aria-describedby="creator-name-help" className="mt-2" /><span id="creator-name-help" className="mt-1 block text-xs text-muted-foreground">{t.creatorHub.nameHelp}</span></div>
       <div>
         <label htmlFor="creator-handle" className="block text-sm font-medium">{t.creatorHub.handle}</label>
         <Input id="creator-handle" name="handle" required={!profile} disabled={Boolean(profile)} minLength={3} maxLength={40} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={profile?.handle} dir="ltr" autoComplete="off" aria-describedby="creator-handle-help" className="mt-2" />
@@ -76,6 +79,12 @@ export function CreatorHub() {
       <Button disabled={submitting}>{submitting ? t.wait : profile ? t.creatorHub.save : t.creatorHub.create}</Button>
     </form>
   </section>;
+
+  if (!profile) return profileForm;
+  return <div className="mx-auto max-w-6xl">
+    <CreatorDashboard />
+    <div className="mt-14 border-t pt-10">{profileForm}</div>
+  </div>;
 }
 
 function StatusCard({ title, message, action }: { title: string; message: string; action?: React.ReactNode }) {

@@ -4,20 +4,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Creator and Submission Lifecycle
 
-- Build a creator dashboard showing owned listings, draft/review/published status,
-  moderation feedback, versions, ratings, acquisition counts, and recent updates.
-- Build draft creation and editing for listing metadata, documentation,
-  screenshots, platform compatibility, community membership, category, item
-  type, requirements, permissions, license, and installation instructions.
-- Build the staff moderation queue with preview, approval, rejection, change
-  requests, internal notes, and an audit trail.
-- Add creator-controlled release/version management without silently replacing
-  artifacts already acquired by users.
-- Implement GitHub and npm source ingestion with authenticated ownership checks,
-  immutable release references, provider integrity metadata, bounded background
-  reconciliation, and safe failure states as defined in ADR 0001.
-- Complete the free-item acquisition/install flow and expose the correct package
-  or external installation instructions only to eligible users.
 - Add API and end-to-end authorization tests covering cross-user listing access,
   creator ownership, moderation, unpublished artifacts, and Blog isolation.
 
@@ -59,8 +45,6 @@ This file tracks known improvement work that has not been completed yet. When an
 - Add dependency, compatibility, deprecation, and abandoned-project indicators.
 - Add curated and community collections without conflating them with Blog
   editorial content.
-- Design paid checkout, creator payouts, refunds, tax handling, fraud controls,
-  and financial reconciliation only after the free lifecycle is proven.
 
 ## Blog — Staff-Managed Editorial
 

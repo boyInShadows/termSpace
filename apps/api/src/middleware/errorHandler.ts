@@ -16,7 +16,8 @@ import multer from "multer";
 export const notFoundHandler: RequestHandler = (req, res) => {
   res.status(404).json({
     error: {
-      message: `Route not found: ${req.method} ${req.originalUrl}`,
+      code: "ROUTE_NOT_FOUND",
+      message: "Route not found",
     },
   });
 };
@@ -37,6 +38,11 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     return;
   }
 
+  if (err instanceof SyntaxError && "body" in err) {
+    res.status(400).json({ error: { code: "INVALID_JSON", message: "Request body must contain valid JSON" } });
+    return;
+  }
+
   // Zod validation errors
   if (err instanceof ZodError) {
     res.status(400).json({
@@ -45,6 +51,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
         message: "Request validation failed",
         details: err.issues.map((issue) => ({
           path: issue.path.join("."),
+          code: issue.code,
           message: issue.message,
         })),
       },
@@ -81,7 +88,12 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   }
 
   // Fallback
-  req.log?.error({ err }, "Unhandled request error");
+  req.log?.error({
+    err,
+    correlationId: res.locals.correlationId,
+    method: req.method,
+    path: req.path,
+  }, "Unhandled request error");
   const isProd = process.env.NODE_ENV === "production";
   res.status(500).json({
     error: {

@@ -24,6 +24,7 @@ export interface MarketplaceListingLifecycleContext {
   hasProposedSnapshot: boolean;
   resumeState: MarketplaceListingStateValue | null;
   resumePublished: boolean | null;
+  archivedBy: MarketplaceLifecycleActor | "SYSTEM" | null;
 }
 
 export interface MarketplaceListingTransitionResult {
@@ -100,6 +101,9 @@ export function resolveMarketplaceListingTransition(
   }
   if (action === "RESTORE") {
     if (context.state !== "ARCHIVED") invalid(context.state, action);
+    if (actor === "CREATOR" && context.archivedBy !== "CREATOR") {
+      throw new MarketplaceLifecycleError("INVALID_LISTING_TRANSITION", "Only marketplace staff can restore a staff-archived listing");
+    }
     if (!context.resumeState || context.resumePublished === null) throw new MarketplaceLifecycleError("RESUME_STATE_REQUIRED", "Archived listing has no recoverable prior state");
     return { ...unchanged, state: context.resumeState, published: context.resumePublished, resumeState: null, resumePublished: null, eventAction: "RESTORED" };
   }
@@ -126,7 +130,7 @@ export function marketplaceProductProjectionFromManifest(manifest: MarketplaceMa
     itemType: MARKETPLACE_DATABASE_ITEM_TYPES[manifest.type],
     classificationRequired: false,
     outcome: manifest.listing.outcome.en,
-    description: manifest.listing.description.en,
+    description: manifest.listing.description.en ?? manifest.listing.description.fa!,
     categoryId,
     tags: manifest.listing.tags,
     platforms: manifest.release.compatibility.map(({ platform }) => platform),

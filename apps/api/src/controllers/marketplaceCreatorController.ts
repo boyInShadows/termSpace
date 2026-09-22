@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
+import { marketplaceItemTypeKey } from "../lib/marketplaceManifest.js";
 
 const creatorProfileSelect = {
   id: true,
@@ -15,6 +16,76 @@ const creatorProfileSelect = {
   updatedAt: true,
   _count: { select: { products: true } },
 } as const;
+
+const creatorDashboardListingSelect = {
+  id: true,
+  slug: true,
+  name: true,
+  itemType: true,
+  type: true,
+  lifecycleState: true,
+  lifecycleVersion: true,
+  published: true,
+  rating: true,
+  reviewCount: true,
+  version: true,
+  updatedAt: true,
+  versions: {
+    orderBy: { releasedAt: "desc" as const },
+    take: 1,
+    select: { version: true, releasedAt: true },
+  },
+  lifecycleEvents: {
+    where: { action: { not: "INTERNAL_NOTE_ADDED" as const } },
+    orderBy: { createdAt: "desc" as const },
+    take: 3,
+    select: { id: true, action: true, resultingState: true, publicReason: true, createdAt: true },
+  },
+  _count: {
+    select: {
+      versions: true,
+      orders: { where: { status: "completed" } },
+    },
+  },
+} satisfies Prisma.MarketplaceProductSelect;
+
+type CreatorDashboardListingRecord = Prisma.MarketplaceProductGetPayload<{ select: typeof creatorDashboardListingSelect }>;
+
+function serializeDashboardListing(
+  product: CreatorDashboardListingRecord,
+  feedback: { action: string; reasonCode: string; publicReason: string | null; createdAt: Date } | undefined,
+) {
+  return {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    type: product.type,
+    typeKey: marketplaceItemTypeKey(product.itemType),
+    state: product.lifecycleState.toLowerCase(),
+    lifecycleVersion: product.lifecycleVersion,
+    published: product.published,
+    rating: Number(product.rating),
+    reviewCount: product.reviewCount,
+    acquisitionCount: product._count.orders,
+    currentVersion: product.version,
+    releaseCount: product._count.versions,
+    latestRelease: product.versions[0] ?? null,
+    moderationFeedback: feedback ? {
+      action: feedback.action.toLowerCase(),
+      reasonCode: feedback.reasonCode,
+      message: feedback.publicReason,
+      createdAt: feedback.createdAt,
+    } : null,
+    recentUpdates: product.lifecycleEvents.map((event) => ({
+      id: event.id,
+      action: event.action.toLowerCase(),
+      state: event.resultingState.toLowerCase(),
+      message: event.publicReason,
+      createdAt: event.createdAt,
+    })),
+    updatedAt: product.updatedAt,
+  };
+}
 
 function serializeCreatorProfile(creator: {
   _count: { products: number };
@@ -108,4 +179,144 @@ export async function updateOwnedCreatorProfile(req: Request, res: Response) {
     select: creatorProfileSelect,
   });
   res.json({ data: serializeCreatorProfile(creator) });
+}
+
+export async function getCreatorDashboard(req: Request, res: Response) {
+  const userId = res.locals.reader.id as string;
+  const { page, limit } = req.query as unknown as { page: number; limit: number };
+  const ownerWhere = { creator: { ownerUserId: userId } } as const;
+  const [listings, total, publishedListings, inReviewListings, totalAcquisitions] = await Promise.all([
+    prisma.marketplaceProduct.findMany({
+      where: ownerWhere,
+      select: creatorDashboardListingSelect,
+      orderBy: [{ updatedAt: "desc" }, { id: "asc" }],
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.marketplaceProduct.count({ where: ownerWhere }),
+    prisma.marketplaceProduct.count({ where: { ...ownerWhere, published: true } }),
+    prisma.marketplaceProduct.count({ where: { ...ownerWhere, lifecycleState: { in: ["SUBMITTED", "APPROVED"] } } }),
+    prisma.marketplaceOrder.count({ where: { status: "completed", product: ownerWhere } }),
+  ]);
+
+  const listingIds = listings.map((listing) => listing.id);
+  const feedbackEvents = listingIds.length ? await prisma.marketplaceListingLifecycleEvent.findMany({
+    where: {
+      productId: { in: listingIds },
+      product: ownerWhere,
+      publicReason: { not: null },
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    distinct: ["productId"],
+    select: { productId: true, action: true, reasonCode: true, publicReason: true, createdAt: true },
+  }) : [];
+  const feedbackByProduct = new Map(feedbackEvents.map((event) => [event.productId, event]));
+
+  res.json({
+    data: {
+      summary: { totalListings: total, publishedListings, inReviewListings, totalAcquisitions },
+      listings: listings.map((listing) => serializeDashboardListing(listing, feedbackByProduct.get(listing.id))),
+    },
+    meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  });
+}
+
+export async function listOwnedMarketplaceReleases(req: Request, res: Response) {
+  const product = await prisma.marketplaceProduct.findUnique({
+    where: { id: String(req.params.id) },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      lifecycleState: true,
+      lifecycleVersion: true,
+      published: true,
+      approvedSnapshotId: true,
+      proposedSnapshotId: true,
+      creator: { select: { ownerUserId: true } },
+      versions: {
+        orderBy: [{ releasedAt: "desc" }, { id: "desc" }],
+        select: {
+          id: true,
+          version: true,
+          notes: true,
+          releasedAt: true,
+          releaseManifests: {
+            orderBy: { revision: "desc" },
+            select: {
+              id: true,
+              revision: true,
+              sourceKind: true,
+              sourceUrl: true,
+              sourceRef: true,
+              sourcePath: true,
+              providerIntegrityDigest: true,
+              artifactSizeBytes: true,
+              resolvedInstallationUrl: true,
+              sourceResolvedAt: true,
+              ownershipVerifiedAt: true,
+              sourceCheckStatus: true,
+              sourceCheckedAt: true,
+              sourceNextCheckAt: true,
+              sourceFailureCount: true,
+              lastSourceErrorCode: true,
+              publishedAt: true,
+              createdAt: true,
+              listingSnapshots: { select: { id: true, revision: true } },
+              _count: { select: { acquisitions: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!product || product.creator.ownerUserId !== res.locals.reader.id) {
+    res.status(404).json({ error: { code: "LISTING_NOT_FOUND", message: "Marketplace listing not found" } });
+    return;
+  }
+
+  res.json({ data: {
+    listing: {
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      state: product.lifecycleState.toLowerCase(),
+      lifecycleVersion: product.lifecycleVersion,
+      published: product.published,
+    },
+    releases: product.versions.flatMap((version) => version.releaseManifests.map((release) => {
+      const snapshot = release.listingSnapshots[0] ?? null;
+      const isApproved = snapshot?.id === product.approvedSnapshotId;
+      const isProposed = snapshot?.id === product.proposedSnapshotId;
+      return {
+        id: release.id,
+        productVersionId: version.id,
+        version: version.version,
+        notes: version.notes,
+        revision: release.revision,
+        status: release.publishedAt ? "published" : isProposed ? "proposed" : "superseded_draft",
+        source: {
+          kind: release.sourceKind.toLowerCase(),
+          url: release.sourceUrl,
+          ref: release.sourceRef,
+          path: release.sourcePath,
+          integrityDigest: release.providerIntegrityDigest,
+          artifactSizeBytes: release.artifactSizeBytes,
+          installationUrl: release.resolvedInstallationUrl,
+        },
+        sourceCheckStatus: release.sourceCheckStatus.toLowerCase(),
+        sourceCheckedAt: release.sourceCheckedAt,
+        sourceNextCheckAt: release.sourceNextCheckAt,
+        sourceFailureCount: release.sourceFailureCount,
+        lastSourceErrorCode: release.lastSourceErrorCode,
+        sourceResolvedAt: release.sourceResolvedAt,
+        ownershipVerifiedAt: release.ownershipVerifiedAt,
+        publishedAt: release.publishedAt,
+        createdAt: release.createdAt,
+        listingRevision: snapshot?.revision ?? null,
+        isCurrent: isApproved,
+        acquisitionCount: release._count.acquisitions,
+      };
+    })),
+  } });
 }

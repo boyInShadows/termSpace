@@ -17,6 +17,8 @@
     "marketplace:role": "tsx src/scripts/manageMarketplaceRole.ts",
     "publish:scheduled": "tsx src/jobs/publishScheduled.ts",
     "email:worker": "tsx src/jobs/sendTransactionalEmails.ts",
+    "marketplace:source-worker": "tsx src/jobs/processMarketplaceSourceChecks.ts",
+    "marketplace:source-worker:watch": "sh -c 'while true; do tsx src/jobs/processMarketplaceSourceChecks.ts; sleep 15; done'",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --coverage.enabled=false"
   },

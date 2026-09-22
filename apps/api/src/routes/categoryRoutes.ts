@@ -6,10 +6,11 @@ import {
   deleteCategory,
 } from "../controllers/categoryController.js";
 import { requireAdmin } from "../middleware/auth.js";
-import { validate } from "../middleware/validate.js";
-import { createCategorySchema, updateCategorySchema } from "../validation/schemas.js";
+import { validate, validateRouteParam } from "../middleware/validate.js";
+import { createCategorySchema, routeIdSchema, updateCategorySchema } from "../validation/schemas.js";
 
 const router = Router();
+router.param("id", validateRouteParam("id", routeIdSchema));
 
 router.get("/", listCategories);
 router.post("/", requireAdmin, validate(createCategorySchema), createCategory);

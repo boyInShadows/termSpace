@@ -27,4 +27,9 @@ describe("ProductCard", () => {
     expect(screen.getByText(products[0].outcome)).toBeInTheDocument();
     expect(screen.queryByText(products[0].description)).not.toBeInTheDocument();
   });
+
+  it("does not render legacy commerce metadata", () => {
+    render(<ProductCard product={{ ...products[0], pricing: { amountMinor: 3800, currency: "USD", model: "one-time" } }} />);
+    expect(screen.queryByText(/\$38|buy|purchase/i)).not.toBeInTheDocument();
+  });
 });

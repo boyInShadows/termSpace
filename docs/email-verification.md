@@ -47,3 +47,22 @@ or provider response bodies.
 - Rotate `CLOUDFLARE_EMAIL_API_TOKEN` independently. Rotating
   `EMAIL_VERIFICATION_SECRET` immediately invalidates every outstanding link, so
   do it only as a deliberate security action and tell users to request a new one.
+
+## Local development bypass
+
+When an email provider is intentionally unavailable during local browser
+testing, set both values explicitly:
+
+```env
+WEB_PUBLIC_URL=http://localhost:3000
+LOCAL_AUTO_VERIFY_EMAIL=true
+```
+
+New password accounts are then stored as verified immediately and no verification
+record or email outbox job is created. An older unverified local account is also
+marked verified on its next successful password login.
+
+The bypass refuses to activate unless `WEB_PUBLIC_URL` uses the exact loopback
+hostname `localhost`, `127.0.0.1`, or `[::1]`. Keep the flag unset or `false` in
+staging and production; it is a testing convenience, not a fallback for a broken
+email provider.

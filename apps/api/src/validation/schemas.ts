@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { englishDisplayName, marketplaceManifestV1Schema } from "../lib/marketplaceManifest.js";
 
 /**
  * Validation schemas for request bodies and query parameters.
@@ -6,6 +7,9 @@ import { z } from "zod";
  */
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const routeIdSchema = z.string().trim().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/, "Invalid resource identifier");
+export const routeSlugSchema = z.string().trim().min(1).max(200).regex(slugPattern, "Invalid slug");
+export const routeTokenSchema = z.string().trim().min(16).max(256).regex(/^[A-Za-z0-9_-]+$/, "Invalid token");
 const allowedImageHosts = new Set(
   (process.env.IMAGE_HOSTS ?? "images.unsplash.com")
     .split(",")
@@ -134,21 +138,56 @@ export const marketplaceProductQuerySchema = z.object({
   type: z.string().trim().max(40).optional(),
   category: z.string().trim().max(80).optional(),
   platform: z.string().trim().max(40).optional(),
-  price: z.enum(["free", "paid"]).optional(),
   verified: z.enum(["true", "false"]).optional().transform((value) => value === "true" ? true : undefined),
   minRating: z.coerce.number().min(0).max(5).optional().default(0),
-  sort: z.enum(["featured", "rating", "newest", "price-low"]).optional().default("featured"),
+  sort: z.enum(["featured", "rating", "newest"]).optional().default("featured"),
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(48).optional().default(12),
 });
 
+export const marketplaceLibraryQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(24),
+});
+
 export const creatorOnboardingSchema = z.object({
-  name: z.string().trim().min(2).max(80),
+  name: englishDisplayName(2, 80),
   handle: z.string().trim().toLowerCase().min(3).max(40).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Handle must use lowercase letters, numbers, and single hyphens"),
   bio: z.string().trim().min(20).max(500),
 });
 
 export const creatorProfileUpdateSchema = creatorOnboardingSchema.pick({ name: true, bio: true });
+
+export const creatorDashboardQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(24),
+});
+
+export const moderationQueueQuerySchema = z.object({
+  state: z.enum(["review", "all", "draft", "submitted", "changes_requested", "approved", "published", "rejected", "suspended", "archived"]).optional().default("review"),
+  q: z.string().trim().max(120).optional().default(""),
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(24),
+});
+
+export const moderationNoteSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+  note: z.string().trim().min(2).max(4000),
+}).strict();
+
+export const creatorDraftCreateSchema = z.object({ manifest: marketplaceManifestV1Schema }).strict();
+export const creatorDraftUpdateSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+  manifest: marketplaceManifestV1Schema,
+}).strict();
+
+export const marketplaceProviderSchema = z.enum(["github", "npm"]);
+export const providerConnectionSchema = z.object({
+  token: z.string().trim().min(8).max(1000),
+}).strict();
+export const sourceCheckRequestSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+}).strict();
 
 const listingLifecycleBaseSchema = z.object({
   expectedVersion: z.number().int().min(0),
@@ -162,6 +201,7 @@ export const creatorListingLifecycleSchema = listingLifecycleBaseSchema.extend({
 
 export const moderatedListingLifecycleSchema = listingLifecycleBaseSchema.extend({
   action: z.enum(["REQUEST_CHANGES", "APPROVE", "PUBLISH", "REJECT", "SUSPEND", "REINSTATE", "ARCHIVE", "RESTORE"]),
+  internalNote: z.string().trim().min(2).max(4000).optional(),
 });
 
 export const markdownResourceMetadataSchema = z.object({

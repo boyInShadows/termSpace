@@ -1,0 +1,1 @@
+ALTER TYPE "MarketplaceListingLifecycleAction" ADD VALUE 'INTERNAL_NOTE_ADDED' AFTER 'DRAFT_SAVED';

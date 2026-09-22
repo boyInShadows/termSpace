@@ -25,7 +25,6 @@ import { ProductCard } from "@/components/marketplace/product-card";
 import {
   CompatibilityBadges,
   CreatorIdentity,
-  PriceDisplay,
   ProductTypeBadge,
   Rating,
   TrustStatus,
@@ -205,7 +204,7 @@ export function Showroom() {
                     Publish this product?
                   </Dialog.Title>
                   <Dialog.Description className="mt-2 text-sm text-muted-foreground">
-                    Your listing will become visible in marketplace search. You
+                    Your listing will become visible in community search. You
                     can unpublish it at any time.
                   </Dialog.Description>
                   <div className="mt-6 flex justify-end gap-2">
@@ -244,7 +243,7 @@ export function Showroom() {
             </div>
           )}
         </Show>
-        <Show title="Badges, identity & commerce">
+        <Show title="Badges, identity & trust">
           <div className="flex flex-wrap items-center gap-3">
             <Badge>Default</Badge>
             <Badge variant="primary">Featured</Badge>
@@ -262,7 +261,6 @@ export function Showroom() {
             </div>
             <CreatorIdentity creator={creators[0]} />
             <Rating rating={4.9} count={184} />
-            <PriceDisplay pricing={products[0].pricing} large />
             <CompatibilityBadges compatibility={products[1].compatibility} />
           </div>
         </Show>
@@ -302,8 +300,8 @@ export function Showroom() {
           </div>
         </Show>
         <Show
-          title="Marketplace cards"
-          note="Featured, free, verified, and unverified content states."
+          title="Community resource cards"
+          note="Compact, expanded, featured, verified, and unverified content states."
         >
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {products.slice(0, 6).map((p) => (

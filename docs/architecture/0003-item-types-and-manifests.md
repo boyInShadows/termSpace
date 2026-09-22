@@ -90,10 +90,10 @@ the moderated listing-edit lifecycle. Every listing requires:
 - support, documentation, and issue-reporting URLs when available;
 - publication and moderation state.
 
-Pricing, featured status, verification, ratings, review counts, usage counts,
-purchase counts, moderation decisions, and ownership claims are server-managed.
-Creators cannot submit aggregate reputation or staff-controlled fields through a
-manifest.
+Free availability, featured status, verification, ratings, review counts, usage
+counts, legacy acquisition counts, moderation decisions, and ownership claims
+are server-managed. Creator manifests cannot introduce prices or paid access,
+aggregate reputation, or other staff-controlled fields.
 
 ## Release metadata
 
