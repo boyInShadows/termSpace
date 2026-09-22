@@ -460,6 +460,27 @@ export const copy = {
       connectionError:
         "Could not reach the community library. Check your connection and try again.",
     },
+    homePage: {
+      degradedTitle: "Showing an example catalogue.",
+      degradedBody:
+        "The community library could not be reached, so these listings are placeholders.",
+      retry: "Retry",
+      retrying: "Retrying…",
+      loadingFeatured: "Loading featured building blocks",
+      loadingCreators: "Loading featured creators",
+      loadingPractice: "Loading practice areas",
+      emptyFeaturedTitle: "Nothing featured yet",
+      emptyFeaturedBody:
+        "Featured listings are chosen after review. The full catalogue is open in the meantime.",
+      emptyFeaturedCta: "Browse everything",
+      emptyCreatorsTitle: "No creator profiles yet",
+      emptyCreatorsBody:
+        "The first published creators will appear here. Yours could be one of them.",
+      emptyCreatorsCta: "Share your work",
+      emptyPracticeTitle: "No practice areas yet",
+      emptyPracticeBody:
+        "Categories appear once listings are published into them.",
+    },
   },
   fa: {
     language: "English",
@@ -879,6 +900,27 @@ export const copy = {
         "درخواست‌های کتابخانهٔ جامعه موقتاً محدود شده است. کمی صبر کنید و دوباره تلاش کنید.",
       connectionError:
         "ارتباط با کتابخانهٔ جامعه برقرار نشد. اتصال خود را بررسی و دوباره تلاش کنید.",
+    },
+    homePage: {
+      degradedTitle: "فهرست نمونه نمایش داده می‌شود.",
+      degradedBody:
+        "دسترسی به کتابخانهٔ جامعه ممکن نشد، بنابراین این فهرست‌ها نمونه هستند.",
+      retry: "تلاش دوباره",
+      retrying: "در حال تلاش…",
+      loadingFeatured: "در حال بارگذاری منابع منتخب",
+      loadingCreators: "در حال بارگذاری سازندگان منتخب",
+      loadingPractice: "در حال بارگذاری حوزه‌های کاری",
+      emptyFeaturedTitle: "هنوز منبع منتخبی نیست",
+      emptyFeaturedBody:
+        "منابع منتخب پس از بازبینی انتخاب می‌شوند. تا آن زمان همهٔ فهرست در دسترس است.",
+      emptyFeaturedCta: "دیدن همه",
+      emptyCreatorsTitle: "هنوز پروفایل سازنده‌ای نیست",
+      emptyCreatorsBody:
+        "نخستین سازندگان منتشرشده اینجا دیده می‌شوند. شما هم می‌توانید یکی از آن‌ها باشید.",
+      emptyCreatorsCta: "کارتان را منتشر کنید",
+      emptyPracticeTitle: "هنوز حوزهٔ کاری ثبت نشده",
+      emptyPracticeBody:
+        "حوزه‌ها پس از انتشار منابع در آن‌ها نمایان می‌شوند.",
     },
   },
 

@@ -1,3 +1,4 @@
+import { Suspense, cache } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -8,6 +9,9 @@ import {
   Store,
   Quote,
   ScrollText,
+  PackageOpen,
+  Users,
+  LayoutGrid,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -21,12 +25,47 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { CreatorIdentity } from "@/components/marketplace/product-parts";
+import { SectionNotice } from "@/components/patterns/section-notice";
+import { SectionEmpty } from "@/components/patterns/section-empty";
+import {
+  CategoryGridSkeleton,
+  CreatorGridSkeleton,
+  ProductGridSkeleton,
+} from "@/components/patterns/skeleton";
 import { getMarketplaceHome } from "@/lib/api";
+import { mockHome } from "@/lib/mock-home";
+import type { MarketplaceHome } from "@/lib/types";
 import { NewsletterForm } from "@/features/newsletter/newsletter-form";
 import { getLocale } from "@/lib/serverLocale";
-import { copy, localePath } from "@/lib/i18n";
+import { copy, localePath, type Locale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * One fetch, shared by every section.
+ *
+ * `cache()` dedupes across the render pass, so each section can `await` the
+ * catalogue independently — and therefore stream in behind its own skeleton —
+ * without turning one request into four.
+ *
+ * The homepage never throws on a failed catalogue. A landing page that 500s
+ * because a list of nine categories is unavailable is a worse outcome than one
+ * that says so and keeps its search box working, so the failure degrades to
+ * the local fixture with a visible notice scoped to the affected section.
+ */
+const loadHome = cache(
+  async (): Promise<{ home: MarketplaceHome; degraded: boolean }> => {
+    if (process.env.NEXT_PUBLIC_USE_MOCK === "1") {
+      return { home: mockHome, degraded: false };
+    }
+    try {
+      return { home: await getMarketplaceHome(), degraded: false };
+    } catch (error) {
+      console.error("Marketplace home load failed", error);
+      return { home: mockHome, degraded: true };
+    }
+  },
+);
 
 const collections = [
   {
@@ -64,21 +103,158 @@ const trustFacts = [
   },
 ];
 
+const SECTION_HEADING =
+  "editorial mt-3 text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]";
+
+/* --- featured ------------------------------------------------------------ */
+
+async function FeaturedLink({ locale }: { locale: Locale }) {
+  const t = copy[locale];
+  const { home } = await loadHome();
+  // "View all 0 listings" is worse than no link at all: it asserts an empty
+  // catalogue, which is never what an unreachable one means.
+  if (home.total <= 0) return null;
+  return (
+    <Link
+      href={localePath("/explore", locale)}
+      className="group inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
+    >
+      {t.viewAll.replace("{count}", String(home.total))}
+      <ArrowRight
+        size={15}
+        className="transition-transform duration-300 group-hover:translate-x-1"
+      />
+    </Link>
+  );
+}
+
+async function FeaturedGrid({ locale }: { locale: Locale }) {
+  const t = copy[locale];
+  const { home, degraded } = await loadHome();
+  const featured = home.products.filter((product) => product.featured);
+
+  return (
+    <>
+      {degraded && <SectionNotice className="mb-6" />}
+      {featured.length === 0 ? (
+        <SectionEmpty
+          icon={PackageOpen}
+          title={t.homePage.emptyFeaturedTitle}
+          body={t.homePage.emptyFeaturedBody}
+          action={{
+            label: t.homePage.emptyFeaturedCta,
+            href: localePath("/explore", locale),
+          }}
+        />
+      ) : (
+        <div className="grid gap-5 md:grid-cols-3">
+          {featured.slice(0, 3).map((product, index) => (
+            <Reveal key={product.id} delay={index * 90}>
+              <TiltCard className="h-full rounded-lg" max={5}>
+                <ProductCard product={product} />
+              </TiltCard>
+            </Reveal>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+/* --- browse by practice -------------------------------------------------- */
+
+async function PracticeGrid({ locale }: { locale: Locale }) {
+  const t = copy[locale];
+  const { home } = await loadHome();
+
+  if (home.categories.length === 0) {
+    return (
+      <SectionEmpty
+        icon={LayoutGrid}
+        title={t.homePage.emptyPracticeTitle}
+        body={t.homePage.emptyPracticeBody}
+      />
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
+      {home.categories.map((category, index) => (
+        <Link
+          href={`${localePath("/explore", locale)}?category=${encodeURIComponent(category.name)}`}
+          key={category.slug}
+          className="group relative min-h-32 bg-background p-5 transition-colors hover:bg-surface"
+        >
+          <span className="font-mono text-xs text-muted-foreground">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <p className="mt-9 text-sm font-semibold transition-colors group-hover:text-primary">
+            {category.name}
+          </p>
+          <span
+            aria-hidden
+            className="rule-plasma absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 transition-transform duration-500 group-hover:scale-x-100"
+          />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+/* --- creators ------------------------------------------------------------ */
+
+async function CreatorGrid({ locale }: { locale: Locale }) {
+  const t = copy[locale];
+  const { home } = await loadHome();
+
+  if (home.creators.length === 0) {
+    return (
+      <SectionEmpty
+        icon={Users}
+        title={t.homePage.emptyCreatorsTitle}
+        body={t.homePage.emptyCreatorsBody}
+        action={{
+          label: t.homePage.emptyCreatorsCta,
+          href: localePath("/creator", locale),
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="grid gap-4 md:grid-cols-3">
+      {home.creators.slice(0, 3).map((creator, index) => (
+        <Reveal key={creator.id} delay={index * 90}>
+          <TiltCard
+            className="h-full rounded-xl border border-border bg-background/70 p-6"
+            max={4}
+          >
+            <CreatorIdentity creator={creator} />
+            <p className="mt-4 text-sm leading-6 text-muted-foreground">
+              {creator.bio}
+            </p>
+            <p className="mt-5 font-mono text-xs text-muted-foreground">
+              {creator.products} products ·{" "}
+              {creator.followers.toLocaleString()} followers
+            </p>
+          </TiltCard>
+        </Reveal>
+      ))}
+    </div>
+  );
+}
+
+/* --- page ---------------------------------------------------------------- */
+
 export default async function Home() {
   const locale = await getLocale();
   const t = copy[locale];
-  const marketplace = await getMarketplaceHome().catch((error) => { console.error("Marketplace home load failed", error); return null; });
-  const products = marketplace?.products ?? [];
-  const creators = marketplace?.creators ?? [];
-  const categories = marketplace?.categories ?? [];
-  const featured = products.filter((product) => product.featured);
 
   return (
     <>
       <Header />
       <main>
         <Hero />
-        {!marketplace && <p role="alert" className="border-b border-warning/40 bg-warning/10 px-5 py-3 text-center text-sm">{t.unavailable}</p>}
 
         {/* --- the console --------------------------------------------------- */}
         <section className="border-b border-border bg-surface/30 py-12">
@@ -90,30 +266,19 @@ export default async function Home() {
           <Reveal className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="eyebrow">{t.featuredEyebrow}</p>
-              <h2 className="editorial mt-3 text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]">
-                {t.featuredTitle}
-              </h2>
+              <h2 className={SECTION_HEADING}>{t.featuredTitle}</h2>
             </div>
-            <Link
-              href={localePath("/explore", locale)}
-              className="group inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
-            >
-              {t.viewAll.replace("{count}", String(marketplace?.total ?? 0))}
-              <ArrowRight
-                size={15}
-                className="transition-transform duration-300 group-hover:translate-x-1"
-              />
-            </Link>
+            <Suspense fallback={null}>
+              <FeaturedLink locale={locale} />
+            </Suspense>
           </Reveal>
 
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {featured.map((product, index) => (
-              <Reveal key={product.id} delay={index * 90}>
-                <TiltCard className="h-full rounded-lg" max={5}>
-                  <ProductCard product={product} />
-                </TiltCard>
-              </Reveal>
-            ))}
+          <div className="mt-10">
+            <Suspense
+              fallback={<ProductGridSkeleton label={t.homePage.loadingFeatured} />}
+            >
+              <FeaturedGrid locale={locale} />
+            </Suspense>
           </div>
         </section>
 
@@ -128,9 +293,7 @@ export default async function Home() {
                 <ShieldCheck size={13} />
                 Verified
               </span>
-              <h2 className="editorial mt-6 text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]">
-                Trust is product information.
-              </h2>
+              <h2 className={SECTION_HEADING}>Trust is product information.</h2>
               <p className="mt-5 max-w-md leading-8 text-muted-foreground">
                 Most catalogues bury what a tool actually does inside a
                 paragraph of marketing. We break compatibility, permissions,
@@ -176,7 +339,10 @@ export default async function Home() {
         </section>
 
         {/* --- collections (inverted, plasma-lit) ---------------------------- */}
-        <section id="collections" className="relative isolate overflow-hidden border-y border-border bg-background-deep py-20 lg:py-28">
+        <section
+          id="collections"
+          className="relative isolate overflow-hidden border-y border-border bg-background-deep py-20 lg:py-28"
+        >
           <div
             aria-hidden
             className="absolute inset-0 -z-10 opacity-70"
@@ -188,7 +354,7 @@ export default async function Home() {
           <div className="container-page">
             <Reveal>
               <p className="eyebrow">{t.collectionsEyebrow}</p>
-              <h2 className="editorial mt-3 max-w-2xl text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]">
+              <h2 className={`${SECTION_HEADING} max-w-2xl`}>
                 Shelves assembled by people who use this stuff daily.
               </h2>
             </Reveal>
@@ -197,7 +363,7 @@ export default async function Home() {
               {collections.map((collection, index) => (
                 <Reveal key={collection.title} delay={index * 100}>
                   <Link
-                    href="/explore"
+                    href={localePath("/explore", locale)}
                     className="group flex h-full flex-col rounded-xl border border-border bg-surface/50 p-7 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-plasma"
                   >
                     <div className="flex items-start justify-between">
@@ -230,36 +396,20 @@ export default async function Home() {
           <div className="grid gap-12 lg:grid-cols-[.72fr_1.28fr]">
             <Reveal>
               <p className="eyebrow">{t.practiceEyebrow}</p>
-              <h2 className="editorial mt-3 text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]">
-                Made for work that matters.
-              </h2>
+              <h2 className={SECTION_HEADING}>Made for work that matters.</h2>
               <p className="mt-5 max-w-sm leading-7 text-muted-foreground">
                 Start with the outcome, not the file format.
               </p>
             </Reveal>
 
-            <Reveal
-              delay={120}
-              className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3"
-            >
-              {categories.map((category, index) => (
-                <Link
-                  href={`${localePath("/explore", locale)}?category=${encodeURIComponent(category.name)}`}
-                  key={category.slug}
-                  className="group relative min-h-32 bg-background p-5 transition-colors hover:bg-surface"
-                >
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <p className="mt-9 text-sm font-semibold transition-colors group-hover:text-primary">
-                    {category.name}
-                  </p>
-                  <span
-                    aria-hidden
-                    className="rule-plasma absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 transition-transform duration-500 group-hover:scale-x-100"
-                  />
-                </Link>
-              ))}
+            <Reveal delay={120}>
+              <Suspense
+                fallback={
+                  <CategoryGridSkeleton label={t.homePage.loadingPractice} />
+                }
+              >
+                <PracticeGrid locale={locale} />
+              </Suspense>
             </Reveal>
           </div>
         </section>
@@ -272,29 +422,15 @@ export default async function Home() {
           <div className="container-page">
             <Reveal>
               <p className="eyebrow">{t.creatorsEyebrow}</p>
-              <h2 className="editorial mt-3 text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]">
-                {t.featuredCreators}
-              </h2>
+              <h2 className={SECTION_HEADING}>{t.featuredCreators}</h2>
             </Reveal>
 
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
-              {creators.slice(0, 3).map((creator, index) => (
-                <Reveal key={creator.id} delay={index * 90}>
-                  <TiltCard
-                    className="h-full rounded-xl border border-border bg-background/70 p-6"
-                    max={4}
-                  >
-                    <CreatorIdentity creator={creator} />
-                    <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                      {creator.bio}
-                    </p>
-                    <p className="mt-5 font-mono text-xs text-muted-foreground">
-                      {creator.products} products ·{" "}
-                      {creator.followers.toLocaleString()} followers
-                    </p>
-                  </TiltCard>
-                </Reveal>
-              ))}
+            <div className="mt-10">
+              <Suspense
+                fallback={<CreatorGridSkeleton label={t.homePage.loadingCreators} />}
+              >
+                <CreatorGrid locale={locale} />
+              </Suspense>
             </div>
 
             <Reveal delay={180} className="mt-12">
@@ -334,7 +470,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* --- closing CTA ---------------------------------------------------- */}
+        {/* --- closing CTA --------------------------------------------------- */}
         <section className="container-page py-20 lg:py-28">
           <Reveal>
             <div className="relative isolate overflow-hidden rounded-2xl border border-border px-6 py-14 sm:px-12">

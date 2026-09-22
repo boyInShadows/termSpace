@@ -27,7 +27,11 @@ export function MarketplaceSessionProvider({ children }: { children: React.React
       setMarketplaceRoles(session.data.user.marketplaceRoles);
       setFavorites(new Set(await getFavorites()));
     } catch (cause) {
-      if (!(cause instanceof ApiError && cause.status === 401)) {
+      // A 401 means "not signed in"; an unreachable or timed-out API means
+      // "we cannot tell who you are". Both leave the visitor anonymous, and
+      // neither is something they can act on, so neither is reported. Only a
+      // service that answered and failed is worth surfacing.
+      if (!(cause instanceof ApiError && (cause.status === 401 || cause.status === 0 || cause.code === "CLIENT_TIMEOUT"))) {
         console.error("Marketplace session load failed", cause);
         setError("Account services are temporarily unavailable.");
       }
