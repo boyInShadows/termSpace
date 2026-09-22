@@ -95,7 +95,7 @@ export function Process() {
 
   return (
     <section className="border-y border-border bg-surface/40">
-      <div className="container-page py-20 lg:py-28">
+      <div className="container-page section-y">
         <div className="max-w-2xl">
           <p className="eyebrow">How it works</p>
           <h2 className="editorial mt-3 text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]">
@@ -103,7 +103,7 @@ export function Process() {
           </h2>
         </div>
 
-        <div className="mt-14 grid gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
+        <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
           {/* --- scrolling steps ------------------------------------------ */}
           <ol className="relative">
             {/* The rail the active marker travels down. */}
@@ -120,12 +120,12 @@ export function Process() {
                     ref={(node) => {
                       stepRefs.current[index] = node;
                     }}
-                    className="relative py-10 pl-12 lg:py-16"
+                    className="relative py-8 pl-12 lg:py-12"
                   >
                     <span
                       aria-hidden
                       className={cn(
-                        "absolute left-0 top-10 grid size-8 place-items-center rounded-full border transition-all duration-500 lg:top-16",
+                        "absolute left-0 top-8 grid size-8 place-items-center rounded-full border transition-all duration-500 lg:top-12",
                         isActive
                           ? "border-primary bg-primary text-primary-foreground shadow-plasma"
                           : "border-border bg-background text-muted-foreground",

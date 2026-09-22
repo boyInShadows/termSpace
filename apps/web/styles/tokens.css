@@ -32,6 +32,11 @@
 
   /* geometry ----------------------------------------------------------- */
   --radius-card: 0.9rem;
+
+  /* One vertical rhythm for every page section. Sections used to carry their
+     own py-20/lg:py-28 pair, which at wide widths left ~250px of nothing
+     between a heading and the content it introduced. */
+  --section-y: clamp(4rem, 3rem + 4vw, 7rem);
 }
 
 /* ---------------------------------------------------------------------------

@@ -109,6 +109,10 @@ select {
   margin-inline: auto;
 }
 
+.section-y {
+  padding-block: var(--section-y);
+}
+
 .eyebrow {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.7rem;

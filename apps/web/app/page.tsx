@@ -2,7 +2,6 @@ import { Suspense, cache } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
-  ArrowUpRight,
   ShieldCheck,
   FileCheck2,
   RefreshCw,
@@ -11,12 +10,12 @@ import {
   ScrollText,
   PackageOpen,
   Users,
-  LayoutGrid,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Hero } from "@/components/hero/hero";
 import { Process } from "@/components/sections/process";
+import { Browse, type BrowseCollection } from "@/components/sections/browse";
 import { Reveal } from "@/components/motion/reveal";
 import { TiltCard } from "@/components/motion/tilt-card";
 import { Magnetic } from "@/components/motion/magnetic";
@@ -66,21 +65,29 @@ const loadHome = cache(
   },
 );
 
-const collections = [
+/**
+ * Editorial shelves, each backed by exactly one real category.
+ *
+ * The counts used to be hardcoded (84 / 212 / 67) beside a Featured section
+ * that could simultaneously report zero listings. Reading them from the same
+ * response as everything else makes that disagreement impossible, and a
+ * missing category yields no count rather than a confident zero.
+ */
+const COLLECTION_SHELVES = [
   {
     title: "Tools for careful research",
     copy: "Evidence-first workflows that keep sources, caveats, and reasoning visible.",
-    count: 84,
+    category: "Research",
   },
   {
     title: "Ship better software",
     copy: "Review, accessibility, and database tools made by practicing engineers.",
-    count: 212,
+    category: "Engineering",
   },
   {
     title: "Find the words that work",
     copy: "Brand and conversion systems grounded in customer language, not hype.",
-    count: 67,
+    category: "Marketing",
   },
 ];
 
@@ -100,6 +107,22 @@ const trustFacts = [
     title: "Licence on the label",
     copy: "Use, redistribution and attribution are clear before you install anything.",
   },
+];
+
+/**
+ * A distinct tint per trust card, so the three scan as three different
+ * guarantees rather than one repeated in three boxes.
+ *
+ * Purple, cyan, green — not the purple/green/amber a straight reading would
+ * suggest. `--warning` is the caution colour and using it to decorate a
+ * reassurance inverts its meaning. `--verified` is under a semantic lock in
+ * styles/tokens.css ("if it is green, it is a trust claim"), and all three of
+ * these are trust claims, so it is within its own rule here.
+ */
+const TRUST_TINTS = [
+  "bg-primary-soft text-primary",
+  "bg-accent-soft text-accent",
+  "bg-verified/15 text-verified",
 ];
 
 const SECTION_HEADING =
@@ -160,43 +183,24 @@ async function FeaturedGrid({ locale }: { locale: Locale }) {
   );
 }
 
-/* --- browse by practice -------------------------------------------------- */
+/* --- browse (collections + practice) ------------------------------------- */
 
-async function PracticeGrid({ locale }: { locale: Locale }) {
-  const t = copy[locale];
+async function BrowsePanels({ locale }: { locale: Locale }) {
   const { home } = await loadHome();
 
-  if (home.categories.length === 0) {
-    return (
-      <SectionEmpty
-        icon={LayoutGrid}
-        title={t.homePage.emptyPracticeTitle}
-        body={t.homePage.emptyPracticeBody}
-      />
-    );
-  }
+  const collections: BrowseCollection[] = COLLECTION_SHELVES.map((shelf) => ({
+    ...shelf,
+    count:
+      home.categories.find((category) => category.name === shelf.category)
+        ?.products ?? null,
+  }));
 
   return (
-    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
-      {home.categories.map((category, index) => (
-        <Link
-          href={`${localePath("/explore", locale)}?category=${encodeURIComponent(category.name)}`}
-          key={category.slug}
-          className="group relative min-h-32 bg-background p-5 transition-colors hover:bg-surface"
-        >
-          <span className="font-mono text-xs text-muted-foreground">
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          <p className="mt-9 text-sm font-semibold transition-colors group-hover:text-primary">
-            {category.name}
-          </p>
-          <span
-            aria-hidden
-            className="rule-plasma absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 transition-transform duration-500 group-hover:scale-x-100"
-          />
-        </Link>
-      ))}
-    </div>
+    <Browse
+      collections={collections}
+      categories={home.categories}
+      exploreHref={localePath("/explore", locale)}
+    />
   );
 }
 
@@ -221,7 +225,7 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {home.creators.slice(0, 3).map((creator, index) => (
         <Reveal key={creator.id} delay={index * 90}>
           <TiltCard
@@ -239,6 +243,40 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
           </TiltCard>
         </Reveal>
       ))}
+
+      {/* The creator pitch as the row's last tile rather than its own section.
+          It is the same invitation the three profiles beside it already make,
+          so it belongs in the same breath. */}
+      <Reveal delay={270}>
+        <div className="flex h-full flex-col rounded-xl border border-primary/40 bg-primary-soft/40 p-6 backdrop-blur">
+          <Store size={22} className="text-primary" />
+          <h3 className="editorial mt-4 text-xl leading-tight">
+            {t.homePage.creatorCtaTitle}
+          </h3>
+          <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">
+            {t.homePage.creatorCtaBody}
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Magnetic>
+              <Link
+                href={localePath("/dashboard", locale)}
+                className={cn(
+                  buttonVariants({ variant: "primary", size: "sm" }),
+                  "shadow-plasma",
+                )}
+              >
+                {t.homePage.creatorCtaPrimary}
+              </Link>
+            </Magnetic>
+            <Link
+              href={localePath("/design-system", locale)}
+              className={buttonVariants({ variant: "secondary", size: "sm" })}
+            >
+              {t.homePage.creatorCtaSecondary}
+            </Link>
+          </div>
+        </div>
+      </Reveal>
     </div>
   );
 }
@@ -256,7 +294,7 @@ export default async function Home() {
         <Hero />
 
         {/* --- featured ------------------------------------------------------ */}
-        <section className="container-page py-20 lg:py-28">
+        <section className="container-page section-y">
           <Reveal className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="eyebrow">{t.featuredEyebrow}</p>
@@ -279,145 +317,115 @@ export default async function Home() {
         {/* --- how it works (pinned narrative) ------------------------------- */}
         <Process />
 
-        {/* --- trust --------------------------------------------------------- */}
-        <section className="container-page py-20 lg:py-28">
-          <div className="grid gap-14 lg:grid-cols-[.9fr_1.1fr] lg:gap-20">
-            <Reveal>
-              <span className="inline-flex items-center gap-2 rounded-full border border-verified/30 bg-verified/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-verified">
-                <ShieldCheck size={13} />
-                Verified
-              </span>
-              <h2 className={SECTION_HEADING}>Trust is product information.</h2>
-              <p className="mt-5 max-w-md leading-8 text-muted-foreground">
-                Most catalogues bury what a tool actually does inside a
-                paragraph of marketing. We break compatibility, permissions,
-                requirements, licence and safety status into separate fields so
-                you can judge a product before it touches your workflow.
-              </p>
-              <blockquote className="editorial mt-8 border-l-2 border-primary/50 pl-5 text-xl leading-8">
-                <Quote size={20} className="mb-3 text-primary" />
-                A good AI product should tell you what it does, what it touches,
-                and why you can trust it.
-                <footer className="mt-4 font-sans text-sm not-italic text-muted-foreground">
-                  The termspace quality standard
-                </footer>
-              </blockquote>
-            </Reveal>
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-              {trustFacts.map((fact, index) => {
-                const Icon = fact.icon;
-                return (
-                  <Reveal key={fact.title} delay={index * 90}>
-                    <TiltCard
-                      className="h-full rounded-xl border border-border bg-surface/70 p-6 backdrop-blur"
-                      max={4}
-                    >
-                      <div className="flex items-start gap-4">
-                        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary">
-                          <Icon size={18} />
-                        </span>
-                        <div>
-                          <h3 className="font-semibold">{fact.title}</h3>
-                          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                            {fact.copy}
-                          </p>
-                        </div>
-                      </div>
-                    </TiltCard>
-                  </Reveal>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* --- collections (inverted, plasma-lit) ---------------------------- */}
-        <section
-          id="collections"
-          className="relative isolate overflow-hidden border-y border-border bg-background-deep py-20 lg:py-28"
-        >
-          {/* The nebula belongs to the hero. This is a far quieter echo of it,
-              scaled by --nebula-opacity so the light theme does not end up
-              with a pastel wash fighting the white cards on top of it. */}
+        {/* --- trust, inverted ----------------------------------------------
+            The one full-bleed dark section on the page. Every other section is
+            a light-on-background grid, and the argument this one makes is the
+            product's central claim, so it gets a different ground to stand on
+            rather than being the fifth identical band in a row. */}
+        <section className="relative isolate overflow-hidden border-y border-border bg-background-deep">
           <div
             aria-hidden
             className="absolute inset-0 -z-10"
             style={{
               opacity: "var(--nebula-opacity)",
               backgroundImage:
-                "radial-gradient(60% 70% at 12% 0%, color-mix(in oklab, var(--primary) 26%, transparent), transparent 70%), radial-gradient(55% 65% at 88% 100%, color-mix(in oklab, var(--spark) 20%, transparent), transparent 72%)",
+                "radial-gradient(60% 70% at 12% 0%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 70%), radial-gradient(55% 65% at 88% 100%, color-mix(in oklab, var(--spark) 16%, transparent), transparent 72%)",
             }}
           />
-          <div className="container-page">
-            <Reveal>
-              <p className="eyebrow">{t.collectionsEyebrow}</p>
-              <h2 className={`${SECTION_HEADING} max-w-2xl`}>
-                Shelves assembled by people who use this stuff daily.
-              </h2>
-            </Reveal>
+          <div className="container-page section-y">
+            <div className="grid gap-12 lg:grid-cols-[.9fr_1.1fr] lg:gap-16">
+              <Reveal>
+                <span className="inline-flex items-center gap-2 rounded-full border border-verified/30 bg-verified/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-verified">
+                  <ShieldCheck size={13} />
+                  Verified
+                </span>
+                <h2 className={SECTION_HEADING}>
+                  Trust is product information.
+                </h2>
+                <p className="mt-5 max-w-md leading-8 text-muted-foreground">
+                  Most catalogues bury what a tool actually does inside a
+                  paragraph of marketing. We break compatibility, permissions,
+                  requirements, licence and safety status into separate fields
+                  so you can judge a product before it touches your workflow.
+                </p>
+                <blockquote className="editorial mt-8 border-l-2 border-primary/50 pl-5 text-xl leading-8">
+                  <Quote size={20} className="mb-3 text-primary" />
+                  A good AI product should tell you what it does, what it
+                  touches, and why you can trust it.
+                  <footer className="mt-4 font-sans text-sm not-italic text-muted-foreground">
+                    <Link
+                      href={localePath("/design-system", locale)}
+                      className="transition-colors hover:text-primary"
+                    >
+                      The termspace quality standard
+                    </Link>
+                  </footer>
+                </blockquote>
+              </Reveal>
 
-            <div className="mt-12 grid gap-4 md:grid-cols-3">
-              {collections.map((collection, index) => (
-                <Reveal key={collection.title} delay={index * 100}>
-                  <Link
-                    href={localePath("/explore", locale)}
-                    className="group flex h-full flex-col rounded-xl border border-border bg-surface/50 p-7 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-plasma"
-                  >
-                    <div className="flex items-start justify-between">
-                      <span className="font-mono text-xs text-muted-foreground">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <ArrowUpRight
-                        size={18}
-                        className="text-muted-foreground transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary"
-                      />
-                    </div>
-                    <h3 className="editorial mt-14 text-2xl leading-tight">
-                      {collection.title}
-                    </h3>
-                    <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">
-                      {collection.copy}
-                    </p>
-                    <p className="mt-6 font-mono text-xs text-accent">
-                      {collection.count} listings
-                    </p>
-                  </Link>
-                </Reveal>
-              ))}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                {trustFacts.map((fact, index) => {
+                  const Icon = fact.icon;
+                  return (
+                    <Reveal key={fact.title} delay={index * 90}>
+                      <TiltCard
+                        className="h-full rounded-xl border border-border bg-surface/70 p-6 backdrop-blur"
+                        max={4}
+                      >
+                        <div className="flex items-start gap-4">
+                          <span
+                            className={cn(
+                              "grid size-10 shrink-0 place-items-center rounded-lg",
+                              TRUST_TINTS[index],
+                            )}
+                          >
+                            <Icon size={18} />
+                          </span>
+                          <div>
+                            <h3 className="font-semibold">{fact.title}</h3>
+                            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                              {fact.copy}
+                            </p>
+                          </div>
+                        </div>
+                      </TiltCard>
+                    </Reveal>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* --- browse by practice -------------------------------------------- */}
-        <section className="container-page py-20 lg:py-28">
-          <div className="grid gap-12 lg:grid-cols-[.72fr_1.28fr]">
-            <Reveal>
-              <p className="eyebrow">{t.practiceEyebrow}</p>
-              <h2 className={SECTION_HEADING}>Made for work that matters.</h2>
-              <p className="mt-5 max-w-sm leading-7 text-muted-foreground">
-                Start with the outcome, not the file format.
-              </p>
-            </Reveal>
+        {/* --- browse: collections + by practice, one section ----------------- */}
+        <section id="collections" className="container-page section-y">
+          <Reveal>
+            <p className="eyebrow">{t.homePage.browseEyebrow}</p>
+            <h2 className={`${SECTION_HEADING} max-w-2xl`}>
+              {t.homePage.browseTitle}
+            </h2>
+            <p className="mt-4 max-w-xl leading-7 text-muted-foreground">
+              {t.homePage.browseIntro}
+            </p>
+          </Reveal>
 
-            <Reveal delay={120}>
-              <Suspense
-                fallback={
-                  <CategoryGridSkeleton label={t.homePage.loadingPractice} />
-                }
-              >
-                <PracticeGrid locale={locale} />
-              </Suspense>
-            </Reveal>
-          </div>
+          <Suspense
+            fallback={
+              <div className="mt-10">
+                <CategoryGridSkeleton label={t.homePage.loadingPractice} />
+              </div>
+            }
+          >
+            <BrowsePanels locale={locale} />
+          </Suspense>
         </section>
 
-        {/* --- creators ------------------------------------------------------ */}
+        {/* --- creators + the creator invitation ------------------------------ */}
         <section
           id="creators"
-          className="border-y border-border bg-surface/40 py-20 lg:py-28"
+          className="border-y border-border bg-surface/40"
         >
-          <div className="container-page">
+          <div className="container-page section-y">
             <Reveal>
               <p className="eyebrow">{t.creatorsEyebrow}</p>
               <h2 className={SECTION_HEADING}>{t.featuredCreators}</h2>
@@ -425,53 +433,20 @@ export default async function Home() {
 
             <div className="mt-10">
               <Suspense
-                fallback={<CreatorGridSkeleton label={t.homePage.loadingCreators} />}
+                fallback={
+                  <CreatorGridSkeleton label={t.homePage.loadingCreators} />
+                }
               >
                 <CreatorGrid locale={locale} />
               </Suspense>
             </div>
-
-            <Reveal delay={180} className="mt-12">
-              <div className="grid items-center gap-8 rounded-2xl border border-border bg-background/70 p-8 backdrop-blur md:grid-cols-[1.2fr_.8fr] lg:p-10">
-                <div>
-                  <Store size={26} className="text-primary" />
-                  <h3 className="editorial mt-5 text-2xl sm:text-3xl">
-                    A serious shelf for your best work.
-                  </h3>
-                  <p className="mt-3 max-w-lg leading-7 text-muted-foreground">
-                    Publish with rich previews, version history, compatibility
-                    metadata and a storefront that respects the craft — not a
-                    zip file and a hope.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-3 md:justify-end">
-                  <Magnetic>
-                    <Link
-                      href={localePath("/dashboard", locale)}
-                      className={cn(
-                        buttonVariants({ variant: "primary", size: "lg" }),
-                        "shadow-plasma",
-                      )}
-                    >
-                      Start publishing
-                    </Link>
-                  </Magnetic>
-                  <Link
-                    href={localePath("/design-system", locale)}
-                    className={buttonVariants({ variant: "outline", size: "lg" })}
-                  >
-                    Read the creator guide
-                  </Link>
-                </div>
-              </div>
-            </Reveal>
           </div>
         </section>
 
         {/* --- closing CTA --------------------------------------------------- */}
-        <section className="container-page py-20 lg:py-28">
+        <section className="container-page section-y">
           <Reveal>
-            <div className="relative isolate overflow-hidden rounded-2xl border border-border px-6 py-14 sm:px-12">
+            <div className="relative isolate overflow-hidden rounded-2xl border border-border px-6 py-12 sm:px-12">
               <div
                 aria-hidden
                 className="absolute inset-0 -z-10"

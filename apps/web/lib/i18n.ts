@@ -461,6 +461,18 @@ export const copy = {
         "Could not reach the community library. Check your connection and try again.",
     },
     homePage: {
+      browseEyebrow: "Where to start",
+      browseTitle: "Browse the library.",
+      browseIntro:
+        "Shelves assembled by people who use this stuff daily, or the whole catalogue by practice.",
+      tabCollections: "Collections",
+      tabPractice: "By practice",
+      listingCount: "{count} listings",
+      creatorCtaTitle: "A serious shelf for your best work.",
+      creatorCtaBody:
+        "Publish with rich previews, version history and compatibility metadata.",
+      creatorCtaPrimary: "Start publishing",
+      creatorCtaSecondary: "Creator guide",
       worksWithModels: "Models",
       worksWithEditors: "Editors & CLIs",
       worksWithProtocols: "Protocols",
@@ -905,6 +917,18 @@ export const copy = {
         "ارتباط با کتابخانهٔ جامعه برقرار نشد. اتصال خود را بررسی و دوباره تلاش کنید.",
     },
     homePage: {
+      browseEyebrow: "از کجا شروع کنیم",
+      browseTitle: "کتابخانه را مرور کنید.",
+      browseIntro:
+        "قفسه‌هایی که اهل کار چیده‌اند، یا همهٔ فهرست بر پایهٔ حوزهٔ کاری.",
+      tabCollections: "مجموعه‌ها",
+      tabPractice: "بر پایهٔ حوزه",
+      listingCount: "{count} منبع",
+      creatorCtaTitle: "قفسه‌ای درخور بهترین کارتان.",
+      creatorCtaBody:
+        "با پیش‌نمایش کامل، تاریخچهٔ نسخه‌ها و اطلاعات سازگاری منتشر کنید.",
+      creatorCtaPrimary: "شروع انتشار",
+      creatorCtaSecondary: "راهنمای سازندگان",
       worksWithModels: "مدل‌ها",
       worksWithEditors: "ویرایشگرها و خط فرمان",
       worksWithProtocols: "پروتکل‌ها",
