@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
+import { ShieldCheck, Sparkles } from "lucide-react";
 import { PlasmaField } from "./plasma-field";
 import { HeroScene } from "./hero-scene";
 import { DecodeText } from "@/components/motion/decode-text";
 import { Magnetic } from "@/components/motion/magnetic";
 import { Marquee } from "@/components/motion/marquee";
+import { ConsoleSearch } from "@/components/sections/console-search";
 import { buttonVariants } from "@/components/ui/button";
 import { useScrollProgress } from "@/lib/hooks/use-scroll-progress";
 import { useLocale } from "@/lib/locale-context";
@@ -68,7 +69,9 @@ export function Hero() {
         className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-b from-transparent to-background"
       />
 
-      <div className="container-page relative grid items-center gap-14 py-20 lg:grid-cols-[1.05fr_.95fr] lg:gap-8 lg:py-28">
+      {/* ~80vh once the header, announcement strip and ticker are counted,
+          so the featured row is visible without a deliberate scroll. */}
+      <div className="container-page relative grid items-center gap-14 py-16 lg:min-h-[66vh] lg:grid-cols-[1.05fr_.95fr] lg:gap-8 lg:py-20">
         {/* --- copy -------------------------------------------------------- */}
         <div>
           <p className="eyebrow flex items-center gap-2">
@@ -91,38 +94,33 @@ export function Hero() {
             />
           </h1>
 
-          <p className="mt-7 max-w-xl text-lg leading-8 text-muted-foreground">
+          <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">
             {t.heroIntro}
           </p>
 
-          <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Magnetic>
-              <Link
-                href="/explore"
-                className={`${buttonVariants({ size: "lg" })} group shadow-plasma`}
-              >
-                {t.exploreMarketplace}
-                <ArrowRight
-                  size={17}
-                  className="transition-transform duration-300 group-hover:translate-x-1"
-                />
-              </Link>
-            </Magnetic>
+          {/* The primary action. This is a library: the thing almost everyone
+              arrived to do is search it, so the field sits here rather than
+              below the fold under a marquee. "Explore community resources" was
+              a button that led to the same search one screen further down. */}
+          <div className="mt-8">
+            <ConsoleSearch variant="hero" />
+          </div>
+
+          <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
             <Magnetic strength={9}>
               <Link
                 href="/dashboard"
-                className={buttonVariants({ variant: "secondary", size: "lg" })}
+                className={buttonVariants({ variant: "secondary" })}
               >
                 <Sparkles size={16} />
                 {t.shareWork}
               </Link>
             </Magnetic>
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ShieldCheck size={15} className="text-verified" />
+              {t.declared}
+            </p>
           </div>
-
-          <p className="mt-5 flex items-center gap-2 text-sm text-muted-foreground">
-            <ShieldCheck size={15} className="text-verified" />
-            {t.declared}
-          </p>
         </div>
 
         {/* --- 3D scene ----------------------------------------------------- */}

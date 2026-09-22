@@ -16,7 +16,6 @@ import {
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Hero } from "@/components/hero/hero";
-import { ConsoleSearch } from "@/components/sections/console-search";
 import { Process } from "@/components/sections/process";
 import { Reveal } from "@/components/motion/reveal";
 import { TiltCard } from "@/components/motion/tilt-card";
@@ -255,11 +254,6 @@ export default async function Home() {
       <Header />
       <main>
         <Hero />
-
-        {/* --- the console --------------------------------------------------- */}
-        <section className="border-b border-border bg-surface/30 py-12">
-          <ConsoleSearch />
-        </section>
 
         {/* --- featured ------------------------------------------------------ */}
         <section className="container-page py-20 lg:py-28">

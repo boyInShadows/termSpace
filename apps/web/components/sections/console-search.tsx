@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Search, CornerDownLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 
 const SUGGESTIONS = [
@@ -27,8 +28,17 @@ const SHORTCUTS = [
  * which is the whole premise of the catalogue, without a line of instruction
  * copy. It stops the moment you focus the field, so it never types over
  * someone who is trying to think.
+ *
+ * Two placements. `hero` sits in the hero's copy column as the page's primary
+ * action — this is a library, so search is the thing most people came to do,
+ * and it does not belong below the fold. `band` is the wider standalone strip
+ * used anywhere else on the site.
  */
-export function ConsoleSearch() {
+export function ConsoleSearch({
+  variant = "band",
+}: {
+  variant?: "hero" | "band";
+}) {
   const [typed, setTyped] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const prefersReducedMotion = useReducedMotion();
@@ -72,9 +82,17 @@ export function ConsoleSearch() {
       ? "What do you want AI to do better?"
       : typed;
 
+  const isHero = variant === "hero";
+
   return (
-    <div className="container-page">
-      <form action="/explore" className="group relative mx-auto max-w-3xl">
+    <div className={isHero ? undefined : "container-page"}>
+      <form
+        action="/explore"
+        className={cn(
+          "group relative",
+          isHero ? "max-w-xl" : "mx-auto max-w-3xl",
+        )}
+      >
         {/* Plasma bloom behind the field — the only place on the page where
             the brand gradient touches a form control. */}
         <div
@@ -97,7 +115,10 @@ export function ConsoleSearch() {
             placeholder={placeholder}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            className="h-16 min-w-0 flex-1 bg-transparent px-4 text-base placeholder:text-muted-foreground/80 focus:outline-none"
+            className={cn(
+              "min-w-0 flex-1 bg-transparent px-4 text-base placeholder:text-muted-foreground/80 focus:outline-none",
+              isHero ? "h-14" : "h-16",
+            )}
           />
           <button
             type="submit"
@@ -109,7 +130,12 @@ export function ConsoleSearch() {
         </div>
       </form>
 
-      <div className="mt-5 flex flex-wrap justify-center gap-2">
+      <div
+        className={cn(
+          "mt-5 flex flex-wrap gap-2",
+          isHero ? "justify-start" : "justify-center",
+        )}
+      >
         {SHORTCUTS.map(([label, value]) => (
           <Link
             key={value}
