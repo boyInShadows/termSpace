@@ -461,6 +461,11 @@ export const copy = {
         "Could not reach the community library. Check your connection and try again.",
     },
     homePage: {
+      searchLabel: "Search community resources by outcome",
+      searchPrompt: "What do you want AI to do better?",
+      searchCta: "Search",
+      recentSearches: "Recent searches",
+      popularSearches: "Popular searches",
       browseEyebrow: "Where to start",
       browseTitle: "Browse the library.",
       browseIntro:
@@ -917,6 +922,11 @@ export const copy = {
         "ارتباط با کتابخانهٔ جامعه برقرار نشد. اتصال خود را بررسی و دوباره تلاش کنید.",
     },
     homePage: {
+      searchLabel: "جستجوی منابع بر پایهٔ نتیجه",
+      searchPrompt: "دوست دارید هوش مصنوعی چه کاری را بهتر انجام دهد؟",
+      searchCta: "جستجو",
+      recentSearches: "جستجوهای اخیر",
+      popularSearches: "جستجوهای پرطرفدار",
       browseEyebrow: "از کجا شروع کنیم",
       browseTitle: "کتابخانه را مرور کنید.",
       browseIntro:

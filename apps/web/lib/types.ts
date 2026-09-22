@@ -133,7 +133,8 @@ export interface MarketplaceLibraryEntry {
   installationAvailable: boolean;
 }
 export interface MarketplaceCategory { name: string; slug: string; products: number; }
-export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; total: number; }
+export interface MarketplaceTypeCount { type: string; products: number; }
+export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; types: MarketplaceTypeCount[]; total: number; }
 export interface ProductPageResult { data: Product[]; meta: { page: number; limit: number; total: number; totalPages: number }; }
 export interface ProductFilters { q?: string; type?: string; category?: string; platform?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }
 export interface CreatorProfile { id: string; name: string; handle: string; initials: string; verified: boolean; bio: string; followers: number; }

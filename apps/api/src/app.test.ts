@@ -11,7 +11,7 @@ const prismaMock = vi.hoisted(() => ({
   readerSession: { findFirst: vi.fn(), deleteMany: vi.fn(), create: vi.fn() },
   readerEmailVerification: { findUnique: vi.fn(), findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   transactionalEmailOutbox: { updateMany: vi.fn() },
-  marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
+  marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), groupBy: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceProductVersion: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceReleaseManifest: { create: vi.fn(), update: vi.fn() },
   marketplaceProviderConnection: { findMany: vi.fn(), findUnique: vi.fn(), upsert: vi.fn(), updateMany: vi.fn() },
@@ -101,9 +101,10 @@ describe("API", () => {
     prismaMock.marketplaceProduct.count.mockResolvedValue(12);
     prismaMock.marketplaceCreator.findMany.mockResolvedValue([]);
     prismaMock.marketplaceCategory.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.groupBy.mockResolvedValue([{ type: "Skill", _count: { _all: 7 } }]);
     const response = await request(createApp()).get("/api/marketplace/home");
     expect(response.status).toBe(200);
-    expect(response.body.data).toEqual({ products: [], creators: [], categories: [], total: 12 });
+    expect(response.body.data).toEqual({ products: [], creators: [], categories: [], types: [{ type: "Skill", products: 7 }], total: 12 });
   });
 
   it("publishes the controlled marketplace item-type registry", async () => {
@@ -123,6 +124,7 @@ describe("API", () => {
     prismaMock.marketplaceProduct.count.mockResolvedValue(1);
     prismaMock.marketplaceCreator.findMany.mockResolvedValue([]);
     prismaMock.marketplaceCategory.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.groupBy.mockResolvedValue([]);
 
     const response = await request(createApp()).get("/api/marketplace/home");
     expect(response.status).toBe(200);

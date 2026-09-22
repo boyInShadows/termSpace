@@ -11,6 +11,7 @@ import { ConsoleSearch } from "@/components/sections/console-search";
 import { buttonVariants } from "@/components/ui/button";
 import { useScrollProgress } from "@/lib/hooks/use-scroll-progress";
 import { useLocale } from "@/lib/locale-context";
+import type { MarketplaceTypeCount } from "@/lib/types";
 
 /**
  * The ticker's source of truth: unique names, grouped by what they actually
@@ -25,7 +26,11 @@ const WORKS_WITH = [
   { key: "worksWithProtocols", items: ["MCP", "Raw API"] },
 ] as const;
 
-export function Hero() {
+export function Hero({
+  types,
+}: {
+  types?: Promise<MarketplaceTypeCount[]>;
+}) {
   const { t } = useLocale();
   // Writes --progress on the section; the 3D stage reads it to rotate and
   // rise as the hero leaves, so scroll and cursor drive the same object.
@@ -103,7 +108,7 @@ export function Hero() {
               below the fold under a marquee. "Explore community resources" was
               a button that led to the same search one screen further down. */}
           <div className="mt-8">
-            <ConsoleSearch variant="hero" />
+            <ConsoleSearch variant="hero" types={types} />
           </div>
 
           <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">

@@ -1,4 +1,10 @@
-import type { Creator, MarketplaceCategory, MarketplaceHome, Product } from "./types";
+import type {
+  Creator,
+  MarketplaceCategory,
+  MarketplaceHome,
+  MarketplaceTypeCount,
+  Product,
+} from "./types";
 
 /**
  * The homepage's degraded-mode dataset.
@@ -213,9 +219,19 @@ const categories: MarketplaceCategory[] = [
   { name: "Operations", slug: "operations", products: 19 },
 ];
 
+const types: MarketplaceTypeCount[] = [
+  { type: "Skill", products: 412 },
+  { type: "Agent", products: 186 },
+  { type: "MCP server", products: 143 },
+  { type: "Prompt", products: 97 },
+  { type: "Rule", products: 58 },
+  { type: "Developer utility", products: 41 },
+];
+
 export const mockHome: MarketplaceHome = {
   products,
   creators,
   categories,
+  types,
   total: categories.reduce((sum, category) => sum + category.products, 0),
 };
