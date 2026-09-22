@@ -26,7 +26,7 @@ const STEPS: readonly Step[] = [
     ],
   },
   {
-    id: "verify",
+    id: "inspect",
     icon: FileCheck2,
     title: "Read what it touches",
     copy: "Contents, permissions, requirements, licence and update history are separate fields on every listing — not paragraphs in a README you have to trust.",
@@ -43,8 +43,10 @@ const STEPS: readonly Step[] = [
     title: "Put it to work",
     copy: "One command, the exact version you inspected, and updates that arrive with notes from the person who wrote them.",
     lines: [
-      { label: "$", value: "termspace add conversion-copywriter" },
-      { label: "resolved", value: "v2.4.0 (pinned)", tone: "accent" },
+      // Version-pinned on purpose: the step's whole claim is that you install
+      // the exact thing you just read, so the command has to show the pin.
+      { label: "$", value: "termspace add conversion-copywriter@2.4.0" },
+      { label: "resolved", value: "matches the release you inspected", tone: "accent" },
       { label: "ready", value: "installed in 1.8s", tone: "verified" },
     ],
   },
@@ -73,13 +75,35 @@ export function Process() {
     const nodes = stepRefs.current.filter(Boolean) as HTMLDivElement[];
     if (nodes.length === 0) return;
 
+    // Which steps are currently crossing the band, kept across callbacks:
+    // a callback only reports what *changed*, so deciding from `entries`
+    // alone meant a step that was still in the band but had not re-fired
+    // could not win, and the panel could sit on a step the reader had
+    // already scrolled past.
+    const intersecting = new Set<Element>();
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const index = nodes.indexOf(entry.target as HTMLDivElement);
-          if (index !== -1) setActive(index);
+          if (entry.isIntersecting) intersecting.add(entry.target);
+          else intersecting.delete(entry.target);
         }
+        if (intersecting.size === 0) return;
+
+        // When two steps share the band, the one nearest the middle of the
+        // viewport owns the panel.
+        const middle = window.innerHeight / 2;
+        let best = -1;
+        let bestDistance = Infinity;
+        for (const node of intersecting) {
+          const box = node.getBoundingClientRect();
+          const distance = Math.abs(box.top + box.height / 2 - middle);
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            best = nodes.indexOf(node as HTMLDivElement);
+          }
+        }
+        if (best !== -1) setActive(best);
       },
       // A narrow band across the middle of the viewport: whichever step is
       // sitting in it owns the panel.
