@@ -461,6 +461,9 @@ export const copy = {
         "Could not reach the community library. Check your connection and try again.",
     },
     homePage: {
+      dismissAnnouncement: "Dismiss announcement",
+      toDarkTheme: "Switch to dark theme",
+      toLightTheme: "Switch to light theme",
       newsletterEmail: "Email address",
       newsletterCta: "Subscribe",
       newsletterSending: "Subscribing…",
@@ -931,6 +934,9 @@ export const copy = {
         "ارتباط با کتابخانهٔ جامعه برقرار نشد. اتصال خود را بررسی و دوباره تلاش کنید.",
     },
     homePage: {
+      dismissAnnouncement: "بستن اطلاعیه",
+      toDarkTheme: "تغییر به پوستهٔ تیره",
+      toLightTheme: "تغییر به پوستهٔ روشن",
       newsletterEmail: "نشانی ایمیل",
       newsletterCta: "عضویت",
       newsletterSending: "در حال ثبت…",

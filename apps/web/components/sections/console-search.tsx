@@ -1,18 +1,11 @@
 "use client";
 
-import {
-  Suspense,
-  use,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { Suspense, use, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Search, CornerDownLeft, Clock3, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
+import { useStoredString } from "@/lib/hooks/use-stored-string";
 import type { MarketplaceTypeCount } from "@/lib/types";
 
 const TYPED_INTENTS = [
@@ -34,71 +27,26 @@ const SHORTCUTS: ReadonlyArray<readonly [string, string]> = [
 
 const RECENT_KEY = "termspace:recent-searches";
 const RECENT_LIMIT = 4;
+const NO_RECENT: string[] = [];
 
 /**
- * Past searches, read through `useSyncExternalStore`.
+ * Past searches, stored per browser.
  *
- * `localStorage` is an external store, and this is the one way to read one
- * that is safe under concurrent rendering and hydrates without a mismatch:
- * the server snapshot is empty, React hydrates against that, then swaps in
- * whatever the browser actually had.
- *
- * Every access is wrapped. Private windows and blocked site data make these
- * throw, and a search box that crashes because it could not recall an old
- * query is a far worse outcome than one that simply does not recall it.
+ * Parsed defensively: the key is reachable from devtools and from older
+ * versions of this component, so anything that is not a list of strings is
+ * treated as nothing rather than trusted.
  */
-const NO_RECENT: string[] = [];
-const recentListeners = new Set<() => void>();
-
-// getSnapshot is called on every render and must return a stable reference
-// until the underlying value actually changes, or React re-renders forever.
-let cachedRaw: string | null = null;
-let cachedRecent: string[] = NO_RECENT;
-
-function getRecent(): string[] {
+function parseRecent(raw: string | null): string[] {
+  if (!raw) return NO_RECENT;
   try {
-    const raw = window.localStorage.getItem(RECENT_KEY);
-    if (raw === cachedRaw) return cachedRecent;
-    cachedRaw = raw;
-    const parsed: unknown = raw ? JSON.parse(raw) : [];
-    cachedRecent = Array.isArray(parsed)
-      ? parsed
-          .filter((entry): entry is string => typeof entry === "string")
-          .slice(0, RECENT_LIMIT)
-      : NO_RECENT;
-    return cachedRecent;
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return NO_RECENT;
+    return parsed
+      .filter((entry): entry is string => typeof entry === "string")
+      .slice(0, RECENT_LIMIT);
   } catch {
     return NO_RECENT;
   }
-}
-
-function getServerRecent(): string[] {
-  return NO_RECENT;
-}
-
-function subscribeRecent(onChange: () => void) {
-  recentListeners.add(onChange);
-  // Another tab writing the same key should update this one too.
-  window.addEventListener("storage", onChange);
-  return () => {
-    recentListeners.delete(onChange);
-    window.removeEventListener("storage", onChange);
-  };
-}
-
-function rememberQuery(query: string) {
-  const trimmed = query.trim();
-  if (!trimmed) return;
-  try {
-    const next = [trimmed, ...getRecent().filter((q) => q !== trimmed)].slice(
-      0,
-      RECENT_LIMIT,
-    );
-    window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-  } catch {
-    // Nothing to do. Not remembering is an acceptable outcome.
-  }
-  for (const listener of recentListeners) listener();
 }
 
 /**
@@ -138,11 +86,8 @@ export function ConsoleSearch({
   const [typed, setTyped] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [scope, setScope] = useState<string | null>(null);
-  const recent = useSyncExternalStore(
-    subscribeRecent,
-    getRecent,
-    getServerRecent,
-  );
+  const [storedRecent, setStoredRecent] = useStoredString(RECENT_KEY);
+  const recent = useMemo(() => parseRecent(storedRecent), [storedRecent]);
   const [query, setQuery] = useState("");
   const prefersReducedMotion = useReducedMotion();
   const timerRef = useRef<number>(0);
@@ -188,6 +133,19 @@ export function ConsoleSearch({
 
   const isHero = variant === "hero";
 
+  function remember(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    setStoredRecent(
+      JSON.stringify(
+        [trimmed, ...recent.filter((entry) => entry !== trimmed)].slice(
+          0,
+          RECENT_LIMIT,
+        ),
+      ),
+    );
+  }
+
   const suggestions = recent.length > 0 ? recent : [...TYPED_INTENTS].slice(0, 4);
   const isSuggesting = isFocused && query.trim().length === 0;
 
@@ -195,7 +153,7 @@ export function ConsoleSearch({
     <div className={isHero ? undefined : "container-page"}>
       <form
         action="/explore"
-        onSubmit={() => rememberQuery(query)}
+        onSubmit={() => remember(query)}
         className={cn("group relative", isHero ? "max-w-xl" : "mx-auto max-w-3xl")}
       >
         {/* Plasma bloom behind the field — the only place on the page where

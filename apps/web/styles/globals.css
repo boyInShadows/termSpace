@@ -179,6 +179,14 @@ select {
   to { transform: translate3d(-50%, 0, 0); }
 }
 
+/* The logo's terminal caret. `steps(2)` so it snaps on and off like a real
+   cursor instead of fading, which would read as a pulsing decoration. The
+   global reduced-motion rule stops it and leaves the bar visible. */
+@keyframes ts-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 @keyframes ts-pulse-ring {
   0% { opacity: 0.85; transform: scale(1); }
   70%, 100% { opacity: 0; transform: scale(2.4); }
@@ -195,6 +203,7 @@ select {
 }
 
 .animate-marquee { animation: ts-marquee var(--marquee-duration, 42s) linear infinite; }
+.ts-caret { animation: ts-blink 1.15s steps(2, jump-none) infinite; }
 .animate-drift { animation: ts-drift 7s var(--ease-out-quart) infinite; }
 
 /* Each line of the pinned process panel re-enters when the step changes.
