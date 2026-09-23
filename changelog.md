@@ -2,6 +2,28 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-09-23
+
+- Closed out the homepage plan (`plan.md`, gitignored scratch, now deleted).
+  Audited every item against the code; the only unfinished ones were the
+  Next.js upgrade and the Lighthouse/axe targets. Upgraded `next` and
+  `eslint-config-next` in `apps/web` from 16.3.3 to 16.3.6 (exact pins kept).
+- First Lighthouse run against a production build with the API down: desktop
+  Performance 97 / Accessibility 100, but mobile Performance 83, below the
+  plan's 90. The LCP element was the hero intro paragraph, with 86% of its time
+  spent in render delay behind 380 ms of blocking time; the synchronous WebGL
+  shader compile in `PlasmaField` was running during hydration. The field now
+  waits for `requestIdleCallback` (1.5 s timeout, 300 ms `setTimeout` fallback
+  where it is missing) before building its GL program. The canvas shows its
+  `bg-background` until then, as it already did before its first frame.
+- Verification: Lighthouse mobile Performance 92 / 92 / 91 over three runs
+  (TBT 380 ms → ~95 ms) with Accessibility 100; desktop Performance 100,
+  Accessibility 100, Best Practices 96. Lighthouse's accessibility category is
+  axe-core, so no axe failures were reported. Root `typecheck` clean, 201 tests
+  passing, `apps/web` lint clean, all production builds pass. The manual
+  browser walkthroughs from the plan (keyboard-only pass, 375px, how-it-works
+  panel on scroll) were not run and are tracked in `pending.md`.
+
 ## 2026-09-22
 
 - Completed the homepage design and UX pass, landed as fourteen commits on
