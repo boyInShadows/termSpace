@@ -60,6 +60,12 @@ describe("marketplace manifest v1", () => {
     expect(marketplaceManifestV1Schema.safeParse(environmentInput).success).toBe(false);
   });
 
+  it("accepts only controlled platform compatibility keys", () => {
+    const input = manifest("skill");
+    input.release.compatibility = [{ platform: "Codex", models: [] }];
+    expect(marketplaceManifestV1Schema.safeParse(input).success).toBe(false);
+  });
+
   it("requires exact immutable source references", () => {
     const input = manifest("skill");
     input.release.source.commitSha = "main";

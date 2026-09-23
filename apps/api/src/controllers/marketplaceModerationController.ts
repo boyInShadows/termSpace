@@ -91,11 +91,12 @@ export async function getMarketplaceModerationPreview(req: Request, res: Respons
           sourceCheckedAt: true, lastSourceErrorCode: true, publishedAt: true,
         } },
         communityRequests: { select: {
-          createdAt: true,
+          communityId: true, createdAt: true,
           community: { select: { slug: true, nameEn: true, nameFa: true, primaryPlatform: true, rulesEn: true, rulesFa: true } },
         }, orderBy: { createdAt: "asc" } },
       } },
       approvedSnapshot: { select: { id: true, revision: true, content: true, createdAt: true } },
+      communityPlacements: { select: { id: true, communityId: true, state: true, version: true, publicReason: true } },
       lifecycleEvents: {
         select: {
           id: true, previousState: true, resultingState: true, action: true, actorType: true,
@@ -127,7 +128,14 @@ export async function getMarketplaceModerationPreview(req: Request, res: Respons
     updatedAt: product.updatedAt,
     selfOwned: product.creator.ownerUserId === res.locals.reader.id,
     creator: { id: product.creator.id, name: product.creator.name, handle: product.creator.handle },
-    proposedSnapshot: product.proposedSnapshot,
+    proposedSnapshot: product.proposedSnapshot ? {
+      ...product.proposedSnapshot,
+      communityRequests: product.proposedSnapshot.communityRequests.map((request) => ({
+        createdAt: request.createdAt,
+        community: request.community,
+        placement: (product.communityPlacements ?? []).find((placement) => placement.communityId === request.communityId) ?? null,
+      })),
+    } : null,
     approvedSnapshot: product.approvedSnapshot,
     auditTrail: product.lifecycleEvents.slice(0, 100).map((event) => ({
       ...event,
@@ -175,6 +183,75 @@ export async function addMarketplaceModerationNote(req: Request, res: Response) 
       });
     });
     res.status(201).json({ data: { ...note, correlationId } });
+  } catch (error) {
+    if (error instanceof ModerationRequestError) {
+      res.status(error.status).json({ error: { code: error.code, message: error.message } });
+      return;
+    }
+    throw error;
+  }
+}
+
+const placementDecision = {
+  APPROVE: { state: "APPROVED", action: "APPROVED" },
+  REJECT: { state: "REJECTED", action: "REJECTED" },
+  REMOVE: { state: "REMOVED", action: "REMOVED" },
+} as const;
+
+export async function moderateMarketplaceCommunityPlacement(req: Request, res: Response) {
+  const productId = String(req.params.id);
+  const communitySlug = String(req.params.communitySlug);
+  const userId = res.locals.reader.id as string;
+  const actorType = res.locals.reader.marketplaceRoles.includes("administrator") ? "ADMINISTRATOR" : "MODERATOR";
+  const decision = placementDecision[req.body.action as keyof typeof placementDecision];
+  const correlationId = randomUUID();
+  try {
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`${productId}:${communitySlug}`}, 3))`;
+      const community = await tx.marketplaceCommunity.findUnique({ where: { slug: communitySlug }, select: { id: true, state: true } });
+      if (!community) throw new ModerationRequestError(404, "PLACEMENT_NOT_FOUND", "Community placement request not found");
+      const placement = await tx.marketplaceCommunityPlacement.findUnique({
+        where: { productId_communityId: { productId, communityId: community.id } },
+        select: {
+          id: true, state: true, version: true, requestedSnapshotId: true,
+          product: { select: { creator: { select: { ownerUserId: true } } } },
+        },
+      });
+      if (!placement) throw new ModerationRequestError(404, "PLACEMENT_NOT_FOUND", "Community placement request not found");
+      if (placement.product.creator.ownerUserId === userId) throw new ModerationRequestError(403, "SELF_MODERATION_FORBIDDEN", "Staff cannot moderate their own community placement");
+      if (placement.version !== req.body.expectedVersion) throw new ModerationRequestError(409, "PLACEMENT_VERSION_CONFLICT", "The community placement changed; reload it before deciding");
+      if (req.body.action === "APPROVE" && community.state !== "ACTIVE") throw new ModerationRequestError(409, "COMMUNITY_ARCHIVED", "Archived communities cannot accept placements");
+      const requiredState = req.body.action === "REMOVE" ? "APPROVED" : "REQUESTED";
+      if (placement.state !== requiredState) throw new ModerationRequestError(409, "PLACEMENT_TRANSITION_INVALID", `A ${placement.state.toLowerCase()} placement cannot be ${req.body.action.toLowerCase()}d`);
+
+      const next = await tx.marketplaceCommunityPlacement.update({
+        where: { id: placement.id },
+        data: {
+          state: decision.state,
+          version: { increment: 1 },
+          moderatedByUserId: userId,
+          decidedAt: new Date(),
+          publicReason: req.body.publicReason ?? null,
+        },
+        select: { id: true, state: true, version: true, publicReason: true, decidedAt: true },
+      });
+      await tx.marketplaceCommunityPlacementEvent.create({
+        data: {
+          placementId: placement.id,
+          snapshotId: placement.requestedSnapshotId,
+          previousState: placement.state,
+          resultingState: decision.state,
+          action: decision.action,
+          actorType,
+          actorUserId: userId,
+          publicReason: req.body.publicReason,
+          internalNote: req.body.internalNote,
+          correlationId,
+        },
+      });
+      return next;
+    });
+    res.json({ data: { ...updated, state: updated.state.toLowerCase(), correlationId } });
   } catch (error) {
     if (error instanceof ModerationRequestError) {
       res.status(error.status).json({ error: { code: error.code, message: error.message } });

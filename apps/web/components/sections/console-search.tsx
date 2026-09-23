@@ -18,11 +18,11 @@ const TYPED_INTENTS = [
 
 /** Chip label → the `type` value the catalogue filters on. */
 const SHORTCUTS: ReadonlyArray<readonly [string, string]> = [
-  ["Skills", "Skill"],
-  ["Agents", "Agent"],
-  ["MCP servers", "MCP server"],
-  ["Prompts", "Prompt"],
-  ["Developer tools", "Developer utility"],
+  ["Skills", "skill"],
+  ["Agents", "agent"],
+  ["MCP servers", "mcp_server"],
+  ["Prompts", "prompt"],
+  ["Rules", "rule"],
 ];
 
 const RECENT_KEY = "termspace:recent-searches";

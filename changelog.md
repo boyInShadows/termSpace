@@ -133,6 +133,52 @@ Project changes completed from `pending.md` should be recorded here with the dat
   the LCP element would need the fonts moved to `next/font/local` and was left
   for a deliberate change.
 
+## 2026-09-21
+
+- Expanded public marketplace search across multi-term listing metadata, tags,
+  creator profiles, categories, approved active communities, platform labels,
+  and model compatibility. All discovery sort modes now use a unique product-ID
+  tie-breaker for deterministic offset pagination. The bilingual discovery UI
+  distinguishes unavailable search, loading, filtered-empty, query-empty, and
+  catalog-empty states instead of silently converting initial API failures into
+  zero results. Verification: all workspace type-checks; 181 tests; web lint;
+  API and web production builds; and the Blog webpack production build.
+
+- Normalized marketplace discovery taxonomy end to end: controlled platform
+  keys now back relational platform, product-compatibility, release-
+  compatibility, and community records; manifests reject creator-defined
+  platforms; item-type, category, and platform filters accept stable keys only;
+  and English/Persian labels remain at the presentation boundary. Added a
+  forward-only legacy backfill that fails safely on ambiguous platform alias
+  collisions instead of discarding compatibility metadata. Verification:
+  Prisma generation and schema validation; all workspace type-checks; 176
+  tests; web lint; API and web production builds; Blog webpack production
+  build; and `git diff --check`. Runtime migration deployment remains pending
+  because the local PostgreSQL service is stopped and Docker access requires
+  elevated host privileges.
+
+- Completed ADR 0002 community discovery and moderated placement lifecycle.
+  Immutable per-snapshot creator requests now feed canonical, versioned
+  many-to-many placements; moderator approval, rejection, and removal decisions
+  append actor-attributed audit events and independently block self-moderation.
+  Public APIs expose active communities and only approved placements attached
+  to published listings, with explicit archived-community responses and
+  combinable community, platform, category, item-type, rating, and search
+  filters. Added bilingual community browse pages, discovery controls,
+  canonical listing links, community badges, and placement decisions in the
+  moderation preview. Verification: Prisma validation and client generation;
+  all workspace type-checks; 174 tests; web lint; API and web production builds;
+  Blog webpack production build; and `git diff --check`. Runtime migration
+  deployment was not exercised because local PostgreSQL was stopped and this
+  host requires an interactive sudo password to start Docker.
+- Completed the Marketplace creator and submission lifecycle authorization test
+  pass. Route-level Supertest coverage now verifies cross-owner draft reads,
+  writes, release access, and lifecycle transitions; creator-only and
+  moderator-only role boundaries; self-moderation rejection; unpublished
+  listing and draft-artifact isolation; and bidirectional separation between
+  marketplace authority and Blog administration. Verification: API tests,
+  workspace type-checks, and `git diff --check`.
+
 ## 2026-09-18
 
 - Completed the free-resource acquisition and installation flow. Public product

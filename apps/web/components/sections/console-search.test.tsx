@@ -31,7 +31,7 @@ describe("ConsoleSearch", () => {
 
     await user.click(skills);
     expect(skills).toHaveAttribute("aria-pressed", "true");
-    expect(scopeInput(container)).toHaveValue("Skill");
+    expect(scopeInput(container)).toHaveValue("skill");
 
     await user.click(skills);
     expect(scopeInput(container)).toBeNull();
@@ -41,8 +41,8 @@ describe("ConsoleSearch", () => {
     render(
       <ConsoleSearch
         types={[
-          { type: "Skill", products: 412 },
-          { type: "Agent", products: 186 },
+          { type: "skill", products: 412 },
+          { type: "agent", products: 186 },
         ]}
       />,
     );

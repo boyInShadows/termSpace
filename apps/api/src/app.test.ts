@@ -19,14 +19,17 @@ const prismaMock = vi.hoisted(() => ({
   marketplaceSkillReleaseDetails: { create: vi.fn() },
   marketplaceListingSnapshot: { aggregate: vi.fn(), create: vi.fn() },
   marketplaceManifestSnapshot: { create: vi.fn() },
-  marketplaceCommunity: { findMany: vi.fn() },
+  marketplaceCommunity: { findMany: vi.fn(), findUnique: vi.fn() },
   marketplaceCommunityPlacementRequest: { createMany: vi.fn() },
+  marketplaceCommunityPlacement: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
+  marketplaceCommunityPlacementEvent: { create: vi.fn() },
   marketplaceListingLifecycleEvent: { create: vi.fn(), findMany: vi.fn() },
   marketplaceOrder: { count: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn() },
   marketplaceCreator: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceRoleGrant: { findUnique: vi.fn(), create: vi.fn() },
   marketplaceRoleEvent: { create: vi.fn() },
   marketplaceCategory: { findMany: vi.fn(), findUnique: vi.fn() },
+  marketplacePlatform: { findMany: vi.fn() },
   $transaction: vi.fn(),
   $executeRaw: vi.fn(),
   $queryRaw: vi.fn(),
@@ -79,6 +82,7 @@ describe("API", () => {
     prismaMock.$transaction.mockResolvedValue([]);
     prismaMock.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     prismaMock.article.updateMany.mockResolvedValue({ count: 0 });
+    prismaMock.marketplacePlatform.findMany.mockResolvedValue([]);
   });
 
   it("serves health with hardened headers", async () => {
@@ -101,10 +105,10 @@ describe("API", () => {
     prismaMock.marketplaceProduct.count.mockResolvedValue(12);
     prismaMock.marketplaceCreator.findMany.mockResolvedValue([]);
     prismaMock.marketplaceCategory.findMany.mockResolvedValue([]);
-    prismaMock.marketplaceProduct.groupBy.mockResolvedValue([{ type: "Skill", _count: { _all: 7 } }]);
+    prismaMock.marketplaceProduct.groupBy.mockResolvedValue([{ itemType: "SKILL", _count: { _all: 7 } }, { itemType: null, _count: { _all: 2 } }]);
     const response = await request(createApp()).get("/api/marketplace/home");
     expect(response.status).toBe(200);
-    expect(response.body.data).toEqual({ products: [], creators: [], categories: [], types: [{ type: "Skill", products: 7 }], total: 12 });
+    expect(response.body.data).toEqual({ products: [], creators: [], categories: [], types: [{ type: "skill", products: 7 }], platforms: [], total: 12 });
   });
 
   it("publishes the controlled marketplace item-type registry", async () => {
@@ -135,7 +139,7 @@ describe("API", () => {
     expect(response.body.data.products[0]).not.toHaveProperty("approvedSnapshotId");
   });
 
-  it("filters by canonical item type while preserving legacy filters", async () => {
+  it("filters only by canonical item-type keys", async () => {
     prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
     prismaMock.marketplaceProduct.count.mockResolvedValue(0);
 
@@ -144,10 +148,90 @@ describe("API", () => {
       where: expect.objectContaining({ itemType: "PROMPT" }),
     }));
 
-    expect((await request(createApp()).get("/api/marketplace/products?type=Prompt%20pack")).status).toBe(200);
-    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenLastCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ type: "Prompt pack" }),
+    expect((await request(createApp()).get("/api/marketplace/products?type=Prompt%20pack")).status).toBe(400);
+  });
+
+  it("combines approved community placement and platform compatibility filters", async () => {
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+
+    const response = await request(createApp()).get("/api/marketplace/products?community=codex&platform=codex");
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        published: true,
+        compatibility: { some: { platformKey: "codex" } },
+        communityPlacements: { some: { state: "APPROVED", community: { slug: "codex", state: "ACTIVE" } } },
+      }),
     }));
+  });
+
+  it("searches public listing, creator, category, community, and compatibility metadata", async () => {
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+
+    const response = await request(createApp()).get("/api/marketplace/products?q=codex%20review&sort=rating&page=2&limit=10");
+
+    expect(response.status).toBe(200);
+    const call = prismaMock.marketplaceProduct.findMany.mock.calls.at(-1)?.[0];
+    expect(call).toMatchObject({
+      skip: 10,
+      take: 10,
+      orderBy: [{ rating: "desc" }, { reviewCount: "desc" }, { id: "asc" }],
+      where: { published: true },
+    });
+    expect(call.where.AND).toHaveLength(2);
+    expect(call.where.AND[0].OR).toEqual(expect.arrayContaining([
+      { tags: { has: "codex" } },
+      { creator: { OR: expect.any(Array) } },
+      { category: { OR: expect.any(Array) } },
+      { compatibility: { some: { OR: expect.any(Array) } } },
+      { communityPlacements: { some: expect.objectContaining({ state: "APPROVED", community: expect.objectContaining({ state: "ACTIVE" }) }) } },
+    ]));
+  });
+
+  it.each([
+    ["featured", [{ featured: "desc" }, { usageCount: "desc" }, { id: "asc" }]],
+    ["newest", [{ updatedAt: "desc" }, { id: "asc" }]],
+  ])("uses deterministic %s pagination ordering", async (sort, orderBy) => {
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+
+    expect((await request(createApp()).get(`/api/marketplace/products?sort=${sort}`)).status).toBe(200);
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenLastCalledWith(expect.objectContaining({ orderBy }));
+  });
+
+  it("lists active communities with approved published placement counts", async () => {
+    prismaMock.marketplaceCommunity.findMany.mockResolvedValue([{
+      slug: "codex", nameEn: "Codex", nameFa: "کودکس", descriptionEn: "Codex tools", descriptionFa: null,
+      primaryPlatform: "codex", rulesEn: "Be relevant.", rulesFa: null,
+      submissionGuidanceEn: "Explain compatibility.", submissionGuidanceFa: null, state: "ACTIVE", _count: { placements: 4 },
+    }]);
+
+    const response = await request(createApp()).get("/api/marketplace/communities");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data[0]).toMatchObject({ slug: "codex", state: "active", products: 4 });
+    expect(prismaMock.marketplaceCommunity.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { state: "ACTIVE" },
+      select: expect.objectContaining({ _count: { select: { placements: { where: { state: "APPROVED", product: { published: true } } } } } }),
+    }));
+  });
+
+  it("returns an explicit archived community state without public placements", async () => {
+    prismaMock.marketplaceCommunity.findUnique.mockResolvedValue({
+      slug: "legacy", nameEn: "Legacy", nameFa: null, descriptionEn: "Archived tools", descriptionFa: null,
+      primaryPlatform: "legacy", rulesEn: "No new submissions.", rulesFa: null,
+      submissionGuidanceEn: "Archived.", submissionGuidanceFa: null, state: "ARCHIVED",
+    });
+
+    const response = await request(createApp()).get("/api/marketplace/communities/legacy");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toMatchObject({ community: { slug: "legacy", state: "archived" }, products: [] });
+    expect(response.body.meta.total).toBe(0);
+    expect(prismaMock.marketplaceProduct.findMany).not.toHaveBeenCalled();
   });
 
   it("does not expose draft-only versions on a public product page", async () => {
@@ -174,6 +258,18 @@ describe("API", () => {
     }));
     expect(response.body.data).not.toHaveProperty("installationSteps");
     expect(JSON.stringify(response.body)).not.toContain("private installation step");
+  });
+
+  it("does not expose an unpublished listing through the public product route", async () => {
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue(null);
+
+    const response = await request(createApp()).get("/api/marketplace/products/private-skill");
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe("NOT_FOUND");
+    expect(prismaMock.marketplaceProduct.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: { slug: "private-skill", published: true },
+    }));
   });
 
   it("rejects invalid newsletter input before database access", async () => {
@@ -393,6 +489,23 @@ describe("API", () => {
     expect(response.status).toBe(401);
     expect(prismaMock.adminSession.findFirst).not.toHaveBeenCalled();
     expect(prismaMock.readerSession.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("does not treat a Blog administrator as a marketplace moderator", async () => {
+    prismaMock.adminSession.findFirst.mockResolvedValue({
+      id: "admin-session-1",
+      user: { id: "admin-1", email: "blog-admin@example.com" },
+    });
+
+    const response = await request(createApp())
+      .get("/api/marketplace/moderation/queue")
+      .set("Cookie", "term_academy_session=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe("UNAUTHORIZED");
+    expect(prismaMock.adminSession.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.readerSession.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.marketplaceProduct.findMany).not.toHaveBeenCalled();
   });
 
   it("returns verified-email state and active marketplace roles in the reader session", async () => {
@@ -1150,6 +1263,62 @@ describe("API", () => {
     expect(prismaMock.marketplaceListingLifecycleEvent.create).not.toHaveBeenCalled();
   });
 
+  it("approves a community placement with an append-only moderation event", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceCommunity.findUnique.mockResolvedValue({ id: "community-1", state: "ACTIVE" });
+    prismaMock.marketplaceCommunityPlacement.findUnique.mockResolvedValue({
+      id: "placement-1", state: "REQUESTED", version: 1, requestedSnapshotId: "snapshot-1",
+      product: { creator: { ownerUserId: "reader-1" } },
+    });
+    prismaMock.marketplaceCommunityPlacement.update.mockResolvedValue({
+      id: "placement-1", state: "APPROVED", version: 2, publicReason: null, decidedAt: new Date(),
+    });
+    prismaMock.marketplaceCommunityPlacementEvent.create.mockResolvedValue({});
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/moderation/products/product-1/community-placements/codex")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ action: "APPROVE", expectedVersion: 1 });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toMatchObject({ id: "placement-1", state: "approved", version: 2 });
+    expect(prismaMock.marketplaceCommunityPlacementEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({
+      placementId: "placement-1", snapshotId: "snapshot-1", previousState: "REQUESTED", resultingState: "APPROVED",
+      action: "APPROVED", actorType: "MODERATOR", actorUserId: "moderator-1",
+    }) });
+  });
+
+  it("prevents staff from deciding their own community placement", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceCommunity.findUnique.mockResolvedValue({ id: "community-1", state: "ACTIVE" });
+    prismaMock.marketplaceCommunityPlacement.findUnique.mockResolvedValue({
+      id: "placement-1", state: "REQUESTED", version: 1, requestedSnapshotId: "snapshot-1",
+      product: { creator: { ownerUserId: "moderator-1" } },
+    });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/moderation/products/product-1/community-placements/codex")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ action: "APPROVE", expectedVersion: 1 });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("SELF_MODERATION_FORBIDDEN");
+    expect(prismaMock.marketplaceCommunityPlacement.update).not.toHaveBeenCalled();
+    expect(prismaMock.marketplaceCommunityPlacementEvent.create).not.toHaveBeenCalled();
+  });
+
   it("returns only the authenticated creator's current draft", async () => {
     prismaMock.readerSession.findFirst.mockResolvedValue({
       id: "session-1",
@@ -1177,6 +1346,7 @@ describe("API", () => {
     prismaMock.marketplaceCreator.findUnique.mockResolvedValue({ id: "creator-1" });
     prismaMock.marketplaceCategory.findUnique.mockResolvedValue({ id: "category-1" });
     prismaMock.marketplaceCommunity.findMany.mockResolvedValue([{ id: "community-1", slug: "codex" }]);
+    prismaMock.marketplaceCommunityPlacement.findUnique.mockResolvedValue(null);
     prismaMock.marketplaceProduct.create.mockResolvedValue({ id: "product-1", published: false, lifecycleState: "DRAFT", lifecycleVersion: 0 });
     prismaMock.marketplaceListingSnapshot.aggregate.mockResolvedValue({ _max: { revision: null } });
     prismaMock.marketplaceManifestSnapshot.create.mockResolvedValue({ id: "manifest-1" });
@@ -1199,6 +1369,9 @@ describe("API", () => {
     expect(response.status).toBe(201);
     expect(response.body.data).toMatchObject({ id: "product-1", state: "draft", version: 1, published: false, draft: { revision: 1 } });
     expect(prismaMock.marketplaceCommunityPlacementRequest.createMany).toHaveBeenCalledWith({ data: [expect.objectContaining({ snapshotId: "snapshot-1", communityId: "community-1", productId: "product-1", requestedByUserId: "reader-1" })] });
+    expect(prismaMock.marketplaceCommunityPlacement.create).toHaveBeenCalledWith({ data: {
+      productId: "product-1", communityId: "community-1", requestedSnapshotId: "snapshot-1", requestedByUserId: "reader-1",
+    } });
     expect(prismaMock.marketplaceListingLifecycleEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({ snapshotId: "snapshot-1", action: "DRAFT_SAVED", actorUserId: "reader-1" }) });
   });
 
@@ -1218,6 +1391,31 @@ describe("API", () => {
 
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe("LISTING_NOT_FOUND");
+  });
+
+  it("does not let a creator replace another creator's draft", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      id: "product-2", published: false, lifecycleState: "DRAFT", lifecycleVersion: 1,
+      creator: { ownerUserId: "reader-2" }, approvedSnapshot: null,
+    });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .put("/api/marketplace/creator/products/product-2/draft")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ expectedVersion: 1, manifest: marketplaceManifestFixture() });
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe("LISTING_NOT_FOUND");
+    expect(prismaMock.marketplaceManifestSnapshot.create).not.toHaveBeenCalled();
+    expect(prismaMock.marketplaceListingSnapshot.create).not.toHaveBeenCalled();
+    expect(prismaMock.marketplaceProduct.update).not.toHaveBeenCalled();
   });
 
   it("rejects stale draft saves before creating an immutable snapshot", async () => {

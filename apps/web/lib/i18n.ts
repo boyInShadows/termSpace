@@ -467,7 +467,7 @@ export const copy = {
       title: "Find a resource that helps.",
       intro:
         "Search freely shared, reusable resources for real agentic coding work.",
-      search: "Search by resource, outcome, or creator…",
+      search: "Search resources, creators, communities, or compatibility…",
       productType: "Resource type",
       all: "All",
       category: "Category",
@@ -488,6 +488,10 @@ export const copy = {
       loadMore: "Load more resources",
       loading: "Loading…",
       retry: "Retry",
+      emptyTitle: "No resources found",
+      emptySearch: "No published resources match “{query}”. Try a broader search or remove a filter.",
+      emptyFiltered: "No published resources match these filters. Remove a filter or clear them all.",
+      emptyDefault: "No published resources are available yet.",
       rateLimited:
         "The community library is rate-limited. Please wait a moment and try again.",
       connectionError:
@@ -973,7 +977,7 @@ export const copy = {
       title: "منبع مفید بعدی را پیدا کنید.",
       intro:
         "منابع رایگان، قابل اعتماد و قابل استفادهٔ مجدد را برای کدنویسی عامل‌محور جست‌وجو کنید.",
-      search: "بر اساس منبع، نتیجه یا سازنده جست‌وجو کنید…",
+      search: "در منابع، سازندگان، جامعه‌ها یا سازگاری جست‌وجو کنید…",
       productType: "نوع منبع",
       all: "همه",
       category: "دسته‌بندی",
@@ -994,6 +998,10 @@ export const copy = {
       loadMore: "بارگذاری منابع بیشتر",
       loading: "در حال بارگذاری…",
       retry: "تلاش دوباره",
+      emptyTitle: "منبعی پیدا نشد",
+      emptySearch: "هیچ منبع منتشرشده‌ای با «{query}» مطابقت ندارد. عبارت گسترده‌تری جست‌وجو کنید یا یکی از فیلترها را بردارید.",
+      emptyFiltered: "هیچ منبع منتشرشده‌ای با این فیلترها مطابقت ندارد. یکی از فیلترها را بردارید یا همه را پاک کنید.",
+      emptyDefault: "هنوز منبع منتشرشده‌ای در دسترس نیست.",
       rateLimited:
         "درخواست‌های کتابخانهٔ جامعه موقتاً محدود شده است. کمی صبر کنید و دوباره تلاش کنید.",
       connectionError:

@@ -19,20 +19,8 @@ This file tracks known improvement work that has not been completed yet. When an
 - Preload the display serif used on the hero headline. This needs the fonts
   moved from `@fontsource-variable` to `next/font/local`.
 
-## Marketplace — P0 Creator and Submission Lifecycle
-
-- Add API and end-to-end authorization tests covering cross-user listing access,
-  creator ownership, moderation, unpublished artifacts, and Blog isolation.
-
 ## Marketplace — P0 Discovery and Community
 
-- Add normalized communities and moderated many-to-many listing placements, then
-  expose community browse pages and combinable community/platform filters as
-  defined in ADR 0002.
-- Normalize platform, compatibility, item type, and category values so filters
-  cannot fragment through inconsistent creator input.
-- Expand marketplace search across listing metadata, creators, communities, and
-  compatibility with stable pagination and useful empty/error states.
 - Add creator profile pages and listing collections while excluding drafts and
   suspended items from public responses.
 - Add reporting controls for unsafe, misleading, abandoned, or malicious items,

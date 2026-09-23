@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, CheckCircle2, ExternalLink, RotateCcw, ShieldAlert } from "lucide-react";
-import { addModerationNote, ApiError, getModerationPreview, moderateListing } from "@/lib/api";
+import { addModerationNote, ApiError, getModerationPreview, moderateCommunityPlacement, moderateListing } from "@/lib/api";
 import type { MarketplaceModerationPreview } from "@/lib/types";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
@@ -23,6 +23,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
   const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [addingNote, setAddingNote] = useState(false);
+  const [placementSubmitting, setPlacementSubmitting] = useState<string | null>(null);
   const canModerate = session.marketplaceRoles.includes("moderator") || session.marketplaceRoles.includes("administrator");
 
   const load = useCallback(async () => {
@@ -74,6 +75,25 @@ export function ModerationPreview({ productId }: { productId: string }) {
     finally { setAddingNote(false); }
   }
 
+  async function submitPlacement(event: FormEvent<HTMLFormElement>, communitySlug: string, version: number) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const action = text(data, "action") as "APPROVE" | "REJECT" | "REMOVE";
+    setPlacementSubmitting(communitySlug); setError(null); setSaved(false);
+    try {
+      await moderateCommunityPlacement(preview!.id, communitySlug, {
+        action,
+        expectedVersion: version,
+        ...(text(data, "publicReason") ? { publicReason: text(data, "publicReason") } : {}),
+        ...(text(data, "internalNote") ? { internalNote: text(data, "internalNote") } : {}),
+      });
+      setSaved(true);
+      await load();
+    } catch (cause) { setError(apiMessage(cause, t.moderation)); }
+    finally { setPlacementSubmitting(null); }
+  }
+
   if (session.loading) return <Status message={t.moderation.loading} />;
   if (!canModerate) return <Status message={t.moderation.accessDenied} error />;
   if (loading && !preview) return <Status message={t.moderation.loading} />;
@@ -121,7 +141,20 @@ export function ModerationPreview({ productId }: { productId: string }) {
         <Panel title={t.moderation.permissions}><JsonBlock value={release.permissions} /></Panel>
         <Panel title={t.moderation.license}><JsonBlock value={release.license} /></Panel>
         <Panel title={t.moderation.typeDetails}><JsonBlock value={manifest?.typeDetails} /></Panel>
-        <Panel title={t.moderation.communities}>{preview.proposedSnapshot?.communityRequests.length ? <div className="space-y-3">{preview.proposedSnapshot.communityRequests.map(({ community }) => <article key={community.slug} className="rounded-lg border p-4"><h3 className="font-semibold">{locale === "fa" ? community.nameFa ?? community.nameEn : community.nameEn}</h3><p className="mt-1 text-xs text-muted-foreground">{community.primaryPlatform}</p><p className="mt-3 text-sm">{locale === "fa" ? community.rulesFa ?? community.rulesEn : community.rulesEn}</p></article>)}</div> : <Empty />}</Panel>
+        <Panel title={t.moderation.communities}>{preview.proposedSnapshot?.communityRequests.length ? <div className="space-y-3">{preview.proposedSnapshot.communityRequests.map(({ community, placement }) => {
+          const actions = placement?.state === "REQUESTED" ? ["APPROVE", "REJECT"] as const : placement?.state === "APPROVED" ? ["REMOVE"] as const : [];
+          return <article key={community.slug} className="rounded-lg border p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-semibold">{locale === "fa" ? community.nameFa ?? community.nameEn : community.nameEn}</h3><p className="mt-1 text-xs text-muted-foreground">{community.primaryPlatform}</p></div><span className="rounded-full border px-2.5 py-1 text-xs font-semibold">{placement?.state.toLowerCase() ?? "requested"}</span></div>
+            <p className="mt-3 text-sm">{locale === "fa" ? community.rulesFa ?? community.rulesEn : community.rulesEn}</p>
+            {placement?.publicReason && <p className="mt-3 rounded-md bg-muted/50 p-3 text-sm">{placement.publicReason}</p>}
+            {placement && actions.length > 0 && <form className="mt-4 grid gap-3 border-t pt-4" onSubmit={(event) => void submitPlacement(event, community.slug, placement.version)}>
+              <label className="text-sm font-semibold">{locale === "fa" ? "تصمیم" : "Decision"}<select name="action" className="mt-2 min-h-11 w-full rounded-md border bg-background px-3 text-sm">{actions.map((value) => <option key={value} value={value}>{value.toLowerCase()}</option>)}</select></label>
+              <label className="text-sm font-semibold">{t.moderation.publicReason}<textarea name="publicReason" className="mt-2 min-h-20 w-full rounded-md border bg-background p-3 text-sm" /></label>
+              <label className="text-sm font-semibold">{t.moderation.internalNote}<textarea name="internalNote" className="mt-2 min-h-20 w-full rounded-md border bg-background p-3 text-sm" /></label>
+              <Button type="submit" variant="secondary" disabled={placementSubmitting === community.slug}>{placementSubmitting === community.slug ? t.moderation.submitting : (locale === "fa" ? "ثبت تصمیم جامعه" : "Save community decision")}</Button>
+            </form>}
+          </article>;
+        })}</div> : <Empty />}</Panel>
         <Panel title={t.moderation.approvedBaseline}>{preview.approvedSnapshot ? <div><p className="text-sm text-muted-foreground">{t.moderation.revision} {preview.approvedSnapshot.revision} · {date.format(new Date(preview.approvedSnapshot.createdAt))}</p><div className="mt-4"><JsonBlock value={preview.approvedSnapshot.content} /></div></div> : <p className="text-sm text-muted-foreground">{t.moderation.noApprovedBaseline}</p>}</Panel>
       </div>
 

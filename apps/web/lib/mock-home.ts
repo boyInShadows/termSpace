@@ -192,6 +192,7 @@ const products: Product[] = seeds.map((seed, index) => ({
   creator: seed.creator,
   pricing: { amountMinor: 0, currency: "USD", model: "free" },
   compatibility: { platforms: seed.platforms, models: ["Model agnostic"] },
+  communities: [],
   category: seed.category,
   rating: seed.rating,
   reviewCount: seed.reviewCount,
@@ -220,12 +221,12 @@ const categories: MarketplaceCategory[] = [
 ];
 
 const types: MarketplaceTypeCount[] = [
-  { type: "Skill", products: 412 },
-  { type: "Agent", products: 186 },
-  { type: "MCP server", products: 143 },
-  { type: "Prompt", products: 97 },
-  { type: "Rule", products: 58 },
-  { type: "Developer utility", products: 41 },
+  { type: "skill", products: 412 },
+  { type: "agent", products: 186 },
+  { type: "mcp_server", products: 143 },
+  { type: "prompt", products: 97 },
+  { type: "rule", products: 58 },
+  { type: "workflow", products: 41 },
 ];
 
 export const mockHome: MarketplaceHome = {
@@ -233,5 +234,6 @@ export const mockHome: MarketplaceHome = {
   creators,
   categories,
   types,
+  platforms: [],
   total: categories.reduce((sum, category) => sum + category.products, 0),
 };

@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
+import { MARKETPLACE_PLATFORM_KEYS } from "./marketplacePlatforms.js";
 
 export const MARKETPLACE_ITEM_TYPES = [
   "skill", "agent", "mcp_server", "integration", "rule", "prompt", "hook", "template", "workflow",
@@ -57,7 +58,7 @@ const httpsUrl = z.string().url().max(2048).refine((value) => {
   return parsed.protocol === "https:" && !parsed.username && !parsed.password;
 }, "URL must use HTTPS and must not contain credentials");
 const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(160);
-const platformKey = z.string().regex(/^[a-z0-9]+(?:[_-][a-z0-9]+)*$/).max(50);
+const platformKey = z.enum(MARKETPLACE_PLATFORM_KEYS);
 const repositoryPath = boundedText(1, 500).refine((value) => !value.startsWith("/") && !value.includes("\\") && value.split("/").every((segment) => segment !== "." && segment !== ".."), "Path must be a safe repository-relative path");
 
 const localizedText = z.object({ en: boundedText(), fa: boundedText().optional() }).strict();

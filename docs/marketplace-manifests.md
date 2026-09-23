@@ -11,8 +11,8 @@ The stable API keys are `skill`, `agent`, `mcp_server`, `integration`, `rule`,
 `prompt`, `hook`, `template`, and `workflow`. PostgreSQL stores their uppercase
 enum equivalents. Public product responses retain the old localized/display
 `type` field for compatibility and add `typeKey` as the stable identifier.
-Product filtering accepts both forms during the transition; new clients should
-send the stable key.
+Product filtering accepts only the stable key. Display labels remain response
+metadata and must never be sent back as filter values.
 
 Legacy `Skill`, `Agent`, `Workflow`, `Prompt`, `Prompt pack`, and `MCP server`
 records are migrated directly. `AI tool`, `Developer utility`, and unknown
@@ -71,6 +71,13 @@ version is published, creators must choose a new version label for changed
 release metadata. Listing and manifest snapshots may point to an unchanged
 release manifest across metadata-only revisions, but snapshots themselves are
 always append-only.
+
+Platform compatibility uses the controlled registry in
+`apps/api/src/lib/marketplacePlatforms.ts`. Manifests, query filters, relational
+compatibility rows, and community primary-platform references store only stable
+lowercase keys. English and Persian names are presentation metadata returned by
+the API. Adding a platform requires a registry update and a forward migration;
+creators cannot introduce platform keys through a manifest.
 
 The flat product fields `platforms`, `models`, `installationSteps`,
 `requirements`, and `permissions` remain transitional so existing public pages
