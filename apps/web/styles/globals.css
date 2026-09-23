@@ -88,6 +88,13 @@ html[dir="rtl"] .editorial {
   letter-spacing: 0;
 }
 
+/* Persian is a joined script: tracking pulls its letters apart, and the mono
+   face has no Persian glyphs, so the fallback breaks the joins too. */
+html[dir="rtl"] .eyebrow {
+  font-family: var(--font-estedad), var(--font-geist), sans-serif;
+  letter-spacing: 0;
+}
+
 ::selection {
   background: var(--selection);
 }

@@ -1,48 +1,60 @@
 "use client";
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
+import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
-import { cn } from "@/lib/utils";
-import { DashboardNav } from "./dashboard-nav";
+import { DashboardSidebar, DashboardTabBar } from "./dashboard-nav";
+import { DashboardTopbar } from "./dashboard-topbar";
+import { DashboardOverviewSkeleton } from "./overview";
 
 /**
- * Gates every dashboard page behind a reader session and lays the side
- * navigation alongside the page body.
+ * The dashboard frame — top bar, sidebar, bottom tab bar — and the reader
+ * session gate for every page inside it.
  *
  * The gate lives here rather than in each page so a new dashboard route cannot
  * accidentally ship ungated. It is a convenience, not a security boundary — the
- * API authenticates every `/api/community` request independently.
+ * API authenticates every creator request independently.
  */
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const session = useMarketplaceSession();
+  const router = useRouter();
+  const pathname = usePathname() ?? "/dashboard";
+  const signInHref = `${localePath("/account", locale)}?next=${encodeURIComponent(pathname)}`;
+  const isSignedOut = !session.loading && !session.email;
 
-  if (session.loading) {
-    return (
-      <p className="py-20 text-center text-sm text-muted-foreground">{t.wait}</p>
-    );
-  }
+  useEffect(() => {
+    if (isSignedOut) router.replace(signInHref);
+  }, [isSignedOut, router, signInHref]);
 
-  if (!session.email) {
+  if (isSignedOut) {
     return (
-      <section className="mx-auto max-w-md rounded-xl border border-border bg-surface p-7 text-center">
-        <h1 className="editorial text-3xl">{t.dashTitle}</h1>
-        <p className="mt-3 text-sm text-muted-foreground">{t.dashSignIn}</p>
-        <Link
-          href="/account?next=%2Fdashboard"
-          className={cn(buttonVariants({ variant: "primary" }), "mt-6")}
-        >
-          {t.signIn}
-        </Link>
-      </section>
+      <main className="grid min-h-dvh place-items-center bg-background px-5">
+        <p className="text-sm text-muted-foreground" role="status">
+          {t.dashboardHome.redirecting}{" "}
+          <Link href={signInHref} className="text-primary underline-offset-4 hover:underline">
+            {t.signIn}
+          </Link>
+        </p>
+      </main>
     );
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[13rem_1fr] lg:gap-12">
-      <DashboardNav />
-      <div className="min-w-0">{children}</div>
+    <div className="min-h-dvh bg-background text-foreground">
+      <DashboardTopbar />
+      <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
+        <DashboardSidebar />
+        {/* Bottom padding clears the fixed tab bar and Publish button below lg. */}
+        <main className="min-w-0 px-4 pb-32 pt-6 sm:px-6 lg:px-10 lg:py-8">
+          <div className="mx-auto max-w-[1200px]">
+            {session.loading ? <DashboardOverviewSkeleton /> : children}
+          </div>
+        </main>
+      </div>
+      <DashboardTabBar />
     </div>
   );
 }

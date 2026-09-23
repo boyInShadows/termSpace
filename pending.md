@@ -9,6 +9,13 @@ This file tracks known improvement work that has not been completed yet. When an
   stop, no horizontal scroll at 375px with the menu working and hero chips
   hidden, and the how-it-works panel stepping through all three states on
   scroll.
+- Do a manual browser pass of `/dashboard` at 375px (tab bar, floating
+  Publish, no horizontal scroll) and with a creator account that has listings
+  and lifecycle events (table, status pills, activity rail in both locales).
+- Dashboard data the plan wanted but the API lacks: acquisitions over a time
+  window with a trend, an average rating aggregated server-side across all of a
+  creator's listings, and pending review responses. Add these endpoints before
+  adding their tiles.
 - Preload the display serif used on the hero headline. This needs the fonts
   moved from `@fontsource-variable` to `next/font/local`.
 

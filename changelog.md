@@ -4,6 +4,41 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-23
 
+- Rebuilt `/dashboard` as a creator workbench (from `dashboardPlan.md`,
+  gitignored scratch). The dashboard now has its own frame in place of the site
+  header and footer: a top bar (wordmark, `~/path` crumb, catalog search with a
+  working ⌘K / Ctrl K shortcut, theme, language, avatar), a sidebar with the one
+  primary Publish action and a user card, and below `lg` a bottom tab bar and a
+  floating Publish button. A signed-out visitor is now redirected to
+  `/account?next=<path>` instead of seeing an inline card.
+- The overview moved off the legacy `/api/community` endpoints onto the
+  owner-scoped marketplace creator API, via a new `lib/dashboard.ts`
+  (`getDashboardHome`, where a 403/404 means "no creator workspace", not an
+  error). It shows a time-of-day greeting, four stat tiles, an eight-row
+  listings table with lifecycle status, an activity feed merged from each
+  listing's lifecycle events, and quick actions. Every data card has loading,
+  empty, no-profile and inline-error-with-Retry states, and the route skeleton
+  is the same layout held in its loading state, so dimensions cannot drift.
+- Deliberate departures from the plan, all because the data does not exist:
+  no "installs · 7d" or trend deltas (the API reports totals, not a time
+  series), no "pending reviews" tile or "reply to reviews" action (there is no
+  review-response workflow), and no Listings / Reviews / Analytics nav items
+  (no such routes; the nav only links real pages). The tiles are
+  Acquisitions, Listings live, In review and Total listings. Components live
+  in `features/dashboard/`, matching the repo, not the plan's
+  `components/dashboard/`.
+- Fixed Persian eyebrow labels site-wide: `.eyebrow`'s tracking and mono face
+  pulled Persian letters apart, so `html[dir="rtl"] .eyebrow` now uses Estedad
+  with no tracking. `listingStateLabel` and `lifecycleActionLabel` are now
+  exported from `features/creator/creator-dashboard.tsx` for reuse.
+- Verification: root `typecheck` clean, 220 tests passing (19 new: data
+  layer, overview states, shell gate/nav/Publish routing), `apps/web` lint
+  clean, all production builds. Checked in a real browser against the running
+  API with a signed-in reader without a creator profile: desktop dark and
+  light, and Persian RTL (which found and fixed the eyebrow and greeting-bidi
+  bugs). Not checked in a browser: the 375px layout and a creator account
+  with listings (covered by unit tests only).
+
 - Closed out the homepage plan (`plan.md`, gitignored scratch, now deleted).
   Audited every item against the code; the only unfinished ones were the
   Next.js upgrade and the Lighthouse/axe targets. Upgraded `next` and
