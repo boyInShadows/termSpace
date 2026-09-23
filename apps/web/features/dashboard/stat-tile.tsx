@@ -1,17 +1,50 @@
+import { cn } from "@/lib/utils";
 import { Skeleton } from "./dashboard-card";
 
 const TILE = "rounded-[var(--radius-card)] border border-border bg-surface p-5";
 
+export type StatDelta = {
+  /** Signed change against the previous period. */
+  value: number;
+  /** The change as formatted text, without a sign — the arrow carries it. */
+  display: string;
+  /** Full sentence for assistive tech; the arrow and colour alone say nothing. */
+  description: string;
+};
+
 /**
- * A number and its label. No sparkline and no delta: the API reports totals,
- * not a time series, and a trend arrow without one would be invented.
+ * A number, its label and, when the API reports a comparison period, how it
+ * moved. No sparkline: the API reports window totals, not a series.
  */
-export function StatTile({ label, value }: { label: string; value: string }) {
+export function StatTile({ label, value, delta }: { label: string; value: string; delta?: StatDelta }) {
   return (
     <div className={`${TILE} transition-colors duration-[var(--duration-fast)] hover:bg-surface-raised`}>
       <dt className="eyebrow">{label}</dt>
-      <dd className="mt-3 text-3xl font-semibold leading-9 tabular-nums">{value}</dd>
+      <dd className="mt-3 flex items-baseline gap-3">
+        <span className="text-3xl font-semibold leading-9 tabular-nums">{value}</span>
+        {delta && <DeltaBadge delta={delta} />}
+      </dd>
     </div>
+  );
+}
+
+function DeltaBadge({ delta }: { delta: StatDelta }) {
+  const arrow = delta.value > 0 ? "▲" : delta.value < 0 ? "▼" : "—";
+  return (
+    <span
+      className={cn(
+        "font-mono text-xs tabular-nums",
+        delta.value > 0 && "text-success",
+        delta.value < 0 && "text-destructive",
+        delta.value === 0 && "text-muted-foreground",
+      )}
+    >
+      <span aria-hidden>
+        {arrow}
+        {delta.value !== 0 && ` ${delta.display}`}
+      </span>
+      <span className="sr-only">{delta.description}</span>
+    </span>
   );
 }
 

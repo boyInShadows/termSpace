@@ -8,7 +8,7 @@ import { Skeleton } from "./dashboard-card";
 import { ListingsTable } from "./listings-table";
 import type { OverviewState } from "./overview-state";
 import { QuickActions } from "./quick-actions";
-import { StatTile, StatTileSkeleton } from "./stat-tile";
+import { StatTile, StatTileSkeleton, type StatDelta } from "./stat-tile";
 
 /** Fetches the overview once, and again on Retry. */
 export function DashboardOverview() {
@@ -105,6 +105,7 @@ function OverviewHeader({ state, now, name }: { state: OverviewState; now: numbe
     summary = totals.totalListings === 0
       ? copy.summaryEmpty
       : copy.summary
+          .replace("{week}", number.format(totals.acquisitionsLast7Days))
           .replace("{review}", number.format(totals.inReviewListings))
           .replace("{acquisitions}", number.format(totals.totalAcquisitions))
           .replace("{listings}", number.format(totals.totalListings));
@@ -155,16 +156,41 @@ function OverviewStats({ state }: { state: OverviewState }) {
     );
   }
 
-  const number = new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US");
+  const localeTag = locale === "fa" ? "fa-IR" : "en-US";
+  const number = new Intl.NumberFormat(localeTag);
+  const rating = new Intl.NumberFormat(localeTag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const totals = state.status === "ready" && state.home.kind === "creator" ? state.home.dashboard.summary : null;
-  const show = (value: number | undefined) => (totals && value !== undefined ? number.format(value) : "—");
+  const show = (value: number | null | undefined) =>
+    totals && value !== undefined && value !== null ? number.format(value) : "—";
 
   return (
     <dl className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-      <StatTile label={copy.statAcquisitions} value={show(totals?.totalAcquisitions)} />
+      <StatTile
+        label={copy.statAcquisitions7d}
+        value={show(totals?.acquisitionsLast7Days)}
+        delta={
+          // Both finite, or no badge: an API a deploy behind lacks the fields.
+          totals && Number.isFinite(totals.acquisitionsLast7Days) && Number.isFinite(totals.acquisitionsPrevious7Days)
+            ? acquisitionDelta(totals.acquisitionsLast7Days - totals.acquisitionsPrevious7Days, number, copy)
+            : undefined
+        }
+      />
       <StatTile label={copy.statLive} value={show(totals?.publishedListings)} />
+      <StatTile
+        label={copy.statRating}
+        value={totals?.averageRating != null ? rating.format(totals.averageRating) : "—"}
+      />
       <StatTile label={copy.statReview} value={show(totals?.inReviewListings)} />
-      <StatTile label={copy.statTotal} value={show(totals?.totalListings)} />
     </dl>
   );
+}
+
+function acquisitionDelta(
+  change: number,
+  number: Intl.NumberFormat,
+  copy: { deltaUp: string; deltaDown: string; deltaFlat: string },
+): StatDelta {
+  const display = number.format(Math.abs(change));
+  const template = change > 0 ? copy.deltaUp : change < 0 ? copy.deltaDown : copy.deltaFlat;
+  return { value: change, display, description: template.replace("{n}", display) };
 }

@@ -790,19 +790,26 @@ describe("API", () => {
       id: "session-1",
       user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
     });
-    prismaMock.marketplaceProduct.findMany.mockResolvedValue([{
+    prismaMock.marketplaceProduct.findMany.mockResolvedValueOnce([{
       id: "product-1", slug: "owned-skill", name: "Owned Skill", itemType: "SKILL", type: "Skill",
       lifecycleState: "CHANGES_REQUESTED", lifecycleVersion: 3, published: false,
       rating: 4.5, reviewCount: 2, version: "1.1.0", updatedAt: new Date("2026-09-16T10:00:00.000Z"),
       versions: [{ version: "1.1.0", releasedAt: new Date("2026-09-15T10:00:00.000Z") }],
       lifecycleEvents: [{ id: "event-2", action: "CHANGES_REQUESTED", resultingState: "CHANGES_REQUESTED", publicReason: "Clarify network access.", createdAt: new Date("2026-09-16T09:00:00.000Z") }],
       _count: { versions: 2, orders: 7 },
-    }]);
+    }]).mockResolvedValueOnce([
+      // Weighted by reviews: (4.5 × 2 + 3.0 × 6) / 8 = 3.375, shown as 3.4.
+      { rating: 4.5, reviewCount: 2 },
+      { rating: 3.0, reviewCount: 6 },
+    ]);
     prismaMock.marketplaceProduct.count
       .mockResolvedValueOnce(1)
       .mockResolvedValueOnce(0)
       .mockResolvedValueOnce(0);
-    prismaMock.marketplaceOrder.count.mockResolvedValue(7);
+    prismaMock.marketplaceOrder.count
+      .mockResolvedValueOnce(7)
+      .mockResolvedValueOnce(3)
+      .mockResolvedValueOnce(1);
     prismaMock.marketplaceListingLifecycleEvent.findMany.mockResolvedValue([{
       productId: "product-1", action: "CHANGES_REQUESTED", reasonCode: "PERMISSIONS_UNCLEAR",
       publicReason: "Clarify network access.", createdAt: new Date("2026-09-16T09:00:00.000Z"),
@@ -813,7 +820,10 @@ describe("API", () => {
       .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
 
     expect(response.status).toBe(200);
-    expect(response.body.data.summary).toEqual({ totalListings: 1, publishedListings: 0, inReviewListings: 0, totalAcquisitions: 7 });
+    expect(response.body.data.summary).toEqual({
+      totalListings: 1, publishedListings: 0, inReviewListings: 0, totalAcquisitions: 7,
+      acquisitionsLast7Days: 3, acquisitionsPrevious7Days: 1, averageRating: 3.4, ratedReviewCount: 8,
+    });
     expect(response.body.data.listings[0]).toMatchObject({
       id: "product-1", typeKey: "skill", state: "changes_requested", acquisitionCount: 7,
       releaseCount: 2, moderationFeedback: { reasonCode: "PERMISSIONS_UNCLEAR", message: "Clarify network access." },
@@ -826,6 +836,30 @@ describe("API", () => {
     expect(prismaMock.marketplaceOrder.count).toHaveBeenCalledWith({
       where: { status: "completed", product: { creator: { ownerUserId: "reader-1" } } },
     });
+    expect(prismaMock.marketplaceOrder.count).toHaveBeenCalledWith({
+      where: { status: "completed", product: { creator: { ownerUserId: "reader-1" } }, createdAt: { gte: expect.any(Date) } },
+    });
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledWith({
+      where: { creator: { ownerUserId: "reader-1" }, reviewCount: { gt: 0 } },
+      select: { rating: true, reviewCount: true },
+    });
+  });
+
+  it("reports no average rating, rather than zero, when nothing has been reviewed", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+    prismaMock.marketplaceOrder.count.mockResolvedValue(0);
+
+    const response = await request(createApp())
+      .get("/api/marketplace/creator/dashboard")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.summary).toMatchObject({ averageRating: null, ratedReviewCount: 0, acquisitionsLast7Days: 0 });
   });
 
   it("does not expose the creator dashboard without an active creator grant", async () => {

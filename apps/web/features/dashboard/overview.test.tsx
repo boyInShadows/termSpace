@@ -24,7 +24,11 @@ function creatorHome(listingCount = 1): DashboardHome {
       createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z", accessActive: true,
     } as unknown as Extract<DashboardHome, { kind: "creator" }>["profile"],
     dashboard: {
-      summary: { totalListings: listingCount, publishedListings: listingCount, inReviewListings: 2, totalAcquisitions: 1234 },
+      summary: {
+        totalListings: listingCount, publishedListings: listingCount, inReviewListings: Math.min(1, listingCount), totalAcquisitions: 1234,
+        acquisitionsLast7Days: 5, acquisitionsPrevious7Days: 8,
+        averageRating: listingCount ? 4.6 : null, ratedReviewCount: listingCount ? 30 : 0,
+      },
       listings: Array.from({ length: listingCount }, (_, index) => ({
         id: `listing-${index}`, slug: `listing-${index}`, name: `Conversion Copywriter ${index}`, type: "Skill", typeKey: "skill",
         state: "changes_requested", lifecycleVersion: 1, published: true, rating: 0, reviewCount: 0,
@@ -45,8 +49,16 @@ describe("DashboardOverview", () => {
 
     await screen.findByRole("table");
     expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/^Good (morning|afternoon|evening), Kasra\.$/);
-    expect(screen.getByText("2 in review and 1,234 acquisitions across 1 listings.")).toBeInTheDocument();
-    expect(screen.getByText("1,234")).toBeInTheDocument();
+    expect(screen.getByText("5 acquisitions this week, 1,234 in all. 1 of your 1 listings are in review.")).toBeInTheDocument();
+
+    const acquisitions = screen.getByText(copy.en.dashboardHome.statAcquisitions7d).parentElement!;
+    expect(within(acquisitions).getByText("5")).toBeInTheDocument();
+    // Down 3 on the previous week: arrow for sighted readers, a sentence for everyone else.
+    expect(within(acquisitions).getByText("▼ 3").parentElement).toHaveClass("text-destructive");
+    expect(within(acquisitions).getByText("3 fewer than the previous 7 days")).toHaveClass("sr-only");
+
+    const rating = screen.getByText(copy.en.dashboardHome.statRating).parentElement!;
+    expect(within(rating).getByText("4.6")).toBeInTheDocument();
 
     const table = screen.getByRole("table");
     const row = within(table).getByRole("link", { name: /Conversion Copywriter 0/ });
@@ -85,6 +97,9 @@ describe("DashboardOverview", () => {
     expect(cta).toHaveAttribute("href", "/creator/listings/new");
     expect(screen.getByText(copy.en.dashboardHome.summaryEmpty)).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    // Nothing reviewed yet reads as "no rating", never as a score of zero.
+    const rating = screen.getByText(copy.en.dashboardHome.statRating).parentElement!;
+    expect(within(rating).getByText("—")).toBeInTheDocument();
   });
 
   it("shows an inline error in each data card and recovers on retry", async () => {

@@ -19,7 +19,12 @@ export interface CreatorDashboardListing {
   moderationFeedback: CreatorModerationFeedback | null; recentUpdates: CreatorDashboardEvent[]; updatedAt: string;
 }
 export interface CreatorDashboard {
-  summary: { totalListings: number; publishedListings: number; inReviewListings: number; totalAcquisitions: number };
+  summary: {
+    totalListings: number; publishedListings: number; inReviewListings: number; totalAcquisitions: number;
+    acquisitionsLast7Days: number; acquisitionsPrevious7Days: number;
+    /** Review-weighted across every listing; null until something is reviewed. */
+    averageRating: number | null; ratedReviewCount: number;
+  };
   listings: CreatorDashboardListing[];
 }
 export interface CreatorDashboardResult {

@@ -35,7 +35,7 @@ describe("getDashboardHome", () => {
 
   it("returns the profile and the first page of listings for a creator", async () => {
     const profile = { id: "c1", name: "Kasra" };
-    const data = { summary: { totalListings: 0, publishedListings: 0, inReviewListings: 0, totalAcquisitions: 0 }, listings: [] };
+    const data = { summary: { totalListings: 0, publishedListings: 0, inReviewListings: 0, totalAcquisitions: 0, acquisitionsLast7Days: 0, acquisitionsPrevious7Days: 0, averageRating: null, ratedReviewCount: 0 }, listings: [] };
     getProfile.mockResolvedValue(profile);
     getDashboard.mockResolvedValue({ data, meta: {} });
 

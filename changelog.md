@@ -4,6 +4,28 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-23
 
+- Finished the dashboard plan and deleted `dashboardPlan.md`. The creator
+  dashboard API summary now also returns `acquisitionsLast7Days`,
+  `acquisitionsPrevious7Days` (completed orders by `createdAt`), and
+  `averageRating` / `ratedReviewCount`: a review-weighted average across all
+  of the creator's rated listings, `null` rather than 0 until anything is
+  reviewed. The overview tiles now follow the plan: Acquisitions · 7d with a
+  ▲/▼ change against the previous seven days (colour and arrow for sight, a
+  sentence for screen readers), Listings live, Avg rating, and In review. The
+  plan's "pending reviews" tile and "reply to reviews" action remain out, as
+  the review-response workflow does not exist yet; it is tracked under
+  Ratings and Reviews.
+- Merged `origin/main` into `ramtin` (search expansion, normalized taxonomy,
+  community placements, lifecycle authorization tests). The homepage type
+  counts are now grouped on `itemType` and returned as stable keys, because
+  main's `?type=` filter accepts only keys; the search chips submit keys, and
+  "Developer tools" became "Rules" since `Developer utility` has no key.
+- Verification: root `typecheck` clean; 237 tests passing (150 API including
+  two new dashboard summary tests, 15 Blog, 72 web); `apps/web` lint clean;
+  all production builds. The 375px dashboard pass is still not done in a
+  browser (the browser window could not be resized from this environment)
+  and remains in `pending.md`.
+
 - Rebuilt `/dashboard` as a creator workbench (from `dashboardPlan.md`,
   gitignored scratch). The dashboard now has its own frame in place of the site
   header and footer: a top bar (wordmark, `~/path` crumb, catalog search with a
