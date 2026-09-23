@@ -53,6 +53,15 @@
   border-color: var(--border);
 }
 
+/* The `hidden` attribute must win.
+   Tailwind's display utilities are real class selectors, so a `flex` or `grid`
+   class out-specifies the user-agent rule for `[hidden]` and an element marked
+   hidden stays on screen. Any component that toggles a laid-out element with
+   `hidden` — the browse tab panels, for one — is broken without this. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
   color-scheme: dark;
@@ -76,6 +85,13 @@ html[dir="rtl"] body {
 
 html[dir="rtl"] .editorial {
   font-family: var(--font-estedad), var(--font-newsreader), serif;
+  letter-spacing: 0;
+}
+
+/* Persian is a joined script: tracking pulls its letters apart, and the mono
+   face has no Persian glyphs, so the fallback breaks the joins too. */
+html[dir="rtl"] .eyebrow {
+  font-family: var(--font-estedad), var(--font-geist), sans-serif;
   letter-spacing: 0;
 }
 
@@ -109,19 +125,30 @@ select {
   margin-inline: auto;
 }
 
+.section-y {
+  padding-block: var(--section-y);
+}
+
 .eyebrow {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.7rem;
-  line-height: 1rem;
+  /* 12px, not 11.2px. --muted-foreground itself is comfortably AA on every
+     surface it is used on here (8.25:1 dark, 6.98:1 light), so the problem
+     with these labels was never colour — it is 0.16em of tracking on type
+     small enough that the letterforms stop carrying it. */
+  font-size: 0.75rem;
+  line-height: 1.1rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 600;
   color: var(--muted-foreground);
 }
 
-/* Plasma → Ion sweep. The single signature gradient of the brand. */
+/* Plasma → Ion sweep. The single signature gradient of the brand.
+   Uses the dedicated --plasma-text-* stops, not the UI colours: this is the
+   only place the brand gradient carries readable text, so the stops are tuned
+   for contrast rather than for fills. */
 .text-plasma {
-  background: linear-gradient(102deg, var(--primary) 0%, var(--spark) 52%, var(--accent) 100%);
+  background: linear-gradient(102deg, var(--plasma-text-1) 0%, var(--plasma-text-2) 52%, var(--plasma-text-3) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -172,6 +199,14 @@ select {
   to { transform: translate3d(-50%, 0, 0); }
 }
 
+/* The logo's terminal caret. `steps(2)` so it snaps on and off like a real
+   cursor instead of fading, which would read as a pulsing decoration. The
+   global reduced-motion rule stops it and leaves the bar visible. */
+@keyframes ts-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 @keyframes ts-pulse-ring {
   0% { opacity: 0.85; transform: scale(1); }
   70%, 100% { opacity: 0; transform: scale(2.4); }
@@ -188,6 +223,7 @@ select {
 }
 
 .animate-marquee { animation: ts-marquee var(--marquee-duration, 42s) linear infinite; }
+.ts-caret { animation: ts-blink 1.15s steps(2, jump-none) infinite; }
 .animate-drift { animation: ts-drift 7s var(--ease-out-quart) infinite; }
 
 /* Each line of the pinned process panel re-enters when the step changes.
@@ -290,7 +326,10 @@ html.light [data-theme-icon="moon"] {
 /* Kept to opacity only: the headline it runs on is gradient-clipped text,
    and setting `color` there would knock out the background-clip. */
 [data-decoding] {
-  opacity: 0.86;
+  /* 0.9, not lower: the decode runs on the gradient headline, and dropping
+     it further composites the stops toward the background far enough to push
+     the light theme under 4.5:1 while the animation is playing. */
+  opacity: 0.9;
 }
 
 /* --- accessibility ------------------------------------------------------- */

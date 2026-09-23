@@ -7,7 +7,7 @@ const sessionState = vi.hoisted(() => ({ loading: false, email: "reader@example.
 
 vi.mock("@/lib/api", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/lib/api")>();
-  return { ...original, getOwnedCreatorProfile: apiMocks.get, createCreatorProfile: apiMocks.create, updateCreatorProfile: apiMocks.update };
+  return { ...original, getOwnedCreatorProfile: apiMocks.get, createOwnedCreatorProfile: apiMocks.create, updateOwnedCreatorProfile: apiMocks.update };
 });
 vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => sessionState }));
 vi.mock("@/lib/locale-context", () => ({

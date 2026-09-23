@@ -310,7 +310,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                 <ProductCard
                   key={p.id}
                   product={p}
-                  variant={view === "list" ? "list" : "compact"}
+                  variant={view === "list" ? "list" : "card"}
                 />
               ))
             ) : loading && !error ? (

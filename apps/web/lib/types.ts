@@ -19,7 +19,12 @@ export interface CreatorDashboardListing {
   moderationFeedback: CreatorModerationFeedback | null; recentUpdates: CreatorDashboardEvent[]; updatedAt: string;
 }
 export interface CreatorDashboard {
-  summary: { totalListings: number; publishedListings: number; inReviewListings: number; totalAcquisitions: number };
+  summary: {
+    totalListings: number; publishedListings: number; inReviewListings: number; totalAcquisitions: number;
+    acquisitionsLast7Days: number; acquisitionsPrevious7Days: number;
+    /** Review-weighted across every listing; null until something is reviewed. */
+    averageRating: number | null; ratedReviewCount: number;
+  };
   listings: CreatorDashboardListing[];
 }
 export interface CreatorDashboardResult {
@@ -145,7 +150,21 @@ export interface MarketplaceCommunity {
   primaryPlatform: string; rulesEn: string; rulesFa: string | null;
   submissionGuidanceEn: string; submissionGuidanceFa: string | null; state: "active" | "archived"; products?: number;
 }
-export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; platforms: MarketplacePlatform[]; total: number; }
+export interface MarketplaceTypeCount { type: string; products: number; }
+export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; types: MarketplaceTypeCount[]; platforms: MarketplacePlatform[]; total: number; }
 export interface ProductPageResult { data: Product[]; meta: { page: number; limit: number; total: number; totalPages: number }; }
 export interface MarketplaceCommunityPageResult { data: { community: MarketplaceCommunity; products: Product[] }; meta: ProductPageResult["meta"]; }
 export interface ProductFilters { q?: string; type?: string; category?: string; community?: string; platform?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }
+export interface CreatorProfile { id: string; name: string; handle: string; initials: string; verified: boolean; bio: string; followers: number; }
+export interface OwnedProduct {
+  id: string; slug: string; name: string; type: ProductType; outcome: string; description: string;
+  tags: string[]; platforms: Platform[]; models: AIModel[]; version: string; published: boolean;
+  rating: number; reviewCount: number; usageCount: number; purchaseCount: number;
+  verified: boolean; featured: boolean; category: string; createdAt: string; updatedAt: string;
+}
+export interface PublishingCategory { name: string; slug: string; }
+export interface CreatorProfileInput { name: string; handle: string; bio: string; }
+export interface ProductSubmission {
+  name: string; slug: string; type: ProductType; category: string; outcome: string;
+  description: string; platforms: Platform[]; models: AIModel[]; tags: string[]; version?: string;
+}

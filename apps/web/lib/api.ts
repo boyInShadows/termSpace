@@ -1,4 +1,4 @@
-import type { CreatorDashboardResult, CreatorReleaseHistory, MarketplaceCommunity, MarketplaceCommunityPageResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceInstallation, MarketplaceItemType, MarketplaceLibraryEntry, MarketplaceModerationPreview, MarketplaceModerationQueueResult, MarketplaceProviderConnection, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
+import type { CreatorDashboardResult, CreatorProfile, CreatorProfileInput, CreatorReleaseHistory, MarketplaceCommunity, MarketplaceCommunityPageResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceInstallation, MarketplaceItemType, MarketplaceLibraryEntry, MarketplaceModerationPreview, MarketplaceModerationQueueResult, MarketplaceProviderConnection, OwnedCreatorProfile, OwnedProduct, ProductDetail, ProductFilters, ProductPageResult, ProductSubmission, PublishingCategory } from "./types";
 
 type ApiErrorDetail = { path: string; code?: string; message: string };
 type ErrorBody = { error?: { code?: string; message?: string; details?: ApiErrorDetail[]; correlationId?: string } };
@@ -79,8 +79,8 @@ export async function logout() { return request("/api/readers/logout", { method:
 export async function requestEmailVerification() { return request<{ data: { accepted: true } }>("/api/readers/email-verification/request", { method: "POST" }); }
 export async function confirmEmailVerification(token: string) { return request<{ data: { verified: true } }>("/api/readers/email-verification/confirm", { method: "POST", body: JSON.stringify({ token }) }); }
 export async function getOwnedCreatorProfile() { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile")).data; }
-export async function createCreatorProfile(input: { name: string; handle: string; bio: string }) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", { method: "POST", body: JSON.stringify(input) })).data; }
-export async function updateCreatorProfile(input: { name: string; bio: string }) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", { method: "PATCH", body: JSON.stringify(input) })).data; }
+export async function createOwnedCreatorProfile(input: { name: string; handle: string; bio: string }) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", { method: "POST", body: JSON.stringify(input) })).data; }
+export async function updateOwnedCreatorProfile(input: { name: string; bio: string }) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", { method: "PATCH", body: JSON.stringify(input) })).data; }
 export async function getCreatorDashboard(page = 1, limit = 24, signal?: AbortSignal) { return request<CreatorDashboardResult>(`/api/marketplace/creator/dashboard?page=${page}&limit=${limit}`, { signal }); }
 export async function getMarketplaceDraftOptions() { return (await request<{ data: MarketplaceDraftOptions }>("/api/marketplace/draft-options")).data; }
 export async function getCreatorDraft(id: string) { return (await request<{ data: MarketplaceDraftRecord }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/draft`)).data; }
@@ -106,3 +106,11 @@ export async function setFavorite(slug: string, saved: boolean) { return request
 export async function acquireProduct(slug: string, idempotencyKey: string) { return request<{ data: { id: string; status: string; releaseManifestId: string | null; acquiredAt: string } }>(`/api/marketplace/products/${encodeURIComponent(slug)}/acquire`, { method: "POST", headers: { "Idempotency-Key": idempotencyKey } }); }
 export async function getProductInstallation(slug: string, signal?: AbortSignal) { return (await request<{ data: MarketplaceInstallation }>(`/api/marketplace/products/${encodeURIComponent(slug)}/installation`, { signal })).data; }
 export async function subscribe(email: string) { return request("/api/newsletter/subscribers", { method: "POST", body: JSON.stringify({ email }) }); }
+export async function getPublishingCategories() { return (await request<{ data: PublishingCategory[] }>("/api/community/categories")).data; }
+export async function getCreatorProfile() { return (await request<{ data: CreatorProfile | null }>("/api/community/creator")).data; }
+export async function createCreatorProfile(input: CreatorProfileInput) { return (await request<{ data: CreatorProfile }>("/api/community/creator", { method: "POST", body: JSON.stringify(input) })).data; }
+export async function updateCreatorProfile(input: Partial<Omit<CreatorProfileInput, "handle">>) { return (await request<{ data: CreatorProfile }>("/api/community/creator", { method: "PATCH", body: JSON.stringify(input) })).data; }
+export async function getMyProducts() { return (await request<{ data: OwnedProduct[] }>("/api/community/products")).data; }
+export async function createMyProduct(input: ProductSubmission) { return (await request<{ data: OwnedProduct }>("/api/community/products", { method: "POST", body: JSON.stringify(input) })).data; }
+export async function setMyProductPublished(slug: string, published: boolean) { return (await request<{ data: OwnedProduct }>(`/api/community/products/${encodeURIComponent(slug)}`, { method: "PATCH", body: JSON.stringify({ published }) })).data; }
+export async function deleteMyProduct(slug: string) { return request(`/api/community/products/${encodeURIComponent(slug)}`, { method: "DELETE" }); }

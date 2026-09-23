@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom/vitest";
+import { cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
 
 /**
@@ -56,5 +57,9 @@ window.IntersectionObserver =
   ImmediateIntersectionObserver as unknown as typeof IntersectionObserver;
 
 afterEach(() => {
+  // `globals` is off, so Testing Library never registers its own auto-cleanup.
+  // Without this, renders accumulate in the document across tests in a file and
+  // single-element queries fail with "found multiple elements".
+  cleanup();
   globalThis.prefersReducedMotion = true;
 });

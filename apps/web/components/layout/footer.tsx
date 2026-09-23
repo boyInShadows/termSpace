@@ -26,13 +26,14 @@ export function Footer() {
     ] },
   ];
   return (
-    <footer className="relative isolate mt-24 overflow-hidden border-t border-border bg-surface/40">
+    <footer className="relative isolate mt-12 overflow-hidden border-t border-border bg-surface/40">
       {/* A last, quiet echo of the hero's plasma so the page closes on the
           same note it opened with. */}
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 -z-10 h-64 opacity-40"
+        className="absolute inset-x-0 top-0 -z-10 h-64"
         style={{
+          opacity: "calc(var(--nebula-opacity) * 0.6)",
           backgroundImage:
             "radial-gradient(50% 100% at 20% 0%, color-mix(in oklab, var(--primary) 20%, transparent), transparent 70%), radial-gradient(45% 100% at 82% 0%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 72%)",
         }}
@@ -70,7 +71,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-border/70 py-5">
-        <p className="container-page font-mono text-[11px] text-muted-foreground">
+        <p className="container-page font-mono text-xs text-muted-foreground">
           © 2026 termspace · Concept prototype · Local mock data only
         </p>
       </div>

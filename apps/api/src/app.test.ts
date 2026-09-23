@@ -11,7 +11,7 @@ const prismaMock = vi.hoisted(() => ({
   readerSession: { findFirst: vi.fn(), deleteMany: vi.fn(), create: vi.fn() },
   readerEmailVerification: { findUnique: vi.fn(), findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   transactionalEmailOutbox: { updateMany: vi.fn() },
-  marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
+  marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), groupBy: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceProductVersion: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceReleaseManifest: { create: vi.fn(), update: vi.fn() },
   marketplaceProviderConnection: { findMany: vi.fn(), findUnique: vi.fn(), upsert: vi.fn(), updateMany: vi.fn() },
@@ -105,9 +105,10 @@ describe("API", () => {
     prismaMock.marketplaceProduct.count.mockResolvedValue(12);
     prismaMock.marketplaceCreator.findMany.mockResolvedValue([]);
     prismaMock.marketplaceCategory.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.groupBy.mockResolvedValue([{ itemType: "SKILL", _count: { _all: 7 } }, { itemType: null, _count: { _all: 2 } }]);
     const response = await request(createApp()).get("/api/marketplace/home");
     expect(response.status).toBe(200);
-    expect(response.body.data).toEqual({ products: [], creators: [], categories: [], platforms: [], total: 12 });
+    expect(response.body.data).toEqual({ products: [], creators: [], categories: [], types: [{ type: "skill", products: 7 }], platforms: [], total: 12 });
   });
 
   it("publishes the controlled marketplace item-type registry", async () => {
@@ -127,6 +128,7 @@ describe("API", () => {
     prismaMock.marketplaceProduct.count.mockResolvedValue(1);
     prismaMock.marketplaceCreator.findMany.mockResolvedValue([]);
     prismaMock.marketplaceCategory.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.groupBy.mockResolvedValue([]);
 
     const response = await request(createApp()).get("/api/marketplace/home");
     expect(response.status).toBe(200);
@@ -788,19 +790,26 @@ describe("API", () => {
       id: "session-1",
       user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
     });
-    prismaMock.marketplaceProduct.findMany.mockResolvedValue([{
+    prismaMock.marketplaceProduct.findMany.mockResolvedValueOnce([{
       id: "product-1", slug: "owned-skill", name: "Owned Skill", itemType: "SKILL", type: "Skill",
       lifecycleState: "CHANGES_REQUESTED", lifecycleVersion: 3, published: false,
       rating: 4.5, reviewCount: 2, version: "1.1.0", updatedAt: new Date("2026-09-16T10:00:00.000Z"),
       versions: [{ version: "1.1.0", releasedAt: new Date("2026-09-15T10:00:00.000Z") }],
       lifecycleEvents: [{ id: "event-2", action: "CHANGES_REQUESTED", resultingState: "CHANGES_REQUESTED", publicReason: "Clarify network access.", createdAt: new Date("2026-09-16T09:00:00.000Z") }],
       _count: { versions: 2, orders: 7 },
-    }]);
+    }]).mockResolvedValueOnce([
+      // Weighted by reviews: (4.5 × 2 + 3.0 × 6) / 8 = 3.375, shown as 3.4.
+      { rating: 4.5, reviewCount: 2 },
+      { rating: 3.0, reviewCount: 6 },
+    ]);
     prismaMock.marketplaceProduct.count
       .mockResolvedValueOnce(1)
       .mockResolvedValueOnce(0)
       .mockResolvedValueOnce(0);
-    prismaMock.marketplaceOrder.count.mockResolvedValue(7);
+    prismaMock.marketplaceOrder.count
+      .mockResolvedValueOnce(7)
+      .mockResolvedValueOnce(3)
+      .mockResolvedValueOnce(1);
     prismaMock.marketplaceListingLifecycleEvent.findMany.mockResolvedValue([{
       productId: "product-1", action: "CHANGES_REQUESTED", reasonCode: "PERMISSIONS_UNCLEAR",
       publicReason: "Clarify network access.", createdAt: new Date("2026-09-16T09:00:00.000Z"),
@@ -811,7 +820,10 @@ describe("API", () => {
       .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
 
     expect(response.status).toBe(200);
-    expect(response.body.data.summary).toEqual({ totalListings: 1, publishedListings: 0, inReviewListings: 0, totalAcquisitions: 7 });
+    expect(response.body.data.summary).toEqual({
+      totalListings: 1, publishedListings: 0, inReviewListings: 0, totalAcquisitions: 7,
+      acquisitionsLast7Days: 3, acquisitionsPrevious7Days: 1, averageRating: 3.4, ratedReviewCount: 8,
+    });
     expect(response.body.data.listings[0]).toMatchObject({
       id: "product-1", typeKey: "skill", state: "changes_requested", acquisitionCount: 7,
       releaseCount: 2, moderationFeedback: { reasonCode: "PERMISSIONS_UNCLEAR", message: "Clarify network access." },
@@ -824,6 +836,30 @@ describe("API", () => {
     expect(prismaMock.marketplaceOrder.count).toHaveBeenCalledWith({
       where: { status: "completed", product: { creator: { ownerUserId: "reader-1" } } },
     });
+    expect(prismaMock.marketplaceOrder.count).toHaveBeenCalledWith({
+      where: { status: "completed", product: { creator: { ownerUserId: "reader-1" } }, createdAt: { gte: expect.any(Date) } },
+    });
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledWith({
+      where: { creator: { ownerUserId: "reader-1" }, reviewCount: { gt: 0 } },
+      select: { rating: true, reviewCount: true },
+    });
+  });
+
+  it("reports no average rating, rather than zero, when nothing has been reviewed", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+    prismaMock.marketplaceOrder.count.mockResolvedValue(0);
+
+    const response = await request(createApp())
+      .get("/api/marketplace/creator/dashboard")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.summary).toMatchObject({ averageRating: null, ratedReviewCount: 0, acquisitionsLast7Days: 0 });
   });
 
   it("does not expose the creator dashboard without an active creator grant", async () => {

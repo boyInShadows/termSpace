@@ -203,7 +203,7 @@ function isEditable(state: string) {
   return state === "draft" || state === "changes_requested" || state === "rejected" || state === "published";
 }
 
-function listingStateLabel(state: string, copy: Record<string, string>) {
+export function listingStateLabel(state: string, copy: Record<string, string>) {
   const labels: Record<string, string> = {
     draft: copy.statusDraft, submitted: copy.statusSubmitted, changes_requested: copy.statusChangesRequested,
     approved: copy.statusApproved, published: copy.statusPublished, rejected: copy.statusRejected,
@@ -212,7 +212,7 @@ function listingStateLabel(state: string, copy: Record<string, string>) {
   return labels[state] ?? state.replaceAll("_", " ");
 }
 
-function lifecycleActionLabel(action: string, copy: Record<string, string>) {
+export function lifecycleActionLabel(action: string, copy: Record<string, string>) {
   const labels: Record<string, string> = {
     draft_saved: copy.actionDraftSaved, submitted: copy.actionSubmitted, withdrawn: copy.actionWithdrawn,
     changes_requested: copy.actionChangesRequested, approved: copy.actionApproved, published: copy.actionPublished,

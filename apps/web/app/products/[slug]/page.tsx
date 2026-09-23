@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   Check,
@@ -71,10 +71,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div>
             <div className="flex flex-wrap gap-2">
               <ProductTypeBadge type={product.type} />
-              {product.verified && <Badge variant="success">
-                <ShieldCheck size={12} />
-                {fa ? "منبع تأییدشده" : "Verified resource"}
-              </Badge>}
+              {product.verified ? (
+                <Badge variant="success">
+                  <ShieldCheck size={12} />
+                  {fa ? "منبع تأییدشده" : "Verified resource"}
+                </Badge>
+              ) : (
+                <Badge variant="warning">{fa ? "هنوز بررسی نشده" : "Not yet reviewed"}</Badge>
+              )}
             </div>
             <h1 className="editorial mt-5 max-w-3xl text-5xl font-medium leading-none sm:text-6xl">
               {product.name}
@@ -110,6 +114,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ))}
               </div>
             </Section>
+            {(product.useCases ?? []).length > 0 && (
             <Section title="Ideal use cases">
               <div className="grid gap-4 sm:grid-cols-3">
                 {(product.useCases ?? []).map((useCase) => (
@@ -120,6 +125,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ))}
               </div>
             </Section>
+            )}
+            {included.length > 0 && (
             <Section title="What’s included">
               <div className="overflow-hidden rounded-lg border bg-surface">
                 {included.map((file) => (
@@ -135,6 +142,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ))}
               </div>
             </Section>
+            )}
+            {product.exampleInput && (
             <Section title="Example input and output">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
@@ -156,12 +165,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </div>
               </div>
             </Section>
+            )}
             <Section title={fa ? "نصب و استفاده" : "Installation and usage"}>
               <div className="rounded-lg border bg-surface p-5">
                 <p className="font-semibold text-foreground">{fa ? "راهنمای دقیق به نسخهٔ دریافت‌شده متصل است." : "Exact instructions are tied to the release you acquire."}</p>
                 <p className="mt-2 text-sm">{fa ? "منبع را به کتابخانهٔ خود اضافه کنید تا پیوند تأییدشده، مرجع تغییرناپذیر و مراحل نصب همان نسخه نمایش داده شود." : "Add the resource to your library to reveal the verified provider URL, immutable reference, and installation steps for that exact version."}</p>
               </div>
             </Section>
+            {versions.length > 0 && (
             <Section title="Version history">
               <div className="space-y-6">
                 {versions.map((v, i) => (
@@ -179,6 +190,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ))}
               </div>
             </Section>
+            )}
             <Section title={`Reviews · ${product.rating}`} id="reviews">
               <div className="space-y-6">
                 {reviews.map((r) => (
@@ -227,9 +239,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     limit={5}
                   />
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Models: Claude 4, GPT-5
-                </p>
+                {product.compatibility.models.length > 0 && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Models: {product.compatibility.models.join(", ")}
+                  </p>
+                )}
               </div>
               <TrustRow
                 icon={Download}
@@ -244,7 +258,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <TrustRow
                 icon={ShieldCheck}
                 title="Safety verification"
-                text={product.verified ? "Verified by the TermSpace review process" : "Not independently verified; review permissions before installation"}
+                text={product.verified ? "Package scan passed" : "Not yet reviewed by the team"}
+
                 good={product.verified}
               />
               <TrustRow
@@ -326,3 +341,4 @@ function TrustRow({
     </div>
   );
 }
+

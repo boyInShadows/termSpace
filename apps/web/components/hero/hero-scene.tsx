@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ShieldCheck, Star, Boxes, Lock, GitBranch } from "lucide-react";
+import { ShieldCheck, Lock, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { pointer, subscribePointer } from "@/lib/pointer";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
@@ -74,106 +74,112 @@ export function HeroScene() {
           }}
         />
 
-        {/* --- halo: sits just behind the panel so the glass reads as lit -- */}
+        {/* --- halo: sits just behind the panel so the glass reads as lit --
+            Three overlapping radial gradients rather than a conic gradient
+            under `blur-3xl`. `filter: blur()` on an element this size is a
+            full-surface raster pass on every frame the stage rotates, and it
+            rotates with the cursor; radial gradients are painted once and
+            cost nothing to transform. The result is the same wash, because a
+            64px blur of a conic sweep is exactly this. */}
         <div
-          className="absolute left-1/2 top-1/2 size-[78%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+          className="absolute left-1/2 top-1/2 size-[92%] -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
             transform: "translateZ(-70px)",
-            background:
-              "conic-gradient(from 210deg, var(--primary), var(--spark), var(--accent), var(--primary))",
+            backgroundImage: [
+              "radial-gradient(55% 55% at 28% 24%, color-mix(in oklab, var(--primary) 85%, transparent), transparent 72%)",
+              "radial-gradient(55% 55% at 76% 34%, color-mix(in oklab, var(--spark) 80%, transparent), transparent 72%)",
+              "radial-gradient(60% 60% at 50% 84%, color-mix(in oklab, var(--accent) 70%, transparent), transparent 74%)",
+            ].join(","),
             opacity: 0.42,
           }}
         />
 
-        {/* --- the manifest panel -------------------------------------- */}
+        {/* --- the manifest panel, with its chips anchored to its corners --
+            The chips used to be positioned against the stage, which is an
+            aspect box rather than the card, so their offsets drifted with the
+            viewport and they read as scattered across the nebula. Sharing a
+            wrapper with the panel means "16px outside the top-right corner"
+            stays that at every width. */}
         <div
-          className="panel absolute inset-x-[6%] top-[10%] overflow-hidden rounded-2xl shadow-lift"
+          className="absolute inset-x-[6%] top-[10%] [transform-style:preserve-3d]"
           style={{ transform: "translateZ(0px)" }}
         >
-          {/* title bar */}
-          <div className="flex items-center gap-2 border-b border-border/80 bg-surface-raised/60 px-4 py-2.5">
-            <span className="size-2 rounded-full bg-destructive/70" />
-            <span className="size-2 rounded-full bg-warning/70" />
-            <span className="size-2 rounded-full bg-verified/70" />
-            <span className="ml-2 font-mono text-[11px] text-muted-foreground">
-              termspace · inspect
-            </span>
-          </div>
-
-          <div className="px-4 py-4 font-mono text-[11.5px] leading-6 sm:text-xs">
-            <p className="truncate text-muted-foreground">
-              <span className="text-accent">$</span> termspace inspect{" "}
-              <span className="text-foreground">conversion-copywriter</span>
-            </p>
-
-            <div className="mt-3 space-y-1">
-              {MANIFEST.map(([key, value]) => (
-                <div key={key} className="flex gap-3">
-                  <span className="w-24 shrink-0 text-muted-foreground">
-                    {key}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-foreground/90">
-                    {value}
-                  </span>
-                </div>
-              ))}
+          <div className="panel overflow-hidden rounded-2xl shadow-lift">
+            {/* title bar */}
+            <div className="flex items-center gap-2 border-b border-border/80 bg-surface-raised/60 px-4 py-2.5">
+              <span className="size-2 rounded-full bg-destructive/70" />
+              <span className="size-2 rounded-full bg-warning/70" />
+              <span className="size-2 rounded-full bg-verified/70" />
+              <span className="ml-2 font-mono text-[11px] text-muted-foreground">
+                termspace · inspect
+              </span>
             </div>
 
-            <p className="mt-3 flex items-center gap-1.5 border-t border-border/70 pt-3 text-verified">
-              <ShieldCheck size={13} />
-              <span>all declared surfaces accounted for</span>
-              <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-accent align-middle" />
-            </p>
-          </div>
-        </div>
+            <div className="px-4 py-4 font-mono text-[11.5px] leading-6 sm:text-xs">
+              <p className="truncate text-muted-foreground">
+                <span className="text-accent">$</span> termspace inspect{" "}
+                <span className="text-foreground">conversion-copywriter</span>
+              </p>
 
-        {/* --- floating chips at increasing depth ---------------------- */}
-        {/* Positions are split by breakpoint. On a wide layout the chips can
-            sit outside the panel's edges; on a narrow one there are no edges
-            to sit outside of, so they move above and below it instead. The
-            Verified chip has nowhere to go on mobile without landing on the
-            manifest text, so it steps out rather than overlapping it — the
-            same claim is already in the panel's own footer line. */}
-        <FloatChip
-          className="left-0 top-0 sm:left-[-6%] sm:top-[6%]"
-          z={92}
-          delay="0s"
-          icon={<Star size={12} className="fill-warning text-warning" />}
-          label="4.9"
-          sub="184 reviews"
-        />
-        <FloatChip
-          className="hidden sm:block sm:right-[-9%] sm:top-[34%]"
-          z={132}
-          delay="1.1s"
-          icon={<ShieldCheck size={12} className="text-verified" />}
-          label="Verified"
-          sub="safety reviewed"
-        />
-        <FloatChip
-          className="bottom-0 left-0 sm:bottom-[3%] sm:left-[2%]"
-          z={112}
-          delay="2.2s"
-          icon={<Lock size={12} className="text-accent" />}
-          label="No network"
-          sub="permission scope"
-        />
-        <FloatChip
-          className="bottom-0 right-0 sm:bottom-[10%] sm:right-[4%]"
-          z={64}
-          delay="0.6s"
-          icon={<GitBranch size={12} className="text-primary" />}
-          label="v2.4.0"
-          sub="12 versions"
-        />
-        <FloatChip
-          className="right-0 top-0 sm:left-[36%] sm:right-auto sm:top-[-4%]"
-          z={150}
-          delay="1.7s"
-          icon={<Boxes size={12} className="text-spark" />}
-          label="$38"
-          sub="one-time"
-        />
+              <div className="mt-3 space-y-1">
+                {MANIFEST.map(([key, value]) => (
+                  <div key={key} className="flex gap-3">
+                    <span className="w-24 shrink-0 text-muted-foreground">
+                      {key}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-foreground/90">
+                      {value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="mt-3 flex items-center gap-1.5 border-t border-border/70 pt-3 text-verified">
+                <ShieldCheck size={13} />
+                <span>all declared surfaces accounted for</span>
+                <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-accent align-middle" />
+              </p>
+            </div>
+          </div>
+
+          {/* --- three chips, one per corner ---------------------------
+              Down from five. Price and rating were the two that had to go:
+              "$38 one-time" contradicts a freely-shared community library
+              outright, and a star rating is a popularity signal, not a
+              trust one. What is left restates the page's actual claim —
+              reviewed, scoped, versioned — and each chip sits at a fixed
+              offset from a corner of the card rather than floating loose
+              in the nebula.
+
+              Depth still differs per chip so the stage's cursor-driven
+              rotation parallaxes them against the panel. That rotation is
+              already skipped under reduced motion and on coarse pointers;
+              the idle drift is stopped by the global reduced-motion rule. */}
+          <FloatChip
+            className="-right-3 -top-3 sm:-right-5 sm:-top-5"
+            z={132}
+            delay="0s"
+            icon={<ShieldCheck size={12} className="text-verified" />}
+            label="Verified"
+            sub="safety reviewed"
+          />
+          <FloatChip
+            className="-bottom-3 -left-3 sm:-bottom-5 sm:-left-5"
+            z={112}
+            delay="1.4s"
+            icon={<Lock size={12} className="text-accent" />}
+            label="No network"
+            sub="permission scope"
+          />
+          <FloatChip
+            className="-bottom-3 -right-3 sm:-bottom-5 sm:-right-5"
+            z={64}
+            delay="2.8s"
+            icon={<GitBranch size={12} className="text-primary" />}
+            label="v2.4.0"
+            sub="12 versions"
+          />
+        </div>
       </div>
     </div>
   );
@@ -191,7 +197,10 @@ type ChipProps = {
 function FloatChip({ className, z, delay, icon, label, sub }: ChipProps) {
   return (
     <div
-      className={cn("absolute", className)}
+      // Hidden below md. On a phone the card fills the column and there is no
+      // margin for a chip to sit outside it without landing on the manifest
+      // text — and every claim these make is already a row in that manifest.
+      className={cn("absolute hidden md:block", className)}
       style={{ transform: `translateZ(${z}px)` }}
     >
       <div

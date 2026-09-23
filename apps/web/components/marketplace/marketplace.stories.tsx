@@ -18,8 +18,7 @@ const meta = {
 } satisfies Meta<typeof ProductCard>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const Compact: Story = {};
-export const Expanded: Story = { args: { variant: "expanded" } };
+export const Card: Story = {};
 export const List: Story = {
   args: { variant: "list" },
   parameters: { viewport: { defaultViewport: "tablet" } },

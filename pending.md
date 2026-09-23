@@ -2,6 +2,19 @@
 
 This file tracks known improvement work that has not been completed yet. When an item is finished, remove it from this file and add a dated entry to `changelog.md`.
 
+## Web — Homepage Follow-ups
+
+- Do a manual browser pass of the homepage: keyboard-only walk (hero → search →
+  chips → browse → newsletter → footer) with a visible focus ring on every
+  stop, no horizontal scroll at 375px with the menu working and hero chips
+  hidden, and the how-it-works panel stepping through all three states on
+  scroll.
+- Do a manual browser pass of `/dashboard` at 375px (tab bar, floating
+  Publish, no horizontal scroll) and with a creator account that has listings
+  and lifecycle events (table, status pills, activity rail in both locales).
+- Preload the display serif used on the hero headline. This needs the fonts
+  moved from `@fontsource-variable` to `next/font/local`.
+
 ## Marketplace — P0 Discovery and Community
 
 - Add creator profile pages and listing collections while excluding drafts and

@@ -181,11 +181,33 @@ export async function updateOwnedCreatorProfile(req: Request, res: Response) {
   res.json({ data: serializeCreatorProfile(creator) });
 }
 
+/** The dashboard's acquisition window and the one before it it is compared with. */
+const ACQUISITION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Average rating across a creator's listings, weighted by review count so one
+ * listing with a single five-star review cannot outweigh one with two hundred.
+ * `null` when nothing has been reviewed — a zero would read as a bad score.
+ */
+function reviewWeightedRating(listings: Array<{ rating: Prisma.Decimal | number; reviewCount: number }>) {
+  const reviewCount = listings.reduce((sum, listing) => sum + listing.reviewCount, 0);
+  if (reviewCount === 0) return { averageRating: null, ratedReviewCount: 0 };
+  const weighted = listings.reduce((sum, listing) => sum + Number(listing.rating) * listing.reviewCount, 0);
+  return { averageRating: Math.round((weighted / reviewCount) * 10) / 10, ratedReviewCount: reviewCount };
+}
+
 export async function getCreatorDashboard(req: Request, res: Response) {
   const userId = res.locals.reader.id as string;
   const { page, limit } = req.query as unknown as { page: number; limit: number };
   const ownerWhere = { creator: { ownerUserId: userId } } as const;
-  const [listings, total, publishedListings, inReviewListings, totalAcquisitions] = await Promise.all([
+  const completedOrders = { status: "completed", product: ownerWhere } as const;
+  const now = Date.now();
+  const weekStart = new Date(now - ACQUISITION_WINDOW_MS);
+  const previousWeekStart = new Date(now - 2 * ACQUISITION_WINDOW_MS);
+  const [
+    listings, total, publishedListings, inReviewListings, totalAcquisitions,
+    acquisitionsLast7Days, acquisitionsPrevious7Days, ratedListings,
+  ] = await Promise.all([
     prisma.marketplaceProduct.findMany({
       where: ownerWhere,
       select: creatorDashboardListingSelect,
@@ -196,7 +218,15 @@ export async function getCreatorDashboard(req: Request, res: Response) {
     prisma.marketplaceProduct.count({ where: ownerWhere }),
     prisma.marketplaceProduct.count({ where: { ...ownerWhere, published: true } }),
     prisma.marketplaceProduct.count({ where: { ...ownerWhere, lifecycleState: { in: ["SUBMITTED", "APPROVED"] } } }),
-    prisma.marketplaceOrder.count({ where: { status: "completed", product: ownerWhere } }),
+    prisma.marketplaceOrder.count({ where: completedOrders }),
+    prisma.marketplaceOrder.count({ where: { ...completedOrders, createdAt: { gte: weekStart } } }),
+    prisma.marketplaceOrder.count({ where: { ...completedOrders, createdAt: { gte: previousWeekStart, lt: weekStart } } }),
+    // Every rated listing, not just this page: the average covers the whole
+    // catalogue, and is bounded by one creator's listing count.
+    prisma.marketplaceProduct.findMany({
+      where: { ...ownerWhere, reviewCount: { gt: 0 } },
+      select: { rating: true, reviewCount: true },
+    }),
   ]);
 
   const listingIds = listings.map((listing) => listing.id);
@@ -214,7 +244,11 @@ export async function getCreatorDashboard(req: Request, res: Response) {
 
   res.json({
     data: {
-      summary: { totalListings: total, publishedListings, inReviewListings, totalAcquisitions },
+      summary: {
+        totalListings: total, publishedListings, inReviewListings, totalAcquisitions,
+        acquisitionsLast7Days, acquisitionsPrevious7Days,
+        ...reviewWeightedRating(ratedListings),
+      },
       listings: listings.map((listing) => serializeDashboardListing(listing, feedbackByProduct.get(listing.id))),
     },
     meta: { page, limit, total, totalPages: Math.ceil(total / limit) },

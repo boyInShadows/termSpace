@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { ApiError, createCreatorProfile, getOwnedCreatorProfile, updateCreatorProfile } from "@/lib/api";
+import { ApiError, createOwnedCreatorProfile, getOwnedCreatorProfile, updateOwnedCreatorProfile } from "@/lib/api";
 import type { OwnedCreatorProfile } from "@/lib/types";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,8 +40,8 @@ export function CreatorHub() {
     const data = new FormData(event.currentTarget);
     try {
       const next = profile
-        ? await updateCreatorProfile({ name: String(data.get("name")), bio: String(data.get("bio")) })
-        : await createCreatorProfile({ name: String(data.get("name")), handle: String(data.get("handle")), bio: String(data.get("bio")) });
+        ? await updateOwnedCreatorProfile({ name: String(data.get("name")), bio: String(data.get("bio")) })
+        : await createOwnedCreatorProfile({ name: String(data.get("name")), handle: String(data.get("handle")), bio: String(data.get("bio")) });
       setProfile(next);
       setSaved(true);
       await session.refresh();

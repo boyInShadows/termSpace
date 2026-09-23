@@ -304,12 +304,8 @@ export function Showroom() {
           note="Compact, expanded, featured, verified, and unverified content states."
         >
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {products.slice(0, 6).map((p, i) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                variant={i === 0 ? "expanded" : "compact"}
-              />
+            {products.slice(0, 6).map((p) => (
+              <ProductCard key={p.id} product={p} />
             ))}
           </div>
         </Show>

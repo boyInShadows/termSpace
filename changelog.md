@@ -2,6 +2,159 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-09-23
+
+- Finished the dashboard plan and deleted `dashboardPlan.md`. The creator
+  dashboard API summary now also returns `acquisitionsLast7Days`,
+  `acquisitionsPrevious7Days` (completed orders by `createdAt`), and
+  `averageRating` / `ratedReviewCount`: a review-weighted average across all
+  of the creator's rated listings, `null` rather than 0 until anything is
+  reviewed. The overview tiles now follow the plan: Acquisitions · 7d with a
+  ▲/▼ change against the previous seven days (colour and arrow for sight, a
+  sentence for screen readers), Listings live, Avg rating, and In review. The
+  plan's "pending reviews" tile and "reply to reviews" action remain out, as
+  the review-response workflow does not exist yet; it is tracked under
+  Ratings and Reviews.
+- Merged `origin/main` into `ramtin` (search expansion, normalized taxonomy,
+  community placements, lifecycle authorization tests). The homepage type
+  counts are now grouped on `itemType` and returned as stable keys, because
+  main's `?type=` filter accepts only keys; the search chips submit keys, and
+  "Developer tools" became "Rules" since `Developer utility` has no key.
+- Verification: root `typecheck` clean; 237 tests passing (150 API including
+  two new dashboard summary tests, 15 Blog, 72 web); `apps/web` lint clean;
+  all production builds. The 375px dashboard pass is still not done in a
+  browser (the browser window could not be resized from this environment)
+  and remains in `pending.md`.
+
+- Rebuilt `/dashboard` as a creator workbench (from `dashboardPlan.md`,
+  gitignored scratch). The dashboard now has its own frame in place of the site
+  header and footer: a top bar (wordmark, `~/path` crumb, catalog search with a
+  working ⌘K / Ctrl K shortcut, theme, language, avatar), a sidebar with the one
+  primary Publish action and a user card, and below `lg` a bottom tab bar and a
+  floating Publish button. A signed-out visitor is now redirected to
+  `/account?next=<path>` instead of seeing an inline card.
+- The overview moved off the legacy `/api/community` endpoints onto the
+  owner-scoped marketplace creator API, via a new `lib/dashboard.ts`
+  (`getDashboardHome`, where a 403/404 means "no creator workspace", not an
+  error). It shows a time-of-day greeting, four stat tiles, an eight-row
+  listings table with lifecycle status, an activity feed merged from each
+  listing's lifecycle events, and quick actions. Every data card has loading,
+  empty, no-profile and inline-error-with-Retry states, and the route skeleton
+  is the same layout held in its loading state, so dimensions cannot drift.
+- Deliberate departures from the plan, all because the data does not exist:
+  no "installs · 7d" or trend deltas (the API reports totals, not a time
+  series), no "pending reviews" tile or "reply to reviews" action (there is no
+  review-response workflow), and no Listings / Reviews / Analytics nav items
+  (no such routes; the nav only links real pages). The tiles are
+  Acquisitions, Listings live, In review and Total listings. Components live
+  in `features/dashboard/`, matching the repo, not the plan's
+  `components/dashboard/`.
+- Fixed Persian eyebrow labels site-wide: `.eyebrow`'s tracking and mono face
+  pulled Persian letters apart, so `html[dir="rtl"] .eyebrow` now uses Estedad
+  with no tracking. `listingStateLabel` and `lifecycleActionLabel` are now
+  exported from `features/creator/creator-dashboard.tsx` for reuse.
+- Verification: root `typecheck` clean, 220 tests passing (19 new: data
+  layer, overview states, shell gate/nav/Publish routing), `apps/web` lint
+  clean, all production builds. Checked in a real browser against the running
+  API with a signed-in reader without a creator profile: desktop dark and
+  light, and Persian RTL (which found and fixed the eyebrow and greeting-bidi
+  bugs). Not checked in a browser: the 375px layout and a creator account
+  with listings (covered by unit tests only).
+
+- Closed out the homepage plan (`plan.md`, gitignored scratch, now deleted).
+  Audited every item against the code; the only unfinished ones were the
+  Next.js upgrade and the Lighthouse/axe targets. Upgraded `next` and
+  `eslint-config-next` in `apps/web` from 16.3.3 to 16.3.6 (exact pins kept).
+- First Lighthouse run against a production build with the API down: desktop
+  Performance 97 / Accessibility 100, but mobile Performance 83, below the
+  plan's 90. The LCP element was the hero intro paragraph, with 86% of its time
+  spent in render delay behind 380 ms of blocking time; the synchronous WebGL
+  shader compile in `PlasmaField` was running during hydration. The field now
+  waits for `requestIdleCallback` (1.5 s timeout, 300 ms `setTimeout` fallback
+  where it is missing) before building its GL program. The canvas shows its
+  `bg-background` until then, as it already did before its first frame.
+- Verification: Lighthouse mobile Performance 92 / 92 / 91 over three runs
+  (TBT 380 ms → ~95 ms) with Accessibility 100; desktop Performance 100,
+  Accessibility 100, Best Practices 96. Lighthouse's accessibility category is
+  axe-core, so no axe failures were reported. Root `typecheck` clean, 201 tests
+  passing, `apps/web` lint clean, all production builds pass. The manual
+  browser walkthroughs from the plan (keyboard-only pass, 375px, how-it-works
+  panel on scroll) were not run and are tracked in `pending.md`.
+
+## 2026-09-22
+
+- Completed the homepage design and UX pass, landed as fourteen commits on
+  `ramtin`. Resilience first: the page no longer needs the API to render. One
+  cached loader feeds every section, a failed fetch degrades to a new
+  `apps/web/lib/mock-home.ts` fixture instead of throwing, each data-driven
+  section streams behind a skeleton sized to the real component, empty states
+  are distinct from the "could not load" notice, the page-wide red banner
+  became an inline notice with a working Retry, and "View all 0 listings" is
+  never rendered. `NEXT_PUBLIC_USE_MOCK=1` serves the same fixture for
+  front-end work with no database. A session refresh that 401s, times out or
+  cannot reach the API now leaves the visitor anonymous silently.
+- Reworked the hero and information architecture. Search moved into the hero
+  as the primary action and the standalone search band was removed; the copy
+  grid drops to `min-h-[66vh]`, landing near 80vh with the header and ticker.
+  The floating chips went from five to three (price and rating removed — "$38
+  one-time" contradicted the freely-shared positioning) and are now anchored
+  to the card's corners. Curated collections and Browse by practice merged
+  into one tabbed Browse section whose active tab lives in `?browse=`;
+  Featured creators absorbed the creator CTA as its fourth tile; Trust became
+  the page's one inverted full-bleed section; and a new `--section-y` scale
+  replaced nine per-section padding decisions.
+- Measured rather than assumed on contrast. The gradient headline already
+  cleared AA at rest (6.35:1 dark, 5.12:1 light across the sampled sweep); the
+  real failure was the decode animation holding it at 86% opacity, which put
+  the light theme at 3.98:1. New `--plasma-text-*` stops now clear 9.11:1 and
+  6.59:1, and the decode holds AA. `--muted-foreground` also passes
+  comfortably, so the eyebrow labels were a type-size problem, not a colour
+  one — every reduced-alpha use of that token (`/70`, `/75`, `/80`) did fail
+  and was removed. The plan's own suggested light stop `#c026d3` measures
+  4.39:1 and was not used.
+- Search shortcuts became scoped filters in the body sans with real listing
+  counts. `/api/marketplace/home` now returns `types`, grouped on the public
+  `type` label so a count can never disagree with the page it links to. The
+  field gained a stable `aria-label`, an icon-only submit on narrow screens,
+  and a suggestions listbox offering this browser's recent searches or popular
+  queries. A new `useStoredString` hook wraps `localStorage` in
+  `useSyncExternalStore` with an empty server snapshot.
+- Rebuilt the header's controls: a proper language button with a globe and
+  `lang`, a visible and `aria-current` active route, a dismissible
+  announcement persisted against an announcement id, a theme toggle named by
+  its destination, Sign in and the language switch added to the mobile menu,
+  and a blinking terminal caret in the logo. `buttonVariants` carried
+  `focus-visible:outline-none` with no replacement, leaving every button with
+  no visible focus; it now draws a ring. One `<header>` landmark now wraps the
+  strip, the bar and the menu.
+- Newsletter success and failure are separate states with distinct roles;
+  failure keeps the typed address and names the cause. The form still never
+  reports "already subscribed", preserving the API's non-enumerable 202.
+- Fixed two bugs found while working rather than reported: the how-it-works
+  panel decided from `entries` alone, so a step still inside the observer band
+  that had not re-fired could never win and the panel could lag behind the
+  reader; and Tailwind's display utilities out-specify the user-agent rule for
+  `[hidden]`, which would have rendered both browse tab panels in a browser
+  (jsdom applies no stylesheet, so no DOM test could see it).
+- Phone widths: per-step panels below `lg`, snap-scrolling collection cards
+  below `md`, hero chips hidden below `md`. Performance: the hero halo's
+  `blur-3xl` conic gradient became three radial gradients, removing the last
+  full-surface raster pass from an element that rotates with the cursor.
+- Also repaired cp1252 mojibake in four files and added `plan.md` to
+  `.gitignore` as session scratch.
+- Verification: root `typecheck` clean across all three workspaces; 201 tests
+  passing (136 API, 15 Blog, 50 web — 27 of the web tests are new, covering
+  the retry notice, browse tabs and their URL round-trip, search scoping and
+  suggestions, newsletter states, header route/announcement/theme behaviour,
+  and the process panels); `apps/web` lint clean; API, web and Blog production
+  builds; `git diff --check` clean. Contrast was computed in oklch→sRGB and
+  sampled across the full gradient in both themes at rest and mid-decode.
+  Still outstanding and not runnable in this environment: Lighthouse and axe,
+  so the plan's numeric Performance ≥ 90 / Accessibility ≥ 95 targets and the
+  375px browser walkthrough remain unverified. Preloading the display serif on
+  the LCP element would need the fonts moved to `next/font/local` and was left
+  for a deliberate change.
+
 ## 2026-09-21
 
 - Expanded public marketplace search across multi-term listing metadata, tags,
@@ -231,6 +384,8 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-15
 
+- Integrated `origin/main` into `ramtin` and resolved overlapping marketplace creator, listing lifecycle, dashboard navigation, API client, Prisma ownership, and localization changes while preserving both feature sets. Verification: Prisma client generation, root type-check, 102 tests, and production builds for all three workspaces.
+
 - Established the TermSpace product direction: the main application is a
   community and creator marketplace for agentic coding tools, while the Blog is
   a separate staff-managed editorial service with no public publishing access.
@@ -338,7 +493,7 @@ Project changes completed from `pending.md` should be recorded here with the dat
 - Updated the marketplace locale switcher to preserve the current pathname and query string when changing between English and Persian. Verification: web typecheck and tests pass.
 - Replaced the no-op homepage creator-guide button with a real localized link to the design system/quality guide. Verification: web typecheck and tests pass.
 - Localized footer headings, link labels, and permission text; replaced placeholder destinations with marketplace, collection, creator, standards, account, and configured editorial-journal routes. Verification: web typecheck and tests pass.
-- Localized the discovery feature’s headings, search, filters, sorting, status labels, retry actions, and error copy through the shared English/Persian dictionary. Verification: web typecheck and tests pass.
+- Localized the discovery featureâ€™s headings, search, filters, sorting, status labels, retry actions, and error copy through the shared English/Persian dictionary. Verification: web typecheck and tests pass.
 - Discovery errors now preserve API failure messages such as rate limiting, distinguish them from connection failures, and expose an in-place Retry control. Verification: web typecheck and tests pass.
 - Made seed reruns non-destructive for administrator passwords, taxonomy metadata and article relationships, and edition ordering; `SEED_RESET=true` is now required for intentional seeded relationship/order resets. Verification: API typecheck and seed completed successfully.
 - Series metadata and page rendering now treat only API 404s as missing content; network and server failures propagate as retryable errors, matching article behavior. Verification: blog typecheck and tests pass.
@@ -349,7 +504,25 @@ Project changes completed from `pending.md` should be recorded here with the dat
 - Made article optimistic concurrency and revision creation atomic: updates now lock the article row, validate the expected timestamp, create the prior snapshot, and apply the update in one transaction. Verification: API typecheck and tests pass.
 - Separated rejected Google credentials from database/session failures: credential verification still returns a safe 401, while persistence errors are logged and reach the centralized 500 handler. Verification: API typecheck and tests pass.
 - Fixed the homepage article split so the newest article is not discarded as an invisible `featured` item; all fetched articles now render in the latest-writing rail, including when only one exists. Verification: blog typecheck and tests pass.
-- Fixed the three high-priority marketplace and deployment issues: both Next frontends now proxy `/backend` through runtime route handlers using the live `API_URL`, preserve host-only session cookies while forwarding requests to the shared API, and return bounded 502/504 errors for backend failures; the marketplace seed now explicitly publishes the catalog and updates existing creators, categories, and products on rerun. Verification: all workspace type-checks, API tests (20), and blog tests (14) pass; production build remains blocked by the sandbox denying Next’s worker port binding.
+- Fixed the three high-priority marketplace and deployment issues: both Next frontends now proxy `/backend` through runtime route handlers using the live `API_URL`, preserve host-only session cookies while forwarding requests to the shared API, and return bounded 502/504 errors for backend failures; the marketplace seed now explicitly publishes the catalog and updates existing creators, categories, and products on rerun. Verification: all workspace type-checks, API tests (20), and blog tests (14) pass; production build remains blocked by the sandbox denying Nextâ€™s worker port binding.
+## 2026-09-03
+
+- Restructured the marketplace product card. It rendered two competing paragraphs â€” `outcome` under the title and `description` again in a quote-bordered block â€” with the creator wedged between them, so cards of differing copy length pushed their dividers and footers to different heights across a row. `outcome` is now the only prose on the card, clamped to two lines with a floor height; the creator sits directly beneath it; rating and usage are consolidated onto one meta row; and the footer is pinned to the bottom so every card in a row aligns. `description` now appears only on the detail page.
+- Gave every card an explicit `View details` call to action linking to `/products/[slug]`, replacing a 15px arrow glyph that was the only affordance. It carries an accessible name including the product name, so the control is distinguishable when a screen reader lists a grid of them.
+- Collapsed the card `variant` union from `compact | expanded | list` to `card | list`; `expanded` existed only to render the duplicate description and became a dead branch.
+- Added community publishing. `MarketplaceCreator` gains a nullable, unique `userId` referencing `ReaderUser` (`ON DELETE SET NULL`, so closing an account never deletes listings other people depend on), letting a signed-in reader claim a username and publish under it. New `/api/community` routes cover the creator profile and the member's own listings, all behind `requireReader` and scoped by `creatorId` so a member can only ever read or mutate their own rows. Seeded editorial creators keep `userId = null` and can never be matched.
+- Held trust and pricing server-side on community submissions. `verified`, `featured`, `trending`, `rating`, review and usage counts, and price are all set by the controller and never read from the request body; submissions are published free because `acquireMarketplaceProduct` rejects any priced acquisition while no payment provider is configured.
+- Added the `/dashboard` creator studio: claim a username (derived handle, reserved-word list), publish a listing, and hide, republish or delete your own. Copy is localized in both `en` and `fa` rather than hard-coded.
+- Stopped the product detail page asserting trust it does not have. The `Verified product` badge and the `Safety verification â€” Package scan passed آ· Aug 18` row were hardcoded and rendered for every listing; an unverified community submission was presented to buyers as reviewed and scanned. Both now follow `product.verified`, and the compatibility panel reads the record's models instead of a hardcoded `Claude 4, GPT-5`. Detail sections with no content (use cases, included files, example input/output, installation steps, version history) are hidden rather than rendered as bare headings.
+- Pointed the two dead creator entry points at the studio: the hero `Sell your work` button, which linked to a `#creators` anchor, and the `#creators` section button, which was a `<button>` with no handler at all.
+- Registered Testing Library cleanup in `apps/web/vitest.setup.ts`. `globals` is off, so RTL never registered its own auto-cleanup and renders accumulated across tests in a file, making any second render in a file fail single-element queries.
+
+- Documented how the two maintainers' agents work together, in `AGENTS.md`: the branch map (`development` as integration branch, `ramtin` and `v.2` as working branches), rebase-before-you-start, never rewriting shared history, treating `AGENTS.md` / `pending.md` / `changelog.md` as the handoff channel between agents, staying inside the task to avoid drive-by conflicts, announcing edits to the shared surfaces both sides touch, and a migration naming rule so two agents cannot create colliding migration numbers on separate branches.
+- Added engineering rules to `AGENTS.md` so both agents make the same call in the same situation. Caching: `lib/api.ts` currently forces `cache: "no-store"` on every request, which is right for session-scoped data and wrong for the public catalog, so the rule is per-endpoint with a hard prohibition on caching anything that varies by session cookie. State management: a table choosing between server components, URL search params, `localStorage`, cookies, React context and Zustand, with Zustand named as the client-state library to adopt when a real case appears rather than speculatively.
+- Corrected two stale facts in `AGENTS.md`: the database port is `DB_HOST_PORT` from the root `.env` and is `5434` on this machine, not the `5433` in `apps/api/.env.example`; and the repository does now have a Conventional Commit history.
+- Split the dashboard into a side-navigated area. `app/dashboard/layout.tsx` wraps every dashboard page in a `DashboardShell` that owns the reader-session gate, so a new dashboard route cannot ship ungated, with `DashboardNav` alongside it. Three real pages: Overview (creator identity and listing counts), Creator studio (the existing publishing surface, moved to `/dashboard/studio`), and Settings (account details and sign out). Every nav entry points at a real page rather than a placeholder.
+
+Verification: root `typecheck` clean across all three workspaces; 49 tests passing (25 API including 7 new community-publishing tests, 14 blog, 10 web); production `next build` for both frontends. The community flow was exercised end to end against the running stack â€” register, claim a username, publish, and the listing appearing on `/explore` and its detail page â€” plus negative cases: unauthenticated access rejected with 401, a second member unable to read, edit or delete another member's listing, reserved usernames and malformed slugs, types and categories rejected, duplicate handle and slug conflicts, and a submission attempting to set `verified`, `featured`, a price and a fake rating confirmed to be written with all of those forced to their safe defaults. `apps/web` lint is one error and four warnings, all pre-existing in `marketplace-session.tsx` and `product-actions.tsx` and recorded in `pending.md`; the previously reported `app/page.tsx` warning is resolved. The dashboard split was checked in the browser across all three tabs, including active-state highlighting.
 
 ## 2026-09-02
 
@@ -443,3 +616,4 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 - Paginated article loading for edition selection so older articles are available to editors.
 - Removed the unused web `CountUp` component and its orphaned tests.
 - Pinned all web package dependencies to the versions already resolved in the lockfile.
+

@@ -148,6 +148,11 @@ const PALETTES: Record<"dark" | "light", Palette> = {
   },
 };
 
+/** Latest the field waits for an idle period before starting anyway. */
+const IDLE_START_TIMEOUT_MS = 1500;
+/** Stand-in delay where requestIdleCallback is missing (Safari). */
+const IDLE_START_FALLBACK_MS = 300;
+
 function compile(gl: WebGLRenderingContext, type: number, source: string) {
   const shader = gl.createShader(type);
   if (!shader) return null;
@@ -172,6 +177,24 @@ export function PlasmaField({ className }: { className?: string }) {
 
   const redrawRef = useRef<(() => void) | null>(null);
 
+  // Shader compilation is synchronous and, on a software-GL or low-end
+  // device, costs hundreds of milliseconds of main thread. Doing it during
+  // hydration held back the hero copy's paint (the page's LCP), so the field
+  // waits for the browser to go idle. Until then the canvas shows its own
+  // bg-background, exactly as it does before any first frame.
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(() => setIsReady(true), {
+        timeout: IDLE_START_TIMEOUT_MS,
+      });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(() => setIsReady(true), IDLE_START_FALLBACK_MS);
+    return () => window.clearTimeout(id);
+  }, []);
+
   useEffect(() => {
     paletteRef.current = PALETTES[resolvedTheme === "light" ? "light" : "dark"];
     // Repaint at once. If the loop happens to be parked (tab hidden, hero
@@ -181,7 +204,7 @@ export function PlasmaField({ className }: { className?: string }) {
   }, [resolvedTheme]);
 
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion || !isReady) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -368,7 +391,7 @@ export function PlasmaField({ className }: { className?: string }) {
       gl.deleteShader(fragmentShader);
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, isReady]);
 
   if (prefersReducedMotion || !isSupported) {
     return <PlasmaFallback className={className} />;

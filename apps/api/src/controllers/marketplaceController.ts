@@ -145,10 +145,14 @@ export function listMarketplaceItemTypes(_req: Request, res: Response) {
 }
 
 export async function getMarketplaceHome(_req: Request, res: Response) {
-  const [products, creators, categories, platforms, total] = await Promise.all([
+  const [products, creators, categories, types, platforms, total] = await Promise.all([
     prisma.marketplaceProduct.findMany({ where: { published: true, featured: true }, include: productInclude, orderBy: [{ usageCount: "desc" }], take: 3 }),
     prisma.marketplaceCreator.findMany({ where: { products: { some: { published: true } } }, select: { id: true, name: true, handle: true, initials: true, verified: true, bio: true, followers: true, _count: { select: { products: { where: { published: true } } } } }, orderBy: [{ verified: "desc" }, { followers: "desc" }], take: 3 }),
     prisma.marketplaceCategory.findMany({ where: { products: { some: { published: true } } }, select: { name: true, slug: true, _count: { select: { products: { where: { published: true } } } } }, orderBy: [{ position: "asc" }, { name: "asc" }] }),
+    // Grouped on `itemType`, the same field the catalogue's `?type=` filter
+    // matches, and returned as its stable key. A count that did not agree with
+    // the page it links to would be worse than no count.
+    prisma.marketplaceProduct.groupBy({ by: ["itemType"], where: { published: true }, _count: { _all: true } }),
     prisma.marketplacePlatform.findMany({ select: { key: true, nameEn: true, nameFa: true }, orderBy: [{ position: "asc" }, { nameEn: "asc" }] }),
     prisma.marketplaceProduct.count({ where: { published: true } }),
   ]);
@@ -156,6 +160,10 @@ export async function getMarketplaceHome(_req: Request, res: Response) {
     products: products.map(serializeProduct),
     creators: creators.map((creator) => ({ ...creator, products: creator._count.products, _count: undefined })),
     categories: categories.map((category) => ({ name: category.name, slug: category.slug, products: category._count.products })),
+    types: types.flatMap((group) => {
+      const key = marketplaceItemTypeKey(group.itemType);
+      return key ? [{ type: key, products: group._count._all }] : [];
+    }),
     platforms,
     total,
   } });
