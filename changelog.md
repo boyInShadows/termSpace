@@ -4,6 +4,45 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-24
 
+- Plan v2, phase P7 (process). This completes plan v2; the plan file is
+  removed.
+  - Shared surface: `apps/web/lib/i18n.ts` is now `lib/i18n/` with
+    `common`, `home`, `dashboard`, `catalog`, `creator` and `moderation`
+    files. `index.ts` spreads them back into `copy`, so all 27
+    `@/lib/i18n` imports are unchanged. The split was mechanical, moved by
+    line range, and the old and new `copy` were checked deep-equal (107 keys
+    per locale) before the old file was removed. Add strings to the file for
+    their surface.
+  - English left on Persian pages is now translated (new `homePage` keys):
+    the hero search's typed examples and type shortcuts, the hero chips'
+    captions (the version stays Latin data), and the creator tiles'
+    products/followers line.
+  - `/dashboard/studio` keeps working, with the plan's fallback notice:
+    "Studio is being replaced by Creator. New listings should start there."
+    The redirect to `/creator` waits for the other maintainer to answer:
+    1. Does `/creator` cover every action studio has today: create, edit,
+       unpublish, delete, and editing items originally published through
+       `/api/community`?
+    2. Is there live data only reachable through `/api/community` that needs
+       migrating into the marketplace tables first?
+    3. Can `/dashboard/studio/*` get a 308 to `/creator/*` on an agreed date,
+       with `/api/community` marked deprecated in the API changelog and
+       removed one release later?
+  - Shared surface: `AGENTS.md` is rewritten from the plan's Part C, with the
+    existing rules kept below it, unchanged in substance.
+    - The new top section covers repository facts, ownership (`pending.md`
+      is the other maintainer's queue), shared surfaces, how a phase runs,
+      context hygiene, Claude Code session commands, and other harnesses.
+    - The Part C placeholders are filled from the repo: the other branch is
+      `v.2`, and the shared-surface list is merged with the old one.
+    - The build section adds the e2e and Lighthouse commands and the
+      budget ratchet rule.
+  - Code comments that cited the plan now point at `docs/motion.md`, the
+    gate files and this changelog.
+- Verification: root `typecheck` clean; 262 tests passing (150 API, 15 Blog,
+  97 web); `apps/web` lint clean; all production builds; e2e 69 passed,
+  13 skipped by design.
+
 - Plan v2, phase P6 (Persian beyond mirroring).
   - Persian type scale in `styles/globals.css`: body leading 1.8; display
     type at weight 600 and leading 1.35; the hero headline smaller

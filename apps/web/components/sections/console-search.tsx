@@ -8,22 +8,8 @@ import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 import { useStoredString } from "@/lib/hooks/use-stored-string";
 import type { MarketplaceTypeCount } from "@/lib/types";
 
-const TYPED_INTENTS = [
-  "review my pull request like a staff engineer",
-  "turn customer interviews into landing page copy",
-  "keep sources and caveats visible while researching",
-  "audit a schema before it hits production",
-  "write release notes people actually read",
-] as const;
-
-/** Chip label → the `type` value the catalogue filters on. */
-const SHORTCUTS: ReadonlyArray<readonly [string, string]> = [
-  ["Skills", "skill"],
-  ["Agents", "agent"],
-  ["MCP servers", "mcp_server"],
-  ["Prompts", "prompt"],
-  ["Rules", "rule"],
-];
+/** The `type` values the shortcut chips filter on; labels come from i18n. */
+const SHORTCUTS = ["skill", "agent", "mcp_server", "prompt", "rule"] as const;
 
 const RECENT_KEY = "termspace:recent-searches";
 const RECENT_LIMIT = 4;
@@ -83,6 +69,7 @@ export function ConsoleSearch({
   types?: MarketplaceTypeCount[] | Promise<MarketplaceTypeCount[]>;
 }) {
   const { t } = useLocale();
+  const intents = t.homePage.typedIntents;
   const [typed, setTyped] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [scope, setScope] = useState<string | null>(null);
@@ -101,7 +88,7 @@ export function ConsoleSearch({
     let isDeleting = false;
 
     const tick = () => {
-      const current = TYPED_INTENTS[phrase];
+      const current = intents[phrase];
       char += isDeleting ? -1 : 1;
       setTyped(current.slice(0, char));
 
@@ -113,7 +100,7 @@ export function ConsoleSearch({
         isDeleting = true;
       } else if (isDeleting && char === 0) {
         isDeleting = false;
-        phrase = (phrase + 1) % TYPED_INTENTS.length;
+        phrase = (phrase + 1) % intents.length;
         delay = 320;
       }
 
@@ -122,7 +109,7 @@ export function ConsoleSearch({
 
     timerRef.current = window.setTimeout(tick, 700);
     return () => window.clearTimeout(timerRef.current);
-  }, [prefersReducedMotion, isFocused]);
+  }, [prefersReducedMotion, isFocused, intents]);
 
   // Derived, not synced: while focused or under reduced motion we simply
   // render the resting prompt instead of writing it into state.
@@ -146,7 +133,7 @@ export function ConsoleSearch({
     );
   }
 
-  const suggestions = recent.length > 0 ? recent : [...TYPED_INTENTS].slice(0, 4);
+  const suggestions = recent.length > 0 ? recent : [...intents].slice(0, 4);
   const isSuggesting = isFocused && query.trim().length === 0;
 
   return (
@@ -305,9 +292,11 @@ function ScopeChips({
   scope: string | null;
   onToggle: (value: string | null) => void;
 }) {
+  const { t } = useLocale();
   return (
     <>
-      {SHORTCUTS.map(([label, value]) => {
+      {SHORTCUTS.map((value) => {
+        const label = t.homePage.searchShortcuts[value];
         const count = types.find((entry) => entry.type === value)?.products ?? null;
         const isActive = scope === value;
         return (

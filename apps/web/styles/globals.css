@@ -105,8 +105,8 @@ html[dir="rtl"] .eyebrow {
 
 /* --- Persian type scale ----------------------------------------------------
    Estedad has a taller x-height and wider glyphs than Newsreader, so Persian
-   display type runs smaller, looser and lighter than the English (plan.md
-   Part B §7). Unlayered, so it wins over the per-element leading utilities. */
+   display type runs smaller, looser and lighter than the English.
+   Unlayered, so it wins over the per-element leading utilities. */
 html[lang="fa"] body {
   line-height: 1.8;
 }

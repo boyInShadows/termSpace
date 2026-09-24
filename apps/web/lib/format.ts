@@ -1,7 +1,7 @@
 import type { Locale } from "./i18n";
 
 /**
- * The numerals policy (plan.md Part B §7), decided here once, not per call.
+ * The numerals policy, decided here once, not per call.
  *
  * - `prose`: a number read as part of a sentence ("۲ بررسی جدید", "9.4k uses")
  *   uses the reader's digits, so Persian gets Persian digits.

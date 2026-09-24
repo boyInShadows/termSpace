@@ -5,7 +5,7 @@
  * while playing; everything visible is derived from that one number here.
  * Pausing is therefore a single flag, and every frame is testable.
  *
- * Storyboard: plan.md, Part B §2. Times are milliseconds from the start.
+ * Storyboard: docs/motion.md. Times are milliseconds from the start.
  */
 
 export type ManifestPhase =

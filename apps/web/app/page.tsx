@@ -232,8 +232,9 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
               {creator.bio}
             </p>
             <p className="mt-5 font-mono text-xs text-muted-foreground">
-              {creator.products} products ·{" "}
-              {formatNumber(creator.followers, locale)} followers
+              {t.homePage.creatorStats
+                .replace("{products}", formatNumber(creator.products, locale))
+                .replace("{followers}", formatNumber(creator.followers, locale))}
             </p>
           </div>
         </div>

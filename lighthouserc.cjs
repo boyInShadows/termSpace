@@ -7,7 +7,7 @@
 //   npm run lhci -w apps/web
 //
 // Ratchet. The gates fail at the 2026-09-24 baseline plus headroom, so
-// nothing may get worse. `target` is the plan.md (Part B §5) budget; when a
+// nothing may get worse. `target` is the budget the plan set; when a
 // later phase meets it, move the gate down to it and never back up.
 //
 // Baseline, local mobile median:  /           /dashboard

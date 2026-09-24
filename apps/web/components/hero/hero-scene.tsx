@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { pointer, subscribePointer } from "@/lib/pointer";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 import { TrustChip } from "@/components/catalog/trust-chip";
+import { useLocale } from "@/lib/locale-context";
 import {
   ManifestCard,
   SequenceControls,
@@ -32,6 +33,7 @@ export function HeroScene() {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const prefersReducedMotion = useReducedMotion();
   const sequence = useManifestSequence(sceneRef);
+  const { t } = useLocale();
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -135,8 +137,8 @@ export function HeroScene() {
               delay="0s"
               shown={sequence.frame.chips.verified}
               icon={<ShieldCheck size={12} className="text-verified" />}
-              label="Verified"
-              sub="safety reviewed"
+              label={t.homePage.heroChips.verified.label}
+              sub={t.homePage.heroChips.verified.sub}
             />
             <FloatChip
               className="-bottom-3 -left-3 sm:-bottom-5 sm:-left-5"
@@ -144,8 +146,8 @@ export function HeroScene() {
               delay="1.4s"
               shown={sequence.frame.chips.network}
               icon={<Lock size={12} className="text-accent" />}
-              label="No network"
-              sub="permission scope"
+              label={t.homePage.heroChips.network.label}
+              sub={t.homePage.heroChips.network.sub}
             />
             <FloatChip
               className="-bottom-3 -right-3 sm:-bottom-5 sm:-right-5"
@@ -154,7 +156,7 @@ export function HeroScene() {
               shown={sequence.frame.chips.version}
               icon={<GitBranch size={12} className="text-primary" />}
               label="v2.4.0"
-              sub="12 versions"
+              sub={t.homePage.heroChips.versions}
             />
           </div>
         </div>

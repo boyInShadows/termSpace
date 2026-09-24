@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * How much atmosphere this device gets behind the hero (plan.md, Part B §1):
+ * How much atmosphere this device gets behind the hero (docs/motion.md):
  *
  * - `static`: reduced motion, Save-Data, or reduced data. The CSS nebula,
  *   held still.
