@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import "@fontsource-variable/geist";
-import "@fontsource-variable/geist-mono";
-import "@fontsource-variable/newsreader";
-import "@fontsource-variable/estedad";
 import "@/styles/globals.css";
+import { preloadedFonts } from "@/lib/fonts";
 import { Providers } from "@/components/layout/providers";
 import { getLocale } from "@/lib/serverLocale";
 import { localePath } from "@/lib/i18n";
@@ -21,11 +18,9 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={locale === "fa" ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
-        {/* Scroll reveals are opacity-gated by JS. Without JS there is no
-            observer to un-gate them, so hand no-script readers the content. */}
-        <noscript>
-          <style>{".ts-reveal{opacity:1!important;transform:none!important}"}</style>
-        </noscript>
+        {preloadedFonts(locale).map((href) => (
+          <link key={href} rel="preload" href={href} as="font" type="font/woff2" crossOrigin="anonymous" />
+        ))}
       </head>
       <body>
         <Providers locale={locale}>{children}</Providers>

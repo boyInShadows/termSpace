@@ -17,9 +17,11 @@
    ========================================================================== */
 
 :root {
-  --font-geist: "Geist Variable";
+  /* Declared in globals.css. The "Fallback" faces are local system fonts
+     resized to the web font's metrics, so the swap does not move text. */
+  --font-geist: "Geist Variable", "Geist Fallback";
   --font-geist-mono: "Geist Mono Variable";
-  --font-newsreader: "Newsreader Variable";
+  --font-newsreader: "Newsreader Variable", "Newsreader Fallback";
   --font-estedad: "Estedad Variable";
 
   /* motion ------------------------------------------------------------- */
@@ -32,8 +34,9 @@
   --duration-panel: 240ms;
   --duration-chip: 320ms;
   --duration-enter: 480ms;
-  --duration-reveal: 560ms;
   --stagger-enter: 60ms;
+  /* How strongly the CSS nebula behind the hero shows. */
+  --nebula-opacity: 0.85;
   --duration-slow: 320ms;
   --duration-scene: 640ms;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);

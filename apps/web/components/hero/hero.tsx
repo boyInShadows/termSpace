@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { ShieldCheck, Sparkles } from "lucide-react";
-import { PlasmaField } from "./plasma-field";
+import { HeroAtmosphere } from "./hero-atmosphere";
 import { HeroScene } from "./hero-scene";
 import { Marquee } from "@/components/motion/marquee";
 import { ConsoleSearch } from "@/components/sections/console-search";
@@ -45,7 +45,7 @@ export function Hero({
     >
       {/* --- atmosphere ---------------------------------------------------- */}
       <div className="absolute inset-0 -z-10">
-        <PlasmaField />
+        <HeroAtmosphere />
       </div>
       <div
         aria-hidden

@@ -15,10 +15,12 @@ import { cn } from "@/lib/utils";
  * full-screen triangle, and the landing page has a 150 kB budget. This is a
  * few kB and does exactly one thing.
  *
- * It degrades three ways: no WebGL falls back to a static CSS aurora,
- * reduced-motion skips the canvas entirely, and the loop suspends whenever
- * the tab is hidden or the hero scrolls out of view, so it never burns a
- * laptop battery animating pixels nobody is looking at.
+ * Only the WebGL tier ever loads this module (hero-atmosphere.tsx decides,
+ * and imports it at idle as its own chunk). The CSS nebula sits beneath it,
+ * so the canvas is transparent until its first frame and then fades in; with
+ * no WebGL it renders nothing and the nebula simply stays. The loop suspends
+ * whenever the tab is hidden or the hero scrolls out of view, so it never
+ * burns a laptop battery animating pixels nobody is looking at.
  */
 
 const VERTEX = `
@@ -180,8 +182,8 @@ export function PlasmaField({ className }: { className?: string }) {
   // Shader compilation is synchronous and, on a software-GL or low-end
   // device, costs hundreds of milliseconds of main thread. Doing it during
   // hydration held back the hero copy's paint (the page's LCP), so the field
-  // waits for the browser to go idle. Until then the canvas shows its own
-  // bg-background, exactly as it does before any first frame.
+  // waits for the browser to go idle. Until then the canvas is transparent
+  // and the CSS nebula beneath it shows.
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -212,8 +214,8 @@ export function PlasmaField({ className }: { className?: string }) {
     const attributes: WebGLContextAttributes = {
       // Transparent rather than opaque-black. An undrawn WebGL buffer with
       // alpha:false composites as solid black, which is invisible in dark
-      // mode and a black slab in light mode. With alpha:true the canvas's own
-      // bg-background shows through until the first frame lands.
+      // mode and a black slab in light mode. With alpha:true the CSS nebula
+      // shows through until the first frame lands.
       alpha: true,
       antialias: false,
       depth: false,
@@ -354,6 +356,7 @@ export function PlasmaField({ className }: { className?: string }) {
     // including when it mounts while the tab is hidden and the loop parks
     // itself immediately.
     draw();
+    canvas.dataset.drawn = "";
 
     const resizeObserver = new ResizeObserver(() => {
       resize();
@@ -393,35 +396,14 @@ export function PlasmaField({ className }: { className?: string }) {
     };
   }, [prefersReducedMotion, isReady]);
 
-  if (prefersReducedMotion || !isSupported) {
-    return <PlasmaFallback className={className} />;
-  }
+  // The CSS nebula beneath is the fallback: nothing to draw here.
+  if (prefersReducedMotion || !isSupported) return null;
 
   return (
     <canvas
       ref={canvasRef}
       aria-hidden
-      className={cn("size-full bg-background", className)}
-    />
-  );
-}
-
-/**
- * Static stand-in when WebGL is unavailable or motion is unwelcome. Same
- * three hues, same composition, just held still.
- */
-function PlasmaFallback({ className }: { className?: string }) {
-  return (
-    <div
-      aria-hidden
-      className={cn("size-full bg-background", className)}
-      style={{
-        backgroundImage: [
-          "radial-gradient(60% 55% at 22% 28%, color-mix(in oklab, var(--primary) 45%, transparent), transparent 70%)",
-          "radial-gradient(50% 50% at 78% 34%, color-mix(in oklab, var(--spark) 34%, transparent), transparent 72%)",
-          "radial-gradient(70% 60% at 52% 88%, color-mix(in oklab, var(--accent) 26%, transparent), transparent 70%)",
-        ].join(","),
-      }}
+      className={cn("ts-plasma size-full", className)}
     />
   );
 }

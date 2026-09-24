@@ -4,6 +4,55 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-24
 
+- Plan v2, phase P3 (fonts, WebGL gating, CSS reveals).
+  - Fonts are self-hosted from `apps/web/public/fonts`, with OFL licences
+    beside them. The files are the ones `@fontsource-variable` served: Latin
+    `wght` subsets of Newsreader, Geist and Geist Mono, plus Estedad's
+    Arabic-script subset only. Version-named files get immutable caching.
+    The root layout preloads what each locale's first paint needs:
+    Newsreader and Geist on English pages (exactly two preloads), Estedad and
+    Geist on Persian ones. The `@font-face` rules include the metric-matched
+    Times New Roman and Arial fallbacks that `next/font` generates, so the
+    swap does not move text. `@fontsource-variable/*` is gone from
+    `apps/web` (the Blog still uses it).
+  - Why not `next/font` as the plan said: under the webpack production
+    build, Next 16 writes an empty font manifest for this app, so it emits no
+    preload at all. Turbopack records them, but switching the production
+    bundler was out of scope. `next/font` also preloads per layout, not per
+    locale.
+  - WebGL gating: `components/hero/use-plasma-tier.ts` picks `static`
+    (reduced motion, Save-Data, reduced data), `css` (under 1024px, coarse
+    pointer, fewer than 4 cores or under 4 GB) or `webgl`. The pure rule is
+    unit-tested. `hero-atmosphere.tsx` always renders a CSS nebula. Only the
+    `webgl` tier imports the shader field, as its own chunk after idle,
+    fading it in over the nebula; it unmounts, losing its GL context, while
+    the hero is off screen. Phones never request the chunk. Deviation: the
+    nebula drifts by rotating a conic layer on the compositor, not by
+    animating `@property --hue`, which would repaint the gradients on the
+    main thread every frame.
+  - Reveals are now CSS scroll-driven animations (`.ts-reveal` on a
+    `view()` timeline, inside `@supports`), with no fallback: without support
+    the content is simply visible. `components/motion/reveal.tsx`,
+    `lib/hooks/use-in-view.ts` and the `<noscript>` reveal override are
+    deleted. Scrolling triggers no React state updates, apart from the two
+    hero observers flipping when the hero crosses the viewport edge.
+- P3 measurements, local mobile median of 3:
+  - `/`: performance 93 (was 92), TBT 21 ms (was 35), CLS 0.023, LCP 3.22 s.
+  - LCP did not reach the plan's 2.0 s. On localhost every script finishes
+    before the first paint, so Lighthouse's simulated throttling counts all
+    first-load JS against LCP: observed LCP equals observed FCP, at 123 ms.
+    Under real DevTools throttling `/` LCP is 2.13 s. `/dashboard` is 5.8 s
+    there, because its LCP text only exists after client-side session and
+    data fetches.
+  - The CI gates keep simulated throttling and are unchanged.
+- Verification: new `e2e/performance.spec.ts` checks the two font preloads on
+  `/` and Estedad's on `/fa`, the CSS tier on phones with no canvas, the
+  WebGL tier offered on desktop, the static tier under reduced motion, and
+  reveals complete in view and absent under reduced motion. e2e 33 passed,
+  7 skipped by design; `lhci assert` passes on the P3 runs. Root `typecheck`
+  clean; 251 tests passing (150 API, 15 Blog, 86 web); `apps/web` lint
+  clean; all production builds.
+
 - Plan v2, phase P2 (motion diet and the signature moment). The homepage
   hero's manifest card now performs the search → inspect → install journey
   once, after load. Everything else got calmer or cheaper. Spec and rules
