@@ -68,7 +68,7 @@ export function Hero({
       />
       <div
         aria-hidden
-        className="absolute inset-y-0 left-0 -z-10 hidden w-[72%] bg-gradient-to-r from-background from-45% via-background/85 via-75% to-transparent lg:block"
+        className="absolute inset-y-0 start-0 -z-10 hidden w-[72%] bg-gradient-to-r from-background rtl:bg-gradient-to-l from-45% via-background/85 via-75% to-transparent lg:block"
       />
       {/* Grounds the hero into the page instead of ending it on a hard edge. */}
       <div
@@ -92,7 +92,7 @@ export function Hero({
           {/* The LCP element. It paints its final text at once: no scramble,
               which delayed the final paint and broke Persian joins. */}
           <h1
-            className="ts-enter editorial mt-6 text-[clamp(2.6rem,1.2rem+5.6vw,4.9rem)] font-medium leading-[0.98] tracking-[-0.03em]"
+            className="ts-enter ts-hero-title editorial mt-6 text-[clamp(2.6rem,1.2rem+5.6vw,4.9rem)] font-medium leading-[0.98] tracking-[-0.03em]"
             style={enter(1)}
             data-enter="nudge"
           >

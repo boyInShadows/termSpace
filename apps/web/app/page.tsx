@@ -33,6 +33,7 @@ import type { MarketplaceHome } from "@/lib/types";
 import { NewsletterForm } from "@/features/newsletter/newsletter-form";
 import { getLocale } from "@/lib/serverLocale";
 import { copy, localePath, type Locale } from "@/lib/i18n";
+import { formatNumber } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -138,10 +139,10 @@ async function FeaturedLink({ locale }: { locale: Locale }) {
       href={localePath("/explore", locale)}
       className="group inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
     >
-      {t.viewAll.replace("{count}", String(home.total))}
+      {t.viewAll.replace("{count}", formatNumber(home.total, locale))}
       <ArrowRight
         size={15}
-        className="transition-transform duration-300 group-hover:translate-x-1"
+        className="transition-transform duration-300 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1"
       />
     </Link>
   );
@@ -232,7 +233,7 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
             </p>
             <p className="mt-5 font-mono text-xs text-muted-foreground">
               {creator.products} products ·{" "}
-              {creator.followers.toLocaleString()} followers
+              {formatNumber(creator.followers, locale)} followers
             </p>
           </div>
         </div>
@@ -343,7 +344,7 @@ export default async function Home() {
                   requirements, licence and safety status into separate fields
                   so you can judge a product before it touches your workflow.
                 </p>
-                <blockquote className="editorial mt-8 border-l-2 border-primary/50 pl-5 text-xl leading-8">
+                <blockquote className="editorial mt-8 border-s-2 border-primary/50 ps-5 text-xl leading-8">
                   <Quote size={20} className="mb-3 text-primary" />
                   A good AI product should tell you what it does, what it
                   touches, and why you can trust it.

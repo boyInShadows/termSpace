@@ -65,6 +65,11 @@ exceptions are hover-only: a card's shadow, and a process-panel dot's width.
   header before the browser takes the new snapshot. Titles carry a static
   `view-transition-name` (`lib/listing-transition.ts`), so a page must never
   show the same listing twice.
+- **Direction.** Horizontal motion and icons follow the reading direction
+  with Tailwind `rtl:` variants (`rtl:rotate-180` on arrows,
+  `rtl:group-hover:-translate-x-*`), and layout uses logical properties
+  (`ms-`, `ps-`, `start-`, `border-s`). Reveals are vertical, so they need
+  nothing. The terminal card stays LTR.
 - **No pointer-tracking effects.** Tilt cards, magnetic buttons and the
   headline decode were removed in plan P2. They cost a listener per element
   and explained nothing.

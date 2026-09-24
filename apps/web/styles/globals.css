@@ -95,6 +95,36 @@ html[dir="rtl"] .eyebrow {
   letter-spacing: 0;
 }
 
+/* Creator-supplied text (listing names, outcomes, descriptions) is often
+   English inside a Persian page. plaintext takes each paragraph's direction
+   from its own first strong character, so an English sentence keeps its full
+   stop at the end while the element keeps the page's alignment. */
+.ts-bidi {
+  unicode-bidi: plaintext;
+}
+
+/* --- Persian type scale ----------------------------------------------------
+   Estedad has a taller x-height and wider glyphs than Newsreader, so Persian
+   display type runs smaller, looser and lighter than the English (plan.md
+   Part B §7). Unlayered, so it wins over the per-element leading utilities. */
+html[lang="fa"] body {
+  line-height: 1.8;
+}
+html[lang="fa"] .editorial {
+  font-weight: 600;
+  line-height: 1.35;
+}
+html[lang="fa"] .ts-hero-title {
+  font-size: clamp(2.6rem, 6.5vw, 4.4rem);
+}
+/* No tracking and no capitals on Persian text, anywhere: tracking pulls a
+   joined script apart. Eyebrows are told apart by colour and size alone.
+   Latin data islands (dir="ltr": commands, versions) keep their styling. */
+html[lang="fa"] :where(body *):not([dir="ltr"], [dir="ltr"] *) {
+  letter-spacing: normal;
+  text-transform: none;
+}
+
 ::selection {
   background: var(--selection);
 }

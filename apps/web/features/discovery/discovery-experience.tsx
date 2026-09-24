@@ -166,14 +166,14 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
       </div>
       <div className="relative mt-8 max-w-4xl">
         <Search
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+          className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground"
           size={20}
         />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={d.search}
-          className="h-14 pl-12 text-base"
+          className="h-14 ps-12 text-base"
         />
       </div>
       <div
@@ -226,7 +226,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                 </Dialog.Trigger>
                 <Dialog.Portal>
                   <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-                  <Dialog.Content className="fixed inset-y-0 right-0 z-50 w-[min(90vw,24rem)] overflow-y-auto bg-background p-6 shadow-lift">
+                  <Dialog.Content className="fixed inset-y-0 end-0 z-50 w-[min(90vw,24rem)] overflow-y-auto bg-background p-6 shadow-lift">
                     <div className="flex items-center justify-between">
                       <Dialog.Title className="editorial text-2xl">
                         {d.filters}

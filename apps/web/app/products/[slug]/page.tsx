@@ -17,6 +17,7 @@ import { copy, localePath, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/serverLocale";
 import type { ProductDetail } from "@/lib/types";
 import { SITE_URL } from "@/lib/site";
+import { formatNumber } from "@/lib/format";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   let product: ProductDetail;
@@ -156,18 +157,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               {/* Shares its name with the card title, so the title travels
                   from the card into this header on navigation. */}
               <h1
-                className="ts-listing-title editorial mt-5 max-w-3xl text-5xl font-medium leading-none sm:text-6xl"
+                className="ts-listing-title ts-bidi editorial mt-5 max-w-3xl text-5xl font-medium leading-none sm:text-6xl"
                 style={{ viewTransitionName: listingTransitionName(product.id) }}
                 data-listing-header={product.id}
               >
                 {product.name}
               </h1>
-              <p className="mt-5 max-w-2xl text-xl leading-8 text-muted-foreground">{product.outcome}</p>
+              <p className="ts-bidi mt-5 max-w-2xl text-xl leading-8 text-muted-foreground">{product.outcome}</p>
               <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
                 <CreatorIdentity creator={product.creator} />
                 <Rating rating={product.rating} count={product.reviewCount} />
                 <span className="text-xs text-muted-foreground">
-                  {product.usageCount.toLocaleString(numbers)} {l.uses}
+                  {formatNumber(product.usageCount, locale)} {l.uses}
                 </span>
               </div>
               {/* The same three claims, in the same order and style, as the
@@ -184,7 +185,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </header>
 
             <Section title={l.whatItDoes}>
-              <p>{product.description}</p>
+              <p className="ts-bidi">{product.description}</p>
               {product.benefits.length > 0 && (
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {product.benefits.map((benefit) => (
@@ -281,7 +282,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <CreatorIdentity creator={product.creator} />
                 <p className="mt-4 max-w-2xl">{product.creator.bio}</p>
                 <p className="mt-4 text-xs font-semibold text-foreground">
-                  {product.creator.products} {l.resources} · {product.creator.followers.toLocaleString(numbers)} {l.followers}
+                  {product.creator.products} {l.resources} · {formatNumber(product.creator.followers, locale)} {l.followers}
                 </p>
               </div>
             </Section>

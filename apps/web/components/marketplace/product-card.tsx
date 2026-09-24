@@ -4,7 +4,8 @@ import { ListingLink } from "@/components/catalog/listing-link";
 import { listingTransitionName } from "@/lib/listing-transition";
 import { ArrowUpRight, Clock3, Heart } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { cn, formatCount } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatNumber } from "@/lib/format";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocale } from "@/lib/locale-context";
@@ -32,7 +33,7 @@ export function ProductCard({
   product: Product;
   variant?: "card" | "list";
 }) {
-  const { t, fa } = useLocale();
+  const { t, fa, locale } = useLocale();
   const { isFavorite, toggleFavorite } = useMarketplaceSession();
   const saved = isFavorite(product.slug);
   const card = t.productCard;
@@ -58,7 +59,7 @@ export function ProductCard({
           <Button
             variant="ghost"
             size="icon"
-            className="-mr-2 -mt-2 shrink-0"
+            className="-me-2 -mt-2 shrink-0"
             aria-label={`${saved ? card.removeFavorite : card.addFavorite}: ${product.name}`}
             aria-pressed={saved}
             onClick={() => void toggleFavorite(product.slug)}
@@ -75,7 +76,7 @@ export function ProductCard({
         {/* Named like the detail page header: on navigation the title
             travels from here into it (listing-link.tsx, docs/motion.md). */}
         <h3
-          className="ts-listing-title editorial mt-4 text-xl font-semibold leading-snug"
+          className="ts-listing-title ts-bidi editorial mt-4 text-xl font-semibold leading-snug"
           style={{ viewTransitionName: listingTransitionName(product.id) }}
         >
           <ListingLink
@@ -89,7 +90,7 @@ export function ProductCard({
 
         {/* The single description. Clamped and floor-height so that every card
             in a row reaches its divider at the same y-position. */}
-        <p className="mt-2 line-clamp-2 min-h-12 text-sm leading-6 text-muted-foreground">
+        <p className="ts-bidi mt-2 line-clamp-2 min-h-12 text-sm leading-6 text-muted-foreground">
           {product.outcome}
         </p>
 
@@ -112,7 +113,7 @@ export function ProductCard({
         className={cn(
           "mt-5 border-t border-border pt-4",
           isList &&
-            "sm:mt-0 sm:w-64 sm:shrink-0 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0",
+            "sm:mt-0 sm:w-64 sm:shrink-0 sm:border-s sm:border-t-0 sm:ps-6 sm:pt-0",
         )}
       >
         <CompatibilityBadges compatibility={product.compatibility} />
@@ -120,7 +121,7 @@ export function ProductCard({
           <Rating rating={product.rating} count={product.reviewCount} />
           <span className="inline-flex items-center gap-1">
             <Clock3 size={12} />
-            {formatCount(product.usageCount)} {card.uses}
+            {formatNumber(product.usageCount, locale, { compact: true })} {card.uses}
           </span>
           <span dir="ltr">
             {new Intl.DateTimeFormat(fa ? "fa-IR" : "en-US", { month: "short", day: "numeric" }).format(new Date(product.updatedAt))}
@@ -137,7 +138,7 @@ export function ProductCard({
             )}
           >
             {t.viewDetails}
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={14} className="rtl:-scale-x-100" />
           </Link>
         </div>
       </div>

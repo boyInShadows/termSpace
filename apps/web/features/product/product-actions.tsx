@@ -133,7 +133,7 @@ export function ProductActions({ product }: { product: ProductDetail }) {
                     {product.slug}/
                   </p>
                   {product.previewFiles.map((f) => (
-                    <p className="mt-3 flex gap-2 pl-4" key={f}>
+                    <p className="mt-3 flex gap-2 ps-4" key={f}>
                       <FileText size={13} />
                       {f}
                     </p>

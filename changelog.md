@@ -4,6 +4,40 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-24
 
+- Plan v2, phase P6 (Persian beyond mirroring).
+  - Persian type scale in `styles/globals.css`: body leading 1.8; display
+    type at weight 600 and leading 1.35; the hero headline smaller
+    (`clamp(2.6rem, 6.5vw, 4.4rem)`).
+  - One rule removes letter-spacing and capitals from all Persian text.
+    Latin data islands (`dir="ltr"`: commands, versions) keep their styling.
+  - Numerals policy in `lib/format.ts` (`formatNumber(n, locale,
+    { context })`, unit-tested). Prose uses the reader's digits, so Persian
+    gets Persian digits; data stays Latin. Applied to the card usage count,
+    the "view all" count, creator followers, and the detail page counts.
+    Dashboard, creator and moderation formatting is unchanged (outside this
+    phase's files).
+  - Direction on the homepage and catalogue components:
+    - arrows mirror (`rtl:rotate-180`, `rtl:-scale-x-100`), and hover nudges
+      reverse;
+    - the hero's wide-screen scrim moves to the start side;
+    - the rail, list borders, search icons and the filter sheet use logical
+      properties.
+  - Tailwind `rtl:` variants stand in for the plan's `--dir` variable. The
+    ticker already ran mirrored since P2.
+  - Creator-supplied text (listing names, outcomes, descriptions) gets
+    `.ts-bidi` (`unicode-bidi: plaintext`), so an English sentence on a
+    Persian page ends with its full stop instead of starting with it.
+- Left for P7: English copy still inside Persian pages (the hero search's
+  typing examples, the home creator tiles' "followers", the trust chip
+  captions). That is the i18n split.
+- Verification: `e2e/persian.spec.ts` now checks for no tracked or
+  capitalised Persian text on `/fa`, `/fa/explore` and a Persian listing;
+  a smaller, looser, 600-weight Persian display; the mirrored ticker; and
+  Persian digits in prose with Latin ones in the terminal card. `/fa` was
+  checked at 375 and 1280. e2e 69 passed, 13 skipped by design. Root
+  `typecheck` clean; 262 tests passing (150 API, 15 Blog, 97 web);
+  `apps/web` lint clean; all production builds.
+
 - Plan v2, phase P5 (error, empty and 404 pages, SEO, social cards).
   - Branded 404 pages: `app/not-found.tsx` ("404 · not on the shelf") and
     `app/products/[slug]/not-found.tsx` ("unpublished, or never existed").

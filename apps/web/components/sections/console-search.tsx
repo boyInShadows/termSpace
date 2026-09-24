@@ -174,7 +174,7 @@ export function ConsoleSearch({
         <div className="relative flex items-center rounded-xl border border-border-strong bg-surface/90 shadow-soft backdrop-blur transition-colors focus-within:border-transparent">
           <Search
             size={19}
-            className="ml-5 shrink-0 text-muted-foreground transition-colors group-focus-within:text-primary"
+            className="ms-5 shrink-0 text-muted-foreground transition-colors group-focus-within:text-primary"
             aria-hidden
           />
           <input
@@ -202,7 +202,7 @@ export function ConsoleSearch({
           />
           <button
             type="submit"
-            className="mr-2 hidden h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover sm:flex"
+            className="me-2 hidden h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover sm:flex"
           >
             {t.homePage.searchCta}
             <CornerDownLeft size={14} aria-hidden />
@@ -210,7 +210,7 @@ export function ConsoleSearch({
           <button
             type="submit"
             aria-label={t.homePage.searchCta}
-            className="mr-2 grid size-11 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground transition hover:bg-primary-hover sm:hidden"
+            className="me-2 grid size-11 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground transition hover:bg-primary-hover sm:hidden"
           >
             <Search size={17} aria-hidden />
           </button>
