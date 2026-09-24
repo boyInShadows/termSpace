@@ -2,8 +2,9 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { CheckCircle2, ShieldCheck, Star } from "lucide-react";
 import type { Compatibility, Creator, ProductType } from "@/lib/types";
-export function ProductTypeBadge({ type }: { type: ProductType }) {
-  return <Badge variant="info">{type}</Badge>;
+/** `label` is the localized name; server callers without a locale fall back to the type key. */
+export function ProductTypeBadge({ type, label }: { type: ProductType; label?: string }) {
+  return <Badge variant="info">{label ?? type}</Badge>;
 }
 export function CreatorIdentity({
   creator,

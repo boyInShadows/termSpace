@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { ProductCard } from "./product-card";
 import { products } from "@/lib/fixtures";
+import { LocaleProvider } from "@/lib/locale-context";
 
 describe("ProductCard", () => {
   afterEach(cleanup);
@@ -41,5 +42,22 @@ describe("ProductCard", () => {
     for (const link of screen.getAllByRole("link", { name: /Conversion Copywriter/ })) {
       expect(link).toHaveAttribute("href", "/products/conversion-copywriter");
     }
+  });
+
+  it("renders card chrome and community names in Persian, with no English labels", () => {
+    const product = { ...products[0], featured: true, trending: true, communities: [{ slug: "codex", nameEn: "Codex", nameFa: "کودکس", primaryPlatform: "codex" }] };
+    render(<LocaleProvider locale="fa"><ProductCard product={product} /></LocaleProvider>);
+    expect(screen.getByText("انتخاب سردبیر")).toBeInTheDocument();
+    expect(screen.getByText("پرطرفدار")).toBeInTheDocument();
+    expect(screen.getByText("مهارت")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "کودکس" })).toHaveAttribute("href", "/communities/codex");
+    expect(screen.getByRole("button", { name: /علاقه‌مندی‌ها/ })).toBeInTheDocument();
+    expect(screen.queryByText(/Editor’s pick|Trending|uses|favorites|^Skill$/)).not.toBeInTheDocument();
+  });
+
+  it("falls back to the English community name when no Persian name exists", () => {
+    const product = { ...products[0], communities: [{ slug: "codex", nameEn: "Codex", nameFa: null, primaryPlatform: "codex" }] };
+    render(<LocaleProvider locale="fa"><ProductCard product={product} /></LocaleProvider>);
+    expect(screen.getByRole("link", { name: "Codex" })).toBeInTheDocument();
   });
 });

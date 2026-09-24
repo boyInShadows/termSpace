@@ -187,6 +187,18 @@ export const copy = {
     settingsNoCreator: "Not claimed yet",
     settingsHandleFixed: "A username is claimed once and cannot be changed here.",
     viewDetails: "View details",
+    productCard: {
+      editorsPick: "Editor’s pick",
+      trending: "Trending",
+      uses: "uses",
+      communities: "Communities",
+      addFavorite: "Add to favorites",
+      removeFavorite: "Remove from favorites",
+      types: {
+        Prompt: "Prompt", "Prompt pack": "Prompt pack", Skill: "Skill", Agent: "Agent", Workflow: "Workflow", "MCP server": "MCP server",
+        Integration: "Integration", Rule: "Rule", Hook: "Hook", Template: "Template", "AI tool": "AI tool", "Developer utility": "Developer utility",
+      },
+    },
     footer:
       "A community library for agentic coding tools. Freely shared, clearly explained.",
     creatorHub: {
@@ -700,6 +712,18 @@ export const copy = {
     settingsNoCreator: "هنوز انتخاب نشده",
     settingsHandleFixed: "نام کاربری یک‌بار انتخاب می‌شود و اینجا قابل تغییر نیست.",
     viewDetails: "جزئیات",
+    productCard: {
+      editorsPick: "انتخاب سردبیر",
+      trending: "پرطرفدار",
+      uses: "استفاده",
+      communities: "جامعه‌ها",
+      addFavorite: "افزودن به علاقه‌مندی‌ها",
+      removeFavorite: "حذف از علاقه‌مندی‌ها",
+      types: {
+        Prompt: "پرامپت", "Prompt pack": "بستهٔ پرامپت", Skill: "مهارت", Agent: "عامل", Workflow: "گردش کار", "MCP server": "سرور MCP",
+        Integration: "یکپارچه‌سازی", Rule: "قاعده", Hook: "هوک", Template: "قالب", "AI tool": "ابزار هوش مصنوعی", "Developer utility": "ابزار توسعه‌دهنده",
+      },
+    },
     footer:
       "کتابخانهٔ جامعه برای ابزارهای کدنویسی عامل‌محور؛ رایگان و شفاف.",
     creatorHub: {

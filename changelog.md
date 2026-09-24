@@ -2,6 +2,48 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-09-24
+
+- Plan v2, phase P0 (housekeeping and browser passes). Product cards no longer
+  render English in Persian: "Editor's pick", "Trending", "uses", the type
+  badge, the favourites button label and the communities group label come
+  from a new `productCard` group in `lib/i18n.ts` (both locales), and
+  community badges show `nameFa` with an `nameEn` fallback.
+  `ProductTypeBadge` takes an optional localized `label`; its server callers
+  are unchanged. Added a root `CLAUDE.md` that imports `AGENTS.md`.
+- `AGENTS.md` (shared surface): corrected stale branch facts only. `main` is
+  the integration branch and GitHub default, CI runs on pushes to `main` and
+  on every PR, and there is no `development` branch on the remote. The rest
+  of the plan's `AGENTS.md` rewrite is P7.
+- Browser passes, run with Playwright driving local Chrome at a real
+  375×812 mobile viewport (DevTools device emulation was not reachable, and
+  the app correctly refuses to be framed) against the dev server and the API
+  run from source:
+  1. 375px — pass. `/`, `/fa`, `/dashboard`, `/fa/dashboard`: no horizontal
+     scroll or overflowing element; hero search usable; hero corner chips
+     hidden (`hidden md:block`) and shown at 1280; marquee clipped by its
+     parent; dashboard bottom tab bar and floating Publish present.
+  2. Keyboard walk on `/` — pass. 49 stops from the announcement through the
+     header, hero search, popular searches, type chips, featured cards,
+     browse tab, collections, creators, newsletter and footer, each with a
+     visible ring. ⌘K / Ctrl K on the dashboard focuses the top-bar search;
+     there is no palette dialog, so "Esc closes ⌘K" does not apply.
+  3. How-it-works — pass. Panel shows discover → inspect → install once each
+     scrolling down, and the reverse scrolling up.
+  4. Creator dashboard with 3 real listings — pass (desktop en/fa, mobile
+     en): 3 table rows, 3 activity items, no errors. Signed-out `/dashboard`
+     redirects to `/account?next=%2Fdashboard`. Fixture: a local reader
+     `p0-creator@example.com` made owner of the seeded `ellisnorth` creator,
+     email-verified and granted CREATOR directly in the local database.
+     This found the unverified-creator message bug now in `pending.md`.
+- Note for local runs: the Docker `api` image built on 2026-09-22 predates
+  the community placements work, so its product payloads have no
+  `communities` and every `ProductCard` crashes (`communities.length`). Run
+  the API from source or rebuild the image (`docker compose up -d --build api`).
+- Verification: root `typecheck` clean; 239 tests passing (150 API, 15 Blog,
+  74 web including two new Persian `ProductCard` tests); `apps/web` lint
+  clean; all production builds.
+
 ## 2026-09-23
 
 - Finished the dashboard plan and deleted `dashboardPlan.md`. The creator

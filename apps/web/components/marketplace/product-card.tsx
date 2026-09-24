@@ -33,6 +33,7 @@ export function ProductCard({
   const { t, fa } = useLocale();
   const { isFavorite, toggleFavorite } = useMarketplaceSession();
   const saved = isFavorite(product.slug);
+  const card = t.productCard;
   const href = `/products/${product.slug}`;
   const isList = variant === "list";
 
@@ -48,15 +49,15 @@ export function ProductCard({
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-wrap gap-2">
-            <ProductTypeBadge type={product.type} />
-            {product.featured && <Badge variant="primary">Editor’s pick</Badge>}
-            {product.trending && <Badge variant="warning">Trending</Badge>}
+            <ProductTypeBadge type={product.type} label={card.types[product.type]} />
+            {product.featured && <Badge variant="primary">{card.editorsPick}</Badge>}
+            {product.trending && <Badge variant="warning">{card.trending}</Badge>}
           </div>
           <Button
             variant="ghost"
             size="icon"
             className="-mr-2 -mt-2 shrink-0"
-            aria-label={`${saved ? "Remove" : "Add"} ${product.name} ${saved ? "from" : "to"} favorites`}
+            aria-label={`${saved ? card.removeFavorite : card.addFavorite}: ${product.name}`}
             aria-pressed={saved}
             onClick={() => void toggleFavorite(product.slug)}
           >
@@ -88,10 +89,10 @@ export function ProductCard({
           <CreatorIdentity creator={product.creator} compact />
         </div>
         {product.communities.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2" aria-label="Communities">
+          <div className="mt-4 flex flex-wrap gap-2" aria-label={card.communities}>
             {product.communities.slice(0, 3).map((community) => (
               <Link key={community.slug} href={`/communities/${community.slug}`} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <Badge variant="outline">{community.nameEn}</Badge>
+                <Badge variant="outline">{fa ? community.nameFa ?? community.nameEn : community.nameEn}</Badge>
               </Link>
             ))}
           </div>
@@ -111,7 +112,7 @@ export function ProductCard({
           <Rating rating={product.rating} count={product.reviewCount} />
           <span className="inline-flex items-center gap-1">
             <Clock3 size={12} />
-            {formatCount(product.usageCount)} uses
+            {formatCount(product.usageCount)} {card.uses}
           </span>
           <span dir="ltr">
             {new Intl.DateTimeFormat(fa ? "fa-IR" : "en-US", { month: "short", day: "numeric" }).format(new Date(product.updatedAt))}

@@ -66,22 +66,22 @@ another agent is editing this codebase at the same time as you.
 
 | Branch | Role |
 | --- | --- |
-| `development` | Integration branch and GitHub default. Everything merges here through a pull request. |
+| `main` | Integration branch and GitHub default. Everything merges here through a pull request. |
 | `ramtin` | Ramtin's working branch. |
 | `v.2` | The other maintainer's working branch. |
 
 - Work on the branch belonging to the person you are working with. Never commit
-  directly to `development`.
-- Pull `development` and rebase your branch onto it **before** starting a task and
+  directly to `main`.
+- Pull `main` and rebase your branch onto it **before** starting a task and
   again before opening a pull request. Most conflicts between the two agents come
   from starting work on a stale base.
 - Never rewrite history that has been pushed to a shared branch. No `--force` on
-  `development`, `ramtin`, or `v.2`. Use `--force-with-lease` only on your own
+  `main`, `ramtin`, or `v.2`. Use `--force-with-lease` only on your own
   branch, and only when the other agent is not building on it.
 
-Note: CI (`.github/workflows`) triggers on pushes to `main`, which does not exist.
-Until the default branch is renamed, the push job never runs and only the
-`pull_request` trigger provides coverage.
+CI (`.github/workflows/ci.yml`) runs on every push to `main` and on every pull
+request. There is no `development` branch on the remote (corrected 2026-09-24);
+anything that still names it as the integration branch is stale.
 
 ## Working Alongside Another Agent
 
@@ -116,7 +116,7 @@ request description:
 `<YYYYMMDD><NNNN>_<snake_case>` and check `apps/api/prisma/migrations/` for the
 highest existing number first. Two agents creating the same-numbered migration on
 different branches produces a database that cannot be migrated cleanly. Never edit
-a migration that has already been merged into `development`; add a new one.
+a migration that has already been merged into `main`; add a new one.
 
 **Do not resolve a conflict by deleting the other side's work.** If a merge conflict
 touches logic you did not write, keep both behaviours or ask, rather than taking
@@ -143,7 +143,7 @@ record. They are not the same thing and are not held to the same standard.
   publishing"). State what the current phase is at the start of a task, so both
   the human and the other agent know what the eventual commit will contain.
 - **When the phase is complete and verified, squash it into one commit and push
-  that.** `development` receives one clean, self-contained commit per phase with
+  that.** `main` receives one clean, self-contained commit per phase with
   a proper Conventional Commit subject and a body explaining the change.
 
 Because the squash only rewrites local commits that were never pushed, this does
@@ -154,7 +154,7 @@ Note that `git rebase -i` is not available to every agent harness. The reliable
 way to collapse a finished phase is:
 
 ```
-git reset --soft $(git merge-base HEAD origin/development)
+git reset --soft $(git merge-base HEAD origin/main)
 git commit            # one message for the whole phase
 ```
 
@@ -178,7 +178,7 @@ fine. A pushed commit that fails any of the three is not.
   work and corrupts your phase.
 - Never `git checkout --`, `git reset --hard`, or `git clean` over changes you did
   not make yourself.
-- Do not push to `development`, or merge your own pull request into it, without
+- Do not push to `main`, or merge your own pull request into it, without
   the human saying so.
 
 ## Engineering Rules
