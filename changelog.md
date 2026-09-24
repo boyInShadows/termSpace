@@ -4,6 +4,58 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-24
 
+- Plan v2, phase P1 (safety net). `apps/web` now has a Playwright e2e suite
+  and a Lighthouse CI performance gate, both run by a new
+  `.github/workflows/web.yml` on pushes to `main` and every PR. The workflow
+  builds once with `NEXT_PUBLIC_USE_MOCK=1`, runs e2e on that build, then
+  hands the same `.next` to Lighthouse.
+  - No API or database needed: `apps/web/e2e/mock-api.mjs` is a small
+    dependency-free stand-in for `apps/api` (session, sign-in/out, favourites,
+    library, creator profile and dashboard). A cookie picks the persona:
+    `creator@e2e.test` gets three listings, `empty@e2e.test` gets none.
+    Unhandled routes log `[mock-api] unhandled …` and answer 404.
+  - `playwright.config.ts`: `desktop-chromium` (1280×800) and
+    `mobile-chromium` (Pixel 7), with the web server on port 3100 so it never
+    collides with `npm run dev:web`. Specs: `landing` (hero, search, featured
+    from the fixture; hero chips; how-it-works panel discover → inspect →
+    install and back; no running animations under reduced motion; no
+    sideways scroll at 375px on `/` and `/fa`), `dashboard` (signed-out
+    redirect to `/account?next=%2Fdashboard` and back after sign-in; empty
+    state for a creator with no listings; Ctrl/⌘K focuses the top-bar
+    search), `persian` (`/fa` is `dir=rtl` `lang=fa`, body in Estedad, no
+    tracked `.eyebrow`), and `budget` (first-load JS).
+  - Where the plan didn't match the code, the tests follow the code: sign-in
+    is `/account`, not `/sign-in`; there is no ⌘K palette to close with Esc;
+    there is no `/` shortcut to focus the hero search; and the how-it-works
+    panel is read through its existing `data-testid="pinned-panel"`, not a
+    new `data-panel-state` attribute. No product code changed.
+  - First-load JS comes from the served HTML's `<script src>` tags, gzipped
+    from `.next/static`, skipping `nomodule` polyfills. The Next 16 webpack
+    build no longer writes `app-build-manifest.json`.
+  - Budgets are a ratchet (agreed with Ramtin). Gates fail at today's
+    baseline plus headroom, and the plan's budgets are written beside them as
+    targets. Local mobile median: `/` LCP 3.16 s, perf 92, JS 185 kB;
+    `/dashboard` LCP 3.62 s, perf 89, JS 182 kB. TBT, CLS, max-potential-FID
+    and accessibility (100) already meet the plan and are gated at it. The
+    plan's "warn at 90%" level is not implemented: LHCI allows one level per
+    audit.
+  - New scripts: `npm run e2e -w apps/web` (builds with the fixture first;
+    `E2E_SKIP_BUILD=1` reuses a mock build; `PW_CHANNEL=chrome` uses the
+    installed Chrome) and `npm run lhci -w apps/web` (config at root
+    `lighthouserc.cjs`). Vitest now excludes `e2e/`. Playwright and LHCI
+    output is gitignored.
+- Local caveats: the Playwright browser CDN returns 403 from this network,
+  hence `PW_CHANNEL=chrome`. `lhci autorun` on Windows fails on Chrome
+  temp-profile cleanup (`EPERM`) after collecting. The baseline was measured
+  with the Lighthouse Node API using the same settings, and `lhci assert`
+  was run against those results. Neither problem affects the Linux runners.
+- Verification: e2e 16 passed, 6 skipped by design (desktop-only or
+  mobile-only), from a fresh mock build. `lhci assert` passes on the
+  baseline runs and fails both URLs when LCP is tightened to the plan's
+  2.2 s. Removing the dashboard's signed-out redirect fails the dashboard
+  spec (reverted). Root `typecheck` clean; 239 tests passing (150 API,
+  15 Blog, 74 web); `apps/web` lint clean; all production builds.
+
 - Plan v2, phase P0 (housekeeping and browser passes). Product cards no longer
   render English in Persian: "Editor's pick", "Trending", "uses", the type
   badge, the favourites button label and the communities group label come
