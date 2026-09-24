@@ -5,6 +5,7 @@ import { ShieldCheck, Lock, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { pointer, subscribePointer } from "@/lib/pointer";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
+import { TrustChip } from "@/components/catalog/trust-chip";
 import {
   ManifestCard,
   SequenceControls,
@@ -192,20 +193,13 @@ function FloatChip({
       data-on={shown}
       style={{ transform: `translateZ(${z}px)` }}
     >
-      <div
-        className="animate-drift panel flex items-center gap-2 rounded-xl px-2.5 py-2 shadow-lift"
+      <TrustChip
+        className="animate-drift"
         style={{ animationDelay: delay }}
-      >
-        <span className="grid size-6 place-items-center rounded-md bg-muted/70">
-          {icon}
-        </span>
-        <span className="leading-tight">
-          <span className="block text-[11px] font-semibold">{label}</span>
-          <span className="block font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-            {sub}
-          </span>
-        </span>
-      </div>
+        icon={icon}
+        label={label}
+        sub={sub}
+      />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { ListingLink } from "@/components/catalog/listing-link";
+import { listingTransitionName } from "@/lib/listing-transition";
 import { ArrowUpRight, Clock3, Heart } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { cn, formatCount } from "@/lib/utils";
@@ -70,13 +72,19 @@ export function ProductCard({
           </Button>
         </div>
 
-        <h3 className="editorial mt-4 text-xl font-semibold leading-snug">
-          <Link
+        {/* Named like the detail page header: on navigation the title
+            travels from here into it (listing-link.tsx, docs/motion.md). */}
+        <h3
+          className="ts-listing-title editorial mt-4 text-xl font-semibold leading-snug"
+          style={{ viewTransitionName: listingTransitionName(product.id) }}
+        >
+          <ListingLink
             href={href}
+            listingId={product.id}
             className="rounded-sm group-hover:text-primary focus-visible:outline-none focus-visible:underline"
           >
             {product.name}
-          </Link>
+          </ListingLink>
         </h3>
 
         {/* The single description. Clamped and floor-height so that every card

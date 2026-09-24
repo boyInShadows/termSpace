@@ -12,12 +12,14 @@ import { expect, test } from "@playwright/test";
  * Next 16's webpack build no longer writes app-build-manifest.json, so the
  * HTML is the reliable source of what a route ships up front.
  */
-// Ratchet, like lighthouserc.cjs: gated at the 2026-09-24 baseline
-// (/ 185 kB, /dashboard 182 kB) plus headroom. The plan's targets are 170 and
-// 200; move a gate down when a phase meets it, never back up.
+// Ratchet, like lighthouserc.cjs: gated at the measured baseline plus
+// headroom (/ 185 kB, /dashboard 182 kB on 2026-09-24; the detail page
+// 189 kB when added in P4). The plan's targets are 170, 200 and 180; move a
+// gate down when a phase meets it, never back up.
 const BUDGETS_KB: Record<string, number> = {
   "/": 190,
   "/dashboard": 200,
+  "/products/conversion-copywriter": 195,
 };
 
 const STATIC_DIR = path.join(__dirname, "..", ".next", "static");

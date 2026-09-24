@@ -3,11 +3,16 @@
 // own fixture (NEXT_PUBLIC_USE_MOCK=1); this server answers what the browser
 // asks for through /backend: the reader session and the creator dashboard.
 //
+// The public catalogue (list, detail, home, types) comes from
+// mock-catalog.mjs and needs no session.
+//
 // Personas are chosen by a cookie, set at sign-in from the email address:
 //   creator@e2e.test -> creator workspace with three listings
 //   empty@e2e.test   -> creator workspace with no listings
 // No cookie means signed out.
 import { createServer } from "node:http";
+import { mockHome } from "../lib/mock-home.ts";
+import { ITEM_TYPES, PLATFORMS, listProducts, productDetail } from "./mock-catalog.mjs";
 
 const PORT = Number(process.env.MOCK_API_PORT ?? 4099);
 const COOKIE = "e2e_persona";
@@ -104,11 +109,21 @@ async function readJson(request) {
 }
 
 async function handle(request, response) {
-  const { pathname } = new URL(request.url ?? "/", "http://mock");
+  const { pathname, searchParams } = new URL(request.url ?? "/", "http://mock");
   const persona = personaOf(request);
   const route = `${request.method} ${pathname}`;
 
   if (route === "GET /health") return send(response, 200, { ok: true });
+
+  if (route === "GET /api/marketplace/home") return send(response, 200, { data: { ...mockHome, platforms: PLATFORMS } });
+  if (route === "GET /api/marketplace/item-types") return send(response, 200, { data: ITEM_TYPES });
+  if (route === "GET /api/marketplace/communities") return send(response, 200, { data: [] });
+  if (route === "GET /api/marketplace/products") return send(response, 200, listProducts(searchParams));
+  const detail = /^GET \/api\/marketplace\/products\/([^/]+)$/.exec(route);
+  if (detail) {
+    const product = productDetail(decodeURIComponent(detail[1]));
+    return product ? send(response, 200, { data: product }) : send(response, 404, error("NOT_FOUND", "No such listing"));
+  }
 
   if (route === "POST /api/readers/login") {
     const { email = "" } = await readJson(request);

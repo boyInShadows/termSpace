@@ -15,6 +15,9 @@
 //   Performance                    92          89
 //   TBT / CLS / max-potential-FID  42 ms / 0.026 / 80 ms   27 ms / 0.028 / 77 ms
 //   Accessibility                  100         100
+//
+// Detail page (added in P4, /products/conversion-copywriter): LCP 3.24 s,
+// performance 93, TBT 17 ms, CLS 0, accessibility 100.
 const BASE = "http://127.0.0.1:3100";
 
 const GATES = {
@@ -27,6 +30,11 @@ const GATES = {
     lcp: { gate: 4000, target: 2000 },
     performance: { gate: 0.85, target: 0.92 },
     imageBytes: { gate: 150 * 1024, target: 150 * 1024 },
+  },
+  detail: {
+    lcp: { gate: 3500, target: 2200 },
+    performance: { gate: 0.9, target: 0.9 },
+    imageBytes: { gate: 400 * 1024, target: 400 * 1024 },
   },
 };
 
@@ -52,7 +60,7 @@ module.exports = {
       startServerCommand: "node e2e/serve.mjs",
       startServerReadyPattern: "Ready in",
       startServerReadyTimeout: 60000,
-      url: [`${BASE}/`, `${BASE}/dashboard`],
+      url: [`${BASE}/`, `${BASE}/dashboard`, `${BASE}/products/conversion-copywriter`],
       numberOfRuns: 3,
       settings: {
         // The mock API reads this cookie as a signed-in creator, so
@@ -65,6 +73,7 @@ module.exports = {
       assertMatrix: [
         { matchingUrlPattern: "^http://[^/]+/$", assertions: assertions(GATES.home) },
         { matchingUrlPattern: "/dashboard$", assertions: assertions(GATES.dashboard) },
+        { matchingUrlPattern: "/products/[^/]+$", assertions: assertions(GATES.detail) },
       ],
     },
     upload: { target: "filesystem", outputDir: ".lighthouseci/reports" },

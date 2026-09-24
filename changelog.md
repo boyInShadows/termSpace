@@ -4,6 +4,70 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-24
 
+- Plan v2, phase P4 (product detail, Explore, view transitions). Catalog
+  presentation only; no API or lifecycle changes.
+  - Detail page (`app/products/[slug]`, route unchanged). The header is the
+    listing card grown: type, version, author, rating, and the three trust
+    claims (verified, permission scope, licence). They use a `TrustChip`
+    now shared with the hero's corner chips, so the promise and the product
+    look the same. The manifest is a definition table with mono labels
+    (`components/catalog/manifest-table.tsx`), no longer a list of prose
+    rows. The sticky rail keeps acquire and install (instructions are pinned
+    to the acquired release, so there is no public install command) and
+    adds a version picker with each release's notes
+    (`components/catalog/version-picker.tsx`). Below: what it does, manifest,
+    use cases, included files, examples, read-only reviews, works with,
+    creator, related. Added `loading.tsx` at the page's real dimensions, and
+    the title is now "{name} — {type} for {platform}".
+  - Left out, on purpose: a report link (reporting is the other
+    maintainer's work) and the plan's `/[type]/[slug]` route (moving URLs is
+    out of scope).
+  - Card → detail morph: the listing title travels from its card into the
+    detail header in Chrome (320ms, expo). Under reduced motion it
+    cross-fades in place, and browsers without the API just navigate.
+  - Why not React's `<ViewTransition>`: on this dynamic page the destination
+    commits after the transition has captured the old page, so React never
+    pairs the two halves. That held in the webpack build and in Turbopack
+    dev, with and without `loading.tsx`, and with full prefetch.
+    `components/catalog/listing-link.tsx` drives `document.startViewTransition`
+    itself and waits, at most 1.5s, for the detail header. There is no root
+    `<ViewTransition>` either: Explore now changes the URL on every filter,
+    and a root transition would cross-fade the whole page each time.
+  - Explore is URL state (`lib/discovery-url.ts`, unit-tested): type,
+    category, platform, verified, rating, sort, query (debounced) and
+    `?page=` are read by the server page and written by the controls, so
+    views survive reload and can be linked. The results are no longer copied
+    into client state. A skeleton grid shows while the next URL renders. The
+    bar is sticky, with the count in mono. "Load more" is replaced by
+    previous/next page links, plus `<link rel="prev"/"next">` in the head.
+    The community pages share the same reading, including `?page=`. The
+    plan's `?license=` filter is not there, because the API has no licence
+    filter.
+  - The e2e mock API now serves the public catalogue: the homepage fixture
+    (imported from `lib/mock-home.ts` via Node's type stripping) plus
+    generated listings, with filtering, pagination and detail.
+- Findings:
+  - An unknown listing streams as 200 with `noindex` once `loading.tsx`
+    exists, which is documented Next behaviour. A true 404 status needs an
+    existence check in `proxy.ts`; left for P5, which owns not-found pages.
+  - Separately, the site header is not actually sticky. Its sticky bar sits
+    inside a `<header>` exactly as tall as its content, so it scrolls away.
+    The Explore bar therefore sticks at the top of the viewport. Not changed
+    here.
+- P4 measurements, local mobile median of 3: the detail page scores
+  performance 93 and accessibility 100, with CLS 0, TBT 17 ms and simulated
+  LCP 3.24 s. Its first-load JS is 188.7 kB. It is added to `lighthouserc.cjs`
+  (LCP gate 3.5 s, target 2.2 s) and the JS budget (gate 195 kB, target
+  180 kB). `/` is 184.7 kB.
+- Verification: new `e2e/catalog.spec.ts` covers the detail page rendering
+  from the mock, the version picker, noindex for an unknown listing, the
+  card-to-header morph (a paired `::view-transition-group` observed), a
+  filter changing the URL and results and surviving reload, pagination
+  links with `rel`, and "no results" clearing filters. e2e 47 passed,
+  9 skipped by design; `lhci assert` passes on all three URLs. Root
+  `typecheck` clean; 259 tests passing (150 API, 15 Blog, 94 web);
+  `apps/web` lint clean; all production builds.
+
 - Plan v2, phase P3 (fonts, WebGL gating, CSS reveals).
   - Fonts are self-hosted from `apps/web/public/fonts`, with OFL licences
     beside them. The files are the ones `@fontsource-variable` served: Latin

@@ -409,6 +409,25 @@ select {
   opacity: 1;
 }
 
+/* --- listing morph ------------------------------------------------------
+   A card title and its detail page header share a view-transition-name
+   (listing-{id}), and ListingLink runs the transition, so navigating moves
+   one title rather than swapping two. Under reduced motion the group does
+   not travel: the two snapshots only cross-fade in place, the browser
+   default. */
+.ts-listing-title {
+  view-transition-class: listing-morph;
+}
+::view-transition-group(.listing-morph) {
+  animation-duration: var(--duration-chip);
+  animation-timing-function: var(--ease-out-expo);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(.listing-morph) {
+    animation: none;
+  }
+}
+
 /* --- hero 3D stage -------------------------------------------------------
    A resting tilt is baked in so the object reads as dimensional before the
    cursor ever arrives; pointer and scroll add on top of it. No transition

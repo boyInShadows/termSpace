@@ -41,7 +41,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "node e2e/mock-api.mjs",
+      command: "node --no-warnings e2e/mock-api.mjs",
       url: `http://127.0.0.1:${MOCK_API_PORT}/health`,
       env: { MOCK_API_PORT: String(MOCK_API_PORT) },
       reuseExistingServer: !isCI,

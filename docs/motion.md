@@ -19,6 +19,7 @@ Tokens live in `apps/web/styles/tokens.css`; the rules that use them are in
 | Panel state (how-it-works) | lines cross-fade; header dot widens | `--duration-panel` 240ms / `--duration-chip` 320ms | expo / `--ease-spring` | instant | `.ts-panel-line`, `process.tsx` |
 | Chip appear (hero) | scale .92→1 + opacity | `--duration-chip` 320ms | `--ease-spring` | already shown | `.ts-chip` |
 | Marquee | linear loop, paused on hover and focus, mirrored in RTL | 64s a pass | linear | stopped, scrollable static row | `.animate-marquee` |
+| Card → detail page | the listing title travels from its card into the detail header (View Transitions API) | `--duration-chip` 320ms | `--ease-out-expo` | cross-fade in place, no travel | `ListingLink`, `.ts-listing-title` |
 | Hero atmosphere | CSS nebula's conic layer turns; the WebGL field fades in over it on capable desktops | 24s a turn / 640ms fade | linear / expo | nebula held still, no WebGL | `.ts-nebula`, `hero-atmosphere.tsx` |
 | Hero manifest sequence | see below | ≈ 6.4s, once | per line | the finished frame, no controls | `manifest-sequence.tsx` |
 
@@ -55,6 +56,15 @@ exceptions are hover-only: a card's shadow, and a process-panel dot's width.
   GL context while the hero is off screen. The nebula drifts by rotating a
   layer on the compositor, not by animating a custom property, which
   would repaint every frame on the main thread.
+- **The listing morph uses the View Transitions API directly**
+  (`components/catalog/listing-link.tsx`), not React's `<ViewTransition>`.
+  The detail page renders per request and commits after the navigation's
+  transition has captured the old page, so React never sees both halves of
+  the pair (checked in both the webpack build and Turbopack dev). The link
+  starts the transition itself and waits, at most 1.5s, for the detail
+  header before the browser takes the new snapshot. Titles carry a static
+  `view-transition-name` (`lib/listing-transition.ts`), so a page must never
+  show the same listing twice.
 - **No pointer-tracking effects.** Tilt cards, magnetic buttons and the
   headline decode were removed in plan P2. They cost a listener per element
   and explained nothing.
