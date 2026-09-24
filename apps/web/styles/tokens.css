@@ -23,7 +23,17 @@
   --font-estedad: "Estedad Variable";
 
   /* motion ------------------------------------------------------------- */
+  /* The spec, with rationale, is docs/motion.md. Nothing but the hero
+     manifest sequence and the marquee runs longer than 640ms. */
   --duration-fast: 160ms;
+  --duration-press: 80ms;
+  --duration-hover: 160ms;
+  --duration-tab: 200ms;
+  --duration-panel: 240ms;
+  --duration-chip: 320ms;
+  --duration-enter: 480ms;
+  --duration-reveal: 560ms;
+  --stagger-enter: 60ms;
   --duration-slow: 320ms;
   --duration-scene: 640ms;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);

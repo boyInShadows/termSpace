@@ -4,6 +4,57 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-24
 
+- Plan v2, phase P2 (motion diet and the signature moment). The homepage
+  hero's manifest card now performs the search → inspect → install journey
+  once, after load. Everything else got calmer or cheaper. Spec and rules
+  are in the new `docs/motion.md`; tokens are in `styles/tokens.css`.
+  - The sequence: `components/hero/manifest-timeline.ts` maps elapsed time
+    to a frame (pure, unit-tested); `manifest-sequence.tsx` runs one
+    `requestAnimationFrame` clock. It starts 600ms after `load`, plays once,
+    and holds on hover, while under half the scene is on screen, and while
+    the tab is hidden. The pause toggle and Replay are real buttons outside
+    the `aria-hidden` scene. Lines are laid out at final size and only
+    revealed, so the card and its chips never move. The three corner chips
+    now land with the manifest line each one restates. Reduced motion gets
+    the finished frame from CSS on first paint, with no controls. In Persian
+    the card stays `dir="ltr"` and only the title bar is translated (Estedad,
+    since the mono face has no Persian glyphs).
+  - Deleted `TiltCard`, `Magnetic` and `DecodeText`, and their CSS. Cards take
+    a CSS `.ts-lift` hover (2px lift and shadow); buttons lift 1px on hover
+    and settle on press. The h1 paints its final text at once, with no
+    scramble. Above-the-fold content enters with a CSS-only stagger
+    (`.ts-enter`). The h1 and intro rise without fading: a fade from 0 on the
+    LCP paragraph measured +430ms mobile LCP, which the Lighthouse ratchet
+    caught.
+  - The how-it-works panel cross-fades instead of sliding, and its dots
+    move to the spec timing. Reveals travel 16px over 560ms.
+  - Fixed the platform marquee, broken before P2: its unlayered
+    `.animate-marquee` rule overrode the Tailwind utilities meant to pause it
+    on hover, stop it under reduced motion, and flip it in RTL. In Persian a
+    growing gap opened at the right edge. All marquee states are now plain
+    CSS, and RTL uses mirrored keyframes, because running the LTR ones in
+    reverse would still open the gap. The component is no longer a client
+    component.
+  - Shared surface: `lib/i18n.ts` gains `homePage.manifestTitle`,
+    `manifestPause` and `manifestReplay` in both locales.
+  - Deviations from the plan: no focus-within pause (the card has nothing
+    focusable; the toggle is the keyboard control); browse tab cross-fade
+    not done (outside the phase's file list).
+- P2 measurements, local mobile median of 3 against the P1 baseline:
+  - `/`: LCP 3.16 s (unchanged), TBT 35 ms, CLS 0.014 (was 0.026),
+    performance 92. `/dashboard` unchanged.
+  - First-load JS on `/`: 185.8 kB, not the plan's 15 kB drop. Removing the
+    three primitives saved about what the sequence costs. The remaining weight
+    is framework chunks and the WebGL field, which is plan P3's lazy gating.
+    Ratchet gates unchanged.
+- Verification: `lhci assert` passes on those runs. e2e 21 passed, 5 skipped
+  by design. New specs cover the sequence playing once, landing every chip,
+  and replaying; the pause button and scrolling away holding it; and reduced
+  motion showing the finished frame with no controls. Marquee direction and
+  hover pause were checked in `/` and `/fa`. Root `typecheck` clean;
+  246 tests passing (150 API, 15 Blog, 81 web including seven timeline
+  tests); `apps/web` lint clean; all production builds.
+
 - Plan v2, phase P1 (safety net). `apps/web` now has a Playwright e2e suite
   and a Lighthouse CI performance gate, both run by a new
   `.github/workflows/web.yml` on pushes to `main` and every PR. The workflow

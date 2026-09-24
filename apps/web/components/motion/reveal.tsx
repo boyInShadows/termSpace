@@ -24,7 +24,7 @@ export function Reveal({
   children,
   className,
   delay = 0,
-  distance = 22,
+  distance = 16,
   as: Tag = "div",
 }: Props) {
   const { ref, isInView } = useInView<HTMLDivElement>();

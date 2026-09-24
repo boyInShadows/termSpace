@@ -231,7 +231,7 @@ function StepPanel({ step, index }: { step: Step; index: number }) {
             <span
               key={candidate.id}
               className={cn(
-                "h-1 rounded-full transition-all duration-500",
+                "h-1 rounded-full transition-[width,background-color] duration-(--duration-chip) ease-(--ease-spring)",
                 position === index ? "w-6 bg-primary" : "w-1.5 bg-border-strong",
               )}
             />

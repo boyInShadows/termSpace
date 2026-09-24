@@ -198,6 +198,12 @@ select {
   from { transform: translate3d(0, 0, 0); }
   to { transform: translate3d(-50%, 0, 0); }
 }
+/* An RTL track is anchored at the right edge, so it has to travel the other
+   way; running the LTR keyframes in reverse would open a gap at the right. */
+@keyframes ts-marquee-rtl {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(50%, 0, 0); }
+}
 
 /* The logo's terminal caret. `steps(2)` so it snaps on and off like a real
    cursor instead of fading, which would read as a pulsing decoration. The
@@ -222,16 +228,58 @@ select {
   to { transform: translate3d(0, 900%, 0); }
 }
 
+/* Every marquee state lives here, not in utility classes on the element: this
+   rule is unlayered, so it would override any layered utility that tried to
+   pause or turn the animation. */
 .animate-marquee { animation: ts-marquee var(--marquee-duration, 42s) linear infinite; }
+[dir="rtl"] .animate-marquee { animation-name: ts-marquee-rtl; }
+.animate-marquee[data-reverse] { animation-direction: reverse; }
+.group:hover > .animate-marquee,
+.group:focus-within > .animate-marquee { animation-play-state: paused; }
 .ts-caret { animation: ts-blink 1.15s steps(2, jump-none) infinite; }
 .animate-drift { animation: ts-drift 7s var(--ease-out-quart) infinite; }
 
-/* Each line of the pinned process panel re-enters when the step changes.
-   React remounts them (the key includes the value), so the animation replays
-   on its own without any imperative restart. */
+/* Each line of the pinned process panel cross-fades in when the step
+   changes. React remounts them (the key includes the value), so the animation
+   replays on its own without any imperative restart. No slide: the panel is
+   content, and text that travels is harder to read. */
+@keyframes ts-fade {
+  from { opacity: 0; }
+}
 .ts-panel-line {
-  --rise-from: 7px;
-  animation: ts-rise 460ms var(--ease-out-expo) backwards;
+  animation: ts-fade var(--duration-panel) var(--ease-out-expo) backwards;
+}
+
+/* --- page-load entrance ---------------------------------------------------
+   Above the fold, once, in reading order: pass --enter-i as 0, 1, 2…
+   CSS only, so it runs on the server-rendered HTML before hydration. */
+.ts-enter {
+  --rise-from: 8px;
+  animation: ts-rise var(--duration-enter) var(--ease-out-expo) backwards;
+  animation-delay: calc(var(--enter-i, 0) * var(--stagger-enter));
+}
+/* For the largest text above the fold: the rise without the fade. The
+   browser does not count an element as painted while its opacity is 0, so a
+   fade on an LCP candidate delays LCP by its whole stagger and more under a
+   throttled CPU. Measured: +430ms on mobile. */
+@keyframes ts-nudge {
+  from { transform: translate3d(0, 8px, 0); }
+}
+.ts-enter[data-enter="nudge"] {
+  animation-name: ts-nudge;
+}
+
+/* --- hover lift -----------------------------------------------------------
+   Replaces the pointer-tracking tilt: the same "this is live" cue from two
+   properties and no script. */
+.ts-lift {
+  transition:
+    translate var(--duration-hover) var(--ease-out-expo),
+    box-shadow var(--duration-hover) var(--ease-out-expo);
+}
+.ts-lift:hover {
+  translate: 0 -2px;
+  box-shadow: var(--shadow-lift);
 }
 
 /* --- scroll reveal ------------------------------------------------------
@@ -241,44 +289,12 @@ select {
   opacity: 0;
   transform: translate3d(0, var(--rise-from, 22px), 0);
   transition:
-    opacity 620ms var(--ease-out-expo) var(--rise-delay, 0ms),
-    transform 620ms var(--ease-out-expo) var(--rise-delay, 0ms);
+    opacity var(--duration-reveal) var(--ease-out-expo) var(--rise-delay, 0ms),
+    transform var(--duration-reveal) var(--ease-out-expo) var(--rise-delay, 0ms);
 }
 .ts-reveal[data-revealed] {
   opacity: 1;
   transform: none;
-}
-
-/* --- 3D tilt + cursor spotlight ----------------------------------------- */
-.ts-tilt {
-  position: relative;
-  isolation: isolate;
-  transform: perspective(1100px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
-  transform-style: preserve-3d;
-  transition: transform 460ms var(--ease-out-expo);
-}
-.ts-tilt:hover {
-  /* Follow the cursor tightly while engaged, glide back slowly on exit. */
-  transition-duration: 90ms;
-}
-.ts-tilt[data-spotlight]::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  border-radius: inherit;
-  opacity: 0;
-  transition: opacity var(--duration-slow) var(--ease-out-quart);
-  background: radial-gradient(
-    340px circle at var(--spot-x, 50%) var(--spot-y, 50%),
-    color-mix(in oklab, var(--primary) 16%, transparent),
-    transparent 62%
-  );
-}
-.ts-tilt[data-spotlight]:hover::after,
-.ts-tilt[data-spotlight]:focus-within::after {
-  opacity: 1;
 }
 
 /* --- hero 3D stage -------------------------------------------------------
@@ -322,21 +338,67 @@ html.light [data-theme-icon="moon"] {
   transform: rotate(0deg) scale(1);
 }
 
-/* --- decode text --------------------------------------------------------- */
-/* Kept to opacity only: the headline it runs on is gradient-clipped text,
-   and setting `color` there would knock out the background-clip. */
-[data-decoding] {
-  /* 0.9, not lower: the decode runs on the gradient headline, and dropping
-     it further composites the stops toward the background far enough to push
-     the light theme under 4.5:1 while the animation is playing. */
-  opacity: 0.9;
+/* --- hero manifest sequence ---------------------------------------------
+   manifest-sequence.tsx sets data-on and --typed from its clock; everything
+   else is here. Lines are laid out from the start and only revealed, so the
+   card never changes size while it plays. The default (data-on="false",
+   nothing typed) is the idle frame the server renders. */
+.ts-typed {
+  /* Monospace, so 1ch is one typed character. */
+  clip-path: inset(0 calc(100% - var(--typed, 0) * 1ch) 0 0);
+}
+.ts-seq-caret {
+  position: absolute;
+  top: 0.3em;
+  bottom: 0.3em;
+  left: calc(var(--typed, 0) * 1ch);
+  width: 0.55em;
+  background: var(--accent);
+  animation: ts-blink 1s steps(2, jump-none) infinite;
+}
+.ts-seq [data-dim] {
+  opacity: 0.55;
+  transition: opacity var(--duration-chip) var(--ease-out-expo);
+}
+.ts-seq-line,
+.ts-seq-row {
+  transition:
+    opacity var(--duration-chip) var(--ease-out-expo),
+    translate var(--duration-chip) var(--ease-out-expo);
+}
+.ts-seq-row {
+  transition-duration: var(--duration-panel);
+}
+.ts-seq-line[data-on="false"] {
+  opacity: 0;
+  translate: 0 6px;
+}
+.ts-seq-row[data-on="false"] {
+  opacity: 0;
+  translate: 0 4px;
+}
+.ts-chip {
+  transition:
+    opacity var(--duration-chip) var(--ease-spring),
+    scale var(--duration-chip) var(--ease-spring);
+}
+.ts-chip[data-on="false"] {
+  opacity: 0;
+  scale: 0.92;
 }
 
 /* --- accessibility ------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .ts-reveal { opacity: 1 !important; transform: none !important; }
-  .ts-tilt { transform: none !important; }
+  .ts-enter { animation: none !important; }
+  .animate-marquee { animation: none; }
+  .ts-lift:hover { translate: none; }
+  /* The finished frame, from the first paint and without any script. */
+  .ts-typed { clip-path: none; }
+  .ts-seq-caret { display: none; }
+  .ts-seq [data-on],
+  .ts-chip[data-on] { opacity: 1 !important; translate: none !important; scale: none !important; }
   .ts-stage { transform: rotateX(-3deg) rotateY(-9deg) !important; }
   *,
   *::before,

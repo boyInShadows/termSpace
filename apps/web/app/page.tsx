@@ -17,8 +17,6 @@ import { Hero } from "@/components/hero/hero";
 import { Process } from "@/components/sections/process";
 import { Browse, type BrowseCollection } from "@/components/sections/browse";
 import { Reveal } from "@/components/motion/reveal";
-import { TiltCard } from "@/components/motion/tilt-card";
-import { Magnetic } from "@/components/motion/magnetic";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/marketplace/product-card";
@@ -172,9 +170,9 @@ async function FeaturedGrid({ locale }: { locale: Locale }) {
         <div className="grid gap-5 md:grid-cols-3">
           {featured.slice(0, 3).map((product, index) => (
             <Reveal key={product.id} delay={index * 90}>
-              <TiltCard className="h-full rounded-lg" max={5}>
+              <div className="ts-lift h-full rounded-lg">
                 <ProductCard product={product} />
-              </TiltCard>
+              </div>
             </Reveal>
           ))}
         </div>
@@ -228,10 +226,7 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {home.creators.slice(0, 3).map((creator, index) => (
         <Reveal key={creator.id} delay={index * 90}>
-          <TiltCard
-            className="h-full rounded-xl border border-border bg-background/70 p-6"
-            max={4}
-          >
+          <div className="ts-lift h-full rounded-xl border border-border bg-background/70 p-6">
             <CreatorIdentity creator={creator} />
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
               {creator.bio}
@@ -240,7 +235,7 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
               {creator.products} products ·{" "}
               {creator.followers.toLocaleString()} followers
             </p>
-          </TiltCard>
+          </div>
         </Reveal>
       ))}
 
@@ -257,17 +252,15 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
             {t.homePage.creatorCtaBody}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
-            <Magnetic>
-              <Link
-                href={localePath("/dashboard", locale)}
-                className={cn(
-                  buttonVariants({ variant: "primary", size: "sm" }),
-                  "shadow-plasma",
-                )}
-              >
-                {t.homePage.creatorCtaPrimary}
-              </Link>
-            </Magnetic>
+            <Link
+              href={localePath("/dashboard", locale)}
+              className={cn(
+                buttonVariants({ variant: "primary", size: "sm" }),
+                "shadow-plasma",
+              )}
+            >
+              {t.homePage.creatorCtaPrimary}
+            </Link>
             <Link
               href={localePath("/design-system", locale)}
               className={buttonVariants({ variant: "secondary", size: "sm" })}
@@ -371,10 +364,7 @@ export default async function Home() {
                   const Icon = fact.icon;
                   return (
                     <Reveal key={fact.title} delay={index * 90}>
-                      <TiltCard
-                        className="h-full rounded-xl border border-border bg-surface/70 p-6 backdrop-blur"
-                        max={4}
-                      >
+                      <div className="ts-lift h-full rounded-xl border border-border bg-surface/70 p-6 backdrop-blur">
                         <div className="flex items-start gap-4">
                           <span
                             className={cn(
@@ -391,7 +381,7 @@ export default async function Home() {
                             </p>
                           </div>
                         </div>
-                      </TiltCard>
+                      </div>
                     </Reveal>
                   );
                 })}

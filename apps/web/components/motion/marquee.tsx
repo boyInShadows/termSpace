@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +15,10 @@ type Props = {
  * `aria-hidden` — assistive tech reads the list once.
  *
  * Pauses on hover and on keyboard focus so nobody has to chase a moving link.
+ *
+ * Pure CSS: no state, no effects, so it renders on the server and ships no
+ * script of its own. The animation, its RTL mirror, the pause and the
+ * reduced-motion stop are all in globals.css under `.animate-marquee`.
  *
  * Under reduced motion the animation is switched off entirely rather than
  * sped up to nothing: the global reduced-motion rule collapses every animation
@@ -36,13 +38,8 @@ export function Marquee({ children, className, duration = 42, reverse }: Props) 
       )}
     >
       <div
-        className={cn(
-          "flex w-max shrink-0 animate-marquee gap-4",
-          "group-hover:[animation-play-state:paused]",
-          "group-focus-within:[animation-play-state:paused]",
-          "motion-reduce:[animation:none]",
-          reverse && "[animation-direction:reverse]",
-        )}
+        className="flex w-max shrink-0 animate-marquee gap-4"
+        data-reverse={reverse ? "" : undefined}
         style={{ "--marquee-duration": `${duration}s` } as React.CSSProperties}
       >
         <div className="flex shrink-0 gap-4">{children}</div>
