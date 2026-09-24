@@ -1,7 +1,4 @@
 import type { Preview } from "@storybook/nextjs-vite";
-import "@fontsource-variable/geist";
-import "@fontsource-variable/geist-mono";
-import "@fontsource-variable/newsreader";
 import "../styles/globals.css";
 
 const preview: Preview = {

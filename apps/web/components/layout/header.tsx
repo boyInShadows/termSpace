@@ -125,7 +125,7 @@ export function Header() {
                 {t.explore}
                 <ArrowRight
                   size={12}
-                  className="transition-transform duration-300 group-hover:translate-x-0.5"
+                  className="transition-transform duration-300 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
                 />
               </Link>
             </p>

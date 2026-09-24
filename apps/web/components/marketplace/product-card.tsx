@@ -1,8 +1,11 @@
 "use client";
 import Link from "next/link";
+import { ListingLink } from "@/components/catalog/listing-link";
+import { listingTransitionName } from "@/lib/listing-transition";
 import { ArrowUpRight, Clock3, Heart } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { cn, formatCount } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatNumber } from "@/lib/format";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocale } from "@/lib/locale-context";
@@ -30,9 +33,10 @@ export function ProductCard({
   product: Product;
   variant?: "card" | "list";
 }) {
-  const { t, fa } = useLocale();
+  const { t, fa, locale } = useLocale();
   const { isFavorite, toggleFavorite } = useMarketplaceSession();
   const saved = isFavorite(product.slug);
+  const card = t.productCard;
   const href = `/products/${product.slug}`;
   const isList = variant === "list";
 
@@ -48,15 +52,15 @@ export function ProductCard({
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-wrap gap-2">
-            <ProductTypeBadge type={product.type} />
-            {product.featured && <Badge variant="primary">Editor’s pick</Badge>}
-            {product.trending && <Badge variant="warning">Trending</Badge>}
+            <ProductTypeBadge type={product.type} label={card.types[product.type]} />
+            {product.featured && <Badge variant="primary">{card.editorsPick}</Badge>}
+            {product.trending && <Badge variant="warning">{card.trending}</Badge>}
           </div>
           <Button
             variant="ghost"
             size="icon"
-            className="-mr-2 -mt-2 shrink-0"
-            aria-label={`${saved ? "Remove" : "Add"} ${product.name} ${saved ? "from" : "to"} favorites`}
+            className="-me-2 -mt-2 shrink-0"
+            aria-label={`${saved ? card.removeFavorite : card.addFavorite}: ${product.name}`}
             aria-pressed={saved}
             onClick={() => void toggleFavorite(product.slug)}
           >
@@ -69,18 +73,24 @@ export function ProductCard({
           </Button>
         </div>
 
-        <h3 className="editorial mt-4 text-xl font-semibold leading-snug">
-          <Link
+        {/* Named like the detail page header: on navigation the title
+            travels from here into it (listing-link.tsx, docs/motion.md). */}
+        <h3
+          className="ts-listing-title ts-bidi editorial mt-4 text-xl font-semibold leading-snug"
+          style={{ viewTransitionName: listingTransitionName(product.id) }}
+        >
+          <ListingLink
             href={href}
+            listingId={product.id}
             className="rounded-sm group-hover:text-primary focus-visible:outline-none focus-visible:underline"
           >
             {product.name}
-          </Link>
+          </ListingLink>
         </h3>
 
         {/* The single description. Clamped and floor-height so that every card
             in a row reaches its divider at the same y-position. */}
-        <p className="mt-2 line-clamp-2 min-h-12 text-sm leading-6 text-muted-foreground">
+        <p className="ts-bidi mt-2 line-clamp-2 min-h-12 text-sm leading-6 text-muted-foreground">
           {product.outcome}
         </p>
 
@@ -88,10 +98,10 @@ export function ProductCard({
           <CreatorIdentity creator={product.creator} compact />
         </div>
         {product.communities.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2" aria-label="Communities">
+          <div className="mt-4 flex flex-wrap gap-2" aria-label={card.communities}>
             {product.communities.slice(0, 3).map((community) => (
               <Link key={community.slug} href={`/communities/${community.slug}`} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <Badge variant="outline">{community.nameEn}</Badge>
+                <Badge variant="outline">{fa ? community.nameFa ?? community.nameEn : community.nameEn}</Badge>
               </Link>
             ))}
           </div>
@@ -103,7 +113,7 @@ export function ProductCard({
         className={cn(
           "mt-5 border-t border-border pt-4",
           isList &&
-            "sm:mt-0 sm:w-64 sm:shrink-0 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0",
+            "sm:mt-0 sm:w-64 sm:shrink-0 sm:border-s sm:border-t-0 sm:ps-6 sm:pt-0",
         )}
       >
         <CompatibilityBadges compatibility={product.compatibility} />
@@ -111,7 +121,7 @@ export function ProductCard({
           <Rating rating={product.rating} count={product.reviewCount} />
           <span className="inline-flex items-center gap-1">
             <Clock3 size={12} />
-            {formatCount(product.usageCount)} uses
+            {formatNumber(product.usageCount, locale, { compact: true })} {card.uses}
           </span>
           <span dir="ltr">
             {new Intl.DateTimeFormat(fa ? "fa-IR" : "en-US", { month: "short", day: "numeric" }).format(new Date(product.updatedAt))}
@@ -128,7 +138,7 @@ export function ProductCard({
             )}
           >
             {t.viewDetails}
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={14} className="rtl:-scale-x-100" />
           </Link>
         </div>
       </div>

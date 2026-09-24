@@ -132,7 +132,7 @@ export function Process() {
             {/* The rail the active marker travels down. */}
             <span
               aria-hidden
-              className="absolute left-[15px] top-2 bottom-2 w-px bg-border"
+              className="absolute start-[15px] top-2 bottom-2 w-px bg-border"
             />
             {STEPS.map((step, index) => {
               const Icon = step.icon;
@@ -143,12 +143,12 @@ export function Process() {
                     ref={(node) => {
                       stepRefs.current[index] = node;
                     }}
-                    className="relative py-8 pl-12 lg:py-12"
+                    className="relative py-8 ps-12 lg:py-12"
                   >
                     <span
                       aria-hidden
                       className={cn(
-                        "absolute left-0 top-8 grid size-8 place-items-center rounded-full border transition-all duration-500 lg:top-12",
+                        "absolute start-0 top-8 grid size-8 place-items-center rounded-full border transition-all duration-500 lg:top-12",
                         isActive
                           ? "border-primary bg-primary text-primary-foreground shadow-plasma"
                           : "border-border bg-background text-muted-foreground",
@@ -226,12 +226,12 @@ function StepPanel({ step, index }: { step: Step; index: number }) {
         <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           {step.id}
         </span>
-        <span className="ml-auto flex gap-1">
+        <span className="ms-auto flex gap-1">
           {STEPS.map((candidate, position) => (
             <span
               key={candidate.id}
               className={cn(
-                "h-1 rounded-full transition-all duration-500",
+                "h-1 rounded-full transition-[width,background-color] duration-(--duration-chip) ease-(--ease-spring)",
                 position === index ? "w-6 bg-primary" : "w-1.5 bg-border-strong",
               )}
             />

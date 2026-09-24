@@ -1,9 +1,8 @@
 /**
  * A single shared pointer store for the whole page.
  *
- * Every cursor-reactive surface (the WebGL plasma field, the 3D hero scene,
- * tilt cards, magnetic buttons) reads from here instead of attaching its own
- * listener and its own rAF loop. One `pointermove` listener, one animation
+ * Every cursor-reactive surface (the WebGL plasma field and the 3D hero
+ * scene) reads from here instead of attaching its own listener and its own rAF loop. One `pointermove` listener, one animation
  * frame, regardless of how many things are reacting.
  *
  * Values are normalised to -1..1 around the viewport centre and eased toward

@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { ShieldCheck, Sparkles } from "lucide-react";
-import { PlasmaField } from "./plasma-field";
+import { HeroAtmosphere } from "./hero-atmosphere";
 import { HeroScene } from "./hero-scene";
-import { DecodeText } from "@/components/motion/decode-text";
-import { Magnetic } from "@/components/motion/magnetic";
 import { Marquee } from "@/components/motion/marquee";
 import { ConsoleSearch } from "@/components/sections/console-search";
 import { buttonVariants } from "@/components/ui/button";
@@ -20,6 +19,9 @@ import type { MarketplaceTypeCount } from "@/lib/types";
  * apps. Group labels also make the loop legible — when "Models" comes back
  * round it reads as the list repeating, not as a duplicated entry.
  */
+/** Page-load entrance order: eyebrow → h1 → intro → search → card. */
+const enter = (index: number) => ({ "--enter-i": index }) as CSSProperties;
+
 const WORKS_WITH = [
   { key: "worksWithModels", items: ["Claude", "ChatGPT", "Gemini"] },
   { key: "worksWithEditors", items: ["Cursor", "VS Code", "Codex"] },
@@ -43,7 +45,7 @@ export function Hero({
     >
       {/* --- atmosphere ---------------------------------------------------- */}
       <div className="absolute inset-0 -z-10">
-        <PlasmaField />
+        <HeroAtmosphere />
       </div>
       <div
         aria-hidden
@@ -66,7 +68,7 @@ export function Hero({
       />
       <div
         aria-hidden
-        className="absolute inset-y-0 left-0 -z-10 hidden w-[72%] bg-gradient-to-r from-background from-45% via-background/85 via-75% to-transparent lg:block"
+        className="absolute inset-y-0 start-0 -z-10 hidden w-[72%] bg-gradient-to-r from-background rtl:bg-gradient-to-l from-45% via-background/85 via-75% to-transparent lg:block"
       />
       {/* Grounds the hero into the page instead of ending it on a hard edge. */}
       <div
@@ -79,7 +81,7 @@ export function Hero({
       <div className="container-page relative grid items-center gap-14 py-16 lg:min-h-[66vh] lg:grid-cols-[1.05fr_.95fr] lg:gap-8 lg:py-20">
         {/* --- copy -------------------------------------------------------- */}
         <div>
-          <p className="eyebrow flex items-center gap-2">
+          <p className="ts-enter eyebrow flex items-center gap-2" style={enter(0)}>
             <span className="relative flex size-1.5">
               <span className="absolute inline-flex size-full rounded-full bg-accent opacity-75 [animation:ts-pulse-ring_2.4s_ease-out_infinite]" />
               <span className="relative inline-flex size-1.5 rounded-full bg-accent" />
@@ -87,19 +89,23 @@ export function Hero({
             {t.marketplace}
           </p>
 
-          <h1 className="editorial mt-6 text-[clamp(2.6rem,1.2rem+5.6vw,4.9rem)] font-medium leading-[0.98] tracking-[-0.03em]">
+          {/* The LCP element. It paints its final text at once: no scramble,
+              which delayed the final paint and broke Persian joins. */}
+          <h1
+            className="ts-enter ts-hero-title editorial mt-6 text-[clamp(2.6rem,1.2rem+5.6vw,4.9rem)] font-medium leading-[0.98] tracking-[-0.03em]"
+            style={enter(1)}
+            data-enter="nudge"
+          >
             <span className="block">{t.heroStop}</span>
             <span className="block">{t.heroScratch}</span>
-            <DecodeText
-              text={t.heroStart}
-              className="mt-1 block"
-              textClassName="text-plasma"
-              delay={420}
-              speed={26}
-            />
+            <span className="mt-1 block text-plasma">{t.heroStart}</span>
           </h1>
 
-          <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">
+          <p
+            className="ts-enter mt-6 max-w-xl text-lg leading-8 text-muted-foreground"
+            style={enter(2)}
+            data-enter="nudge"
+          >
             {t.heroIntro}
           </p>
 
@@ -107,20 +113,18 @@ export function Hero({
               arrived to do is search it, so the field sits here rather than
               below the fold under a marquee. "Explore community resources" was
               a button that led to the same search one screen further down. */}
-          <div className="mt-8">
+          <div className="ts-enter mt-8" style={enter(3)}>
             <ConsoleSearch variant="hero" types={types} />
           </div>
 
           <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
-            <Magnetic strength={9}>
-              <Link
-                href="/dashboard"
-                className={buttonVariants({ variant: "secondary" })}
-              >
-                <Sparkles size={16} />
-                {t.shareWork}
-              </Link>
-            </Magnetic>
+            <Link
+              href="/dashboard"
+              className={buttonVariants({ variant: "secondary" })}
+            >
+              <Sparkles size={16} />
+              {t.shareWork}
+            </Link>
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <ShieldCheck size={15} className="text-verified" />
               {t.declared}
@@ -129,7 +133,7 @@ export function Hero({
         </div>
 
         {/* --- 3D scene ----------------------------------------------------- */}
-        <div className="relative">
+        <div className="ts-enter relative" style={enter(4)}>
           <HeroScene />
         </div>
       </div>

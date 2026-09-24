@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/footer";
 import { DiscoveryExperience } from "@/features/discovery/discovery-experience";
 import { getMarketplaceCommunities, getMarketplaceCommunity, getMarketplaceHome, getMarketplaceItemTypes } from "@/lib/api";
 import type { ProductFilters } from "@/lib/types";
+import { filtersFromParams } from "@/lib/discovery-url";
 import { getLocale } from "@/lib/serverLocale";
 
 export const dynamic = "force-dynamic";
@@ -20,11 +21,8 @@ export default async function CommunityPage({ params, searchParams }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const [{ slug }, raw, locale] = await Promise.all([params, searchParams, getLocale()]);
-  const first = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] : value;
-  const filters: ProductFilters = {
-    q: first(raw.q), type: first(raw.type), category: first(raw.category), community: slug,
-    platform: first(raw.platform), sort: first(raw.sort) ?? "featured", page: 1, limit: 12,
-  };
+  // The community is the route, not a filter a URL can override.
+  const filters: ProductFilters = { ...filtersFromParams(raw), community: slug };
   const [result, home, communities, itemTypes] = await Promise.all([
     getMarketplaceCommunity(slug, filters).catch((error: { status?: number }) => error?.status === 404 ? null : Promise.reject(error)),
     getMarketplaceHome().catch(() => null),

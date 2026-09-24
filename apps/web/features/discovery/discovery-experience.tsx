@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Filter,
   Grid2X2,
@@ -12,14 +13,25 @@ import {
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Switch from "@radix-ui/react-switch";
 import type { MarketplaceCategory, MarketplaceCommunity, MarketplaceItemType, MarketplacePlatform, ProductFilters, ProductPageResult } from "@/lib/types";
-import { ApiError, getProducts } from "@/lib/api";
 import { ProductCard } from "@/components/marketplace/product-card";
+import { ProductCardSkeleton } from "@/components/patterns/skeleton";
 import { EmptyState } from "@/components/patterns/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
+import { discoveryHref } from "@/lib/discovery-url";
+
+/** Typing settles for this long before the URL, and so the results, change. */
+const QUERY_DEBOUNCE_MS = 300;
+
+/**
+ * Search and filter a page of listings. The URL is the state: every control
+ * rewrites it, the server page fetches the results it describes, and this
+ * component renders what it is given. So a view survives a reload, can be
+ * linked, and has a real page 2.
+ */
 export function DiscoveryExperience({ initial, initialError = false, categories, platforms, communities, itemTypes, initialFilters, context }: {
   initial: ProductPageResult;
   initialError?: boolean;
@@ -32,21 +44,31 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
 }) {
   const { fa, t } = useLocale();
   const d = t.discovery;
-  const [query, setQuery] = useState(initialFilters.q ?? "");
-  const [type, setType] = useState<string>(initialFilters.type ?? "All");
-  const [category, setCategory] = useState(initialFilters.category ?? "All");
-  const [community, setCommunity] = useState(initialFilters.community ?? "All");
-  const [platform, setPlatform] = useState(initialFilters.platform ?? "All");
-  const [verified, setVerified] = useState(initialFilters.verified ?? false);
-  const [minRating, setMinRating] = useState(initialFilters.minRating ?? 0);
-  const [sort, setSort] = useState(initialFilters.sort ?? "featured");
+  const router = useRouter();
+  const pathname = usePathname() ?? "/explore";
+  const searchParams = useSearchParams();
+  const [pending, startTransition] = useTransition();
+  const urlQuery = initialFilters.q ?? "";
+  // The field is the one control that is not the URL, so typing stays
+  // instant. It follows the URL when the URL changes under it (back button).
+  const [query, setQuery] = useState(urlQuery);
+  const [syncedQuery, setSyncedQuery] = useState(urlQuery);
+  if (syncedQuery !== urlQuery) {
+    setSyncedQuery(urlQuery);
+    setQuery(urlQuery);
+  }
+  const type = initialFilters.type ?? "All";
+  const category = initialFilters.category ?? "All";
+  const community = initialFilters.community ?? "All";
+  const platform = initialFilters.platform ?? "All";
+  const verified = initialFilters.verified ?? false;
+  const minRating = initialFilters.minRating ?? 0;
+  const sort = initialFilters.sort ?? "featured";
   const [view, setView] = useState<"grid" | "list">("grid");
-  const [result, setResult] = useState(initial.data);
-  const [meta, setMeta] = useState(initial.meta);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(initialError ? d.connectionError : null);
-  const [retryNonce, setRetryNonce] = useState(0);
+  const result = initial.data;
+  const meta = initial.meta;
+  const error = initialError ? d.connectionError : null;
+  const loading = pending;
   const typeOptions = [{ value: "All", label: d.all }, ...itemTypes.map((item) => ({ value: item.key, label: fa ? item.fa : item.en }))];
   const selectedTypeLabel = typeOptions.find((option) => option.value === type)?.label ?? type;
   const selectedCommunity = communities.find((item) => item.slug === community);
@@ -54,39 +76,26 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
   const selectedCategoryLabel = categories.find((item) => item.slug === category)?.name ?? category;
   const selectedPlatform = platforms.find((item) => item.key === platform);
   const selectedPlatformLabel = selectedPlatform ? (fa ? selectedPlatform.nameFa ?? selectedPlatform.nameEn : selectedPlatform.nameEn) : platform;
-  const firstLoad = useRef(true);
-  useEffect(() => {
-    if (firstLoad.current) {
-      firstLoad.current = false;
-      return;
-    }
-    const controller = new AbortController();
-    const timer = window.setTimeout(async () => {
-      setLoading(true); setError(null);
-      try {
-        const next = await getProducts({ q: query, type, category, community, platform, verified, minRating, sort, page, limit: 12 }, controller.signal);
-        setResult((current) => page === 1 ? next.data : [...current, ...next.data]); setMeta(next.meta);
-      } catch (cause) {
-        if (!controller.signal.aborted) {
-          console.error("Product search failed", cause);
-          setError(cause instanceof ApiError ? cause.code === "RATE_LIMITED" ? d.rateLimited : cause.message : d.connectionError);
-        }
-      }
-      finally { if (!controller.signal.aborted) setLoading(false); }
-    }, 250);
-    return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [d.connectionError, d.rateLimited, query, type, category, community, platform, verified, minRating, sort, page, retryNonce]);
-  const change = (setter: (value: string) => void) => (value: string) => { setPage(1); setter(value); };
-  const reset = () => {
-    setPage(1);
-    setQuery("");
-    setType("All");
-    setCategory("All");
-    setCommunity(context ? initialFilters.community ?? "All" : "All");
-    setPlatform("All");
-    setVerified(false);
-    setMinRating(0);
+  const update = (changes: Record<string, string | number | boolean | undefined>) => {
+    const href = discoveryHref(pathname, searchParams?.toString() ?? "", changes);
+    startTransition(() => router.replace(href, { scroll: false }));
   };
+  useEffect(() => {
+    if (query.trim() === urlQuery.trim()) return;
+    const timer = window.setTimeout(() => {
+      const href = discoveryHref(pathname, searchParams?.toString() ?? "", { q: query.trim() });
+      startTransition(() => router.replace(href, { scroll: false }));
+    }, QUERY_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [query, urlQuery, pathname, searchParams, router]);
+  const change = (key: string) => (value: string) => update({ [key]: value });
+  const reset = () => {
+    setQuery("");
+    // A community page's community is its route, not a filter.
+    update({ q: undefined, type: undefined, category: undefined, community: context ? undefined : "All", platform: undefined, verified: undefined, minRating: undefined });
+  };
+  const retry = () => startTransition(() => router.refresh());
+  const pageHref = (page: number) => discoveryHref(pathname, searchParams?.toString() ?? "", { page });
   const active = [
     type !== "All" && selectedTypeLabel,
     category !== "All" && selectedCategoryLabel,
@@ -99,7 +108,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
     <div className="space-y-7">
       <label className="block text-sm font-semibold">
         {d.category}
-        <select value={category} onChange={(event) => change(setCategory)(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+        <select value={category} onChange={(event) => change("category")(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
           <option value="All">{d.all}</option>
           {categories.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
         </select>
@@ -108,7 +117,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
         {fa ? "جامعه" : "Community"}
         <select
           value={community}
-          onChange={(event) => change(setCommunity)(event.target.value)}
+          onChange={(event) => change("community")(event.target.value)}
           className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
         >
           <option value="All">{d.all}</option>
@@ -118,7 +127,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
       </label>}
       <label className="block text-sm font-semibold">
         {d.compatibility}
-        <select value={platform} onChange={(event) => change(setPlatform)(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+        <select value={platform} onChange={(event) => change("platform")(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
           <option value="All">{d.all}</option>
           {platforms.map((item) => <option key={item.key} value={item.key}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
         </select>
@@ -127,7 +136,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
         label={d.rating}
         options={["Any", "4.5+", "4.8+"]}
         value={minRating === 0 ? "Any" : `${minRating}+`}
-        setValue={(v) => { setPage(1); setMinRating(v === "Any" ? 0 : parseFloat(v)); }}
+        setValue={(v) => update({ minRating: v === "Any" ? 0 : parseFloat(v) })}
       />
       <div className="flex items-center justify-between">
         <label htmlFor="verified" className="text-sm font-medium">
@@ -136,7 +145,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
         <Switch.Root
           id="verified"
           checked={verified}
-          onCheckedChange={(value) => { setPage(1); setVerified(value); }}
+          onCheckedChange={(value) => update({ verified: value })}
           className="h-6 w-11 rounded-full bg-border-strong p-0.5 data-[state=checked]:bg-primary"
         >
           <Switch.Thumb className="block size-5 rounded-full bg-background shadow transition-transform data-[state=checked]:translate-x-5" />
@@ -157,14 +166,14 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
       </div>
       <div className="relative mt-8 max-w-4xl">
         <Search
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+          className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground"
           size={20}
         />
         <Input
           value={query}
-          onChange={(e) => { setPage(1); setQuery(e.target.value); }}
+          onChange={(e) => setQuery(e.target.value)}
           placeholder={d.search}
-          className="h-14 pl-12 text-base"
+          className="h-14 ps-12 text-base"
         />
       </div>
       <div
@@ -177,7 +186,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
             role="tab"
             aria-selected={type === option.value}
             key={option.value}
-            onClick={() => { setPage(1); setType(option.value); }}
+            onClick={() => update({ type: option.value })}
             className={cn(
               "min-h-10 shrink-0 border-b-2 px-3 text-sm font-medium",
               type === option.value
@@ -200,9 +209,12 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           </div>
         </aside>
         <section aria-busy={loading}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Sticky, so the count and the controls stay in reach while
+              scrolling a page of results. At the very top: the site header
+              scrolls away with the page. */}
+          <div className="sticky top-0 z-20 -mx-2 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background/90 px-2 py-3 backdrop-blur">
             <div className="flex items-center gap-3">
-              <p className="text-sm">
+              <p className="font-mono text-sm" role="status">
                 <strong>{meta.total}</strong> {d.products}
               </p>
               <Dialog.Root>
@@ -214,7 +226,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                 </Dialog.Trigger>
                 <Dialog.Portal>
                   <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-                  <Dialog.Content className="fixed inset-y-0 right-0 z-50 w-[min(90vw,24rem)] overflow-y-auto bg-background p-6 shadow-lift">
+                  <Dialog.Content className="fixed inset-y-0 end-0 z-50 w-[min(90vw,24rem)] overflow-y-auto bg-background p-6 shadow-lift">
                     <div className="flex items-center justify-between">
                       <Dialog.Title className="editorial text-2xl">
                         {d.filters}
@@ -234,7 +246,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                     </div>
                     <Dialog.Close asChild>
                       <Button className="mt-8 w-full">
-                        {d.showResults.replace("{count}", String(result.length))}
+                        {d.showResults.replace("{count}", String(meta.total))}
                       </Button>
                     </Dialog.Close>
                   </Dialog.Content>
@@ -245,7 +257,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
               <select
                 aria-label={d.sort}
                 value={sort}
-                onChange={(e) => { setPage(1); setSort(e.target.value); }}
+                onChange={(e) => update({ sort: e.target.value })}
                 className="min-h-10 rounded-md border bg-surface px-3 text-sm"
               >
                 <option value="featured">{d.featured}</option>
@@ -302,10 +314,12 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
             {error && (
               <div role="alert" className="col-span-full flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/40 p-4 text-sm text-destructive">
                 <p>{error}</p>
-                <Button variant="secondary" size="sm" onClick={() => setRetryNonce((value) => value + 1)}>{d.retry}</Button>
+                <Button variant="secondary" size="sm" onClick={retry}>{d.retry}</Button>
               </div>
             )}
-            {result.length ? (
+            {loading ? (
+              Array.from({ length: Math.min(Math.max(result.length, 3), 6) }, (_, index) => <ProductCardSkeleton key={index} />)
+            ) : result.length ? (
               result.map((p) => (
                 <ProductCard
                   key={p.id}
@@ -313,16 +327,26 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                   variant={view === "list" ? "list" : "card"}
                 />
               ))
-            ) : loading && !error ? (
-              <p role="status" className="col-span-full py-12 text-center text-sm text-muted-foreground">{d.loading}</p>
             ) : !error ? (
               <EmptyState onReset={reset} query={query.trim() || undefined} filtered={active.length > 0} />
             ) : null}
           </div>
-          {meta.page < meta.totalPages && (
-            <div className="mt-10 flex justify-center">
-              <Button variant="secondary" disabled={loading} onClick={() => setPage((value) => value + 1)}>{loading ? d.loading : d.loadMore}</Button>
-            </div>
+          {meta.totalPages > 1 && (
+            <nav aria-label={fa ? "صفحه‌ها" : "Pages"} className="mt-10 flex items-center justify-between gap-4 border-t border-border pt-6">
+              {meta.page > 1 ? (
+                <Link rel="prev" href={pageHref(meta.page - 1)} className="text-sm font-semibold text-primary hover:underline">
+                  {fa ? "صفحهٔ قبل" : "Previous page"}
+                </Link>
+              ) : <span />}
+              <p className="font-mono text-xs text-muted-foreground">
+                {fa ? `صفحهٔ ${meta.page} از ${meta.totalPages}` : `Page ${meta.page} of ${meta.totalPages}`}
+              </p>
+              {meta.page < meta.totalPages ? (
+                <Link rel="next" href={pageHref(meta.page + 1)} className="text-sm font-semibold text-primary hover:underline">
+                  {fa ? "صفحهٔ بعد" : "Next page"}
+                </Link>
+              ) : <span />}
+            </nav>
           )}
         </section>
       </div>

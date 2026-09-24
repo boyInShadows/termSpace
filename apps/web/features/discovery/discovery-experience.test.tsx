@@ -1,6 +1,12 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DiscoveryExperience } from "./discovery-experience";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/explore",
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 const emptyResult = { data: [], meta: { page: 1, limit: 12, total: 0, totalPages: 0 } };
 
