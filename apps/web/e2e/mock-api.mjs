@@ -121,6 +121,8 @@ async function handle(request, response) {
   if (route === "GET /api/marketplace/products") return send(response, 200, listProducts(searchParams));
   const detail = /^GET \/api\/marketplace\/products\/([^/]+)$/.exec(route);
   if (detail) {
+    // A listing whose API call fails, for the error boundary.
+    if (detail[1] === "fixture-error") return send(response, 500, error("MOCK_FAILURE", "Deliberate failure"));
     const product = productDetail(decodeURIComponent(detail[1]));
     return product ? send(response, 200, { data: product }) : send(response, 404, error("NOT_FOUND", "No such listing"));
   }

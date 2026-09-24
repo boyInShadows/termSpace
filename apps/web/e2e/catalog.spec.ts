@@ -51,6 +51,9 @@ test.describe("product detail", () => {
         return transition;
       };
     });
+    // The morph waits at most 1.5s for the detail page; under a fully
+    // parallel local run a cold render can take longer, so warm it first.
+    await page.request.get("/products/conversion-copywriter");
     await page.goto("/");
     const featured = page.locator("section", { has: page.getByRole("heading", { name: "Featured building blocks" }) });
     await featured.scrollIntoViewIfNeeded();

@@ -16,6 +16,7 @@ import { ApiError, getProduct } from "@/lib/api";
 import { copy, localePath, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/serverLocale";
 import type { ProductDetail } from "@/lib/types";
+import { SITE_URL } from "@/lib/site";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   let product: ProductDetail;
@@ -26,10 +27,39 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
   const platform = product.compatibility.platforms[0];
   // The root layout's title template appends " · termspace".
+  const path = `/products/${product.slug}`;
   return {
     title: platform ? `${product.name} — ${product.type} for ${platform}` : `${product.name} — ${product.type}`,
     description: product.outcome,
+    alternates: { canonical: path, languages: { en: path, fa: `/fa${path}` } },
+    openGraph: { title: product.name, description: product.outcome, type: "website", url: path },
   };
+}
+
+/**
+ * schema.org SoftwareApplication, so search results can show the rating and
+ * that it is free. `<` is escaped: listing text is creator-supplied, and must
+ * not be able to close the script element.
+ */
+function structuredData(product: ProductDetail) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: product.name,
+    description: product.outcome,
+    url: `${SITE_URL}/products/${product.slug}`,
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: product.compatibility.platforms.join(", ") || undefined,
+    softwareVersion: product.version,
+    dateModified: product.updatedAt,
+    author: { "@type": "Person", name: product.creator.name },
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    aggregateRating:
+      product.reviewCount > 0
+        ? { "@type": "AggregateRating", ratingValue: product.rating, reviewCount: product.reviewCount, bestRating: 5, worstRating: 1 }
+        : undefined,
+  };
+  return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
 /** The page's own strings. The i18n split (plan P7) will move these into lib/i18n. */
@@ -107,6 +137,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData(product) }} />
       <Header />
       <main className="container-page py-8">
         <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground">

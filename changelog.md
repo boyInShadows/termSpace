@@ -4,6 +4,49 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-09-24
 
+- Plan v2, phase P5 (error, empty and 404 pages, SEO, social cards).
+  - Branded 404 pages: `app/not-found.tsx` ("404 · not on the shelf") and
+    `app/products/[slug]/not-found.tsx` ("unpublished, or never existed").
+    Each has a mono eyebrow, a serif headline, a search box styled like the
+    hero's, and links to Explore, Publish and Home. `/nope` answers a real
+    404. Error boundaries (`app/error.tsx`, `app/dashboard/error.tsx` inside
+    the dashboard frame, and `app/global-error.tsx`) share one calm
+    `ErrorView`: a retry button and the digest in small mono, no red banner.
+  - The 404 view is server-only, with plain anchors, an inline icon and a
+    GET search form, for a measured reason. The root not-found boundary
+    hangs off every route, and Next ships its client components' chunks in
+    every first load, even behind `next/dynamic`. Using the hero search and
+    the header there put the homepage chunk on `/dashboard` (+24 kB), and
+    even `next/link` and a lucide icon did. The JS budget spec caught it.
+  - `app/sitemap.ts` covers the static pages, communities and every live
+    listing (walked 48 per page), with `en`/`fa` alternates and a change
+    frequency derived from `updatedAt`. `app/robots.ts` keeps the dashboard,
+    account, creator, moderation, backend and design system out, in both
+    locales.
+  - Social cards (`next/og`, 1200×630): a root card and a per-listing card.
+    Each has a dark canvas, the name in Newsreader, a type pill, the trust
+    chips in the hero's order, and the wordmark. Satori needs static WOFF,
+    not the site's variable WOFF2, so `lib/og/fonts` holds static cuts of the
+    same faces (OFL). A listing card renders in 268 ms cold and 60 ms warm.
+  - Metadata: `metadataBase` from the new `NEXT_PUBLIC_SITE_URL` (added to
+    `apps/web/.env.example`), `openGraph.siteName`, `summary_large_image`
+    Twitter cards, and per-listing canonical plus `en`/`fa` alternates.
+    Detail pages carry `SoftwareApplication` JSON-LD: free offer, version,
+    author, and an aggregate rating when there are reviews. `<` is escaped,
+    since listing text is creator-supplied.
+  - Not done: a true 404 status for unknown listings, which still stream as
+    200 with `noindex` (P4). It needs an existence check in `proxy.ts` on
+    every listing request, which is too costly without a cheap API
+    endpoint. There is also no author link from the listing 404, as there
+    are no author pages.
+- Verification: new `e2e/seo.spec.ts` covers the branded 404 with a real
+  status, the listing 404, the error boundary (the mock API fails a slug on
+  purpose), the sitemap listing all 15 fixture listings, robots, the social
+  card's size and type, large-image metadata, and JSON-LD. The build lists
+  `/products/[slug]/opengraph-image` as `ƒ`. e2e 57 passed, 13 skipped by
+  design, with JS budgets unchanged. Root `typecheck` clean; 259 tests
+  passing; `apps/web` lint clean; all production builds.
+
 - Plan v2, phase P4 (product detail, Explore, view transitions). Catalog
   presentation only; no API or lifecycle changes.
   - Detail page (`app/products/[slug]`, route unchanged). The header is the
