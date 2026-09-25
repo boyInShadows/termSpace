@@ -13,14 +13,20 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Web — Homepage Follow-ups
 
-- Do a manual browser pass of the homepage: keyboard-only walk (hero → search →
-  chips → browse → newsletter → footer) with a visible focus ring on every
-  stop, no horizontal scroll at 375px with the menu working and hero chips
-  hidden, and the how-it-works panel stepping through all three states on
-  scroll.
-- Do a manual browser pass of `/dashboard` at 375px (tab bar, floating
-  Publish, no horizontal scroll) and with a creator account that has listings
-  and lifecycle events (table, status pills, activity rail in both locales).
+- `/dashboard` tells an unverified creator "your creator workspace isn't set
+  up yet" and offers "Create creator profile". The creator API answers
+  `403 EMAIL_VERIFICATION_REQUIRED` (and `403 MARKETPLACE_ROLE_REQUIRED` for a
+  profile owner without the role), but `lib/dashboard.ts` treats every 403 as
+  "no creator workspace". Distinguish the error codes and show "verify your
+  email" instead. Found in the 2026-09-24 P0 browser pass.
+- Meet the plan's performance budgets, then tighten the ratchet gates in
+  `lighthouserc.cjs` and `apps/web/e2e/budget.spec.ts` to them. Still
+  missing as of 2026-09-24: mobile LCP (`/` 3.16 s vs 2.2 s, `/dashboard`
+  3.62 s vs 2.0 s), `/dashboard` performance (89 vs 92), `/` first-load JS
+  (185 kB vs 170 kB). Expected from plan P2 (motion diet) and P3 (fonts,
+  plasma tiers).
+- `.github/workflows/ci.yml` still triggers on a `development` branch, which
+  does not exist on the remote.
 - Preload the display serif used on the hero headline. This needs the fonts
   moved from `@fontsource-variable` to `next/font/local`.
 

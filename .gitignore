@@ -54,3 +54,8 @@ maintenance/
 build/
 *.log
 *.local
+
+# e2e and Lighthouse output
+playwright-report/
+test-results/
+.lighthouseci/

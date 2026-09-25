@@ -26,6 +26,379 @@ Project changes completed from `pending.md` should be recorded here with the dat
   `LOCAL_AUTO_VERIFY_EMAIL=false` and Node's experimental global web storage
   disabled so API registration used the documented default and jsdom owned
   `localStorage`.
+## 2026-09-24
+
+- Plan v2, phase P7 (process). This completes plan v2; the plan file is
+  removed.
+  - Shared surface: `apps/web/lib/i18n.ts` is now `lib/i18n/` with
+    `common`, `home`, `dashboard`, `catalog`, `creator` and `moderation`
+    files. `index.ts` spreads them back into `copy`, so all 27
+    `@/lib/i18n` imports are unchanged. The split was mechanical, moved by
+    line range, and the old and new `copy` were checked deep-equal (107 keys
+    per locale) before the old file was removed. Add strings to the file for
+    their surface.
+  - English left on Persian pages is now translated (new `homePage` keys):
+    the hero search's typed examples and type shortcuts, the hero chips'
+    captions (the version stays Latin data), and the creator tiles'
+    products/followers line.
+  - `/dashboard/studio` keeps working, with the plan's fallback notice:
+    "Studio is being replaced by Creator. New listings should start there."
+    The redirect to `/creator` waits for the other maintainer to answer:
+    1. Does `/creator` cover every action studio has today: create, edit,
+       unpublish, delete, and editing items originally published through
+       `/api/community`?
+    2. Is there live data only reachable through `/api/community` that needs
+       migrating into the marketplace tables first?
+    3. Can `/dashboard/studio/*` get a 308 to `/creator/*` on an agreed date,
+       with `/api/community` marked deprecated in the API changelog and
+       removed one release later?
+  - Shared surface: `AGENTS.md` is rewritten from the plan's Part C, with the
+    existing rules kept below it, unchanged in substance.
+    - The new top section covers repository facts, ownership (`pending.md`
+      is the other maintainer's queue), shared surfaces, how a phase runs,
+      context hygiene, Claude Code session commands, and other harnesses.
+    - The Part C placeholders are filled from the repo: the other branch is
+      `v.2`, and the shared-surface list is merged with the old one.
+    - The build section adds the e2e and Lighthouse commands and the
+      budget ratchet rule.
+  - Code comments that cited the plan now point at `docs/motion.md`, the
+    gate files and this changelog.
+- Verification: root `typecheck` clean; 262 tests passing (150 API, 15 Blog,
+  97 web); `apps/web` lint clean; all production builds; e2e 69 passed,
+  13 skipped by design.
+
+- Plan v2, phase P6 (Persian beyond mirroring).
+  - Persian type scale in `styles/globals.css`: body leading 1.8; display
+    type at weight 600 and leading 1.35; the hero headline smaller
+    (`clamp(2.6rem, 6.5vw, 4.4rem)`).
+  - One rule removes letter-spacing and capitals from all Persian text.
+    Latin data islands (`dir="ltr"`: commands, versions) keep their styling.
+  - Numerals policy in `lib/format.ts` (`formatNumber(n, locale,
+    { context })`, unit-tested). Prose uses the reader's digits, so Persian
+    gets Persian digits; data stays Latin. Applied to the card usage count,
+    the "view all" count, creator followers, and the detail page counts.
+    Dashboard, creator and moderation formatting is unchanged (outside this
+    phase's files).
+  - Direction on the homepage and catalogue components:
+    - arrows mirror (`rtl:rotate-180`, `rtl:-scale-x-100`), and hover nudges
+      reverse;
+    - the hero's wide-screen scrim moves to the start side;
+    - the rail, list borders, search icons and the filter sheet use logical
+      properties.
+  - Tailwind `rtl:` variants stand in for the plan's `--dir` variable. The
+    ticker already ran mirrored since P2.
+  - Creator-supplied text (listing names, outcomes, descriptions) gets
+    `.ts-bidi` (`unicode-bidi: plaintext`), so an English sentence on a
+    Persian page ends with its full stop instead of starting with it.
+- Left for P7: English copy still inside Persian pages (the hero search's
+  typing examples, the home creator tiles' "followers", the trust chip
+  captions). That is the i18n split.
+- Verification: `e2e/persian.spec.ts` now checks for no tracked or
+  capitalised Persian text on `/fa`, `/fa/explore` and a Persian listing;
+  a smaller, looser, 600-weight Persian display; the mirrored ticker; and
+  Persian digits in prose with Latin ones in the terminal card. `/fa` was
+  checked at 375 and 1280. e2e 69 passed, 13 skipped by design. Root
+  `typecheck` clean; 262 tests passing (150 API, 15 Blog, 97 web);
+  `apps/web` lint clean; all production builds.
+
+- Plan v2, phase P5 (error, empty and 404 pages, SEO, social cards).
+  - Branded 404 pages: `app/not-found.tsx` ("404 · not on the shelf") and
+    `app/products/[slug]/not-found.tsx` ("unpublished, or never existed").
+    Each has a mono eyebrow, a serif headline, a search box styled like the
+    hero's, and links to Explore, Publish and Home. `/nope` answers a real
+    404. Error boundaries (`app/error.tsx`, `app/dashboard/error.tsx` inside
+    the dashboard frame, and `app/global-error.tsx`) share one calm
+    `ErrorView`: a retry button and the digest in small mono, no red banner.
+  - The 404 view is server-only, with plain anchors, an inline icon and a
+    GET search form, for a measured reason. The root not-found boundary
+    hangs off every route, and Next ships its client components' chunks in
+    every first load, even behind `next/dynamic`. Using the hero search and
+    the header there put the homepage chunk on `/dashboard` (+24 kB), and
+    even `next/link` and a lucide icon did. The JS budget spec caught it.
+  - `app/sitemap.ts` covers the static pages, communities and every live
+    listing (walked 48 per page), with `en`/`fa` alternates and a change
+    frequency derived from `updatedAt`. `app/robots.ts` keeps the dashboard,
+    account, creator, moderation, backend and design system out, in both
+    locales.
+  - Social cards (`next/og`, 1200×630): a root card and a per-listing card.
+    Each has a dark canvas, the name in Newsreader, a type pill, the trust
+    chips in the hero's order, and the wordmark. Satori needs static WOFF,
+    not the site's variable WOFF2, so `lib/og/fonts` holds static cuts of the
+    same faces (OFL). A listing card renders in 268 ms cold and 60 ms warm.
+  - Metadata: `metadataBase` from the new `NEXT_PUBLIC_SITE_URL` (added to
+    `apps/web/.env.example`), `openGraph.siteName`, `summary_large_image`
+    Twitter cards, and per-listing canonical plus `en`/`fa` alternates.
+    Detail pages carry `SoftwareApplication` JSON-LD: free offer, version,
+    author, and an aggregate rating when there are reviews. `<` is escaped,
+    since listing text is creator-supplied.
+  - Not done: a true 404 status for unknown listings, which still stream as
+    200 with `noindex` (P4). It needs an existence check in `proxy.ts` on
+    every listing request, which is too costly without a cheap API
+    endpoint. There is also no author link from the listing 404, as there
+    are no author pages.
+- Verification: new `e2e/seo.spec.ts` covers the branded 404 with a real
+  status, the listing 404, the error boundary (the mock API fails a slug on
+  purpose), the sitemap listing all 15 fixture listings, robots, the social
+  card's size and type, large-image metadata, and JSON-LD. The build lists
+  `/products/[slug]/opengraph-image` as `ƒ`. e2e 57 passed, 13 skipped by
+  design, with JS budgets unchanged. Root `typecheck` clean; 259 tests
+  passing; `apps/web` lint clean; all production builds.
+
+- Plan v2, phase P4 (product detail, Explore, view transitions). Catalog
+  presentation only; no API or lifecycle changes.
+  - Detail page (`app/products/[slug]`, route unchanged). The header is the
+    listing card grown: type, version, author, rating, and the three trust
+    claims (verified, permission scope, licence). They use a `TrustChip`
+    now shared with the hero's corner chips, so the promise and the product
+    look the same. The manifest is a definition table with mono labels
+    (`components/catalog/manifest-table.tsx`), no longer a list of prose
+    rows. The sticky rail keeps acquire and install (instructions are pinned
+    to the acquired release, so there is no public install command) and
+    adds a version picker with each release's notes
+    (`components/catalog/version-picker.tsx`). Below: what it does, manifest,
+    use cases, included files, examples, read-only reviews, works with,
+    creator, related. Added `loading.tsx` at the page's real dimensions, and
+    the title is now "{name} — {type} for {platform}".
+  - Left out, on purpose: a report link (reporting is the other
+    maintainer's work) and the plan's `/[type]/[slug]` route (moving URLs is
+    out of scope).
+  - Card → detail morph: the listing title travels from its card into the
+    detail header in Chrome (320ms, expo). Under reduced motion it
+    cross-fades in place, and browsers without the API just navigate.
+  - Why not React's `<ViewTransition>`: on this dynamic page the destination
+    commits after the transition has captured the old page, so React never
+    pairs the two halves. That held in the webpack build and in Turbopack
+    dev, with and without `loading.tsx`, and with full prefetch.
+    `components/catalog/listing-link.tsx` drives `document.startViewTransition`
+    itself and waits, at most 1.5s, for the detail header. There is no root
+    `<ViewTransition>` either: Explore now changes the URL on every filter,
+    and a root transition would cross-fade the whole page each time.
+  - Explore is URL state (`lib/discovery-url.ts`, unit-tested): type,
+    category, platform, verified, rating, sort, query (debounced) and
+    `?page=` are read by the server page and written by the controls, so
+    views survive reload and can be linked. The results are no longer copied
+    into client state. A skeleton grid shows while the next URL renders. The
+    bar is sticky, with the count in mono. "Load more" is replaced by
+    previous/next page links, plus `<link rel="prev"/"next">` in the head.
+    The community pages share the same reading, including `?page=`. The
+    plan's `?license=` filter is not there, because the API has no licence
+    filter.
+  - The e2e mock API now serves the public catalogue: the homepage fixture
+    (imported from `lib/mock-home.ts` via Node's type stripping) plus
+    generated listings, with filtering, pagination and detail.
+- Findings:
+  - An unknown listing streams as 200 with `noindex` once `loading.tsx`
+    exists, which is documented Next behaviour. A true 404 status needs an
+    existence check in `proxy.ts`; left for P5, which owns not-found pages.
+  - Separately, the site header is not actually sticky. Its sticky bar sits
+    inside a `<header>` exactly as tall as its content, so it scrolls away.
+    The Explore bar therefore sticks at the top of the viewport. Not changed
+    here.
+- P4 measurements, local mobile median of 3: the detail page scores
+  performance 93 and accessibility 100, with CLS 0, TBT 17 ms and simulated
+  LCP 3.24 s. Its first-load JS is 188.7 kB. It is added to `lighthouserc.cjs`
+  (LCP gate 3.5 s, target 2.2 s) and the JS budget (gate 195 kB, target
+  180 kB). `/` is 184.7 kB.
+- Verification: new `e2e/catalog.spec.ts` covers the detail page rendering
+  from the mock, the version picker, noindex for an unknown listing, the
+  card-to-header morph (a paired `::view-transition-group` observed), a
+  filter changing the URL and results and surviving reload, pagination
+  links with `rel`, and "no results" clearing filters. e2e 47 passed,
+  9 skipped by design; `lhci assert` passes on all three URLs. Root
+  `typecheck` clean; 259 tests passing (150 API, 15 Blog, 94 web);
+  `apps/web` lint clean; all production builds.
+
+- Plan v2, phase P3 (fonts, WebGL gating, CSS reveals).
+  - Fonts are self-hosted from `apps/web/public/fonts`, with OFL licences
+    beside them. The files are the ones `@fontsource-variable` served: Latin
+    `wght` subsets of Newsreader, Geist and Geist Mono, plus Estedad's
+    Arabic-script subset only. Version-named files get immutable caching.
+    The root layout preloads what each locale's first paint needs:
+    Newsreader and Geist on English pages (exactly two preloads), Estedad and
+    Geist on Persian ones. The `@font-face` rules include the metric-matched
+    Times New Roman and Arial fallbacks that `next/font` generates, so the
+    swap does not move text. `@fontsource-variable/*` is gone from
+    `apps/web` (the Blog still uses it).
+  - Why not `next/font` as the plan said: under the webpack production
+    build, Next 16 writes an empty font manifest for this app, so it emits no
+    preload at all. Turbopack records them, but switching the production
+    bundler was out of scope. `next/font` also preloads per layout, not per
+    locale.
+  - WebGL gating: `components/hero/use-plasma-tier.ts` picks `static`
+    (reduced motion, Save-Data, reduced data), `css` (under 1024px, coarse
+    pointer, fewer than 4 cores or under 4 GB) or `webgl`. The pure rule is
+    unit-tested. `hero-atmosphere.tsx` always renders a CSS nebula. Only the
+    `webgl` tier imports the shader field, as its own chunk after idle,
+    fading it in over the nebula; it unmounts, losing its GL context, while
+    the hero is off screen. Phones never request the chunk. Deviation: the
+    nebula drifts by rotating a conic layer on the compositor, not by
+    animating `@property --hue`, which would repaint the gradients on the
+    main thread every frame.
+  - Reveals are now CSS scroll-driven animations (`.ts-reveal` on a
+    `view()` timeline, inside `@supports`), with no fallback: without support
+    the content is simply visible. `components/motion/reveal.tsx`,
+    `lib/hooks/use-in-view.ts` and the `<noscript>` reveal override are
+    deleted. Scrolling triggers no React state updates, apart from the two
+    hero observers flipping when the hero crosses the viewport edge.
+- P3 measurements, local mobile median of 3:
+  - `/`: performance 93 (was 92), TBT 21 ms (was 35), CLS 0.023, LCP 3.22 s.
+  - LCP did not reach the plan's 2.0 s. On localhost every script finishes
+    before the first paint, so Lighthouse's simulated throttling counts all
+    first-load JS against LCP: observed LCP equals observed FCP, at 123 ms.
+    Under real DevTools throttling `/` LCP is 2.13 s. `/dashboard` is 5.8 s
+    there, because its LCP text only exists after client-side session and
+    data fetches.
+  - The CI gates keep simulated throttling and are unchanged.
+- Verification: new `e2e/performance.spec.ts` checks the two font preloads on
+  `/` and Estedad's on `/fa`, the CSS tier on phones with no canvas, the
+  WebGL tier offered on desktop, the static tier under reduced motion, and
+  reveals complete in view and absent under reduced motion. e2e 33 passed,
+  7 skipped by design; `lhci assert` passes on the P3 runs. Root `typecheck`
+  clean; 251 tests passing (150 API, 15 Blog, 86 web); `apps/web` lint
+  clean; all production builds.
+
+- Plan v2, phase P2 (motion diet and the signature moment). The homepage
+  hero's manifest card now performs the search → inspect → install journey
+  once, after load. Everything else got calmer or cheaper. Spec and rules
+  are in the new `docs/motion.md`; tokens are in `styles/tokens.css`.
+  - The sequence: `components/hero/manifest-timeline.ts` maps elapsed time
+    to a frame (pure, unit-tested); `manifest-sequence.tsx` runs one
+    `requestAnimationFrame` clock. It starts 600ms after `load`, plays once,
+    and holds on hover, while under half the scene is on screen, and while
+    the tab is hidden. The pause toggle and Replay are real buttons outside
+    the `aria-hidden` scene. Lines are laid out at final size and only
+    revealed, so the card and its chips never move. The three corner chips
+    now land with the manifest line each one restates. Reduced motion gets
+    the finished frame from CSS on first paint, with no controls. In Persian
+    the card stays `dir="ltr"` and only the title bar is translated (Estedad,
+    since the mono face has no Persian glyphs).
+  - Deleted `TiltCard`, `Magnetic` and `DecodeText`, and their CSS. Cards take
+    a CSS `.ts-lift` hover (2px lift and shadow); buttons lift 1px on hover
+    and settle on press. The h1 paints its final text at once, with no
+    scramble. Above-the-fold content enters with a CSS-only stagger
+    (`.ts-enter`). The h1 and intro rise without fading: a fade from 0 on the
+    LCP paragraph measured +430ms mobile LCP, which the Lighthouse ratchet
+    caught.
+  - The how-it-works panel cross-fades instead of sliding, and its dots
+    move to the spec timing. Reveals travel 16px over 560ms.
+  - Fixed the platform marquee, broken before P2: its unlayered
+    `.animate-marquee` rule overrode the Tailwind utilities meant to pause it
+    on hover, stop it under reduced motion, and flip it in RTL. In Persian a
+    growing gap opened at the right edge. All marquee states are now plain
+    CSS, and RTL uses mirrored keyframes, because running the LTR ones in
+    reverse would still open the gap. The component is no longer a client
+    component.
+  - Shared surface: `lib/i18n.ts` gains `homePage.manifestTitle`,
+    `manifestPause` and `manifestReplay` in both locales.
+  - Deviations from the plan: no focus-within pause (the card has nothing
+    focusable; the toggle is the keyboard control); browse tab cross-fade
+    not done (outside the phase's file list).
+- P2 measurements, local mobile median of 3 against the P1 baseline:
+  - `/`: LCP 3.16 s (unchanged), TBT 35 ms, CLS 0.014 (was 0.026),
+    performance 92. `/dashboard` unchanged.
+  - First-load JS on `/`: 185.8 kB, not the plan's 15 kB drop. Removing the
+    three primitives saved about what the sequence costs. The remaining weight
+    is framework chunks and the WebGL field, which is plan P3's lazy gating.
+    Ratchet gates unchanged.
+- Verification: `lhci assert` passes on those runs. e2e 21 passed, 5 skipped
+  by design. New specs cover the sequence playing once, landing every chip,
+  and replaying; the pause button and scrolling away holding it; and reduced
+  motion showing the finished frame with no controls. Marquee direction and
+  hover pause were checked in `/` and `/fa`. Root `typecheck` clean;
+  246 tests passing (150 API, 15 Blog, 81 web including seven timeline
+  tests); `apps/web` lint clean; all production builds.
+
+- Plan v2, phase P1 (safety net). `apps/web` now has a Playwright e2e suite
+  and a Lighthouse CI performance gate, both run by a new
+  `.github/workflows/web.yml` on pushes to `main` and every PR. The workflow
+  builds once with `NEXT_PUBLIC_USE_MOCK=1`, runs e2e on that build, then
+  hands the same `.next` to Lighthouse.
+  - No API or database needed: `apps/web/e2e/mock-api.mjs` is a small
+    dependency-free stand-in for `apps/api` (session, sign-in/out, favourites,
+    library, creator profile and dashboard). A cookie picks the persona:
+    `creator@e2e.test` gets three listings, `empty@e2e.test` gets none.
+    Unhandled routes log `[mock-api] unhandled …` and answer 404.
+  - `playwright.config.ts`: `desktop-chromium` (1280×800) and
+    `mobile-chromium` (Pixel 7), with the web server on port 3100 so it never
+    collides with `npm run dev:web`. Specs: `landing` (hero, search, featured
+    from the fixture; hero chips; how-it-works panel discover → inspect →
+    install and back; no running animations under reduced motion; no
+    sideways scroll at 375px on `/` and `/fa`), `dashboard` (signed-out
+    redirect to `/account?next=%2Fdashboard` and back after sign-in; empty
+    state for a creator with no listings; Ctrl/⌘K focuses the top-bar
+    search), `persian` (`/fa` is `dir=rtl` `lang=fa`, body in Estedad, no
+    tracked `.eyebrow`), and `budget` (first-load JS).
+  - Where the plan didn't match the code, the tests follow the code: sign-in
+    is `/account`, not `/sign-in`; there is no ⌘K palette to close with Esc;
+    there is no `/` shortcut to focus the hero search; and the how-it-works
+    panel is read through its existing `data-testid="pinned-panel"`, not a
+    new `data-panel-state` attribute. No product code changed.
+  - First-load JS comes from the served HTML's `<script src>` tags, gzipped
+    from `.next/static`, skipping `nomodule` polyfills. The Next 16 webpack
+    build no longer writes `app-build-manifest.json`.
+  - Budgets are a ratchet (agreed with Ramtin). Gates fail at today's
+    baseline plus headroom, and the plan's budgets are written beside them as
+    targets. Local mobile median: `/` LCP 3.16 s, perf 92, JS 185 kB;
+    `/dashboard` LCP 3.62 s, perf 89, JS 182 kB. TBT, CLS, max-potential-FID
+    and accessibility (100) already meet the plan and are gated at it. The
+    plan's "warn at 90%" level is not implemented: LHCI allows one level per
+    audit.
+  - New scripts: `npm run e2e -w apps/web` (builds with the fixture first;
+    `E2E_SKIP_BUILD=1` reuses a mock build; `PW_CHANNEL=chrome` uses the
+    installed Chrome) and `npm run lhci -w apps/web` (config at root
+    `lighthouserc.cjs`). Vitest now excludes `e2e/`. Playwright and LHCI
+    output is gitignored.
+- Local caveats: the Playwright browser CDN returns 403 from this network,
+  hence `PW_CHANNEL=chrome`. `lhci autorun` on Windows fails on Chrome
+  temp-profile cleanup (`EPERM`) after collecting. The baseline was measured
+  with the Lighthouse Node API using the same settings, and `lhci assert`
+  was run against those results. Neither problem affects the Linux runners.
+- Verification: e2e 16 passed, 6 skipped by design (desktop-only or
+  mobile-only), from a fresh mock build. `lhci assert` passes on the
+  baseline runs and fails both URLs when LCP is tightened to the plan's
+  2.2 s. Removing the dashboard's signed-out redirect fails the dashboard
+  spec (reverted). Root `typecheck` clean; 239 tests passing (150 API,
+  15 Blog, 74 web); `apps/web` lint clean; all production builds.
+
+- Plan v2, phase P0 (housekeeping and browser passes). Product cards no longer
+  render English in Persian: "Editor's pick", "Trending", "uses", the type
+  badge, the favourites button label and the communities group label come
+  from a new `productCard` group in `lib/i18n.ts` (both locales), and
+  community badges show `nameFa` with an `nameEn` fallback.
+  `ProductTypeBadge` takes an optional localized `label`; its server callers
+  are unchanged. Added a root `CLAUDE.md` that imports `AGENTS.md`.
+- `AGENTS.md` (shared surface): corrected stale branch facts only. `main` is
+  the integration branch and GitHub default, CI runs on pushes to `main` and
+  on every PR, and there is no `development` branch on the remote. The rest
+  of the plan's `AGENTS.md` rewrite is P7.
+- Browser passes, run with Playwright driving local Chrome at a real
+  375×812 mobile viewport (DevTools device emulation was not reachable, and
+  the app correctly refuses to be framed) against the dev server and the API
+  run from source:
+  1. 375px — pass. `/`, `/fa`, `/dashboard`, `/fa/dashboard`: no horizontal
+     scroll or overflowing element; hero search usable; hero corner chips
+     hidden (`hidden md:block`) and shown at 1280; marquee clipped by its
+     parent; dashboard bottom tab bar and floating Publish present.
+  2. Keyboard walk on `/` — pass. 49 stops from the announcement through the
+     header, hero search, popular searches, type chips, featured cards,
+     browse tab, collections, creators, newsletter and footer, each with a
+     visible ring. ⌘K / Ctrl K on the dashboard focuses the top-bar search;
+     there is no palette dialog, so "Esc closes ⌘K" does not apply.
+  3. How-it-works — pass. Panel shows discover → inspect → install once each
+     scrolling down, and the reverse scrolling up.
+  4. Creator dashboard with 3 real listings — pass (desktop en/fa, mobile
+     en): 3 table rows, 3 activity items, no errors. Signed-out `/dashboard`
+     redirects to `/account?next=%2Fdashboard`. Fixture: a local reader
+     `p0-creator@example.com` made owner of the seeded `ellisnorth` creator,
+     email-verified and granted CREATOR directly in the local database.
+     This found the unverified-creator message bug now in `pending.md`.
+- Note for local runs: the Docker `api` image built on 2026-09-22 predates
+  the community placements work, so its product payloads have no
+  `communities` and every `ProductCard` crashes (`communities.length`). Run
+  the API from source or rebuild the image (`docker compose up -d --build api`).
+- Verification: root `typecheck` clean; 239 tests passing (150 API, 15 Blog,
+  74 web including two new Persian `ProductCard` tests); `apps/web` lint
+  clean; all production builds.
 
 ## 2026-09-23
 

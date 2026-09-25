@@ -16,9 +16,6 @@ import { Footer } from "@/components/layout/footer";
 import { Hero } from "@/components/hero/hero";
 import { Process } from "@/components/sections/process";
 import { Browse, type BrowseCollection } from "@/components/sections/browse";
-import { Reveal } from "@/components/motion/reveal";
-import { TiltCard } from "@/components/motion/tilt-card";
-import { Magnetic } from "@/components/motion/magnetic";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/marketplace/product-card";
@@ -36,6 +33,7 @@ import type { MarketplaceHome } from "@/lib/types";
 import { NewsletterForm } from "@/features/newsletter/newsletter-form";
 import { getLocale } from "@/lib/serverLocale";
 import { copy, localePath, type Locale } from "@/lib/i18n";
+import { formatNumber } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -141,10 +139,10 @@ async function FeaturedLink({ locale }: { locale: Locale }) {
       href={localePath("/explore", locale)}
       className="group inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
     >
-      {t.viewAll.replace("{count}", String(home.total))}
+      {t.viewAll.replace("{count}", formatNumber(home.total, locale))}
       <ArrowRight
         size={15}
-        className="transition-transform duration-300 group-hover:translate-x-1"
+        className="transition-transform duration-300 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1"
       />
     </Link>
   );
@@ -170,12 +168,12 @@ async function FeaturedGrid({ locale }: { locale: Locale }) {
         />
       ) : (
         <div className="grid gap-5 md:grid-cols-3">
-          {featured.slice(0, 3).map((product, index) => (
-            <Reveal key={product.id} delay={index * 90}>
-              <TiltCard className="h-full rounded-lg" max={5}>
+          {featured.slice(0, 3).map((product) => (
+            <div key={product.id} className="ts-reveal">
+              <div className="ts-lift h-full rounded-lg">
                 <ProductCard product={product} />
-              </TiltCard>
-            </Reveal>
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -226,28 +224,26 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {home.creators.slice(0, 3).map((creator, index) => (
-        <Reveal key={creator.id} delay={index * 90}>
-          <TiltCard
-            className="h-full rounded-xl border border-border bg-background/70 p-6"
-            max={4}
-          >
+      {home.creators.slice(0, 3).map((creator) => (
+        <div key={creator.id} className="ts-reveal">
+          <div className="ts-lift h-full rounded-xl border border-border bg-background/70 p-6">
             <CreatorIdentity creator={creator} />
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
               {creator.bio}
             </p>
             <p className="mt-5 font-mono text-xs text-muted-foreground">
-              {creator.products} products ·{" "}
-              {creator.followers.toLocaleString()} followers
+              {t.homePage.creatorStats
+                .replace("{products}", formatNumber(creator.products, locale))
+                .replace("{followers}", formatNumber(creator.followers, locale))}
             </p>
-          </TiltCard>
-        </Reveal>
+          </div>
+        </div>
       ))}
 
       {/* The creator pitch as the row's last tile rather than its own section.
           It is the same invitation the three profiles beside it already make,
           so it belongs in the same breath. */}
-      <Reveal delay={270}>
+      <div className="ts-reveal">
         <div className="flex h-full flex-col rounded-xl border border-primary/40 bg-primary-soft/40 p-6 backdrop-blur">
           <Store size={22} className="text-primary" />
           <h3 className="editorial mt-4 text-xl leading-tight">
@@ -257,17 +253,15 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
             {t.homePage.creatorCtaBody}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
-            <Magnetic>
-              <Link
-                href={localePath("/dashboard", locale)}
-                className={cn(
-                  buttonVariants({ variant: "primary", size: "sm" }),
-                  "shadow-plasma",
-                )}
-              >
-                {t.homePage.creatorCtaPrimary}
-              </Link>
-            </Magnetic>
+            <Link
+              href={localePath("/dashboard", locale)}
+              className={cn(
+                buttonVariants({ variant: "primary", size: "sm" }),
+                "shadow-plasma",
+              )}
+            >
+              {t.homePage.creatorCtaPrimary}
+            </Link>
             <Link
               href={localePath("/design-system", locale)}
               className={buttonVariants({ variant: "secondary", size: "sm" })}
@@ -276,7 +270,7 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
             </Link>
           </div>
         </div>
-      </Reveal>
+      </div>
     </div>
   );
 }
@@ -298,7 +292,7 @@ export default async function Home() {
 
         {/* --- featured ------------------------------------------------------ */}
         <section className="container-page section-y">
-          <Reveal className="flex flex-wrap items-end justify-between gap-4">
+          <div className="ts-reveal flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="eyebrow">{t.featuredEyebrow}</p>
               <h2 className={SECTION_HEADING}>{t.featuredTitle}</h2>
@@ -306,7 +300,7 @@ export default async function Home() {
             <Suspense fallback={null}>
               <FeaturedLink locale={locale} />
             </Suspense>
-          </Reveal>
+          </div>
 
           <div className="mt-10">
             <Suspense
@@ -337,7 +331,7 @@ export default async function Home() {
           />
           <div className="container-page section-y">
             <div className="grid gap-12 lg:grid-cols-[.9fr_1.1fr] lg:gap-16">
-              <Reveal>
+              <div className="ts-reveal">
                 <span className="inline-flex items-center gap-2 rounded-full border border-verified/30 bg-verified/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-verified">
                   <ShieldCheck size={13} />
                   Verified
@@ -351,7 +345,7 @@ export default async function Home() {
                   requirements, licence and safety status into separate fields
                   so you can judge a product before it touches your workflow.
                 </p>
-                <blockquote className="editorial mt-8 border-l-2 border-primary/50 pl-5 text-xl leading-8">
+                <blockquote className="editorial mt-8 border-s-2 border-primary/50 ps-5 text-xl leading-8">
                   <Quote size={20} className="mb-3 text-primary" />
                   A good AI product should tell you what it does, what it
                   touches, and why you can trust it.
@@ -364,17 +358,14 @@ export default async function Home() {
                     </Link>
                   </footer>
                 </blockquote>
-              </Reveal>
+              </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
                 {trustFacts.map((fact, index) => {
                   const Icon = fact.icon;
                   return (
-                    <Reveal key={fact.title} delay={index * 90}>
-                      <TiltCard
-                        className="h-full rounded-xl border border-border bg-surface/70 p-6 backdrop-blur"
-                        max={4}
-                      >
+                    <div key={fact.title} className="ts-reveal">
+                      <div className="ts-lift h-full rounded-xl border border-border bg-surface/70 p-6 backdrop-blur">
                         <div className="flex items-start gap-4">
                           <span
                             className={cn(
@@ -391,8 +382,8 @@ export default async function Home() {
                             </p>
                           </div>
                         </div>
-                      </TiltCard>
-                    </Reveal>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -402,7 +393,7 @@ export default async function Home() {
 
         {/* --- browse: collections + by practice, one section ----------------- */}
         <section id="collections" className="container-page section-y">
-          <Reveal>
+          <div className="ts-reveal">
             <p className="eyebrow">{t.homePage.browseEyebrow}</p>
             <h2 className={`${SECTION_HEADING} max-w-2xl`}>
               {t.homePage.browseTitle}
@@ -410,7 +401,7 @@ export default async function Home() {
             <p className="mt-4 max-w-xl leading-7 text-muted-foreground">
               {t.homePage.browseIntro}
             </p>
-          </Reveal>
+          </div>
 
           <Suspense
             fallback={
@@ -429,10 +420,10 @@ export default async function Home() {
           className="border-y border-border bg-surface/40"
         >
           <div className="container-page section-y">
-            <Reveal>
+            <div className="ts-reveal">
               <p className="eyebrow">{t.creatorsEyebrow}</p>
               <h2 className={SECTION_HEADING}>{t.featuredCreators}</h2>
-            </Reveal>
+            </div>
 
             <div className="mt-10">
               <Suspense
@@ -448,7 +439,7 @@ export default async function Home() {
 
         {/* --- closing CTA --------------------------------------------------- */}
         <section className="container-page section-y">
-          <Reveal>
+          <div className="ts-reveal">
             <div className="relative isolate overflow-hidden rounded-2xl border border-border px-6 py-12 sm:px-12">
               <div
                 aria-hidden
@@ -472,7 +463,7 @@ export default async function Home() {
                 <NewsletterForm />
               </div>
             </div>
-          </Reveal>
+          </div>
         </section>
       </main>
       <Footer />

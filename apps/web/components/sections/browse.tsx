@@ -142,7 +142,7 @@ export function Browse({
               </span>
               <ArrowUpRight
                 size={18}
-                className="text-muted-foreground transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary"
+                className="text-muted-foreground transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5"
               />
             </div>
             <h3 className="editorial mt-10 text-2xl leading-tight">
