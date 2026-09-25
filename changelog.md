@@ -2,6 +2,31 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-09-25
+
+- Removed the duplicate `/api/community` creator and product mutation surface
+  after review found that it allowed any authenticated reader to publish a
+  `DRAFT` listing directly into the public catalog, bypassing verified-email,
+  creator-role, source-check, release, moderation, and lifecycle controls. The
+  duplicate hard-delete path is gone as well, so creators cannot erase reviews,
+  favourites, or trust history outside the established archival lifecycle.
+- Consolidated creator ownership on `MarketplaceCreator.ownerUserId`. The
+  dashboard Studio now renders the existing role-aware `CreatorHub`, and
+  dashboard Settings reads the same owned creator profile as Overview and
+  `/creator`; the duplicate dashboard forms, API client methods, DTOs,
+  validation schemas, controller, routes, and tests were removed.
+- Added forward migration `202609240001_remove_duplicate_creator_ownership`.
+  It deliberately aborts if the retired `MarketplaceCreator.userId` contains
+  data, preventing a deployment from silently orphaning creator profiles or
+  listings; affected databases require the reconciliation recorded in
+  `pending.md` before migration.
+- Verification: Prisma generation and schema validation; all workspace
+  type-checks; 231 tests passing (144 API, 15 Blog, 72 web); all three
+  production builds; and `git diff --check`. Tests ran with
+  `LOCAL_AUTO_VERIFY_EMAIL=false` and Node's experimental global web storage
+  disabled so API registration used the documented default and jsdom owned
+  `localStorage`.
+
 ## 2026-09-23
 
 - Finished the dashboard plan and deleted `dashboardPlan.md`. The creator
@@ -616,4 +641,3 @@ Verification for the three changes above: `typecheck` clean, 8 web tests passing
 - Paginated article loading for edition selection so older articles are available to editors.
 - Removed the unused web `CountUp` component and its orphaned tests.
 - Pinned all web package dependencies to the versions already resolved in the lockfile.
-

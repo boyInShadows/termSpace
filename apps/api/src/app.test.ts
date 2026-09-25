@@ -100,6 +100,13 @@ describe("API", () => {
     expect(response.body.error.code).toBe("DATABASE_UNAVAILABLE");
   });
 
+  it("does not expose the retired community publishing API", async () => {
+    const response = await request(createApp()).post("/api/community/products").send({});
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe("ROUTE_NOT_FOUND");
+  });
+
   it("serves marketplace home data from the shared API", async () => {
     prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
     prismaMock.marketplaceProduct.count.mockResolvedValue(12);

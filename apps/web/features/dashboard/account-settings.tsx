@@ -1,8 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { ApiError, getCreatorProfile, logout } from "@/lib/api";
-import type { CreatorProfile } from "@/lib/types";
+import { ApiError, getOwnedCreatorProfile, logout } from "@/lib/api";
+import type { OwnedCreatorProfile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
@@ -20,13 +20,15 @@ export function AccountSettings() {
   const { t } = useLocale();
   const router = useRouter();
   const session = useMarketplaceSession();
-  const [profile, setProfile] = useState<CreatorProfile | null>(null);
+  const [profile, setProfile] = useState<OwnedCreatorProfile | null>(null);
 
   const load = useCallback(async () => {
     try {
-      setProfile(await getCreatorProfile());
+      setProfile(await getOwnedCreatorProfile());
     } catch (cause) {
-      if (!(cause instanceof ApiError && cause.status === 401)) {
+      if (cause instanceof ApiError && cause.code === "CREATOR_PROFILE_NOT_FOUND") {
+        setProfile(null);
+      } else if (!(cause instanceof ApiError && cause.status === 401)) {
         console.error("Settings failed to load the creator profile", cause);
       }
     }

@@ -2,6 +2,15 @@
 
 This file tracks known improvement work that has not been completed yet. When an item is finished, remove it from this file and add a dated entry to `changelog.md`.
 
+## Deployment Safety
+
+- Before applying migration `202609240001_remove_duplicate_creator_ownership`
+  to any database that served the retired `/api/community` publishing routes,
+  audit `MarketplaceCreator.userId`. If any row is non-null, reconcile it into
+  the canonical `ownerUserId` profile and create any required audited creator
+  role grant before migrating. The migration intentionally aborts instead of
+  discarding ownership data.
+
 ## Web — Homepage Follow-ups
 
 - Do a manual browser pass of the homepage: keyboard-only walk (hero → search →

@@ -261,7 +261,6 @@ model ReaderUser {
   marketplaceRoleGrants  MarketplaceRoleGrant[]
   marketplaceRoleEvents  MarketplaceRoleEvent[]
   emailVerifications     ReaderEmailVerification[]
-  creatorProfile         MarketplaceCreator?                @relation("CommunityCreator")
   marketplaceCreator     MarketplaceCreator?                @relation("OwnedCreator")
   listingLifecycleEvents MarketplaceListingLifecycleEvent[]
   communityRequests      MarketplaceCommunityPlacementRequest[]
@@ -404,13 +403,6 @@ model MarketplaceCreator {
   owner               ReaderUser?                     @relation("OwnedCreator", fields: [ownerUserId], references: [id], onDelete: Restrict)
   products            MarketplaceProduct[]
   providerConnections MarketplaceProviderConnection[]
-
-  // A community member's publishing identity. Null for the editorial creators
-  // seeded by the team, which no reader account owns. SetNull rather than
-  // Cascade: deleting an account must not delete listings other people rely on,
-  // and MarketplaceProduct.creatorId restricts deletes anyway.
-  userId    String?     @unique
-  user      ReaderUser? @relation("CommunityCreator", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([verified, followers])
 }

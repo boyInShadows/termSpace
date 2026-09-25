@@ -1,7 +1,7 @@
-import { CreatorDashboard } from "@/features/dashboard/creator-dashboard";
+import { CreatorHub } from "@/features/creator/creator-hub";
 
 export const metadata = { title: "Creator studio" };
 
 export default function CreatorStudioPage() {
-  return <CreatorDashboard />;
+  return <CreatorHub />;
 }
