@@ -2,6 +2,56 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-01
+
+- Completed the five Discovery and Community backlog items: snapshot-scoped
+  moderated placements and public community pages; canonical compatibility
+  values and legacy type alignment; community/compatibility search with stable
+  pagination; public creator profiles and owner-managed collections; and
+  deduplicated reports, severity-based cases, scoped reversible restrictions,
+  and decision-linked appeals. Management screens live under `/dashboard`.
+  Restrictions preserve acquisitions and audit history, apply independently
+  from Blog authority, and require fresh source checks before release
+  reinstatement. Fixed an older database trigger that blocked published source
+  verification refreshes while retaining immutable release contents. Removed
+  the completed backlog section and narrowed overlapping collection/review work.
+  Verification: all workspace type-checks, 191 unit/component tests, web lint,
+  all three production builds, and the separate authenticated database scenario
+  (192 passing checks in total). The full migration chain and audit triggers
+  were tested on an isolated disposable PostgreSQL 18 database using the
+  repeatable `test:discovery` command; the existing database was not changed.
+  Details and remaining review-author limitations are documented in
+  `docs/marketplace-discovery-and-trust.md`.
+- Audited all 23 pending improvements against current routes, schemas, validation,
+  and UI source. Retained unfinished items, narrowed partially implemented items
+  to their remaining scope, removed empty historical bug-audit headings, and
+  recorded evidence and the editorial publication limitation in
+  `docs/pending-audit-2026-10-01.md`.
+- Moved the existing marketplace account/library, creator profile/listings,
+  drafts, releases/source checks, and moderation screens into `/dashboard` with
+  shared English/Persian navigation and session/marketplace-role gates. Extracted
+  GitHub/npm connections into their own workspace, retained existing API
+  authorization, and redirected legacy creator/moderation paths while preserving
+  locale, nested paths, and queries. Sign-in/registration stay at `/account` and
+  return readers to the dashboard or their requested local destination; email
+  verification retains its existing token landing page. Blog publishing remains
+  separate. Verification: all workspace type-checks, 187 tests, web lint, all
+  three production builds, live HTTP checks for 11 pages and eight legacy
+  redirects, and `git diff --check`. An API test timeout during concurrent
+  build/test activity passed on the full-suite rerun after the build completed.
+
+## 2026-09-19
+
+- Completed the creator and submission lifecycle authorization test pass. New
+  request-level API coverage exercises the full Express middleware and routing
+  stack for creator-role gates, moderation-role gates, cross-user draft,
+  release, source-check, and lifecycle access, unpublished public marketplace
+  queries, and bidirectional isolation between Blog administrator sessions and
+  marketplace roles. Unauthorized cross-owner requests consistently return
+  non-disclosing errors before creating snapshots, source-check jobs, product
+  updates, or audit events. Verification: all workspace type-checks; 171 tests;
+  API, Blog, and web production builds; and `git diff --check`.
+
 ## 2026-09-18
 
 - Completed the free-resource acquisition and installation flow. Public product

@@ -198,7 +198,7 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
       setRecord(next);
       setDirty(false);
       setSaved(true);
-      if (!productId) router.replace(localePath(`/creator/listings/${next.id}/edit`, locale));
+      if (!productId) router.replace(localePath(`/dashboard/creator/listings/${next.id}/edit`, locale));
     } catch (cause) {
       if (cause instanceof ApiError && cause.code === "LISTING_VERSION_CONFLICT") setError(copy.versionConflict);
       else if (cause instanceof ApiError && cause.code === "VERSION_ALREADY_PUBLISHED") setError(copy.publishedVersionConflict);
@@ -220,7 +220,7 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
   const permissions = Array.isArray(release.permissions) ? release.permissions as Array<{ capability: string; required: boolean; scope?: string; destinations: string[]; purpose: string }> : [];
 
   return <div className="mx-auto max-w-5xl">
-    <Link className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground" href={localePath("/creator", locale)}>
+    <Link className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground" href={localePath("/dashboard/creator", locale)}>
       {locale === "fa" ? <ArrowRight className="size-4" aria-hidden="true" /> : <ArrowLeft className="size-4" aria-hidden="true" />}{copy.back}
     </Link>
     <header className="mt-6 max-w-3xl">
@@ -263,7 +263,7 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
         <div className="grid gap-5 sm:grid-cols-2"><Field label={copy.version}><Input name="releaseVersion" required defaultValue={stringValue(release.version)} dir="ltr" /></Field><Field label={copy.sourceKind}><select name="sourceKind" value={sourceKind} onChange={(event) => setSourceKind(event.target.value as SourceKind)} className={selectClass}><option value="github_repository">GitHub repository</option><option value="github_release">GitHub release</option><option value="npm">npm</option></select></Field></div>
         <SourceFields key={sourceKind} kind={sourceKind} source={source} copy={copy} />
         <div className="mt-5"><Field label={copy.releaseNotes}><Textarea name="releaseNotes" required defaultValue={stringValue(release.releaseNotes)} /></Field></div>
-        <div className="mt-5"><Field label={copy.compatibility} hint={copy.compatibilityHint}><Textarea name="compatibility" required defaultValue={compatibility.map((item) => `${item.platform} | ${item.models.join(", ")} | ${item.notes ?? ""}`).join("\n")} dir="ltr" /></Field></div>
+        <div className="mt-5"><Field label={copy.compatibility} hint={copy.compatibilityHint}><Textarea name="compatibility" required defaultValue={compatibility.map((item) => `${item.platform} | ${item.models.join(", ")} | ${item.notes ?? ""}`).join("\n")} dir="ltr" />{options.platforms && <p className="mt-2 text-xs text-muted-foreground" dir="ltr">{options.platforms.map((item) => `${item.name}: ${item.key}`).join(" · ")}<br />{options.models?.map((item) => `${item.name}: ${item.key}`).join(" · ")}</p>}</Field></div>
         <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.installationMethod}><select name="installationMethod" required defaultValue={stringValue(installation.method) || "manual"} className={selectClass}>{["manual", "npm", "git", "download", "container", "hosted"].map((item) => <option key={item}>{item}</option>)}</select></Field><Field label={copy.installationInstructions} hint={copy.lineHint}><Textarea name="installationInstructions" required defaultValue={listValue(installation.instructions)} /></Field></div>
       </FormSection>
 
@@ -285,7 +285,7 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
 
       <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-xl border bg-surface/95 p-4 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between">
         <div>{error && <p id="draft-errors" tabIndex={-1} className="flex items-start gap-2 text-sm text-destructive" role="alert"><AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />{error}</p>}{saved && <p className="text-sm text-emerald-700" role="status">{copy.saved}</p>}</div>
-        <div className="flex gap-3"><Link className={buttonVariants({ variant: "secondary" })} href={localePath("/creator", locale)}>{copy.cancel}</Link><Button disabled={saving}><Save className="size-4" aria-hidden="true" />{saving ? copy.saving : copy.save}</Button></div>
+        <div className="flex gap-3"><Link className={buttonVariants({ variant: "secondary" })} href={localePath("/dashboard/creator", locale)}>{copy.cancel}</Link><Button disabled={saving}><Save className="size-4" aria-hidden="true" />{saving ? copy.saving : copy.save}</Button></div>
       </div>
     </form>
   </div>;

@@ -62,9 +62,9 @@ describe("CreatorDashboard", () => {
     expect(screen.getByText("Clarify network access.")).toBeInTheDocument();
     expect(screen.getByText("27")).toBeInTheDocument();
     expect(screen.getByText("4.5 / 5")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /New listing/ })).toHaveAttribute("href", "/creator/listings/new");
-    expect(screen.getByRole("link", { name: /Edit draft/ })).toHaveAttribute("href", "/creator/listings/product-1/edit");
-    expect(screen.getByRole("link", { name: /Manage releases/ })).toHaveAttribute("href", "/creator/listings/product-1/releases");
+    expect(screen.getByRole("link", { name: /New listing/ })).toHaveAttribute("href", "/dashboard/creator/listings/new");
+    expect(screen.getByRole("link", { name: /Edit draft/ })).toHaveAttribute("href", "/dashboard/creator/listings/product-1/edit");
+    expect(screen.getByRole("link", { name: /Manage releases/ })).toHaveAttribute("href", "/dashboard/creator/listings/product-1/releases");
     expect(screen.getByRole("link", { name: /View public page/ })).toHaveAttribute("href", "/products/owned-skill");
   });
 

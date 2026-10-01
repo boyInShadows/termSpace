@@ -57,7 +57,7 @@ startup.
 ## Moderation workspace
 
 Readers with an active `moderator` or `administrator` marketplace grant can use
-the main application's `/moderation` workspace. The queue and preview APIs
+the main application's `/dashboard/moderation` workspace. The queue and preview APIs
 recheck the grant on every request. A marketplace staff member cannot view
 private moderation context for, add notes to, or decide a listing owned by their
 own creator account. Assign a different authorized staff account when a reviewer

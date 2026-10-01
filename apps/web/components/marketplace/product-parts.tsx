@@ -1,3 +1,7 @@
+"use client";
+import Link from "next/link";
+import { useLocale } from "@/lib/locale-context";
+import { localePath } from "@/lib/i18n";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { CheckCircle2, ShieldCheck, Star } from "lucide-react";
@@ -12,13 +16,14 @@ export function CreatorIdentity({
   creator: Creator;
   compact?: boolean;
 }) {
+  const { locale } = useLocale();
   return (
     <div className="flex items-center gap-2">
       <Avatar
         initials={creator.initials}
         className={compact ? "size-7 text-xs" : ""}
       />
-      <span className="text-sm font-medium">{creator.name}</span>
+      <Link href={localePath(`/creators/${creator.handle}`, locale)} className="text-sm font-medium hover:underline">{creator.name}</Link>
       {creator.verified && (
         <CheckCircle2
           size={14}
@@ -51,7 +56,7 @@ export function CompatibilityBadges({
     <div className="flex flex-wrap gap-1.5">
       {compatibility.platforms.slice(0, limit).map((x) => (
         <Badge key={x} variant="outline">
-          {x}
+          {compatibility.platformLabels?.[x] ?? x}
         </Badge>
       ))}
       {compatibility.platforms.length > limit && (

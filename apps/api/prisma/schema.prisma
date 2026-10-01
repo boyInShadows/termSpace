@@ -265,6 +265,10 @@ model ReaderUser {
   listingLifecycleEvents MarketplaceListingLifecycleEvent[]
   communityRequests      MarketplaceCommunityPlacementRequest[]
   requestedSourceChecks  MarketplaceSourceCheckJob[]
+  marketplaceTrustCases  MarketplaceTrustCase[]
+  marketplaceReports     MarketplaceReport[]
+  marketplaceAppeals     MarketplaceAppeal[]
+  marketplaceTrustEvents MarketplaceTrustEvent[]
 }
 
 enum TransactionalEmailStatus {
@@ -400,6 +404,8 @@ model MarketplaceCreator {
   owner               ReaderUser?                     @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
   products            MarketplaceProduct[]
   providerConnections MarketplaceProviderConnection[]
+  collections         MarketplaceCollection[]
+  trustCases          MarketplaceTrustCase[]
 
   @@index([verified, followers])
 }
@@ -435,6 +441,8 @@ model MarketplaceCommunity {
   createdAt            DateTime                               @default(now())
   updatedAt            DateTime                               @updatedAt
   placementRequests    MarketplaceCommunityPlacementRequest[]
+  placements           MarketplaceCommunityPlacement[]
+  accentColor          String                                 @default("#0f766e")
 
   @@index([state, nameEn])
   @@index([primaryPlatform, state])
@@ -502,6 +510,9 @@ model MarketplaceProduct {
   proposedSnapshot         MarketplaceListingSnapshot?            @relation("MarketplaceProposedListingSnapshot", fields: [proposedSnapshotId], references: [id], onDelete: Restrict)
   lifecycleEvents          MarketplaceListingLifecycleEvent[]
   communityRequests        MarketplaceCommunityPlacementRequest[]
+  communityPlacements      MarketplaceCommunityPlacement[]
+  collectionItems          MarketplaceCollectionItem[]
+  trustCases               MarketplaceTrustCase[]
 
   @@index([published, featured, usageCount])
   @@index([published, type])
@@ -548,23 +559,25 @@ enum MarketplaceListingLifecycleAction {
 }
 
 model MarketplaceListingSnapshot {
-  id                 String                                 @id @default(cuid())
-  productId          String
-  manifestSnapshotId String?
-  releaseManifestId  String?
-  revision           Int
-  schemaVersion      Int                                    @default(1)
-  digestSha256       String
-  content            Json
-  createdByActor     String
-  createdAt          DateTime                               @default(now())
-  product            MarketplaceProduct                     @relation("MarketplaceListingSnapshotHistory", fields: [productId], references: [id], onDelete: Restrict)
-  manifestSnapshot   MarketplaceManifestSnapshot?           @relation(fields: [manifestSnapshotId], references: [id], onDelete: Restrict)
-  releaseManifest    MarketplaceReleaseManifest?            @relation(fields: [releaseManifestId], references: [id], onDelete: Restrict)
-  approvedFor        MarketplaceProduct?                    @relation("MarketplaceApprovedListingSnapshot")
-  proposedFor        MarketplaceProduct?                    @relation("MarketplaceProposedListingSnapshot")
-  lifecycleEvents    MarketplaceListingLifecycleEvent[]
-  communityRequests  MarketplaceCommunityPlacementRequest[]
+  id                  String                                 @id @default(cuid())
+  productId           String
+  manifestSnapshotId  String?
+  releaseManifestId   String?
+  revision            Int
+  schemaVersion       Int                                    @default(1)
+  digestSha256        String
+  content             Json
+  createdByActor      String
+  createdAt           DateTime                               @default(now())
+  product             MarketplaceProduct                     @relation("MarketplaceListingSnapshotHistory", fields: [productId], references: [id], onDelete: Restrict)
+  manifestSnapshot    MarketplaceManifestSnapshot?           @relation(fields: [manifestSnapshotId], references: [id], onDelete: Restrict)
+  releaseManifest     MarketplaceReleaseManifest?            @relation(fields: [releaseManifestId], references: [id], onDelete: Restrict)
+  approvedFor         MarketplaceProduct?                    @relation("MarketplaceApprovedListingSnapshot")
+  proposedFor         MarketplaceProduct?                    @relation("MarketplaceProposedListingSnapshot")
+  lifecycleEvents     MarketplaceListingLifecycleEvent[]
+  communityRequests   MarketplaceCommunityPlacementRequest[]
+  approvedPlacements  MarketplaceCommunityPlacement[]        @relation("PlacementApprovedSnapshot")
+  requestedPlacements MarketplaceCommunityPlacement[]        @relation("PlacementRequestedSnapshot")
 
   @@unique([productId, revision])
   @@index([productId, createdAt])
@@ -767,6 +780,7 @@ model MarketplaceReleaseManifest {
   verifiedConnection       MarketplaceProviderConnection?          @relation(fields: [verifiedConnectionId], references: [id], onDelete: Restrict)
   sourceChecks             MarketplaceSourceCheck[]
   sourceCheckJobs          MarketplaceSourceCheckJob[]
+  trustCases               MarketplaceTrustCase[]
 
   @@unique([productVersionId, revision])
   @@index([itemType, publishedAt])
@@ -990,15 +1004,16 @@ model MarketplaceWorkflowReleaseDetails {
 }
 
 model MarketplaceReview {
-  id               String             @id @default(cuid())
+  id               String                 @id @default(cuid())
   productId        String
   author           String
   rating           Int
   body             String
-  verifiedPurchase Boolean            @default(false)
-  published        Boolean            @default(false)
-  createdAt        DateTime           @default(now())
-  product          MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  verifiedPurchase Boolean                @default(false)
+  published        Boolean                @default(false)
+  createdAt        DateTime               @default(now())
+  product          MarketplaceProduct     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  trustCases       MarketplaceTrustCase[]
 
   @@index([productId, published, createdAt])
 }
@@ -1035,4 +1050,206 @@ model MarketplaceOrder {
   @@index([userId, createdAt])
   @@index([productId, status])
   @@index([releaseManifestId, createdAt])
+}
+
+enum MarketplacePlacementState {
+  REQUESTED
+  APPROVED
+  REJECTED
+  REMOVED
+}
+
+model MarketplaceCommunityPlacement {
+  id                 String                      @id @default(cuid())
+  productId          String
+  communityId        String
+  snapshotId         String
+  approvedSnapshotId String?
+  state              MarketplacePlacementState   @default(REQUESTED)
+  requestedByUserId  String
+  requestedAt        DateTime                    @default(now())
+  decidedByUserId    String?
+  decidedAt          DateTime?
+  publicReason       String?
+  version            Int                         @default(0)
+  product            MarketplaceProduct          @relation(fields: [productId], references: [id], onDelete: Restrict)
+  community          MarketplaceCommunity        @relation(fields: [communityId], references: [id], onDelete: Restrict)
+  approvedSnapshot   MarketplaceListingSnapshot? @relation("PlacementApprovedSnapshot", fields: [approvedSnapshotId], references: [id], onDelete: Restrict)
+  snapshot           MarketplaceListingSnapshot  @relation("PlacementRequestedSnapshot", fields: [snapshotId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "MarketplacePlacement_snapshotId_fkey")
+  events             MarketplacePlacementEvent[]
+  trustCases         MarketplaceTrustCase[]
+
+  @@unique([productId, communityId])
+  @@index([communityId, state, requestedAt])
+}
+
+model MarketplacePlacementEvent {
+  id            String                        @id @default(cuid())
+  placementId   String
+  actorUserId   String
+  state         MarketplacePlacementState
+  publicReason  String?
+  internalNote  String?
+  correlationId String                        @unique
+  createdAt     DateTime                      @default(now())
+  placement     MarketplaceCommunityPlacement @relation(fields: [placementId], references: [id], onDelete: Restrict)
+
+  @@index([placementId, createdAt])
+}
+
+model MarketplaceCollection {
+  id          String                      @id @default(cuid())
+  creatorId   String
+  slug        String
+  title       String
+  description String
+  published   Boolean                     @default(false)
+  createdAt   DateTime                    @default(now())
+  updatedAt   DateTime                    @updatedAt
+  creator     MarketplaceCreator          @relation(fields: [creatorId], references: [id], onDelete: Restrict)
+  items       MarketplaceCollectionItem[]
+
+  @@unique([creatorId, slug])
+}
+
+model MarketplaceCollectionItem {
+  collectionId String
+  productId    String
+  position     Int
+  collection   MarketplaceCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  product      MarketplaceProduct    @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@id([collectionId, productId])
+  @@unique([collectionId, position])
+}
+
+enum MarketplaceTrustTarget {
+  PRODUCT
+  RELEASE
+  PLACEMENT
+  CREATOR
+  REVIEW
+  USER
+}
+
+enum MarketplaceCaseState {
+  NEW
+  TRIAGED
+  INVESTIGATING
+  ACTIONED
+  DISMISSED
+}
+
+enum MarketplaceCaseSeverity {
+  STANDARD
+  HIGH
+  CRITICAL
+}
+
+model MarketplaceTrustCase {
+  id           String                         @id @default(cuid())
+  targetType   MarketplaceTrustTarget
+  targetId     String
+  dedupKey     String?                        @unique
+  productId    String?
+  creatorId    String?
+  ownerUserId  String?
+  releaseId    String?
+  placementId  String?
+  reviewId     String?
+  state        MarketplaceCaseState           @default(NEW)
+  severity     MarketplaceCaseSeverity        @default(STANDARD)
+  version      Int                            @default(0)
+  publicReason String?
+  createdAt    DateTime                       @default(now())
+  updatedAt    DateTime                       @updatedAt
+  product      MarketplaceProduct?            @relation(fields: [productId], references: [id], onDelete: Restrict)
+  creator      MarketplaceCreator?            @relation(fields: [creatorId], references: [id], onDelete: Restrict)
+  owner        ReaderUser?                    @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
+  release      MarketplaceReleaseManifest?    @relation(fields: [releaseId], references: [id], onDelete: Restrict)
+  placement    MarketplaceCommunityPlacement? @relation(fields: [placementId], references: [id], onDelete: Restrict)
+  review       MarketplaceReview?             @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  reports      MarketplaceReport[]
+  restrictions MarketplaceRestriction[]
+  events       MarketplaceTrustEvent[]
+  appeals      MarketplaceAppeal[]
+
+  @@index([targetType, targetId])
+  @@index([state, severity, createdAt])
+  @@index([ownerUserId, createdAt])
+}
+
+model MarketplaceReport {
+  id             String               @id @default(cuid())
+  caseId         String
+  reporterUserId String
+  reason         String
+  explanation    String
+  createdAt      DateTime             @default(now())
+  case           MarketplaceTrustCase @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  reporter       ReaderUser           @relation(fields: [reporterUserId], references: [id], onDelete: Restrict)
+
+  @@unique([caseId, reporterUserId])
+}
+
+model MarketplaceRestriction {
+  id               String                 @id @default(cuid())
+  caseId           String
+  activeKey        String?                @unique
+  decisionEventId  String                 @unique
+  revokedAt        DateTime?
+  revokedByEventId String?                @unique
+  createdAt        DateTime               @default(now())
+  case             MarketplaceTrustCase   @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  decision         MarketplaceTrustEvent  @relation("RestrictionDecision", fields: [decisionEventId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  revokedBy        MarketplaceTrustEvent? @relation("RestrictionRevocation", fields: [revokedByEventId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@index([caseId, revokedAt])
+}
+
+model MarketplaceTrustEvent {
+  id                  String                  @id @default(cuid())
+  caseId              String
+  actorUserId         String
+  action              String
+  previousState       MarketplaceCaseState
+  resultingState      MarketplaceCaseState
+  publicReason        String
+  internalNote        String?
+  correlationId       String                  @unique
+  createdAt           DateTime                @default(now())
+  case                MarketplaceTrustCase    @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  actor               ReaderUser              @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+  decisionRestriction MarketplaceRestriction? @relation("RestrictionDecision")
+  revokedRestriction  MarketplaceRestriction? @relation("RestrictionRevocation")
+  decisionAppeals     MarketplaceAppeal[]     @relation("AppealDecision")
+
+  @@index([caseId, createdAt])
+}
+
+enum MarketplaceAppealOutcome {
+  PENDING
+  UPHELD
+  MODIFIED
+  REVERSED
+}
+
+model MarketplaceAppeal {
+  id                String                   @id @default(cuid())
+  caseId            String
+  decisionEventId   String
+  submittedByUserId String
+  explanation       String
+  evidence          String
+  outcome           MarketplaceAppealOutcome @default(PENDING)
+  publicReason      String?
+  decidedByUserId   String?
+  decidedAt         DateTime?
+  createdAt         DateTime                 @default(now())
+  case              MarketplaceTrustCase     @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  submittedBy       ReaderUser               @relation(fields: [submittedByUserId], references: [id], onDelete: Restrict)
+  decision          MarketplaceTrustEvent    @relation("AppealDecision", fields: [decisionEventId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([decisionEventId, submittedByUserId])
+  @@index([caseId, createdAt])
 }

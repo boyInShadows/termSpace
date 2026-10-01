@@ -15,6 +15,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "@/features/product/product-actions";
+import { ReportResource } from "@/features/product/report-resource";
 import {
   CompatibilityBadges,
   CreatorIdentity,
@@ -63,6 +64,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     <>
       <Header />
       <main className="container-page py-8">
+        <ReportResource product={product} />
         <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground">
           Explore / {product.type} /{" "}
           <span className="text-foreground">{product.name}</span>

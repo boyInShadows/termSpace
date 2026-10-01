@@ -74,7 +74,7 @@ export function CreatorDashboard() {
         <h1 id="creator-dashboard-title" className="editorial mt-2 text-4xl sm:text-5xl">{t.creatorHub.dashboardTitle}</h1>
         <p className="mt-3 text-muted-foreground">{t.creatorHub.dashboardIntro}</p>
       </div>
-      <Link className={buttonVariants()} href={localePath("/creator/listings/new", locale)}>
+      <Link className={buttonVariants()} href={localePath("/dashboard/creator/listings/new", locale)}>
         <Plus aria-hidden="true" className="size-4" />{t.creatorHub.newListing}
       </Link>
     </div>
@@ -145,10 +145,10 @@ function ListingCard({ listing }: { listing: CreatorDashboardListing }) {
         <p className="mt-1 text-sm text-muted-foreground">{listing.type} · {t.creatorHub.version} {listing.currentVersion}</p>
       </div>
       <div className="flex flex-wrap gap-2">
-        {isEditable(listing.state) && <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/creator/listings/${listing.id}/edit`, locale)}>
+        {isEditable(listing.state) && <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/dashboard/creator/listings/${listing.id}/edit`, locale)}>
           <Pencil aria-hidden="true" className="size-4" />{t.creatorHub.editDraft}
         </Link>}
-        <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/creator/listings/${listing.id}/releases`, locale)}>
+        <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/dashboard/creator/listings/${listing.id}/releases`, locale)}>
           <Layers3 aria-hidden="true" className="size-4" />{t.creatorHub.manageReleases}
         </Link>
         {listing.published && <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/products/${listing.slug}`, locale)}>

@@ -49,6 +49,8 @@ describe("CreatorReleaseManager", () => {
     expect(screen.getByText("Current public release")).toBeInTheDocument();
     expect(screen.getByText(/Acquisitions pinned here: 3/)).toBeInTheDocument();
     expect(screen.getByText(/github_repository/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Prepare new release/ })).toHaveAttribute("href", "/creator/listings/product-1/edit");
+    expect(screen.getByRole("link", { name: /Prepare new release/ })).toHaveAttribute("href", "/dashboard/creator/listings/product-1/edit");
+    expect(screen.getByRole("link", { name: "Provider connections" })).toHaveAttribute("href", "/dashboard/connections");
+    expect(getConnections).not.toHaveBeenCalled();
   });
 });

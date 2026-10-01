@@ -21,7 +21,7 @@ export class ApiError extends Error {
 
 function apiBase() { return typeof window === "undefined" ? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001" : process.env.NEXT_PUBLIC_API_URL ?? "/backend"; }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const method = (init?.method ?? "GET").toUpperCase();
   const attempts = method === "GET" ? 2 : 1;
 
@@ -58,6 +58,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   throw new ApiError(0, "NETWORK_ERROR", "The service could not be reached");
 }
 export async function getMarketplaceHome() { return (await request<{ data: MarketplaceHome }>("/api/marketplace/home")).data; }
+export async function getDiscoveryOptions() { return (await request<{ data: import("./types").DiscoveryOptions }>("/api/marketplace/discovery-options")).data; }
 export async function getMarketplaceItemTypes() { return (await request<{ data: MarketplaceItemType[] }>("/api/marketplace/item-types")).data; }
 export async function getProducts(filters: ProductFilters = {}, signal?: AbortSignal) {
   const params = new URLSearchParams();

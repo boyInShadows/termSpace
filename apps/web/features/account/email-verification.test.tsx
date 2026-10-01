@@ -40,5 +40,6 @@ describe("EmailVerification", () => {
     expect(window.location.hash).toBe("");
     expect(await screen.findByText("Your email is verified.")).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "Return to account" })).toHaveAttribute("href", "/dashboard");
   });
 });

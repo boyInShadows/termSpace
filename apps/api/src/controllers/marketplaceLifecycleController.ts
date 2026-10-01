@@ -30,7 +30,7 @@ const productLifecycleSelect = {
   approvedSnapshotId: true,
   proposedSnapshotId: true,
   proposedSnapshot: {
-    select: { content: true, schemaVersion: true, releaseManifest: { select: { id: true, publishedAt: true, sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true } } },
+    select: { content: true, schemaVersion: true, communityRequests: { select: { communityId: true } }, releaseManifest: { select: { id: true, publishedAt: true, sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true } } },
   },
   approvedSnapshot: {
     select: { schemaVersion: true, releaseManifest: { select: { sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true } } },
@@ -120,6 +120,16 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
       const approvedSnapshotId = transition.approvedSnapshot === "promote-proposed" ? product.proposedSnapshotId : product.approvedSnapshotId;
       const proposedSnapshotId = transition.proposedSnapshot === "clear" ? null : product.proposedSnapshotId;
       const correlationId = randomUUID();
+      if (action === "SUBMIT" && product.proposedSnapshotId) {
+        for (const request of product.proposedSnapshot?.communityRequests ?? []) {
+          const placement = await tx.marketplaceCommunityPlacement.upsert({
+            where: { productId_communityId: { productId, communityId: request.communityId } },
+            create: { productId, communityId: request.communityId, snapshotId: product.proposedSnapshotId, requestedByUserId: userId },
+            update: { snapshotId: product.proposedSnapshotId, state: "REQUESTED", requestedByUserId: userId, requestedAt: new Date(), version: { increment: 1 }, publicReason: null },
+          });
+          await tx.marketplacePlacementEvent.create({ data: { placementId: placement.id, actorUserId: userId, state: "REQUESTED", correlationId: randomUUID() } });
+        }
+      }
       let publicationProjection = {};
       if (action === "PUBLISH") {
         if (!product.proposedSnapshot) throw new LifecycleRequestError(409, "PROPOSED_SNAPSHOT_REQUIRED", "Approved publication candidate is missing");
@@ -179,6 +189,10 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
           correlationId,
         },
       });
+      if (action === "PUBLISH") {
+        await tx.marketplaceCommunityPlacement.updateMany({ where: { productId, NOT: { snapshotId: approvedSnapshotId!, state: "APPROVED" } }, data: { approvedSnapshotId: null } });
+        await tx.marketplaceCommunityPlacement.updateMany({ where: { productId, snapshotId: approvedSnapshotId!, state: "APPROVED" }, data: { approvedSnapshotId } });
+      }
       return { ...next, correlationId };
     });
 

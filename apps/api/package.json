@@ -20,7 +20,8 @@
     "marketplace:source-worker": "tsx src/jobs/processMarketplaceSourceChecks.ts",
     "marketplace:source-worker:watch": "sh -c 'while true; do tsx src/jobs/processMarketplaceSourceChecks.ts; sleep 15; done'",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --coverage.enabled=false"
+    "test": "vitest run --coverage.enabled=false",
+    "test:discovery": "tsx src/scripts/verifyMarketplaceDiscovery.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1117.0",

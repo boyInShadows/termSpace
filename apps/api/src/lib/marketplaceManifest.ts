@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
+import { platformSchema, modelSchema } from "./marketplaceCompatibility.js";
 
 export const MARKETPLACE_ITEM_TYPES = [
   "skill", "agent", "mcp_server", "integration", "rule", "prompt", "hook", "template", "workflow",
@@ -43,6 +44,7 @@ export const LEGACY_ITEM_TYPE_MAP: Readonly<Record<string, MarketplaceItemTypeKe
   Prompt: "prompt",
   "Prompt pack": "prompt",
   "MCP server": "mcp_server",
+  Integration: "integration", Rule: "rule", Hook: "hook", Template: "template",
   "AI tool": null,
   "Developer utility": null,
 };
@@ -57,7 +59,7 @@ const httpsUrl = z.string().url().max(2048).refine((value) => {
   return parsed.protocol === "https:" && !parsed.username && !parsed.password;
 }, "URL must use HTTPS and must not contain credentials");
 const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(160);
-const platformKey = z.string().regex(/^[a-z0-9]+(?:[_-][a-z0-9]+)*$/).max(50);
+const platformKey = platformSchema;
 const repositoryPath = boundedText(1, 500).refine((value) => !value.startsWith("/") && !value.includes("\\") && value.split("/").every((segment) => segment !== "." && segment !== ".."), "Path must be a safe repository-relative path");
 
 const localizedText = z.object({ en: boundedText(), fa: boundedText().optional() }).strict();
@@ -104,7 +106,7 @@ const releaseSchema = z.object({
   version: boundedText(1, 64),
   source: sourceSchema,
   releaseNotes: boundedText(3, 10_000),
-  compatibility: z.array(z.object({ platform: platformKey, models: stringList(30, 100).default([]), notes: boundedText(1, 500).optional() }).strict()).min(1).max(30),
+  compatibility: z.array(z.object({ platform: platformKey, models: z.array(modelSchema).max(30).default([]), notes: boundedText(1, 500).optional() }).strict()).min(1).max(30),
   installation: z.object({ method: z.enum(["manual", "npm", "git", "download", "container", "hosted"]), instructions: stringList(30, 1_000).min(1) }).strict(),
   requirements: z.object({
     runtimes: stringList(30).default([]), accounts: stringList(30).default([]), operatingSystems: stringList(20).default([]),
@@ -129,6 +131,9 @@ const releaseSchema = z.object({
       ctx.addIssue({ code: "custom", path: path.split("."), message: `${path} entries must be unique` });
     }
   }
+  release.compatibility.forEach((entry, index) => {
+    if (new Set(entry.models).size !== entry.models.length) ctx.addIssue({ code: "custom", path: ["compatibility", index, "models"], message: "Models must be unique" });
+  });
 });
 
 const skillDetails = z.object({ format: boundedText(1, 100), entryPath: boundedText(1, 500), activation: boundedText(3, 500), bundledExecutables: z.boolean(), inputs: stringList(), outputs: stringList() }).strict();

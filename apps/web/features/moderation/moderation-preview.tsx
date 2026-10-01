@@ -91,7 +91,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
   const date = new Intl.DateTimeFormat(locale === "fa" ? "fa-IR" : "en-US", { dateStyle: "medium", timeStyle: "short" });
 
   return <section aria-labelledby="moderation-preview-title">
-    <Link href={localePath("/moderation", locale)} className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">{locale === "fa" ? <ArrowRight className="size-4" /> : <ArrowLeft className="size-4" />}{t.moderation.back}</Link>
+    <Link href={localePath("/dashboard/moderation", locale)} className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">{locale === "fa" ? <ArrowRight className="size-4" /> : <ArrowLeft className="size-4" />}{t.moderation.back}</Link>
     <header className="mt-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div className="max-w-3xl"><p className="eyebrow">{t.moderation.eyebrow}</p><h1 id="moderation-preview-title" className="editorial mt-2 text-4xl sm:text-5xl">{preview.name}</h1><p className="mt-3 text-muted-foreground">{t.moderation.previewIntro}</p></div>
       <div className="rounded-xl border bg-surface px-4 py-3 text-sm"><strong>{t.moderation.creator}:</strong> {preview.creator.name} <span className="text-muted-foreground">@{preview.creator.handle}</span></div>

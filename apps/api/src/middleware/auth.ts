@@ -54,6 +54,8 @@ async function getReaderSession(req: Request) {
           id: true,
           email: true,
           emailVerifiedAt: true,
+          marketplaceTrustCases: { where: { targetType: "USER", restrictions: { some: { revokedAt: null } } }, select: { id: true } },
+          marketplaceCreator: { select: { trustCases: { where: { targetType: "CREATOR", restrictions: { some: { revokedAt: null } } }, select: { id: true } } } },
           marketplaceRoleGrants: {
             where: { revokedAt: null },
             select: { role: true },
@@ -87,6 +89,7 @@ export const requireReader: RequestHandler = async (req, res, next) => {
     }
     res.locals.reader = readerAccess(session.user);
     res.locals.readerSessionId = session.id;
+    res.locals.marketplaceRestricted = Boolean(session.user.marketplaceTrustCases?.length);
     next();
   } catch (error) {
     next(error);
@@ -96,6 +99,14 @@ export const requireReader: RequestHandler = async (req, res, next) => {
 export const requireVerifiedReader: RequestHandler = (_req, res, next) => {
   if (!res.locals.reader?.emailVerified) {
     res.status(403).json({ error: { code: "EMAIL_VERIFICATION_REQUIRED", message: "Verify your email before creating a creator profile" } });
+    return;
+  }
+  next();
+};
+
+export const requireMarketplaceAccess: RequestHandler = (_req, res, next) => {
+  if (res.locals.marketplaceRestricted) {
+    res.status(403).json({ error: { code: "MARKETPLACE_RESTRICTED", message: "Marketplace access is restricted; view your cases to appeal" } });
     return;
   }
   next();
@@ -114,6 +125,10 @@ export function requireMarketplaceRole(...allowedRoles: PublicMarketplaceRole[])
       }
 
       const reader = readerAccess(session.user);
+      if (session.user.marketplaceTrustCases?.length || allowed.has("creator") && session.user.marketplaceCreator?.trustCases?.length) {
+        res.status(403).json({ error: { code: "MARKETPLACE_RESTRICTED", message: "Marketplace privileges are restricted; view your cases to appeal" } });
+        return;
+      }
       if (!reader.emailVerified) {
         res.status(403).json({ error: { code: "EMAIL_VERIFICATION_REQUIRED", message: "Verify your email before using creator or moderation tools" } });
         return;

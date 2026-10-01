@@ -32,12 +32,11 @@ export function Header() {
   const query = searchParams.toString();
   const switchHref = `${locale === "fa" ? currentPath : localePath(currentPath, "fa")}${query ? `?${query}` : ""}`;
   const session = useMarketplaceSession();
-  const canModerate = session.marketplaceRoles.includes("moderator") || session.marketplaceRoles.includes("administrator");
   const NAV = [
     { href: "/explore", label: t.explore },
+    { href: "/communities", label: locale === "fa" ? "جامعه‌ها" : "Communities" },
     { href: "/design-system", label: t.designSystem },
-    { href: "/creator", label: t.shareWork },
-    ...(canModerate ? [{ href: "/moderation", label: t.moderation.nav }] : []),
+    { href: session.email ? "/dashboard" : "/dashboard/creator", label: session.email ? t.dashboard.title : t.shareWork },
   ];
   const [isCondensed, setIsCondensed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -134,7 +133,7 @@ export function Header() {
 
           <div className="flex items-center gap-1">
             <ThemeToggle />
-            <Link href={localePath("/account", locale)} className={cn(buttonVariants({ variant: "ghost" }), "hidden sm:inline-flex")}>
+            <Link href={localePath(session.email ? "/dashboard" : "/account", locale)} className={cn(buttonVariants({ variant: "ghost" }), "hidden sm:inline-flex")}>
               {session.email ?? t.signIn}
             </Link>
             <Link href={switchHref} className="hidden px-2 text-xs text-muted-foreground hover:text-primary sm:inline-flex">{t.language}</Link>

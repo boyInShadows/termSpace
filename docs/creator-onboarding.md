@@ -18,7 +18,7 @@ have at most one reader owner.
 
 ## Self-service onboarding
 
-An authenticated reader with a verified email can create a profile at `/creator`.
+An authenticated reader with a verified email can create a profile at `/dashboard/creator`.
 The API serializes onboarding per reader with a PostgreSQL advisory transaction
 lock, then creates the profile and, when needed, the `CREATOR` role grant plus its
 append-only grant event in one transaction.

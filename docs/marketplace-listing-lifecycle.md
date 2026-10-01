@@ -46,11 +46,14 @@ placement request, and `DRAFT_SAVED` audit records. Published listings keep
 their approved snapshot and public projection while the replacement draft is
 edited. Public version responses include only versions linked to a release
 whose `publishedAt` timestamp is set, so draft release metadata is not exposed.
-The creator release workspace at `/creator/listings/:id/releases` shows the
+The creator release workspace at `/dashboard/creator/listings/:id/releases` shows the
 immutable source identity, moderation status, and acquisition count for each
 release. Preparing a new release starts from the listing's controlled draft
 editor and requires a new version label whenever published release metadata
 changes.
+
+GitHub/npm provider connections are managed separately at `/dashboard/connections`,
+so creators can connect a source account before creating their first listing.
 
 Completed acquisitions store the exact approved release-manifest identifier
 selected at acquisition time. Publishing a newer version updates the listing's
@@ -111,7 +114,7 @@ without changing listing state or lifecycle version. Database constraints bound
 private notes, while triggers make snapshots and events append-only and enforce
 same-listing snapshot, manifest, and release references.
 
-The staff workspace is available at `/moderation`. Its queue defaults to
+The staff workspace is available at `/dashboard/moderation`. Its queue defaults to
 submitted and approved listings, supports bounded search and state filters, and
 shows source and ownership readiness without fetching external artifacts. The
 snapshot preview renders stored text only, provides listing decisions and

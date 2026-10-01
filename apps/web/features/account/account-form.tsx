@@ -16,7 +16,14 @@ export function AccountForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter(); const params = useSearchParams(); const session = useMarketplaceSession();
-  if (session.email) return <SignedInAccount email={session.email} />;
+  const next = params.get("next");
+  const destination = mode === "register" ? localePath("/account/verify-email", locale)
+    : next?.startsWith("/") && !next.startsWith("//") && !next.includes("\\") && !["/account", "/fa/account"].includes(next.split(/[?#]/)[0])
+      ? next : localePath("/dashboard", locale);
+  useEffect(() => {
+    if (!session.loading && session.email && !submitting) router.replace(destination);
+  }, [destination, router, session.email, session.loading, submitting]);
+  if (session.loading || session.email) return <p role="status">{t.wait}</p>;
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSubmitting(true); setError(null);
     const data = new FormData(event.currentTarget);
@@ -24,8 +31,7 @@ export function AccountForm() {
       const email = String(data.get("email")); const password = String(data.get("password"));
       await (mode === "login" ? login(email, password) : register(email, password));
       await session.refresh();
-      const next = params.get("next");
-      router.replace(mode === "register" ? localePath("/account/verify-email", locale) : next?.startsWith("/") && !next.startsWith("//") ? next : localePath("/", locale));
+      router.replace(destination);
       router.refresh();
     } catch (cause) { setError(cause instanceof ApiError ? cause.message : t.serviceError); }
     finally { setSubmitting(false); }
@@ -45,10 +51,11 @@ export function AccountForm() {
   </div>;
 }
 
-function SignedInAccount({ email }: { email: string }) {
+export function DashboardAccount() {
   const { locale, t } = useLocale();
   const router = useRouter();
   const session = useMarketplaceSession();
+  const email = session.email;
   const [entries, setEntries] = useState<MarketplaceLibraryEntry[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -64,7 +71,7 @@ function SignedInAccount({ email }: { email: string }) {
     return () => controller.abort();
   }, [page]);
   return <div className="mx-auto max-w-4xl space-y-6">
-    <header className="rounded-xl border bg-surface p-7 sm:flex sm:items-end sm:justify-between sm:gap-6"><div><p className="eyebrow">{fa ? "حساب خواننده" : "Reader account"}</p><h1 className="editorial mt-2 text-4xl">{t.account}</h1><p className="mt-3 text-muted-foreground">{t.signedInAs} {email}</p></div><Button className="mt-6 sm:mt-0" variant="secondary" onClick={async () => { await logout(); await session.refresh(); router.replace(localePath("/", locale)); router.refresh(); }}>{t.signOut}</Button></header>
+    <header className="rounded-xl border bg-surface p-7 sm:flex sm:items-end sm:justify-between sm:gap-6"><div><p className="eyebrow">{fa ? "حساب خواننده" : "Reader account"}</p><h1 className="editorial mt-2 text-4xl">{t.account}</h1><p className="mt-3 text-muted-foreground">{t.signedInAs} {email}</p><p className="mt-3 text-sm">{session.emailVerified ? t.dashboard.verified : <Link className="font-semibold text-primary" href={localePath("/account/verify-email", locale)}>{t.verifyEmail}</Link>}</p></div><Button className="mt-6 sm:mt-0" variant="secondary" onClick={async () => { await logout(); await session.refresh(); router.replace(localePath("/", locale)); router.refresh(); }}>{t.signOut}</Button></header>
     <section className="rounded-xl border bg-surface p-7" aria-labelledby="account-library-title">
       <h2 id="account-library-title" className="editorial text-3xl">{fa ? "کتابخانهٔ شما" : "Your library"}</h2>
       <p className="mt-2 text-sm text-muted-foreground">{fa ? "منابع رایگانی که دریافت کرده‌اید و نسخهٔ دقیق متصل به هر دریافت." : "Free resources you acquired and the exact release pinned to each acquisition."}</p>

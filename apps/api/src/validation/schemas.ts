@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { platformSchema, modelSchema } from "../lib/marketplaceCompatibility.js";
 import { englishDisplayName, marketplaceManifestV1Schema } from "../lib/marketplaceManifest.js";
 
 /**
@@ -137,7 +138,11 @@ export const marketplaceProductQuerySchema = z.object({
   q: z.string().trim().max(120).optional().default(""),
   type: z.string().trim().max(40).optional(),
   category: z.string().trim().max(80).optional(),
-  platform: z.string().trim().max(40).optional(),
+  platform: platformSchema.optional(),
+  model: modelSchema.optional(),
+  community: z.string().regex(slugPattern).max(80).optional(),
+  creator: z.string().regex(slugPattern).max(40).optional(),
+  collection: z.string().regex(slugPattern).max(80).optional(),
   verified: z.enum(["true", "false"]).optional().transform((value) => value === "true" ? true : undefined),
   minRating: z.coerce.number().min(0).max(5).optional().default(0),
   sort: z.enum(["featured", "rating", "newest"]).optional().default("featured"),

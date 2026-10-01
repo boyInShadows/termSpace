@@ -27,6 +27,8 @@ export interface CreatorDashboardResult {
   meta: { page: number; limit: number; total: number; totalPages: number };
 }
 export interface MarketplaceDraftOptions {
+  platforms?: Array<{ key: string; name: string }>;
+  models?: Array<{ key: string; name: string }>;
   categories: Array<{ slug: string; name: string }>;
   communities: Array<{
     slug: string; nameEn: string; nameFa: string | null; descriptionEn: string; descriptionFa: string | null;
@@ -90,16 +92,18 @@ export interface MarketplaceModerationPreview {
   auditTrailTruncated: boolean;
 }
 export interface Pricing { amountMinor: number; currency: "USD"; model: "one-time" | "free"; }
-export interface Compatibility { platforms: Platform[]; models: AIModel[]; }
+export interface Compatibility { platforms: string[]; models: string[]; platformLabels?: Record<string, string>; }
 export interface ProductVersion { id: string; version: string; releasedAt: string; notes: string; }
 export interface Review { id: string; author: string; rating: number; createdAt: string; body: string; verifiedPurchase: boolean; }
 export interface Product {
+  communities?: Array<{ id: string; slug: string; nameEn: string; nameFa: string | null }>;
   id: string; slug: string; name: string; type: ProductType; typeKey: MarketplaceItemTypeKey | null; outcome: string; description: string;
   creator: Creator; pricing: Pricing; compatibility: Compatibility; category: string; rating: number;
   reviewCount: number; usageCount: number; purchaseCount: number; updatedAt: string; version: string;
   featured?: boolean; trending?: boolean; verified: boolean; tags: string[];
 }
 export interface ProductDetail extends Product {
+  currentReleaseId?: string | null;
   packageFileCount: number | null; packageSizeBytes: number | null; benefits: string[];
   useCases: { title: string; description: string }[] | null;
   includedFiles: { name: string; description: string }[] | null;
@@ -135,4 +139,6 @@ export interface MarketplaceLibraryEntry {
 export interface MarketplaceCategory { name: string; slug: string; products: number; }
 export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; total: number; }
 export interface ProductPageResult { data: Product[]; meta: { page: number; limit: number; total: number; totalPages: number }; }
-export interface ProductFilters { q?: string; type?: string; category?: string; platform?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }
+export interface ProductFilters { q?: string; type?: string; category?: string; platform?: string; model?: string; community?: string; creator?: string; collection?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }
+export interface Community { id: string; slug: string; nameEn: string; nameFa: string | null; descriptionEn: string; descriptionFa: string | null; primaryPlatform: string; rulesEn: string; rulesFa: string | null; submissionGuidanceEn: string; submissionGuidanceFa: string | null; state: "ACTIVE" | "ARCHIVED"; accentColor: string; }
+export interface DiscoveryOptions { platforms: Array<{ key: string; name: string }>; models: Array<{ key: string; name: string }>; categories: Array<{ slug: string; name: string }>; communities: Community[]; }

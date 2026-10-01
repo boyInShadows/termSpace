@@ -4,6 +4,7 @@ import { hash } from "bcryptjs";
 import { createHash, randomBytes } from "node:crypto";
 import { categories as marketplaceCategoryNames, creators as marketplaceCreators, products as marketplaceProducts, reviews as marketplaceReviews, versions as marketplaceVersions } from "./marketplaceData.js";
 import { LEGACY_ITEM_TYPE_MAP, MARKETPLACE_DATABASE_ITEM_TYPES } from "../src/lib/marketplaceManifest.js";
+import { platformSchema, modelSchema } from "../src/lib/marketplaceCompatibility.js";
 
 const prisma = new PrismaClient();
 
@@ -632,7 +633,7 @@ async function main() {
       where: { slug: product.slug }, update: {}, create: {
         id: product.id, slug: product.slug, name: product.name, type: product.type, itemType, classificationRequired, outcome: product.outcome,
         description: product.description, priceMinor: product.pricing.amount * 100, currency: product.pricing.currency,
-        pricingModel: product.pricing.model, platforms: [...product.compatibility.platforms], models: [...product.compatibility.models],
+        pricingModel: product.pricing.model, platforms: product.compatibility.platforms.map((platform) => platformSchema.parse(platform)), models: product.compatibility.models.map((model) => modelSchema.parse(model)),
         rating: product.rating, reviewCount: product.reviewCount, usageCount: product.usageCount, version: product.version,
         featured: product.featured ?? false, trending: product.trending ?? false, verified: product.verified, tags: product.tags,
         creatorId: marketplaceCreatorIds.get(product.creator.handle)!, categoryId: marketplaceCategoryIds.get(product.category)!,

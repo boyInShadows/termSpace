@@ -12,6 +12,8 @@ import {
   Rating,
 } from "./product-parts";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
+import { useLocale } from "@/lib/locale-context";
+import { localePath } from "@/lib/i18n";
 export function ProductCard({
   product,
   variant = "compact",
@@ -20,6 +22,7 @@ export function ProductCard({
   variant?: "compact" | "expanded" | "list";
 }) {
   const { isFavorite, toggleFavorite } = useMarketplaceSession();
+  const { locale, fa } = useLocale();
   const saved = isFavorite(product.slug);
   return (
     <article
@@ -34,6 +37,7 @@ export function ProductCard({
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-wrap gap-2">
             <ProductTypeBadge type={product.type} />
+            {product.communities?.map((community) => <Link key={community.id} href={localePath(`/communities/${community.slug}`, locale)} className="text-xs text-primary hover:underline">{fa ? community.nameFa ?? community.nameEn : community.nameEn}</Link>)}
             {product.featured && <Badge variant="primary">Editor’s pick</Badge>}
             {product.trending && <Badge variant="warning">Trending</Badge>}
           </div>

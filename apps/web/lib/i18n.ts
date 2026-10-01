@@ -73,6 +73,10 @@ export const copy = {
     inboxEyebrow: "A quieter, better inbox",
     inboxTitle: "One useful release every Friday.",
     account: "Your account",
+    dashboard: {
+      title: "Dashboard", navigation: "Dashboard navigation", accountLibrary: "Account & library",
+      creator: "Creator workspace", connections: "Connections", verified: "Email verified",
+    },
     signedInAs: "Signed in as",
     signOut: "Sign out",
     accountIntro:
@@ -437,6 +441,10 @@ export const copy = {
     inboxEyebrow: "صندوق ورودی آرام‌تر و مفیدتر",
     inboxTitle: "هر جمعه یک انتشار مفید.",
     account: "حساب شما",
+    dashboard: {
+      title: "داشبورد", navigation: "ناوبری داشبورد", accountLibrary: "حساب و کتابخانه",
+      creator: "فضای سازنده", connections: "اتصال‌ها", verified: "ایمیل تأیید شده",
+    },
     signedInAs: "واردشده با",
     signOut: "خروج",
     accountIntro:

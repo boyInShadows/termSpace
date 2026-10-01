@@ -55,7 +55,7 @@ export function CreatorHub() {
   }
 
   if (session.loading) return <StatusCard title={t.creatorHub.title} message={t.creatorHub.loading} />;
-  if (!session.email) return <StatusCard title={t.creatorHub.title} message={t.creatorHub.signInRequired} action={<Link className={buttonVariants()} href={`${localePath("/account", locale)}?next=${encodeURIComponent(localePath("/creator", locale))}`}>{t.signIn}</Link>} />;
+  if (!session.email) return <StatusCard title={t.creatorHub.title} message={t.creatorHub.signInRequired} action={<Link className={buttonVariants()} href={`${localePath("/account", locale)}?next=${encodeURIComponent(localePath("/dashboard/creator", locale))}`}>{t.signIn}</Link>} />;
   if (!session.emailVerified) return <StatusCard title={t.creatorHub.title} message={t.creatorHub.verifyRequired} action={<Link className={buttonVariants()} href={localePath("/account/verify-email", locale)}>{t.verifyEmail}</Link>} />;
   if (profile === undefined && !error) return <StatusCard title={t.creatorHub.title} message={t.creatorHub.loading} />;
   if (profile && !profile.accessActive) return <StatusCard title={t.creatorHub.editTitle} message={t.creatorHub.accessRevoked} />;

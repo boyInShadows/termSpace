@@ -46,7 +46,7 @@ describe("ModerationQueue", () => {
     expect(await screen.findByRole("heading", { name: "Review Skill" })).toBeInTheDocument();
     expect(screen.getByText("Passed")).toBeInTheDocument();
     expect(screen.getByText("Pending")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Review submission/ })).toHaveAttribute("href", "/moderation/listings/product-1");
+    expect(screen.getByRole("link", { name: /Review submission/ })).toHaveAttribute("href", "/dashboard/moderation/listings/product-1");
   });
 
   it("does not call the queue API without a staff marketplace role", () => {

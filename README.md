@@ -171,6 +171,18 @@ as Blog: English uses `/`, while Persian uses `/fa` (for example `/fa/explore`
 and `/fa/account`). The web proxy strips the locale prefix internally, sets the
 request locale, and applies RTL document direction and Persian typography.
 
+The marketplace workspace is at `/dashboard` (`/fa/dashboard` in Persian).
+It contains account details, the acquired library, creator onboarding and listing
+management, provider connections, and role-restricted moderation. Sign-in and
+registration remain at `/account`; signed-in visitors continue into the dashboard.
+Old `/creator` and `/moderation` links redirect to their dashboard equivalents.
+
+Public communities, creator profiles, collections, compatibility discovery,
+and report/case/appeal workflows are documented in
+[Marketplace Discovery and Trust](docs/marketplace-discovery-and-trust.md).
+The isolated migration/API check is `npm run test:discovery --workspace @termspace/api`.
+Blog publishing remains in its separate staff administration area.
+
 ## Production subdomain deployment
 
 The intended production layout is one parent domain with two Next.js surfaces,

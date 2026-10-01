@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Switch from "@radix-ui/react-switch";
-import type { MarketplaceItemType, ProductFilters, ProductPageResult } from "@/lib/types";
+import type { DiscoveryOptions, MarketplaceItemType, ProductFilters, ProductPageResult } from "@/lib/types";
 import { ApiError, getProducts } from "@/lib/api";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { EmptyState } from "@/components/patterns/empty-state";
@@ -19,13 +19,15 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
-export function DiscoveryExperience({ initial, categories, itemTypes, initialFilters }: { initial: ProductPageResult; categories: string[]; itemTypes: MarketplaceItemType[]; initialFilters: ProductFilters }) {
+export function DiscoveryExperience({ initial, categories = [], options, itemTypes, initialFilters, initialError = null, fixedCommunity = false }: { initial: ProductPageResult; categories?: string[]; options?: DiscoveryOptions; itemTypes: MarketplaceItemType[]; initialFilters: ProductFilters; initialError?: string | null; fixedCommunity?: boolean }) {
   const { fa, t } = useLocale();
   const d = t.discovery;
   const [query, setQuery] = useState(initialFilters.q ?? "");
   const [type, setType] = useState<string>(initialFilters.type ?? "All");
   const [category, setCategory] = useState(initialFilters.category ?? "All");
   const [platform, setPlatform] = useState(initialFilters.platform ?? "All");
+  const [community, setCommunity] = useState(initialFilters.community ?? "All");
+  const [model, setModel] = useState(initialFilters.model ?? "All");
   const [verified, setVerified] = useState(false);
   const [minRating, setMinRating] = useState(0);
   const [sort, setSort] = useState(initialFilters.sort ?? "featured");
@@ -34,7 +36,7 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
   const [meta, setMeta] = useState(initial.meta);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError);
   const [retryNonce, setRetryNonce] = useState(0);
   const typeOptions = [{ value: "All", label: d.all }, ...itemTypes.map((item) => ({ value: item.key, label: fa ? item.fa : item.en }))];
   const selectedTypeLabel = typeOptions.find((option) => option.value === type)?.label ?? type;
@@ -48,7 +50,7 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
     const timer = window.setTimeout(async () => {
       setLoading(true); setError(null);
       try {
-        const next = await getProducts({ q: query, type, category, platform, verified, minRating, sort, page, limit: 12 }, controller.signal);
+        const next = await getProducts({ q: query, type, category, platform, model, community, creator: initialFilters.creator, verified, minRating, sort, page, limit: 12 }, controller.signal);
         setResult((current) => page === 1 ? next.data : [...current, ...next.data]); setMeta(next.meta);
       } catch (cause) {
         if (!controller.signal.aborted) {
@@ -59,7 +61,7 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
       finally { if (!controller.signal.aborted) setLoading(false); }
     }, 250);
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [d.connectionError, d.rateLimited, query, type, category, platform, verified, minRating, sort, page, retryNonce]);
+  }, [d.connectionError, d.rateLimited, query, type, category, platform, model, community, initialFilters.creator, verified, minRating, sort, page, retryNonce]);
   const change = (setter: (value: string) => void) => (value: string) => { setPage(1); setter(value); };
   const reset = () => {
     setPage(1);
@@ -67,6 +69,8 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
     setType("All");
     setCategory("All");
     setPlatform("All");
+    setModel("All");
+    if (!fixedCommunity) setCommunity("All");
     setVerified(false);
     setMinRating(0);
   };
@@ -74,20 +78,27 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
     type !== "All" && selectedTypeLabel,
     category !== "All" && category,
     platform !== "All" && platform,
+    community !== "All" && community,
+    model !== "All" && model,
     verified && "Verified",
     minRating > 0 && `${minRating}+ ${d.rating}`,
   ].filter(Boolean) as string[];
   const filters = (
     <div className="space-y-7">
+      {options && <>
+        {!fixedCommunity && <label className="block text-sm">{fa ? "جامعه" : "Community"}<select className="mt-2 w-full rounded border bg-surface p-2" value={community} onChange={(e) => change(setCommunity)(e.target.value)}><option value="All">{d.all}</option>{options.communities.map((item) => <option key={item.slug} value={item.slug}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}</select></label>}
+        <label className="block text-sm">{fa ? "مدل" : "Model"}<select className="mt-2 w-full rounded border bg-surface p-2" value={model} onChange={(e) => change(setModel)(e.target.value)}><option value="All">{d.all}</option>{options.models.map((item) => <option key={item.key} value={item.key}>{item.name}</option>)}</select></label>
+      </>}
       <FilterGroup
         label={d.category}
-        options={["All", ...categories]}
+        options={["All", ...(options ? options.categories.map((item) => item.slug) : categories)]}
+        labels={options && Object.fromEntries(options.categories.map((item) => [item.slug, item.name]))}
         value={category}
         setValue={change(setCategory)}
       />
       <FilterGroup
         label={d.compatibility}
-        options={[
+        options={options ? ["All", ...options.platforms.map((item) => item.key)] : [
           "All",
           "Claude",
           "ChatGPT",
@@ -96,6 +107,7 @@ export function DiscoveryExperience({ initial, categories, itemTypes, initialFil
           "VS Code",
           "Gemini",
         ]}
+        labels={options && Object.fromEntries(options.platforms.map((item) => [item.key, item.name]))}
         value={platform}
         setValue={change(setPlatform)}
       />
@@ -306,11 +318,13 @@ function FilterGroup({
   options,
   value,
   setValue,
+  labels,
 }: {
   label: string;
   options: (string | number)[];
   value: string | number;
   setValue: (x: string) => void;
+  labels?: Record<string, string>;
 }) {
   const { t } = useLocale();
   return (
@@ -330,7 +344,7 @@ function FilterGroup({
               onChange={() => setValue(String(o))}
               className="size-4 accent-[var(--primary)]"
             />
-            {o === "All" ? t.discovery.all : o === "Any" ? t.discovery.anyRating : o}
+            {o === "All" ? t.discovery.all : o === "Any" ? t.discovery.anyRating : labels?.[String(o)] ?? o}
           </label>
         ))}
       </div>

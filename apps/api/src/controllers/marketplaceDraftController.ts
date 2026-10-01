@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { MarketplaceListingState, Prisma } from "@prisma/client";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
+import { marketplacePlatforms, marketplaceModels } from "../lib/marketplaceCompatibility.js";
 import { createDraftReleaseManifest, PublishedVersionConflictError } from "../lib/marketplaceDraftPersistence.js";
 import {
   MARKETPLACE_DATABASE_ITEM_TYPES,
@@ -223,7 +224,7 @@ export async function listMarketplaceDraftOptions(_req: Request, res: Response) 
       orderBy: { nameEn: "asc" },
     }),
   ]);
-  res.json({ data: { categories, communities } });
+  res.json({ data: { categories, communities, platforms: marketplacePlatforms, models: marketplaceModels } });
 }
 
 function serializeDraft(result: Awaited<ReturnType<typeof saveDraftRevision>>) {

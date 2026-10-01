@@ -49,7 +49,7 @@ export function EmailVerification() {
     {resent && <p className="mt-3 text-sm text-primary" role="status">{t.verificationSent}</p>}
     <div className="mt-7 flex flex-wrap gap-3">
       {session.email && !session.emailVerified && state !== "verified" && <Button onClick={resend} disabled={resending || resent}>{resending ? t.wait : t.resendVerification}</Button>}
-      {(state === "verified" || session.emailVerified) && <Link className={buttonVariants()} href={localePath("/account", locale)}>{t.returnToAccount}</Link>}
+      {(state === "verified" || session.emailVerified) && <Link className={buttonVariants()} href={localePath("/dashboard", locale)}>{t.returnToAccount}</Link>}
       {!session.loading && !session.email && <Link className={buttonVariants()} href={localePath("/account", locale)}>{t.signIn}</Link>}
     </div>
   </section>;

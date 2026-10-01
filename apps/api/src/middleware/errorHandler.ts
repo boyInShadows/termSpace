@@ -2,6 +2,7 @@ import type { ErrorRequestHandler, RequestHandler } from "express";
 import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
 import multer from "multer";
+import { MarketplaceRequestError } from "../lib/marketplaceRequestError.js";
 
 /**
  * Centralized error handling.
@@ -23,6 +24,10 @@ export const notFoundHandler: RequestHandler = (req, res) => {
 };
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
+  if (err instanceof MarketplaceRequestError) {
+    res.status(err.status).json({ error: { code: err.code, message: err.message } });
+    return;
+  }
   if (err instanceof multer.MulterError) {
     const tooLarge = err.code === "LIMIT_FILE_SIZE";
     res.status(tooLarge ? 413 : 400).json({
@@ -61,6 +66,10 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
 
   // Prisma known errors
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === "P2034") {
+      res.status(409).json({ error: { code: "CONCURRENT_UPDATE", message: "The record changed; reload it before retrying" } });
+      return;
+    }
     if (err.code === "P2025") {
       res.status(404).json({
         error: { code: "NOT_FOUND", message: "Resource not found" },

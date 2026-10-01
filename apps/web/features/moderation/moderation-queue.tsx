@@ -87,7 +87,7 @@ export function ModerationQueue() {
             <p className="mt-1 text-sm text-muted-foreground">@{listing.creator.handle} · {listing.type} · {date.format(new Date(listing.updatedAt))}</p>
             {listing.selfOwned && <p className="mt-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300"><ShieldAlert className="size-4" />{t.moderation.selfOwned}</p>}
           </div>
-          <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/moderation/listings/${listing.id}`, locale)}>{t.moderation.review}{locale === "fa" ? <ArrowLeft className="size-4" /> : <ArrowRight className="size-4" />}</Link>
+          <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/dashboard/moderation/listings/${listing.id}`, locale)}>{t.moderation.review}{locale === "fa" ? <ArrowLeft className="size-4" /> : <ArrowRight className="size-4" />}</Link>
         </div>
         <dl className="mt-5 grid gap-3 border-t pt-4 sm:grid-cols-2 lg:grid-cols-5">
           <Fact label={t.moderation.revision} value={listing.proposedRevision === null ? "—" : number.format(listing.proposedRevision)} />
