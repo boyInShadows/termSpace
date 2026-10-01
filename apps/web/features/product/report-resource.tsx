@@ -40,6 +40,7 @@ export function ReportResource({ product }: { product: ProductDetail }) {
       id: review.id,
       label: `${fa ? "نظر" : "Review"}: ${review.author}`,
     })),
+    ...product.reviews.flatMap((review) => review.response ? [{ type: "RESPONSE", id: review.response.id, label: `${fa ? "پاسخ سازنده" : "Creator response"}: ${review.author}` }] : []),
   ];
   return (
     <details className="mt-6 rounded-lg border p-4">

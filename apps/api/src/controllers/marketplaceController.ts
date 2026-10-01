@@ -153,18 +153,23 @@ export async function getMarketplaceProduct(req: Request, res: Response) {
         where: { releaseManifests: { some: { publishedAt: { not: null } } } },
         orderBy: { releasedAt: "desc" },
       },
-      reviews: { where: { published: true, trustCases: { none: { ...activeRestrictions } } }, orderBy: [{ createdAt: "desc" }, { id: "asc" }] },
+      reviews: { where: { status: "PUBLISHED", trustCases: { none: activeRestrictions } }, select: {
+        id: true, userId: true, author: true, rating: true, body: true, createdAt: true,
+        response: { select: { id: true, body: true, status: true, trustCases: { where: activeRestrictions, select: { id: true } } } },
+      }, orderBy: [{ createdAt: "desc" }, { id: "asc" }] },
       approvedSnapshot: { select: { releaseManifestId: true } },
     },
   });
   if (!product) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Product not found" } }); return; }
-  const related = await prisma.marketplaceProduct.findMany({
+  const [related, completedOrders] = await Promise.all([prisma.marketplaceProduct.findMany({
     where: { ...publicProductWhere, id: { not: product.id }, categoryId: product.categoryId },
     include: productInclude,
     orderBy: [{ featured: "desc" }, { usageCount: "desc" }],
     take: 3,
-  });
-  res.json({ data: { ...serializeProduct(product), approvedSnapshot: undefined, currentReleaseId: product.approvedSnapshot?.releaseManifestId ?? null, versions: product.versions, reviews: product.reviews, related: related.map(serializeProduct) } });
+  }), prisma.marketplaceOrder.findMany({ where: { productId: product.id, status: "completed", userId: { in: product.reviews.flatMap((review) => review.userId ? [review.userId] : []) } }, select: { userId: true } })]);
+  const verifiedUsers = new Set(completedOrders.map((order) => order.userId));
+  res.json({ data: { ...serializeProduct(product), approvedSnapshot: undefined, currentReleaseId: product.approvedSnapshot?.releaseManifestId ?? null, versions: product.versions,
+    reviews: product.reviews.map(({ userId, response, ...review }) => ({ ...review, verifiedUse: Boolean(userId && verifiedUsers.has(userId)), response: response?.status === "PUBLISHED" && !response.trustCases.length ? { id: response.id, body: response.body } : null })), related: related.map(serializeProduct) } });
 }
 
 export async function listMarketplaceFavorites(_req: Request, res: Response) {

@@ -94,7 +94,7 @@ export interface MarketplaceModerationPreview {
 export interface Pricing { amountMinor: number; currency: "USD"; model: "one-time" | "free"; }
 export interface Compatibility { platforms: string[]; models: string[]; platformLabels?: Record<string, string>; }
 export interface ProductVersion { id: string; version: string; releasedAt: string; notes: string; }
-export interface Review { id: string; author: string; rating: number; createdAt: string; body: string; verifiedPurchase: boolean; }
+export interface Review { id: string; author: string; rating: number; createdAt: string; body: string; verifiedUse: boolean; response: { id: string; body: string } | null; }
 export interface Product {
   communities?: Array<{ id: string; slug: string; nameEn: string; nameFa: string | null }>;
   id: string; slug: string; name: string; type: ProductType; typeKey: MarketplaceItemTypeKey | null; outcome: string; description: string;

@@ -16,6 +16,7 @@ import { Footer } from "@/components/layout/footer";
 import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "@/features/product/product-actions";
 import { ReportResource } from "@/features/product/report-resource";
+import { ReviewEditor } from "@/features/product/review-editor";
 import {
   CompatibilityBadges,
   CreatorIdentity,
@@ -183,6 +184,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </Section>
             <Section title={`Reviews · ${product.rating}`} id="reviews">
               <div className="space-y-6">
+                <ReviewEditor slug={product.slug} />
                 {reviews.map((r) => (
                   <article key={r.id} className="border-b pb-6">
                     <div className="flex justify-between gap-3">
@@ -194,11 +196,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                           <Rating rating={r.rating} /> · {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(r.createdAt))}
                         </p>
                       </div>
-                      {r.verifiedPurchase && (
+                      {r.verifiedUse && (
                         <Badge variant="success">{fa ? "استفادهٔ تأییدشده" : "Verified use"}</Badge>
                       )}
                     </div>
                     <p className="mt-3 max-w-2xl">{r.body}</p>
+                    {r.response && <div className="mt-4 rounded-lg bg-muted p-4"><strong className="text-sm">{fa ? "پاسخ سازنده" : "Creator response"}</strong><p className="mt-2">{r.response.body}</p></div>}
                   </article>
                 ))}
               </div>

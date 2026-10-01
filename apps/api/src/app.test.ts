@@ -163,6 +163,7 @@ describe("API", () => {
       versions: [], reviews: [],
     });
     prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceOrder.findMany.mockResolvedValue([]);
 
     const response = await request(createApp()).get("/api/marketplace/products/published-skill");
 

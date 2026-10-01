@@ -263,6 +263,42 @@ it.skipIf(!enabled)(
       .set("Idempotency-Key", "batch-acquisition-1")
       .send({});
     expect(acquired.status, JSON.stringify(acquired.body)).toBe(201);
+    const reviewPath = "/api/marketplace/products/batch-skill/review";
+    const submitReview = (name: string, body: object) => request(app).put(reviewPath).set("Origin", "http://localhost:3000").set("Cookie", cookies[name]).send(body);
+    const reviewBody = { rating: 4, body: "Useful in real work, with clear installation steps." };
+    expect((await submitReview("creator", reviewBody)).status).toBe(403);
+    expect((await submitReview("moderator", reviewBody)).status).toBe(403);
+    const submitted = await submitReview("reader", reviewBody);
+    expect(submitted.status, JSON.stringify(submitted.body)).toBe(201);
+    expect(submitted.body.data.status).toBe("HELD");
+    const reviewId = submitted.body.data.id as string;
+    expect((await request(app).get("/api/marketplace/products/batch-skill")).body.data.reviewCount).toBe(0);
+    expect((await request(app).get("/api/marketplace/moderation/reviews").set("Cookie", cookies.reader)).status).toBe(403);
+    const held = await request(app).get("/api/marketplace/moderation/reviews?page=1&limit=20").set("Cookie", cookies.moderator);
+    expect(held.body.data[0].id).toBe(reviewId);
+    const approvedReview = await call("moderator", `moderation/reviews/${reviewId}`, { action: "APPROVE", expectedVersion: 0, publicReason: "Eligible first-hand review." });
+    expect(approvedReview.status, JSON.stringify(approvedReview.body)).toBe(200);
+    expect((await request(app).get("/api/marketplace/products/batch-skill")).body.data).toMatchObject({ rating: 4, reviewCount: 1, reviews: [{ id: reviewId, verifiedUse: true }] });
+    expect((await submitReview("reader", { ...reviewBody, expectedVersion: 0 })).status).toBe(409);
+    await db.readerUser.update({ where: { id: users.reader }, data: { createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) } });
+    await db.marketplaceOrder.update({ where: { id: acquired.body.data.id }, data: { createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) } });
+    const editedReview = await submitReview("reader", { rating: 5, body: "Useful in real work, with clear installation and examples.", expectedVersion: 1 });
+    expect(editedReview.status, JSON.stringify(editedReview.body)).toBe(200);
+    expect((await request(app).get("/api/marketplace/products/batch-skill")).body.data.rating).toBe(5);
+    const response = await request(app).put(`/api/marketplace/creator/reviews/${reviewId}/response`).set("Origin", "http://localhost:3000").set("Cookie", cookies.creator).send({ body: "Thanks for using this resource." });
+    expect(response.status, JSON.stringify(response.body)).toBe(200);
+    expect((await request(app).get("/api/marketplace/products/batch-skill")).body.data.reviews[0].response.body).toContain("Thanks");
+    const reviewReport = await call("administrator", "reports", { targetType: "REVIEW", targetId: reviewId, reason: "ABUSE", explanation: "Please investigate this review." });
+    expect(reviewReport.status, JSON.stringify(reviewReport.body)).toBe(201);
+    const reviewCase = await db.marketplaceTrustCase.findFirstOrThrow({ where: { reviewId } });
+    expect(reviewCase.ownerUserId).toBe(users.reader);
+    const restrictedReview = await call("moderator", `moderation/cases/${reviewCase.id}`, { expectedVersion: 0, action: "RESTRICT", severity: "STANDARD", publicReason: "Review held for policy investigation." });
+    expect(restrictedReview.status, JSON.stringify(restrictedReview.body)).toBe(200);
+    expect((await request(app).get("/api/marketplace/products/batch-skill")).body.data.reviewCount).toBe(0);
+    const reviewAppeal = await call("reader", `cases/${reviewCase.id}/appeals`, { decisionEventId: restrictedReview.body.data.restrictions[0].decisionEventId, explanation: "The review describes my own use.", evidence: "The completed acquisition is in my account." });
+    expect(reviewAppeal.status, JSON.stringify(reviewAppeal.body)).toBe(201);
+    expect((await call("reviewer", `moderation/appeals/${reviewAppeal.body.data.id}`, { expectedVersion: 1, outcome: "REVERSED", publicReason: "Confirmed completed acquisition and first-hand use." })).status).toBe(200);
+    expect((await request(app).get("/api/marketplace/products/batch-skill")).body.data.reviewCount).toBe(1);
     const reportBody = {
       targetType: "RELEASE",
       targetId: releaseId,

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Request, Response } from "express";
 import { Prisma, type MarketplaceTrustTarget } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
+import { refreshProductRating } from "../lib/marketplaceRatings.js";
 import { MarketplaceRequestError as RequestError } from "../lib/marketplaceRequestError.js";
 import {
   activeRestrictions,
@@ -66,10 +67,16 @@ async function reportTarget(
       return { creatorId: creator.id, ownerUserId: creator.ownerUserId };
   } else if (targetType === "REVIEW") {
     const review = await tx.marketplaceReview.findFirst({
-      where: { id: targetId, published: true, product: publicProductWhere },
-      select: { id: true },
+      where: { id: targetId, status: "PUBLISHED", trustCases: { none: activeRestrictions }, product: publicProductWhere },
+      select: { id: true, userId: true },
     });
-    if (review) return { reviewId: review.id };
+    if (review) return { reviewId: review.id, ownerUserId: review.userId };
+  } else if (targetType === "RESPONSE") {
+    const response = await tx.marketplaceReviewResponse.findFirst({
+      where: { id: targetId, status: "PUBLISHED", trustCases: { none: activeRestrictions }, review: { status: "PUBLISHED", trustCases: { none: activeRestrictions }, product: publicProductWhere } },
+      select: { id: true, creatorUserId: true },
+    });
+    if (response) return { responseId: response.id, ownerUserId: response.creatorUserId };
   }
   throw new RequestError(
     404,
@@ -405,20 +412,7 @@ async function refreshRating(tx: Prisma.TransactionClient, reviewId: string) {
     where: { id: reviewId },
     select: { productId: true },
   });
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${review.productId}, 2))`;
-  const aggregate = await tx.marketplaceReview.aggregate({
-    where: {
-      productId: review.productId,
-      published: true,
-      trustCases: { none: activeRestrictions },
-    },
-    _avg: { rating: true },
-    _count: true,
-  });
-  await tx.marketplaceProduct.update({
-    where: { id: review.productId },
-    data: { rating: aggregate._avg.rating ?? 0, reviewCount: aggregate._count },
-  });
+  await refreshProductRating(tx, review.productId);
 }
 
 export async function appealMarketplaceCase(req: Request, res: Response) {

@@ -634,7 +634,7 @@ async function main() {
         id: product.id, slug: product.slug, name: product.name, type: product.type, itemType, classificationRequired, outcome: product.outcome,
         description: product.description, priceMinor: product.pricing.amount * 100, currency: product.pricing.currency,
         pricingModel: product.pricing.model, platforms: product.compatibility.platforms.map((platform) => platformSchema.parse(platform)), models: product.compatibility.models.map((model) => modelSchema.parse(model)),
-        rating: product.rating, reviewCount: product.reviewCount, usageCount: product.usageCount, version: product.version,
+        rating: 0, reviewCount: 0, usageCount: product.usageCount, version: product.version,
         featured: product.featured ?? false, trending: product.trending ?? false, verified: product.verified, tags: product.tags,
         creatorId: marketplaceCreatorIds.get(product.creator.handle)!, categoryId: marketplaceCategoryIds.get(product.category)!,
         updatedAt: new Date(product.updatedAt), published: false, ...productDetails,
@@ -674,9 +674,11 @@ async function main() {
   }
   for (const review of marketplaceReviews) {
     await prisma.marketplaceReview.upsert({
-      where: { id: review.id }, update: {}, create: { id: review.id, productId: detailProduct.id, author: review.author, rating: review.rating, body: review.body, verifiedPurchase: review.verifiedPurchase, published: true, createdAt: new Date(review.date) },
+      where: { id: review.id }, update: {}, create: { id: review.id, productId: detailProduct.id, author: review.author, rating: review.rating, body: review.body, status: "PUBLISHED", createdAt: new Date(review.date) },
     });
   }
+  const reviewTotals = await prisma.marketplaceReview.aggregate({ where: { productId: detailProduct.id, status: "PUBLISHED" }, _avg: { rating: true }, _count: true });
+  await prisma.marketplaceProduct.update({ where: { id: detailProduct.id }, data: { rating: reviewTotals._avg.rating ?? 0, reviewCount: reviewTotals._count } });
 
   console.log(`Seeding complete. Created ${created} new articles and prepared ${marketplaceProducts.length} marketplace products.`);
 }

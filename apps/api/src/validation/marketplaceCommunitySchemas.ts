@@ -48,6 +48,7 @@ export const reportSchema = z
       "PLACEMENT",
       "CREATOR",
       "REVIEW",
+      "RESPONSE",
     ]),
     targetId: z.string().min(1).max(100),
     reason: z.enum([

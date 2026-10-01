@@ -258,6 +258,9 @@ model ReaderUser {
   progress               ReaderReadingProgress[]
   productFavorites       MarketplaceFavorite[]
   marketplaceOrders      MarketplaceOrder[]
+  marketplaceReviews     MarketplaceReview[]
+  reviewResponses        MarketplaceReviewResponse[]
+  reviewAudits           MarketplaceReviewAudit[]
   marketplaceRoleGrants  MarketplaceRoleGrant[]
   marketplaceRoleEvents  MarketplaceRoleEvent[]
   emailVerifications     ReaderEmailVerification[]
@@ -1004,18 +1007,59 @@ model MarketplaceWorkflowReleaseDetails {
 }
 
 model MarketplaceReview {
-  id               String                 @id @default(cuid())
-  productId        String
-  author           String
-  rating           Int
-  body             String
-  verifiedPurchase Boolean                @default(false)
-  published        Boolean                @default(false)
-  createdAt        DateTime               @default(now())
-  product          MarketplaceProduct     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  trustCases       MarketplaceTrustCase[]
+  id          String                    @id @default(cuid())
+  productId   String
+  userId      String?
+  author      String
+  rating      Int
+  body        String
+  bodyHash    String?
+  status      MarketplaceReviewStatus   @default(HELD)
+  version     Int                       @default(0)
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  product     MarketplaceProduct        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  user        ReaderUser?               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  response    MarketplaceReviewResponse?
+  audits      MarketplaceReviewAudit[]
+  trustCases  MarketplaceTrustCase[]
 
-  @@index([productId, published, createdAt])
+  @@unique([userId, productId])
+  @@index([productId, status, createdAt])
+  @@index([bodyHash, createdAt])
+}
+
+enum MarketplaceReviewStatus {
+  PUBLISHED
+  HELD
+  WITHDRAWN
+}
+
+model MarketplaceReviewResponse {
+  id            String                  @id @default(cuid())
+  reviewId      String                  @unique
+  creatorUserId String
+  body          String
+  status        MarketplaceReviewStatus @default(PUBLISHED)
+  version       Int                     @default(0)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  review        MarketplaceReview       @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  creatorUser   ReaderUser              @relation(fields: [creatorUserId], references: [id], onDelete: Restrict)
+  trustCases    MarketplaceTrustCase[]
+}
+
+model MarketplaceReviewAudit {
+  id          String            @id @default(cuid())
+  reviewId    String
+  actorUserId String?
+  action      String
+  snapshot    Json
+  createdAt   DateTime          @default(now())
+  review      MarketplaceReview @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  actor       ReaderUser?       @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([reviewId, createdAt])
 }
 
 model MarketplaceFavorite {
@@ -1129,6 +1173,7 @@ enum MarketplaceTrustTarget {
   PLACEMENT
   CREATOR
   REVIEW
+  RESPONSE
   USER
 }
 
@@ -1157,6 +1202,7 @@ model MarketplaceTrustCase {
   releaseId    String?
   placementId  String?
   reviewId     String?
+  responseId   String?
   state        MarketplaceCaseState           @default(NEW)
   severity     MarketplaceCaseSeverity        @default(STANDARD)
   version      Int                            @default(0)
@@ -1169,6 +1215,7 @@ model MarketplaceTrustCase {
   release      MarketplaceReleaseManifest?    @relation(fields: [releaseId], references: [id], onDelete: Restrict)
   placement    MarketplaceCommunityPlacement? @relation(fields: [placementId], references: [id], onDelete: Restrict)
   review       MarketplaceReview?             @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  response     MarketplaceReviewResponse?     @relation(fields: [responseId], references: [id], onDelete: Restrict)
   reports      MarketplaceReport[]
   restrictions MarketplaceRestriction[]
   events       MarketplaceTrustEvent[]

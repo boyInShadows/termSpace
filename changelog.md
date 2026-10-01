@@ -2,6 +2,10 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-02
+
+- Completed the five Ratings and Reviews backlog items. Signed-in, email-verified readers with completed acquisitions can post one review per listing, edit it, or withdraw it. Public ratings and counts derive from published, unrestricted reviews; verified-use badges derive from completed orders, so legacy seeded reviews remain unverified. New and edited reviews are held for young accounts or acquisitions, exact-copy content, and repeated edits. Creators can respond to published reviews from `/dashboard/creator/reviews`; staff can decide held reviews from `/dashboard/moderation/reviews`. Reviews and creator responses can be reported through the existing trust cases, with reviewer-owned appeals and reversible rating recalculation. Review inputs and queues support English and Persian. Verification: root typecheck, tests, and builds; full migration chain and authenticated review/appeal scenario on an isolated PostgreSQL database.
+
 ## 2026-10-01
 
 - Completed the five Discovery and Community backlog items: snapshot-scoped

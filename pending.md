@@ -8,20 +8,7 @@ foundations and the remaining scope of every item. Published editorial content
 was not verified against a running database.
 The Discovery and Community batch is complete; see
 [`docs/marketplace-discovery-and-trust.md`](docs/marketplace-discovery-and-trust.md).
-
-## Marketplace — P0 Ratings and Reviews
-
-- Link each review to an authenticated user instead of storing an arbitrary
-  author string, enforce one active review per user and item, and support edits.
-- Permit ratings only after a meaningful acquisition or other defined
-  eligibility event, and label verified use consistently.
-- Calculate rating and review counts transactionally from published reviews.
-  Creator manifest validation already excludes client-supplied aggregate fields.
-- Add eligible review submission, moderation, creator responses, and accessible
-  rating inputs in both English and Persian. Public display and reporting of
-  existing reviews now exist; reviewer appeals await authenticated review authors.
-- Add abuse controls for review spam, coordinated manipulation, and creator
-  conflicts of interest, following ADR 0004 review eligibility and hold rules.
+The Ratings and Reviews batch is complete; see `changelog.md`.
 
 ## Marketplace — P1 Operations and Growth
 
