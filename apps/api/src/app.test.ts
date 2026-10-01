@@ -23,6 +23,7 @@ const prismaMock = vi.hoisted(() => ({
   marketplaceCommunityPlacementRequest: { createMany: vi.fn() },
   marketplaceCommunityPlacement: { updateMany: vi.fn(), upsert: vi.fn() },
   marketplacePlacementEvent: { create: vi.fn() },
+  marketplaceRestriction: { findFirst: vi.fn() },
   marketplaceListingLifecycleEvent: { create: vi.fn(), findMany: vi.fn() },
   marketplaceOrder: { count: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn() },
   marketplaceCreator: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
@@ -81,6 +82,7 @@ describe("API", () => {
     process.env.LOCAL_AUTO_VERIFY_EMAIL = "false";
     prismaMock.$transaction.mockResolvedValue([]);
     prismaMock.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
+    prismaMock.marketplaceRestriction.findFirst.mockResolvedValue(null);
     prismaMock.article.updateMany.mockResolvedValue({ count: 0 });
   });
 

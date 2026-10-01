@@ -30,10 +30,10 @@ const productLifecycleSelect = {
   approvedSnapshotId: true,
   proposedSnapshotId: true,
   proposedSnapshot: {
-    select: { content: true, schemaVersion: true, communityRequests: { select: { communityId: true } }, releaseManifest: { select: { id: true, publishedAt: true, sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true } } },
+    select: { content: true, schemaVersion: true, communityRequests: { select: { communityId: true } }, releaseManifest: { select: { id: true, publishedAt: true, sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true, sourceCheckedAt: true } } },
   },
   approvedSnapshot: {
-    select: { schemaVersion: true, releaseManifest: { select: { sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true } } },
+    select: { schemaVersion: true, releaseManifest: { select: { sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true, sourceCheckedAt: true } } },
   },
   lifecycleEvents: {
     where: { action: "ARCHIVED" as const },
@@ -96,6 +96,13 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
       }
       if (["SUBMIT", "PUBLISH", "REINSTATE"].includes(action) || (action === "RESTORE" && product.lifecycleResumePublished)) {
         const sourceSnapshot = action === "SUBMIT" || action === "PUBLISH" ? product.proposedSnapshot : product.approvedSnapshot;
+        const accountRestriction = action !== "SUBMIT" && product.creator.ownerUserId
+          ? await tx.marketplaceRestriction.findFirst({
+              where: { case: { targetType: "USER", ownerUserId: product.creator.ownerUserId } },
+              orderBy: { createdAt: "desc" },
+              select: { createdAt: true },
+            })
+          : null;
         const restoringGrandfatheredLegacyPublication = (action === "REINSTATE" || action === "RESTORE")
           && product.lifecycleResumePublished
           && sourceSnapshot?.schemaVersion === 0;
@@ -103,7 +110,15 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
           || Boolean(sourceSnapshot?.releaseManifest?.sourceResolvedAt
             && sourceSnapshot.releaseManifest.ownershipVerifiedAt
             && sourceSnapshot.releaseManifest.sourceCheckStatus === "VERIFIED");
-        if (!sourceVerified) {
+        const verifiedAfterRestriction = !accountRestriction || Boolean(
+          sourceSnapshot?.releaseManifest?.ownershipVerifiedAt
+          && sourceSnapshot.releaseManifest.ownershipVerifiedAt >= accountRestriction.createdAt
+          && sourceSnapshot.releaseManifest.sourceCheckedAt
+          && sourceSnapshot.releaseManifest.sourceCheckedAt >= accountRestriction.createdAt
+          && sourceSnapshot.releaseManifest.sourceCheckStatus === "VERIFIED"
+          && sourceSnapshot.releaseManifest.sourceResolvedAt,
+        );
+        if (!sourceVerified || !verifiedAfterRestriction) {
           throw new LifecycleRequestError(409, "SOURCE_VERIFICATION_REQUIRED", "Resolve the exact release source and verify ownership before this transition");
         }
       }

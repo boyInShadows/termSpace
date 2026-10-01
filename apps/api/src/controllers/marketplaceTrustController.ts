@@ -390,7 +390,7 @@ export async function decideMarketplaceCase(req: Request, res: Response) {
           severity,
           publicReason,
           version: { increment: 1 },
-          ...(action === "DISMISS" ? { dedupKey: null } : {}),
+          ...(["DISMISS", "LIFT"].includes(action) ? { dedupKey: null } : {}),
         },
         select: publicCaseSelect,
       });
@@ -500,8 +500,9 @@ export async function decideMarketplaceAppeal(req: Request, res: Response) {
         correlationId: randomUUID(),
       },
     });
+    let closedByReversal = false;
     if (outcome === "REVERSED") {
-      await tx.marketplaceRestriction.updateMany({
+      const revoked = await tx.marketplaceRestriction.updateMany({
         where: {
           caseId: item.id,
           decisionEventId: original.id,
@@ -513,11 +514,17 @@ export async function decideMarketplaceAppeal(req: Request, res: Response) {
           revokedByEventId: event.id,
         },
       });
+      closedByReversal = revoked.count === item.restrictions.length;
       if (item.reviewId) await refreshRating(tx, item.reviewId);
     }
     await tx.marketplaceTrustCase.update({
       where: { id: item.id },
-      data: { state: "ACTIONED", publicReason, version: { increment: 1 } },
+      data: {
+        state: "ACTIONED",
+        publicReason,
+        version: { increment: 1 },
+        ...(closedByReversal ? { dedupKey: null } : {}),
+      },
     });
     return tx.marketplaceAppeal.update({
       where: { id },

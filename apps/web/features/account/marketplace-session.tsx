@@ -25,7 +25,14 @@ export function MarketplaceSessionProvider({ children }: { children: React.React
       setEmail(session.data.user.email);
       setEmailVerified(session.data.user.emailVerified);
       setMarketplaceRoles(session.data.user.marketplaceRoles);
-      setFavorites(new Set(await getFavorites()));
+      try {
+        setFavorites(new Set(await getFavorites()));
+      } catch (cause) {
+        setFavorites(new Set());
+        if (!(cause instanceof ApiError && cause.status === 403)) {
+          console.error("Marketplace favorites load failed", cause);
+        }
+      }
     } catch (cause) {
       if (!(cause instanceof ApiError && cause.status === 401)) {
         console.error("Marketplace session load failed", cause);

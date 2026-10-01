@@ -161,14 +161,14 @@ it.skipIf(!enabled)(
       include: { proposedSnapshot: true },
     });
     const releaseId = product.proposedSnapshot!.releaseManifestId!;
-    const lifecycle = async (name: string, action: string) => {
+    const lifecycle = async (name: string, action: string, extra: object = {}) => {
       const current = await db.marketplaceProduct.findUniqueOrThrow({
         where: { id: productId },
       });
       return call(
         name,
         `${name === "creator" ? "creator" : "moderation"}/products/${productId}/lifecycle`,
-        { action, expectedVersion: current.lifecycleVersion },
+        { action, expectedVersion: current.lifecycleVersion, ...extra },
       );
     };
     expect((await lifecycle("creator", "SUBMIT")).status).toBe(409);
@@ -367,6 +367,11 @@ it.skipIf(!enabled)(
         )
       ).status,
     ).toBe(200);
+    expect((await call("reader", "reports", reportBody)).status).toBe(201);
+    const followupCase = await db.marketplaceTrustCase.findUniqueOrThrow({
+      where: { dedupKey: `RELEASE:${releaseId}` },
+    });
+    expect(followupCase.id).not.toBe(caseRecord.id);
     expect(
       (
         await request(app)
@@ -514,6 +519,40 @@ it.skipIf(!enabled)(
           .set("Cookie", cookies.reader)
       ).status,
     ).toBe(200);
+    expect((await lifecycle("moderator", "SUSPEND", {
+      publicReason: "Pause this listing during an account investigation.",
+    })).status).toBe(200);
+    const creatorCase = await call("administrator", "moderation/account-cases", {
+      userId: users.creator,
+      publicReason: "Investigate the creator account before restoration.",
+    });
+    expect(creatorCase.status).toBe(201);
+    expect((await call("administrator", `moderation/cases/${creatorCase.body.data.id}`, {
+      expectedVersion: 0,
+      action: "RESTRICT",
+      severity: "HIGH",
+      publicReason: "Temporarily restrict this creator account.",
+    })).status).toBe(200);
+    expect((await request(app).get("/api/marketplace/cases").set("Cookie", cookies.creator)).status).toBe(200);
+    expect((await call("administrator", `moderation/cases/${creatorCase.body.data.id}`, {
+      expectedVersion: 1,
+      action: "LIFT",
+      severity: "HIGH",
+      publicReason: "Account review complete; listing checks remain required.",
+    })).status).toBe(200);
+    expect((await db.marketplaceTrustCase.findUniqueOrThrow({
+      where: { id: creatorCase.body.data.id },
+    })).dedupKey).toBeNull();
+    expect((await lifecycle("moderator", "REINSTATE")).status).toBe(409);
+    await db.marketplaceReleaseManifest.update({
+      where: { id: releaseId },
+      data: {
+        sourceCheckStatus: "VERIFIED",
+        sourceCheckedAt: new Date(),
+        ownershipVerifiedAt: new Date(),
+      },
+    });
+    expect((await lifecycle("moderator", "REINSTATE")).status).toBe(200);
     expect(
       (
         await request(app)
