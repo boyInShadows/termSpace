@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { MarketplaceRequestError } from "../lib/marketplaceRequestError.js";
+import { recordMarketplaceInstallationView } from "./marketplaceAnalyticsController.js";
 import { marketplacePlatforms, marketplaceModels, platformSchema, modelSchema } from "../lib/marketplaceCompatibility.js";
 import { publicProductWhere, publicCreatorWhere, publicCreatorSelect, publicPlacementWhere, activeRestrictions } from "../lib/marketplaceVisibility.js";
 import {
@@ -157,7 +158,10 @@ export async function getMarketplaceProduct(req: Request, res: Response) {
         id: true, userId: true, author: true, rating: true, body: true, createdAt: true,
         response: { select: { id: true, body: true, status: true, trustCases: { where: activeRestrictions, select: { id: true } } } },
       }, orderBy: [{ createdAt: "desc" }, { id: "asc" }] },
-      approvedSnapshot: { select: { releaseManifestId: true } },
+      approvedSnapshot: { select: { releaseManifestId: true, releaseManifest: { select: {
+        runtimeRequirements: true, accountRequirements: true, operatingSystems: true, dependencyRequirements: true,
+        sourceCheckStatus: true, compatibility: { select: { platformKey: true, models: true, notes: true } },
+      } } } },
     },
   });
   if (!product) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Product not found" } }); return; }
@@ -168,7 +172,15 @@ export async function getMarketplaceProduct(req: Request, res: Response) {
     take: 3,
   }), prisma.marketplaceOrder.findMany({ where: { productId: product.id, status: "completed", userId: { in: product.reviews.flatMap((review) => review.userId ? [review.userId] : []) } }, select: { userId: true } })]);
   const verifiedUsers = new Set(completedOrders.map((order) => order.userId));
-  res.json({ data: { ...serializeProduct(product), approvedSnapshot: undefined, currentReleaseId: product.approvedSnapshot?.releaseManifestId ?? null, versions: product.versions,
+  res.json({ data: { ...serializeProduct(product), approvedSnapshot: undefined, currentReleaseId: product.approvedSnapshot?.releaseManifestId ?? null,
+    currentRequirements: product.approvedSnapshot?.releaseManifest ? {
+      runtimes: product.approvedSnapshot.releaseManifest.runtimeRequirements,
+      accounts: product.approvedSnapshot.releaseManifest.accountRequirements,
+      operatingSystems: product.approvedSnapshot.releaseManifest.operatingSystems,
+      dependencies: product.approvedSnapshot.releaseManifest.dependencyRequirements,
+      sourceStatus: product.approvedSnapshot.releaseManifest.sourceCheckStatus.toLowerCase(),
+      compatibility: product.approvedSnapshot.releaseManifest.compatibility,
+    } : null, versions: product.versions,
     reviews: product.reviews.map(({ userId, response, ...review }) => ({ ...review, verifiedUse: Boolean(userId && verifiedUsers.has(userId)), response: response?.status === "PUBLISHED" && !response.trustCases.length ? { id: response.id, body: response.body } : null })), related: related.map(serializeProduct) } });
 }
 
@@ -303,6 +315,7 @@ export async function getMarketplaceInstallation(req: Request, res: Response) {
     res.status(409).json({ error: { code: "INSTALLATION_UNAVAILABLE", message: "Installation is unavailable while this resource or its pinned release is restricted" } });
     return;
   }
+  await recordMarketplaceInstallationView(entitlement.product.id).catch((error) => console.error("Marketplace installation metric failed", error));
   res.json({ data: {
     acquisition: { id: entitlement.id, status: entitlement.status, acquiredAt: entitlement.createdAt },
     product: { slug: entitlement.product.slug, name: entitlement.product.name },

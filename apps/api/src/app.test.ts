@@ -26,6 +26,7 @@ const prismaMock = vi.hoisted(() => ({
   marketplaceRestriction: { findFirst: vi.fn() },
   marketplaceListingLifecycleEvent: { create: vi.fn(), findMany: vi.fn() },
   marketplaceOrder: { count: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn() },
+  marketplaceDailyMetric: { upsert: vi.fn() },
   marketplaceCreator: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceRoleGrant: { findUnique: vi.fn(), create: vi.fn() },
   marketplaceRoleEvent: { create: vi.fn() },

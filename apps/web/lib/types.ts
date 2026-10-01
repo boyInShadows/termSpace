@@ -53,7 +53,7 @@ export interface MarketplaceProviderConnection {
   revokedAt: string | null; createdAt: string; updatedAt: string;
 }
 export interface CreatorReleaseHistory {
-  listing: { id: string; slug: string; name: string; state: string; lifecycleVersion: number; published: boolean };
+  listing: { id: string; slug: string; name: string; state: string; lifecycleVersion: number; published: boolean; maintenanceStatus?: "ACTIVE" | "DEPRECATED" | "ABANDONED"; maintenanceNote?: string | null };
   releases: CreatorReleaseRecord[];
 }
 export interface MarketplaceModerationQueueListing {
@@ -100,10 +100,12 @@ export interface Product {
   id: string; slug: string; name: string; type: ProductType; typeKey: MarketplaceItemTypeKey | null; outcome: string; description: string;
   creator: Creator; pricing: Pricing; compatibility: Compatibility; category: string; rating: number;
   reviewCount: number; usageCount: number; purchaseCount: number; updatedAt: string; version: string;
+  maintenanceStatus?: "ACTIVE" | "DEPRECATED" | "ABANDONED"; maintenanceNote?: string | null;
   featured?: boolean; trending?: boolean; verified: boolean; tags: string[];
 }
 export interface ProductDetail extends Product {
   currentReleaseId?: string | null;
+  currentRequirements?: null | { runtimes: string[]; accounts: string[]; operatingSystems: string[]; dependencies: string[]; sourceStatus: string; compatibility: Array<{ platformKey: string; models: string[]; notes: string | null }> };
   packageFileCount: number | null; packageSizeBytes: number | null; benefits: string[];
   useCases: { title: string; description: string }[] | null;
   includedFiles: { name: string; description: string }[] | null;
@@ -138,6 +140,7 @@ export interface MarketplaceLibraryEntry {
 }
 export interface MarketplaceCategory { name: string; slug: string; products: number; }
 export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; total: number; }
+export interface CuratedCollection { slug: string; titleEn: string; titleFa: string | null; descriptionEn: string; descriptionFa: string | null; scope: "STAFF" | "COMMUNITY"; community: { slug: string; nameEn: string; nameFa: string | null } | null; count: number; }
 export interface ProductPageResult { data: Product[]; meta: { page: number; limit: number; total: number; totalPages: number }; }
 export interface ProductFilters { q?: string; type?: string; category?: string; platform?: string; model?: string; community?: string; creator?: string; collection?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }
 export interface Community { id: string; slug: string; nameEn: string; nameFa: string | null; descriptionEn: string; descriptionFa: string | null; primaryPlatform: string; rulesEn: string; rulesFa: string | null; submissionGuidanceEn: string; submissionGuidanceFa: string | null; state: "ACTIVE" | "ARCHIVED"; accentColor: string; }

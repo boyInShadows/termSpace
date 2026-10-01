@@ -232,6 +232,8 @@ export async function listOwnedMarketplaceReleases(req: Request, res: Response) 
       lifecycleVersion: true,
       published: true,
       approvedSnapshotId: true,
+      maintenanceStatus: true,
+      maintenanceNote: true,
       proposedSnapshotId: true,
       creator: { select: { ownerUserId: true } },
       versions: {
@@ -283,6 +285,8 @@ export async function listOwnedMarketplaceReleases(req: Request, res: Response) 
       state: product.lifecycleState.toLowerCase(),
       lifecycleVersion: product.lifecycleVersion,
       published: product.published,
+      maintenanceStatus: product.maintenanceStatus,
+      maintenanceNote: product.maintenanceNote,
     },
     releases: product.versions.flatMap((version) => version.releaseManifests.map((release) => {
       const snapshot = release.listingSnapshots[0] ?? null;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, CheckCircle2, Layers3, RotateCcw } from "lucide-react";
-import { getCreatorReleases, requestSourceCheck } from "@/lib/api";
+import { getCreatorReleases, requestSourceCheck, request } from "@/lib/api";
 import type { CreatorReleaseHistory, CreatorReleaseRecord } from "@/lib/types";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
@@ -67,6 +67,16 @@ export function CreatorReleaseManager({ productId }: { productId: string }) {
       </Link>
     </header>
     <p className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">{copy.immutableNotice}</p>
+    <form key={`${history.listing.maintenanceStatus}:${history.listing.maintenanceNote}`} className="mt-6 space-y-3 rounded-xl border bg-surface p-5" onSubmit={async (event) => {
+      event.preventDefault(); const fields = new FormData(event.currentTarget); setBusy("maintenance"); setActionMessage("");
+      try { await request(`/api/marketplace/creator/products/${productId}/maintenance`, { method: "PUT", body: JSON.stringify({ status: fields.get("status"), note: String(fields.get("note") ?? "").trim() || null }) }); setActionMessage(locale === "fa" ? "وضعیت نگهداری ذخیره شد." : "Maintenance status saved."); setReload((value) => value + 1); }
+      catch (cause) { setActionMessage((cause as Error).message); } finally { setBusy(null); }
+    }}>
+      <h2 className="font-semibold">{locale === "fa" ? "وضعیت نگهداری" : "Maintenance status"}</h2>
+      <label className="block text-sm">{locale === "fa" ? "وضعیت" : "Status"}<select name="status" defaultValue={history.listing.maintenanceStatus ?? "ACTIVE"} className="mt-2 block w-full rounded border bg-background p-2"><option value="ACTIVE">{locale === "fa" ? "فعال" : "Active"}</option><option value="DEPRECATED">{locale === "fa" ? "منسوخ" : "Deprecated"}</option><option value="ABANDONED">{locale === "fa" ? "رهاشده" : "Abandoned"}</option></select></label>
+      <label className="block text-sm">{locale === "fa" ? "توضیح عمومی" : "Public explanation"}<textarea name="note" defaultValue={history.listing.maintenanceNote ?? ""} maxLength={1000} className="mt-2 block min-h-20 w-full rounded border bg-background p-2" /></label>
+      <Button disabled={busy !== null}>{locale === "fa" ? "ذخیره وضعیت" : "Save status"}</Button>
+    </form>
     <Link className={`${buttonVariants({ variant: "secondary" })} mt-6`} href={localePath("/dashboard/connections", locale)}>{copy.connectionsTitle}</Link>
     {actionMessage && <p className="mt-4 text-sm" role="status">{actionMessage}</p>}
     {history.releases.length === 0

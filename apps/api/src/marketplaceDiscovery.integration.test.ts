@@ -299,6 +299,32 @@ it.skipIf(!enabled)(
     expect(reviewAppeal.status, JSON.stringify(reviewAppeal.body)).toBe(201);
     expect((await call("reviewer", `moderation/appeals/${reviewAppeal.body.data.id}`, { expectedVersion: 1, outcome: "REVERSED", publicReason: "Confirmed completed acquisition and first-hand use." })).status).toBe(200);
     expect((await request(app).get("/api/marketplace/products/batch-skill")).body.data.reviewCount).toBe(1);
+    expect((await request(app).post("/api/marketplace/products/batch-skill/view").set("Origin", "http://localhost:3000")).status).toBe(204);
+    const analytics = await request(app).get("/api/marketplace/creator/analytics?page=1&limit=20").set("Cookie", cookies.creator);
+    expect(analytics.status, JSON.stringify(analytics.body)).toBe(200);
+    expect(analytics.body.data[0]).toMatchObject({ views: 1, acquisitions: 1, rating: 5 });
+    expect(analytics.body.data[0].versions[0].version).toBe("1.0.0");
+    expect(analytics.body.data[0].daily.some((day: { rating: number | null }) => day.rating === 5)).toBe(true);
+    const maintenancePath = `/api/marketplace/creator/products/${productId}/maintenance`;
+    expect((await request(app).put(maintenancePath).set("Origin", "http://localhost:3000").set("Cookie", cookies.reader).send({ status: "ABANDONED", note: "No maintainer is available." })).status).toBe(403);
+    const maintenance = await request(app).put(maintenancePath).set("Origin", "http://localhost:3000").set("Cookie", cookies.creator).send({ status: "DEPRECATED", note: "Use the replacement release for new installations." });
+    expect(maintenance.status, JSON.stringify(maintenance.body)).toBe(200);
+    expect((await request(app).get("/api/marketplace/products/batch-skill")).body.data.maintenanceStatus).toBe("DEPRECATED");
+    const curatedBody = { titleEn: "Trusted tools", titleFa: "ابزارهای منتخب", descriptionEn: "Tested tools for the Codex community.", descriptionFa: null, scope: "STAFF", communitySlug: null, published: true, position: 1, productIds: [productId] };
+    const saveCurated = (name: string, slug: string, body: object) => request(app).put(`/api/marketplace/moderation/collections/${slug}`).set("Origin", "http://localhost:3000").set("Cookie", cookies[name]).send(body);
+    expect((await saveCurated("moderator", "trusted-tools", curatedBody)).status).toBe(403);
+    expect((await saveCurated("administrator", "trusted-tools", curatedBody)).status).toBe(200);
+    expect((await saveCurated("moderator", "codex-tools", { ...curatedBody, scope: "COMMUNITY", communitySlug: "codex" })).status).toBe(200);
+    expect((await request(app).get("/api/marketplace/collections")).body.data).toHaveLength(2);
+    expect((await request(app).get("/api/marketplace/collections/codex-tools")).body.data.items[0].id).toBe(productId);
+    await db.marketplaceListingLifecycleEvent.create({ data: { productId, previousState: "PUBLISHED", resultingState: "PUBLISHED", action: "PUBLISHED", actorType: "CREATOR", actorUserId: users.creator, reasonCode: "UPDATE", publicReason: "A new release is ready.", correlationId: "batch-member-update" } });
+    const memberNotices = await request(app).get("/api/marketplace/notifications").set("Cookie", cookies.reader);
+    expect(memberNotices.body.data.some((item: { text: string }) => item.text === "A new release is ready.")).toBe(true);
+    expect((await request(app).post("/api/marketplace/notifications/read").set("Origin", "http://localhost:3000").set("Cookie", cookies.reader)).status).toBe(204);
+    expect((await request(app).get("/api/marketplace/notifications").set("Cookie", cookies.reader)).body.data[0].read).toBe(true);
+    const creatorNotices = await request(app).get("/api/marketplace/creator/notifications").set("Cookie", cookies.creator);
+    expect(creatorNotices.status, JSON.stringify(creatorNotices.body)).toBe(200);
+    expect(creatorNotices.body.data.some((item: { kind: string }) => item.kind === "REVIEW")).toBe(true);
     const reportBody = {
       targetType: "RELEASE",
       targetId: releaseId,
@@ -472,6 +498,7 @@ it.skipIf(!enabled)(
       (await request(app).get("/api/marketplace/products?community=codex")).body
         .data,
     ).toHaveLength(0);
+    expect((await request(app).get("/api/marketplace/collections/codex-tools")).body.data.items).toHaveLength(0);
     expect(
       (await request(app).get("/api/marketplace/products/batch-skill")).status,
     ).toBe(200);

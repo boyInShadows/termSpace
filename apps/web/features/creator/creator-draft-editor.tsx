@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft, ArrowRight, Save } from "lucide-react";
@@ -125,6 +125,10 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [step, setStep] = useState(0);
+  const [reviewPreview, setReviewPreview] = useState<Record<string, string>>({});
+  const stepTitles = [copy.identityTitle, copy.presentationTitle, copy.releaseTitle, copy.requirementsTitle, copy.licenseTitle, copy.typeDetailsTitle, locale === "fa" ? "بازبینی" : "Review"];
 
   useEffect(() => {
     let active = true;
@@ -154,6 +158,69 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
     return () => window.removeEventListener("beforeunload", guard);
   }, [dirty]);
 
+  useEffect(() => {
+    if (productId || loading) return;
+    const timer = window.setTimeout(() => formRef.current?.querySelector<HTMLElement>(`[data-step="${step}"] h2`)?.focus(), 0);
+    return () => window.clearTimeout(timer);
+  }, [step, loading, productId]);
+
+  useEffect(() => {
+    if (productId || loading || !formRef.current) return;
+    const savedDraft = sessionStorage.getItem("termspace:new-listing-draft");
+    if (!savedDraft) return;
+    try {
+      const draft = JSON.parse(savedDraft) as { fields: [string, string][]; step: number; type: MarketplaceItemTypeKey; sourceKind: SourceKind; customLicense: boolean };
+      let restoreTimer: number | undefined;
+      const timer = window.setTimeout(() => {
+        setType(draft.type); setSourceKind(draft.sourceKind); setCustomLicense(draft.customLicense); setStep(Math.min(6, Math.max(0, draft.step)));
+        restoreTimer = window.setTimeout(() => {
+        const form = formRef.current;
+        if (!form) return;
+        const values = new Map<string, string[]>();
+        for (const [name, value] of draft.fields) values.set(name, [...(values.get(name) ?? []), value]);
+        for (const control of Array.from(form.elements)) {
+          if (!(control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement || control instanceof HTMLSelectElement) || !control.name) continue;
+          if (control instanceof HTMLInputElement && (control.type === "checkbox" || control.type === "radio")) control.checked = values.get(control.name)?.includes(control.value) ?? false;
+          else if (values.has(control.name)) control.value = values.get(control.name)![0];
+        }
+        if (draft.step === 6) {
+          const data = new FormData(form);
+          setReviewPreview({ name: text(data, "nameEn"), slug: text(data, "slug"), type: draft.type, version: text(data, "releaseVersion"), source: draft.sourceKind, compatibility: text(data, "compatibility"), license: text(data, "license") });
+        }
+        setDirty(true);
+        }, 0);
+      }, 0);
+      return () => { window.clearTimeout(timer); if (restoreTimer !== undefined) window.clearTimeout(restoreTimer); };
+    } catch { sessionStorage.removeItem("termspace:new-listing-draft"); }
+  }, [loading, productId]);
+
+  function preserveProgress(form: HTMLFormElement, nextStep = step) {
+    if (productId) return;
+    const fields = new FormData(form);
+    try { sessionStorage.setItem("termspace:new-listing-draft", JSON.stringify({ fields: Array.from(fields.entries()), step: nextStep, type: fields.get("itemType") || type, sourceKind: fields.get("sourceKind") || sourceKind, customLicense: fields.has("customLicense") })); }
+    catch { /* The active form still retains progress when browser storage is unavailable. */ }
+  }
+
+  function advance(form: HTMLFormElement) {
+    const section = form.querySelector(`[data-step="${step}"]`);
+    const invalid = section?.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(":invalid");
+    if (invalid) { invalid.reportValidity(); return; }
+    if (step === 0) {
+      const data = new FormData(form);
+      if (!text(data, "descriptionEn") && !text(data, "descriptionFa")) {
+        const field = form.elements.namedItem(locale === "fa" ? "descriptionFa" : "descriptionEn");
+        if (field instanceof HTMLTextAreaElement) { field.setCustomValidity(copy.descriptionRequired); field.reportValidity(); field.focus(); }
+        return;
+      }
+    }
+    const next = step + 1;
+    if (next === 6) {
+      const data = new FormData(form);
+      setReviewPreview({ name: text(data, "nameEn"), slug: text(data, "slug"), type, version: text(data, "releaseVersion"), source: sourceKind, compatibility: text(data, "compatibility"), license: text(data, "license") });
+    }
+    setStep(next); preserveProgress(form, next);
+  }
+
   const manifest = useMemo(() => record?.draft?.content as ManifestLike | undefined, [record]);
   const listing = manifest?.listing ?? {};
   const release = manifest?.release ?? {};
@@ -174,6 +241,13 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!productId && step < 6) { advance(event.currentTarget); return; }
+    if (!productId) {
+      for (let index = 0; index < 6; index += 1) {
+        const invalid = event.currentTarget.querySelector(`[data-step="${index}"] :invalid`);
+        if (invalid) { setStep(index); window.setTimeout(() => (invalid as HTMLElement).focus(), 0); return; }
+      }
+    }
     const data = new FormData(event.currentTarget);
     if (!text(data, "descriptionEn") && !text(data, "descriptionFa")) {
       const fieldName = locale === "fa" ? "descriptionFa" : "descriptionEn";
@@ -198,6 +272,7 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
       setRecord(next);
       setDirty(false);
       setSaved(true);
+      if (!productId) sessionStorage.removeItem("termspace:new-listing-draft");
       if (!productId) router.replace(localePath(`/dashboard/creator/listings/${next.id}/edit`, locale));
     } catch (cause) {
       if (cause instanceof ApiError && cause.code === "LISTING_VERSION_CONFLICT") setError(copy.versionConflict);
@@ -230,7 +305,9 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
       {record && <p className="mt-3 text-sm text-muted-foreground">{copy.revision.replace("{revision}", String(record.draft?.revision ?? 0)).replace("{version}", String(record.version))}</p>}
     </header>
 
-    <form className="mt-8 space-y-6" onSubmit={submit} onChange={() => { setDirty(true); setSaved(false); }}>
+    {!productId && <nav aria-label={locale === "fa" ? "مراحل ثبت مورد" : "Listing steps"} className="mt-8 flex flex-wrap gap-2">{stepTitles.map((title, index) => <span key={title} aria-current={step === index ? "step" : undefined} className={`rounded-full px-3 py-2 text-xs ${step === index ? "bg-primary text-primary-foreground" : "bg-muted"}`}>{index + 1}. {title}</span>)}</nav>}
+    <form ref={formRef} noValidate={!productId} className="mt-8 space-y-6" onSubmit={submit} onChange={(event) => { setDirty(true); setSaved(false); preserveProgress(event.currentTarget); }}>
+      <div data-step="0" hidden={!productId && step !== 0}>
       <FormSection title={copy.identityTitle} intro={copy.identityIntro}>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label={copy.slug}><Input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={stringValue(listing.slug)} dir="ltr" /></Field>
@@ -253,12 +330,16 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
           {options.communities.map((community) => <label key={community.slug} className="flex min-h-11 items-start gap-3 rounded-lg border p-3 text-sm"><input className="mt-1" type="checkbox" name="communitySlugs" value={community.slug} defaultChecked={(listing.communitySlugs as string[] | undefined)?.includes(community.slug)} /><span><strong className="block">{locale === "fa" ? community.nameFa ?? community.nameEn : community.nameEn}</strong><span className="text-xs text-muted-foreground">{locale === "fa" ? community.descriptionFa ?? community.descriptionEn : community.descriptionEn}</span></span></label>)}
         </div></fieldset>
       </FormSection>
+      </div>
 
+      <div data-step="1" hidden={!productId && step !== 1}>
       <FormSection title={copy.presentationTitle} intro={copy.presentationIntro}>
         <Field label={copy.screenshots} hint={copy.screenshotHint}><Textarea name="screenshots" defaultValue={screenshots.map((item) => `${item.url} | ${item.alt.en} | ${item.alt.fa ?? ""}`).join("\n")} dir="ltr" /></Field>
         <div className="mt-5 grid gap-5 sm:grid-cols-3"><Field label={copy.documentationUrl}><Input name="documentationUrl" type="url" defaultValue={stringValue(listing.documentationUrl)} dir="ltr" /></Field><Field label={copy.supportUrl}><Input name="supportUrl" type="url" defaultValue={stringValue(listing.supportUrl)} dir="ltr" /></Field><Field label={copy.issueTrackerUrl}><Input name="issueTrackerUrl" type="url" defaultValue={stringValue(listing.issueTrackerUrl)} dir="ltr" /></Field></div>
       </FormSection>
+      </div>
 
+      <div data-step="2" hidden={!productId && step !== 2}>
       <FormSection title={copy.releaseTitle} intro={copy.releaseIntro}>
         <div className="grid gap-5 sm:grid-cols-2"><Field label={copy.version}><Input name="releaseVersion" required defaultValue={stringValue(release.version)} dir="ltr" /></Field><Field label={copy.sourceKind}><select name="sourceKind" value={sourceKind} onChange={(event) => setSourceKind(event.target.value as SourceKind)} className={selectClass}><option value="github_repository">GitHub repository</option><option value="github_release">GitHub release</option><option value="npm">npm</option></select></Field></div>
         <SourceFields key={sourceKind} kind={sourceKind} source={source} copy={copy} />
@@ -266,26 +347,35 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
         <div className="mt-5"><Field label={copy.compatibility} hint={copy.compatibilityHint}><Textarea name="compatibility" required defaultValue={compatibility.map((item) => `${item.platform} | ${item.models.join(", ")} | ${item.notes ?? ""}`).join("\n")} dir="ltr" />{options.platforms && <p className="mt-2 text-xs text-muted-foreground" dir="ltr">{options.platforms.map((item) => `${item.name}: ${item.key}`).join(" · ")}<br />{options.models?.map((item) => `${item.name}: ${item.key}`).join(" · ")}</p>}</Field></div>
         <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.installationMethod}><select name="installationMethod" required defaultValue={stringValue(installation.method) || "manual"} className={selectClass}>{["manual", "npm", "git", "download", "container", "hosted"].map((item) => <option key={item}>{item}</option>)}</select></Field><Field label={copy.installationInstructions} hint={copy.lineHint}><Textarea name="installationInstructions" required defaultValue={listValue(installation.instructions)} /></Field></div>
       </FormSection>
+      </div>
 
+      <div data-step="3" hidden={!productId && step !== 3}>
       <FormSection title={copy.requirementsTitle} intro={copy.requirementsIntro}>
         <div className="grid gap-5 sm:grid-cols-2"><Field label={copy.runtimes} hint={copy.lineHint}><Textarea name="runtimes" defaultValue={listValue(requirements.runtimes)} /></Field><Field label={copy.accounts} hint={copy.lineHint}><Textarea name="accounts" defaultValue={listValue(requirements.accounts)} /></Field><Field label={copy.operatingSystems} hint={copy.lineHint}><Textarea name="operatingSystems" defaultValue={listValue(requirements.operatingSystems)} /></Field><Field label={copy.dependencies} hint={copy.lineHint}><Textarea name="dependencies" defaultValue={listValue(requirements.dependencies)} /></Field></div>
         <div className="mt-5"><Field label={copy.environmentVariables} hint={copy.environmentHint}><Textarea name="environmentVariables" defaultValue={environmentVariables.map((item) => `${item.name} | ${item.purpose} | ${item.required} | ${item.sensitive}`).join("\n")} dir="ltr" /></Field></div>
         <div className="mt-5"><Field label={copy.permissions} hint={copy.permissionHint}><Textarea name="permissions" defaultValue={permissions.map((item) => `${item.capability} | ${item.required} | ${item.scope ?? ""} | ${item.destinations.join(",")} | ${item.purpose}`).join("\n")} dir="ltr" /></Field><p className="mt-2 text-xs text-muted-foreground">{copy.permissionKeys}: {permissionCapabilities.join(", ")}</p></div>
       </FormSection>
+      </div>
 
+      <div data-step="4" hidden={!productId && step !== 4}>
       <FormSection title={copy.licenseTitle} intro={copy.licenseIntro}>
-        <label className="flex min-h-11 items-center gap-3 text-sm font-medium"><input type="checkbox" checked={customLicense} onChange={(event) => setCustomLicense(event.target.checked)} />{copy.customLicense}</label>
+        <label className="flex min-h-11 items-center gap-3 text-sm font-medium"><input name="customLicense" type="checkbox" checked={customLicense} onChange={(event) => setCustomLicense(event.target.checked)} />{copy.customLicense}</label>
         <div className="mt-4"><Field label={customLicense ? copy.customLicenseUrl : copy.licenseIdentifier}><Input key={customLicense ? "custom" : "spdx"} name="license" required defaultValue={customLicense ? stringValue(license.customUrl) : stringValue(license.identifier)} dir="ltr" /></Field></div>
         <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.releaseDocumentationUrl}><Input name="releaseDocumentationUrl" type="url" defaultValue={stringValue(release.documentationUrl)} dir="ltr" /></Field><Field label={copy.releaseSupportUrl}><Input name="releaseSupportUrl" type="url" defaultValue={stringValue(release.supportUrl)} dir="ltr" /></Field></div>
       </FormSection>
+      </div>
 
+      <div data-step="5" hidden={!productId && step !== 5}>
       <FormSection title={copy.typeDetailsTitle} intro={copy.typeDetailsIntro}>
         <div className="grid gap-5 sm:grid-cols-2">{detailFields[type].map((field) => <DetailInput key={`${type}-${field.key}`} field={field} locale={locale} value={details[field.key]} />)}</div>
       </FormSection>
+      </div>
+
+      {!productId && step === 6 && <section data-step="6" className="rounded-2xl border bg-surface p-5 sm:p-7"><h2 tabIndex={-1} className="editorial text-2xl">{stepTitles[6]}</h2><dl className="mt-5 grid gap-3 sm:grid-cols-2">{Object.entries(reviewPreview).map(([key, value]) => <div key={key}><dt className="text-xs font-semibold uppercase text-muted-foreground">{key}</dt><dd className="whitespace-pre-wrap break-words">{value || "—"}</dd></div>)}</dl></section>}
 
       <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-xl border bg-surface/95 p-4 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between">
         <div>{error && <p id="draft-errors" tabIndex={-1} className="flex items-start gap-2 text-sm text-destructive" role="alert"><AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />{error}</p>}{saved && <p className="text-sm text-emerald-700" role="status">{copy.saved}</p>}</div>
-        <div className="flex gap-3"><Link className={buttonVariants({ variant: "secondary" })} href={localePath("/dashboard/creator", locale)}>{copy.cancel}</Link><Button disabled={saving}><Save className="size-4" aria-hidden="true" />{saving ? copy.saving : copy.save}</Button></div>
+        <div className="flex gap-3">{!productId && step > 0 && <Button type="button" variant="secondary" onClick={() => { const previous = step - 1; setStep(previous); preserveProgress(formRef.current!, previous); }}>{locale === "fa" ? "قبلی" : "Previous"}</Button>}{!productId && step < 6 ? <Button type="button" onClick={() => advance(formRef.current!)}>{locale === "fa" ? "بعدی" : "Next"}</Button> : <><Link className={buttonVariants({ variant: "secondary" })} href={localePath("/dashboard/creator", locale)}>{copy.cancel}</Link><Button disabled={saving}><Save className="size-4" aria-hidden="true" />{saving ? copy.saving : copy.save}</Button></>}</div>
       </div>
     </form>
   </div>;
@@ -306,7 +396,7 @@ function DetailInput({ field, locale, value }: { field: DetailField; locale: "en
 }
 
 function FormSection({ title, intro, children }: { title: string; intro: string; children: React.ReactNode }) {
-  return <section className="rounded-2xl border bg-surface p-5 sm:p-7"><h2 className="editorial text-2xl">{title}</h2><p className="mt-1 text-sm text-muted-foreground">{intro}</p><div className="mt-6">{children}</div></section>;
+  return <section className="rounded-2xl border bg-surface p-5 sm:p-7"><h2 tabIndex={-1} className="editorial text-2xl">{title}</h2><p className="mt-1 text-sm text-muted-foreground">{intro}</p><div className="mt-6">{children}</div></section>;
 }
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) { return <label className="block text-sm font-medium">{label}{hint && <span className="ms-2 text-xs font-normal text-muted-foreground">{hint}</span>}<span className="mt-2 block">{children}</span></label>; }
 function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) { return <textarea {...props} className="min-h-28 w-full rounded-md border border-input bg-surface px-3 py-3 text-sm placeholder:text-muted-foreground/75 hover:border-border-strong focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20" />; }

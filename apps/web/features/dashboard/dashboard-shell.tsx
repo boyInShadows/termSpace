@@ -32,10 +32,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     { href: "/dashboard", label: t.dashboard.accountLibrary },
     { href: "/dashboard/creator", label: t.dashboard.creator },
     { href: "/dashboard/cases", label: fa ? "پرونده‌ها و اعتراض‌ها" : "Cases and appeals" },
+    { href: "/dashboard/notifications", label: fa ? "اعلان‌ها" : "Notifications" },
     ...(canCreate ? [{ href: "/dashboard/creator/collections", label: fa ? "مجموعه‌ها" : "Collections" }, { href: "/dashboard/creator/placements", label: fa ? "درخواست‌های جامعه" : "Placements" }, { href: "/dashboard/creator/reviews", label: fa ? "نظرها" : "Reviews" }] : []),
     ...(canCreate ? [{ href: "/dashboard/connections", label: t.dashboard.connections }] : []),
+    ...(canCreate ? [{ href: "/dashboard/creator/analytics", label: fa ? "آمار" : "Analytics" }] : []),
     ...(canModerate ? [{ href: "/dashboard/moderation", label: t.moderation.nav }] : []),
-    ...(canModerate ? [{ href: "/dashboard/moderation/placements", label: fa ? "بررسی جایگاه‌ها" : "Placement review" }, { href: "/dashboard/moderation/cases", label: fa ? "بررسی پرونده‌ها" : "Case review" }, { href: "/dashboard/moderation/reviews", label: fa ? "بررسی نظرها" : "Review moderation" }] : []),
+    ...(canModerate ? [{ href: "/dashboard/moderation/placements", label: fa ? "بررسی جایگاه‌ها" : "Placement review" }, { href: "/dashboard/moderation/cases", label: fa ? "بررسی پرونده‌ها" : "Case review" }, { href: "/dashboard/moderation/reviews", label: fa ? "بررسی نظرها" : "Review moderation" }, { href: "/dashboard/moderation/collections", label: fa ? "مجموعه‌های منتخب" : "Curated collections" }] : []),
     ...(session.marketplaceRoles.includes("administrator") ? [{ href: "/dashboard/moderation/communities", label: fa ? "مدیریت جامعه‌ها" : "Communities" }] : []),
   ];
 

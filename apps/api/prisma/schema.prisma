@@ -253,6 +253,8 @@ model ReaderUser {
   emailVerifiedAt        DateTime?
   createdAt              DateTime                               @default(now())
   updatedAt              DateTime                               @updatedAt
+  memberNotificationsReadAt DateTime?
+  creatorNotificationsReadAt DateTime?
   sessions               ReaderSession[]
   bookmarks              ReaderBookmark[]
   progress               ReaderReadingProgress[]
@@ -272,6 +274,7 @@ model ReaderUser {
   marketplaceReports     MarketplaceReport[]
   marketplaceAppeals     MarketplaceAppeal[]
   marketplaceTrustEvents MarketplaceTrustEvent[]
+  curatedCollections     MarketplaceCuratedCollection[]
 }
 
 enum TransactionalEmailStatus {
@@ -446,6 +449,7 @@ model MarketplaceCommunity {
   placementRequests    MarketplaceCommunityPlacementRequest[]
   placements           MarketplaceCommunityPlacement[]
   accentColor          String                                 @default("#0f766e")
+  curatedCollections   MarketplaceCuratedCollection[]
 
   @@index([state, nameEn])
   @@index([primaryPlatform, state])
@@ -473,6 +477,8 @@ model MarketplaceProduct {
   models                   String[]
   rating                   Decimal                                @default(0) @db.Decimal(2, 1)
   reviewCount              Int                                    @default(0)
+  maintenanceStatus        MarketplaceMaintenanceStatus           @default(ACTIVE)
+  maintenanceNote          String?
   usageCount               Int                                    @default(0)
   purchaseCount            Int                                    @default(0)
   version                  String
@@ -516,6 +522,8 @@ model MarketplaceProduct {
   communityPlacements      MarketplaceCommunityPlacement[]
   collectionItems          MarketplaceCollectionItem[]
   trustCases               MarketplaceTrustCase[]
+  dailyMetrics             MarketplaceDailyMetric[]
+  curatedItems             MarketplaceCuratedCollectionItem[]
 
   @@index([published, featured, usageCount])
   @@index([published, type])
@@ -537,6 +545,25 @@ enum MarketplaceListingState {
   REJECTED
   SUSPENDED
   ARCHIVED
+}
+
+enum MarketplaceMaintenanceStatus {
+  ACTIVE
+  DEPRECATED
+  ABANDONED
+}
+
+model MarketplaceDailyMetric {
+  productId           String
+  day                 DateTime @db.Date
+  views               Int      @default(0)
+  installationViews   Int      @default(0)
+  ratingSnapshot      Decimal? @db.Decimal(2, 1)
+  reviewCountSnapshot Int?
+  product             MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@id([productId, day])
+  @@index([day])
 }
 
 enum MarketplaceLifecycleActorType {
@@ -1162,6 +1189,44 @@ model MarketplaceCollectionItem {
   position     Int
   collection   MarketplaceCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   product      MarketplaceProduct    @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@id([collectionId, productId])
+  @@unique([collectionId, position])
+}
+
+enum MarketplaceCuratedScope {
+  STAFF
+  COMMUNITY
+}
+
+model MarketplaceCuratedCollection {
+  id            String                           @id @default(cuid())
+  slug          String                           @unique
+  titleEn       String
+  titleFa       String?
+  descriptionEn String
+  descriptionFa String?
+  scope         MarketplaceCuratedScope
+  communityId   String?
+  curatorUserId String
+  published     Boolean                          @default(false)
+  position      Int                              @default(0)
+  createdAt     DateTime                         @default(now())
+  updatedAt     DateTime                         @updatedAt
+  community     MarketplaceCommunity?            @relation(fields: [communityId], references: [id], onDelete: Restrict)
+  curator       ReaderUser                       @relation(fields: [curatorUserId], references: [id], onDelete: Restrict)
+  items         MarketplaceCuratedCollectionItem[]
+
+  @@index([published, position])
+  @@index([communityId, published])
+}
+
+model MarketplaceCuratedCollectionItem {
+  collectionId String
+  productId    String
+  position     Int
+  collection   MarketplaceCuratedCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  product      MarketplaceProduct           @relation(fields: [productId], references: [id], onDelete: Restrict)
 
   @@id([collectionId, productId])
   @@unique([collectionId, position])

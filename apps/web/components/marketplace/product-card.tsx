@@ -40,6 +40,7 @@ export function ProductCard({
             {product.communities?.map((community) => <Link key={community.id} href={localePath(`/communities/${community.slug}`, locale)} className="text-xs text-primary hover:underline">{fa ? community.nameFa ?? community.nameEn : community.nameEn}</Link>)}
             {product.featured && <Badge variant="primary">Editor’s pick</Badge>}
             {product.trending && <Badge variant="warning">Trending</Badge>}
+            {product.maintenanceStatus && product.maintenanceStatus !== "ACTIVE" && <Badge variant="warning">{fa ? product.maintenanceStatus === "DEPRECATED" ? "منسوخ" : "رهاشده" : product.maintenanceStatus === "DEPRECATED" ? "Deprecated" : "Abandoned"}</Badge>}
           </div>
           <Button
             variant="ghost"

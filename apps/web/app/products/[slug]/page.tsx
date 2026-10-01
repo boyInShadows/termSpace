@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "@/features/product/product-actions";
 import { ReportResource } from "@/features/product/report-resource";
 import { ReviewEditor } from "@/features/product/review-editor";
+import { ProductViewTracker } from "@/features/product/product-view-tracker";
 import {
   CompatibilityBadges,
   CreatorIdentity,
@@ -63,6 +64,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const reviews = product.reviews;
   return (
     <>
+      <ProductViewTracker slug={product.slug} />
       <Header />
       <main className="container-page py-8">
         <ReportResource product={product} />
@@ -82,6 +84,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <h1 className="editorial mt-5 max-w-3xl text-5xl font-medium leading-none sm:text-6xl">
               {product.name}
             </h1>
+            {product.maintenanceStatus && product.maintenanceStatus !== "ACTIVE" && <p role="status" className="mt-5 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm"><strong>{fa ? product.maintenanceStatus === "DEPRECATED" ? "منسوخ" : "رهاشده" : product.maintenanceStatus === "DEPRECATED" ? "Deprecated" : "Abandoned"}</strong>{product.maintenanceNote && <> · {product.maintenanceNote}</>}</p>}
             <p className="mt-5 max-w-2xl text-xl leading-8 text-muted-foreground">
               {product.outcome}
             </p>
@@ -165,6 +168,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <p className="mt-2 text-sm">{fa ? "منبع را به کتابخانهٔ خود اضافه کنید تا پیوند تأییدشده، مرجع تغییرناپذیر و مراحل نصب همان نسخه نمایش داده شود." : "Add the resource to your library to reveal the verified provider URL, immutable reference, and installation steps for that exact version."}</p>
               </div>
             </Section>
+            {product.currentRequirements && <Section title={fa ? "سازگاری و وابستگی‌ها" : "Compatibility and dependencies"}>
+              <p className="text-sm">{fa ? "وضعیت بررسی منبع" : "Source check"}: {product.currentRequirements.sourceStatus}</p>
+              <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+                {([["runtimes", fa ? "محیط اجرا" : "Runtimes"], ["accounts", fa ? "حساب‌ها" : "Accounts"], ["operatingSystems", fa ? "سیستم‌عامل‌ها" : "Operating systems"], ["dependencies", fa ? "وابستگی‌ها" : "Dependencies"]] as const).map(([key, label]) => <div key={key} className="rounded-lg border bg-surface p-4"><dt className="font-semibold">{label}</dt><dd className="mt-2 text-sm">{product.currentRequirements![key].length ? product.currentRequirements![key].join(" · ") : fa ? "نیازی اعلام نشده" : "None declared"}</dd></div>)}
+              </dl>
+              {product.currentRequirements.compatibility.map((item) => <p key={item.platformKey} className="mt-3 text-sm"><strong>{item.platformKey}</strong>{item.models.length ? ` · ${item.models.join(", ")}` : ""}{item.notes ? ` · ${item.notes}` : ""}</p>)}
+            </Section>}
             <Section title="Version history">
               <div className="space-y-6">
                 {versions.map((v, i) => (
@@ -232,9 +242,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     limit={5}
                   />
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Models: Claude 4, GPT-5
-                </p>
+                {product.compatibility.models.length > 0 && <p className="mt-3 text-xs text-muted-foreground">{fa ? "مدل‌ها" : "Models"}: {product.compatibility.models.join(", ")}</p>}
               </div>
               <TrustRow
                 icon={Download}

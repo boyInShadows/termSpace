@@ -20,30 +20,12 @@ import { Magnetic } from "@/components/motion/magnetic";
 import { buttonVariants } from "@/components/ui/button";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { CreatorIdentity } from "@/components/marketplace/product-parts";
-import { getMarketplaceHome } from "@/lib/api";
+import { getMarketplaceHome, getCuratedCollections } from "@/lib/api";
 import { NewsletterForm } from "@/features/newsletter/newsletter-form";
 import { getLocale } from "@/lib/serverLocale";
 import { copy, localePath } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
-
-const collections = [
-  {
-    title: "Tools for careful research",
-    copy: "Evidence-first workflows that keep sources, caveats, and reasoning visible.",
-    count: 84,
-  },
-  {
-    title: "Ship better software",
-    copy: "Review, accessibility, and database tools made by practicing engineers.",
-    count: 212,
-  },
-  {
-    title: "Find the words that work",
-    copy: "Brand and conversion systems grounded in customer language, not hype.",
-    count: 67,
-  },
-];
 
 const trustFacts = [
   {
@@ -67,6 +49,7 @@ export default async function Home() {
   const locale = await getLocale();
   const t = copy[locale];
   const marketplace = await getMarketplaceHome().catch((error) => { console.error("Marketplace home load failed", error); return null; });
+  const collections = await getCuratedCollections().catch((error) => { console.error("Curated collections load failed", error); return []; });
   const products = marketplace?.products ?? [];
   const creators = marketplace?.creators ?? [];
   const categories = marketplace?.categories ?? [];
@@ -193,10 +176,10 @@ export default async function Home() {
             </Reveal>
 
             <div className="mt-12 grid gap-4 md:grid-cols-3">
-              {collections.map((collection, index) => (
-                <Reveal key={collection.title} delay={index * 100}>
+              {collections.slice(0, 3).map((collection, index) => (
+                <Reveal key={collection.slug} delay={index * 100}>
                   <Link
-                    href="/explore"
+                    href={localePath(`/collections/${collection.slug}`, locale)}
                     className="group flex h-full flex-col rounded-xl border border-border bg-surface/50 p-7 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-plasma"
                   >
                     <div className="flex items-start justify-between">
@@ -209,10 +192,10 @@ export default async function Home() {
                       />
                     </div>
                     <h3 className="editorial mt-14 text-2xl leading-tight">
-                      {collection.title}
+                      {locale === "fa" ? collection.titleFa ?? collection.titleEn : collection.titleEn}
                     </h3>
                     <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">
-                      {collection.copy}
+                      {locale === "fa" ? collection.descriptionFa ?? collection.descriptionEn : collection.descriptionEn}
                     </p>
                     <p className="mt-6 font-mono text-xs text-accent">
                       {collection.count} listings
@@ -220,6 +203,7 @@ export default async function Home() {
                   </Link>
                 </Reveal>
               ))}
+              {!collections.length && <p className="text-sm text-muted-foreground">{locale === "fa" ? "مجموعهٔ منتشرشده‌ای موجود نیست." : "No curated collections have been published yet."}</p>}
             </div>
           </div>
         </section>

@@ -12,7 +12,7 @@ export function Footer() {
   const columns = [
     { heading: labels.marketplace, links: [
       { label: labels.explore, href: localePath("/explore", locale) },
-      { label: labels.collections, href: localePath("/#collections", locale) },
+      { label: labels.collections, href: localePath("/collections", locale) },
       { label: labels.newReleases, href: `${localePath("/explore", locale)}?sort=newest` },
     ] },
     { heading: labels.create, links: [

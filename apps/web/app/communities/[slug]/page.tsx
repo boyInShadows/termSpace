@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { DiscoveryExperience } from "@/features/discovery/discovery-experience";
@@ -8,9 +9,11 @@ import {
   getDiscoveryOptions,
   getMarketplaceItemTypes,
   getProducts,
+  getCuratedCollections,
 } from "@/lib/api";
 import type { Community } from "@/lib/types";
 import { getLocale } from "@/lib/serverLocale";
+import { localePath } from "@/lib/i18n";
 
 export default async function CommunityPage({
   params,
@@ -18,7 +21,8 @@ export default async function CommunityPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const fa = (await getLocale()) === "fa";
+  const locale = await getLocale();
+  const fa = locale === "fa";
   let community: Community;
   try {
     community = (
@@ -31,10 +35,11 @@ export default async function CommunityPage({
     throw error;
   }
   const filters = { community: slug, page: 1, limit: 12 };
-  const [initial, options, itemTypes] = await Promise.all([
+  const [initial, options, itemTypes, collections] = await Promise.all([
     getProducts(filters),
     getDiscoveryOptions(),
     getMarketplaceItemTypes(),
+    getCuratedCollections(),
   ]);
   return (
     <>
@@ -69,6 +74,7 @@ export default async function CommunityPage({
               : "This community is archived. Its listings remain available through their canonical pages."}
           </p>
         )}
+        {collections.filter((item) => item.community?.slug === slug).length > 0 && <div className="mt-8"><h2 className="font-semibold">{fa ? "مجموعه‌های جامعه" : "Community collections"}</h2><div className="mt-3 flex flex-wrap gap-3">{collections.filter((item) => item.community?.slug === slug).map((item) => <Link key={item.slug} className="rounded-lg border bg-surface px-4 py-3 text-primary hover:underline" href={localePath(`/collections/${item.slug}`, locale)}>{fa ? item.titleFa ?? item.titleEn : item.titleEn} · {item.count}</Link>)}</div></div>}
       </section>
       {community.state === "ACTIVE" && (
         <DiscoveryExperience
