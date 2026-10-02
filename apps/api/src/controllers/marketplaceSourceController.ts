@@ -4,6 +4,7 @@ import type { Request, Response } from "express";
 import { encryptProviderToken } from "../lib/marketplaceProviderToken.js";
 import { ProviderCallError, providerForSourceKind, verifyProviderCredential } from "../lib/marketplaceSourceProviders.js";
 import { prisma } from "../lib/prisma.js";
+import { MarketplaceRequestError } from "../lib/marketplaceRequestError.js";
 
 const activeJobStatuses = ["PENDING", "PROCESSING", "RETRY"] as const;
 
@@ -146,17 +147,17 @@ export async function enqueueOwnedSourceCheck(req: Request, res: Response) {
           proposedSnapshot: { select: { releaseManifest: { select: { id: true, sourceKind: true, publishedAt: true } } } },
         },
       });
-      if (!product || product.creator.ownerUserId !== userId) throw new SourceCheckRequestError(404, "LISTING_NOT_FOUND", "Marketplace listing not found");
-      if (product.lifecycleVersion !== req.body.expectedVersion) throw new SourceCheckRequestError(409, "LISTING_VERSION_CONFLICT", "The listing changed; reload it before trying again");
+      if (!product || product.creator.ownerUserId !== userId) throw new MarketplaceRequestError(404, "LISTING_NOT_FOUND", "Marketplace listing not found");
+      if (product.lifecycleVersion !== req.body.expectedVersion) throw new MarketplaceRequestError(409, "LISTING_VERSION_CONFLICT", "The listing changed; reload it before trying again");
       const release = product.proposedSnapshot?.releaseManifest;
-      if (!release) throw new SourceCheckRequestError(409, "RELEASE_MANIFEST_REQUIRED", "Save a release draft before verifying its source");
-      if (release.publishedAt) throw new SourceCheckRequestError(409, "PUBLISHED_RELEASE_IMMUTABLE", "Create a new release draft to change or re-verify this source");
+      if (!release) throw new MarketplaceRequestError(409, "RELEASE_MANIFEST_REQUIRED", "Save a release draft before verifying its source");
+      if (release.publishedAt) throw new MarketplaceRequestError(409, "PUBLISHED_RELEASE_IMMUTABLE", "Create a new release draft to change or re-verify this source");
       const provider = providerForSourceKind(release.sourceKind);
       const connection = await tx.marketplaceProviderConnection.findUnique({
         where: { creatorId_provider: { creatorId: product.creator.id, provider } },
         select: { id: true, revokedAt: true },
       });
-      if (!connection || connection.revokedAt) throw new SourceCheckRequestError(409, "PROVIDER_CONNECTION_REQUIRED", `Connect ${provider === "GITHUB" ? "GitHub" : "npm"} before verifying this source`);
+      if (!connection || connection.revokedAt) throw new MarketplaceRequestError(409, "PROVIDER_CONNECTION_REQUIRED", `Connect ${provider === "GITHUB" ? "GitHub" : "npm"} before verifying this source`);
       const existing = await tx.marketplaceSourceCheckJob.findFirst({
         where: { releaseManifestId: release.id, status: { in: [...activeJobStatuses] } },
         select: { id: true, status: true, correlationId: true },
@@ -174,10 +175,6 @@ export async function enqueueOwnedSourceCheck(req: Request, res: Response) {
     });
     res.status(202).json({ data: { id: job.id, status: job.status.toLowerCase(), correlationId: job.correlationId } });
   } catch (error) {
-    if (error instanceof SourceCheckRequestError) {
-      res.status(error.status).json({ error: { code: error.code, message: error.message } });
-      return;
-    }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const existing = await prisma.marketplaceSourceCheckJob.findFirst({
         where: { releaseManifestId: { in: await ownedProposedReleaseIds(productId, userId) }, status: { in: [...activeJobStatuses] } },
@@ -198,10 +195,4 @@ async function ownedProposedReleaseIds(productId: string, userId: string) {
     select: { proposedSnapshot: { select: { releaseManifestId: true } } },
   });
   return product?.proposedSnapshot?.releaseManifestId ? [product.proposedSnapshot.releaseManifestId] : [];
-}
-
-class SourceCheckRequestError extends Error {
-  constructor(public readonly status: number, public readonly code: string, message: string) {
-    super(message);
-  }
 }

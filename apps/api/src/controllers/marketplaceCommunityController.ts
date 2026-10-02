@@ -10,7 +10,6 @@ import {
   publicCommunitySelect,
   publicCreatorSelect,
   publicCreatorWhere,
-  publicPlacementWhere,
   publicProductWhere,
 } from "../lib/marketplaceVisibility.js";
 import { productInclude, serializeProduct } from "./marketplaceController.js";

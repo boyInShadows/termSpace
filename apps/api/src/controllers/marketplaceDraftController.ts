@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { MarketplaceListingState, Prisma } from "@prisma/client";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
+import { MarketplaceRequestError } from "../lib/marketplaceRequestError.js";
 import { marketplacePlatforms, marketplaceModels } from "../lib/marketplaceCompatibility.js";
 import { createDraftReleaseManifest, PublishedVersionConflictError } from "../lib/marketplaceDraftPersistence.js";
 import {
@@ -10,10 +11,6 @@ import {
   validateMarketplaceManifest,
 } from "../lib/marketplaceManifest.js";
 import { marketplaceProductProjectionFromManifest } from "../lib/marketplaceListingLifecycle.js";
-
-class DraftRequestError extends Error {
-  constructor(public readonly status: number, public readonly code: string, message: string) { super(message); }
-}
 
 const editableStates = new Set(["DRAFT", "CHANGES_REQUESTED", "REJECTED", "PUBLISHED"]);
 
@@ -29,9 +26,9 @@ async function resolveDraftReferences(tx: Prisma.TransactionClient, manifest: Ma
       select: { id: true, slug: true },
     }),
   ]);
-  if (!category) throw new DraftRequestError(409, "CATEGORY_NOT_FOUND", "The selected category is unavailable");
+  if (!category) throw new MarketplaceRequestError(409, "CATEGORY_NOT_FOUND", "The selected category is unavailable");
   if (communities.length !== manifest.listing.communitySlugs.length) {
-    throw new DraftRequestError(409, "COMMUNITY_NOT_FOUND", "One or more selected communities are unavailable");
+    throw new MarketplaceRequestError(409, "COMMUNITY_NOT_FOUND", "One or more selected communities are unavailable");
   }
   return { categoryId: category.id, communities };
 }
@@ -136,7 +133,7 @@ export async function createOwnedMarketplaceDraft(req: Request, res: Response) {
   try {
     const result = await prisma.$transaction(async (tx) => {
       const creator = await tx.marketplaceCreator.findUnique({ where: { ownerUserId: userId }, select: { id: true } });
-      if (!creator) throw new DraftRequestError(404, "CREATOR_PROFILE_NOT_FOUND", "Creator profile not found");
+      if (!creator) throw new MarketplaceRequestError(404, "CREATOR_PROFILE_NOT_FOUND", "Creator profile not found");
       const references = await resolveDraftReferences(tx, manifest);
       const projection = marketplaceProductProjectionFromManifest(manifest, references.categoryId);
       const product = await tx.marketplaceProduct.create({
@@ -174,9 +171,9 @@ export async function updateOwnedMarketplaceDraft(req: Request, res: Response) {
           approvedSnapshot: { select: { content: true, releaseManifestId: true } },
         },
       });
-      if (!product || product.creator.ownerUserId !== userId) throw new DraftRequestError(404, "LISTING_NOT_FOUND", "Marketplace listing not found");
-      if (product.lifecycleVersion !== req.body.expectedVersion) throw new DraftRequestError(409, "LISTING_VERSION_CONFLICT", "The listing changed; reload it before saving");
-      if (!editableStates.has(product.lifecycleState)) throw new DraftRequestError(409, "DRAFT_EDIT_FORBIDDEN", "This listing must leave its current review state before it can be edited");
+      if (!product || product.creator.ownerUserId !== userId) throw new MarketplaceRequestError(404, "LISTING_NOT_FOUND", "Marketplace listing not found");
+      if (product.lifecycleVersion !== req.body.expectedVersion) throw new MarketplaceRequestError(409, "LISTING_VERSION_CONFLICT", "The listing changed; reload it before saving");
+      if (!editableStates.has(product.lifecycleState)) throw new MarketplaceRequestError(409, "DRAFT_EDIT_FORBIDDEN", "This listing must leave its current review state before it can be edited");
       const references = await resolveDraftReferences(tx, manifest);
       return saveDraftRevision({ tx, product, manifest, snapshot, digestSha256, ...references, userId });
     });
@@ -240,10 +237,6 @@ function serializeDraft(result: Awaited<ReturnType<typeof saveDraftRevision>>) {
 }
 
 function handleDraftError(error: unknown, res: Response) {
-  if (error instanceof DraftRequestError) {
-    res.status(error.status).json({ error: { code: error.code, message: error.message } });
-    return;
-  }
   if (error instanceof PublishedVersionConflictError) {
     res.status(409).json({ error: { code: "VERSION_ALREADY_PUBLISHED", message: "Use a new version label when release metadata changes" } });
     return;

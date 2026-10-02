@@ -21,3 +21,10 @@ The Blog editorial batch is complete in the codebase; see
   tests cannot confirm publication in the deployed editorial database.
 - Configure Cloudflare Email Service and start the optional email worker in the
   deployed environment before sending newsletter campaigns.
+
+## Creator publishing
+
+- Connect the creator dashboard to the existing listing lifecycle endpoint for
+  submission and other permitted creator transitions. Draft saving and source
+  verification currently have UI callers, but submission does not. See
+  `docs/api-cleanup-2026-10-02.md` for the route and caller audit.

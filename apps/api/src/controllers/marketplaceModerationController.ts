@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
+import { MarketplaceRequestError } from "../lib/marketplaceRequestError.js";
 import { marketplaceItemTypeKey } from "../lib/marketplaceManifest.js";
 
 const reviewStates = ["SUBMITTED", "APPROVED"] as const;
@@ -145,45 +146,33 @@ export async function addMarketplaceModerationNote(req: Request, res: Response) 
   const userId = res.locals.reader.id as string;
   const actorType = res.locals.reader.marketplaceRoles.includes("administrator") ? "ADMINISTRATOR" : "MODERATOR";
   const correlationId = randomUUID();
-  try {
-    const note = await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${productId}, 2))`;
-      const product = await tx.marketplaceProduct.findUnique({
-        where: { id: productId },
-        select: {
-          id: true, lifecycleState: true, lifecycleVersion: true, proposedSnapshotId: true, approvedSnapshotId: true,
-          creator: { select: { ownerUserId: true } },
-        },
-      });
-      if (!product) throw new ModerationRequestError(404, "LISTING_NOT_FOUND", "Marketplace listing not found");
-      if (product.creator.ownerUserId === userId) throw new ModerationRequestError(403, "SELF_MODERATION_FORBIDDEN", "Staff cannot moderate a listing they own");
-      if (product.lifecycleVersion !== req.body.expectedVersion) throw new ModerationRequestError(409, "LISTING_VERSION_CONFLICT", "The listing changed; reload it before adding a note");
-      return tx.marketplaceListingLifecycleEvent.create({
-        data: {
-          productId,
-          snapshotId: product.proposedSnapshotId ?? product.approvedSnapshotId,
-          previousState: product.lifecycleState,
-          resultingState: product.lifecycleState,
-          action: "INTERNAL_NOTE_ADDED",
-          actorType,
-          actorUserId: userId,
-          reasonCode: "INTERNAL_NOTE_ADDED",
-          internalNote: req.body.note,
-          correlationId,
-        },
-        select: { id: true, createdAt: true },
-      });
+  const note = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${productId}, 2))`;
+    const product = await tx.marketplaceProduct.findUnique({
+      where: { id: productId },
+      select: {
+        id: true, lifecycleState: true, lifecycleVersion: true, proposedSnapshotId: true, approvedSnapshotId: true,
+        creator: { select: { ownerUserId: true } },
+      },
     });
-    res.status(201).json({ data: { ...note, correlationId } });
-  } catch (error) {
-    if (error instanceof ModerationRequestError) {
-      res.status(error.status).json({ error: { code: error.code, message: error.message } });
-      return;
-    }
-    throw error;
-  }
-}
-
-class ModerationRequestError extends Error {
-  constructor(public readonly status: number, public readonly code: string, message: string) { super(message); }
+    if (!product) throw new MarketplaceRequestError(404, "LISTING_NOT_FOUND", "Marketplace listing not found");
+    if (product.creator.ownerUserId === userId) throw new MarketplaceRequestError(403, "SELF_MODERATION_FORBIDDEN", "Staff cannot moderate a listing they own");
+    if (product.lifecycleVersion !== req.body.expectedVersion) throw new MarketplaceRequestError(409, "LISTING_VERSION_CONFLICT", "The listing changed; reload it before adding a note");
+    return tx.marketplaceListingLifecycleEvent.create({
+      data: {
+        productId,
+        snapshotId: product.proposedSnapshotId ?? product.approvedSnapshotId,
+        previousState: product.lifecycleState,
+        resultingState: product.lifecycleState,
+        action: "INTERNAL_NOTE_ADDED",
+        actorType,
+        actorUserId: userId,
+        reasonCode: "INTERNAL_NOTE_ADDED",
+        internalNote: req.body.note,
+        correlationId,
+      },
+      select: { id: true, createdAt: true },
+    });
+  });
+  res.status(201).json({ data: { ...note, correlationId } });
 }

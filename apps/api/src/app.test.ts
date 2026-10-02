@@ -102,6 +102,12 @@ describe("API", () => {
     expect(response.body.error.code).toBe("DATABASE_UNAVAILABLE");
   });
 
+  it("does not expose the unused tag-edit endpoint", async () => {
+    const response = await request(createApp()).put("/api/tags/tag-1");
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe("ROUTE_NOT_FOUND");
+  });
+
   it("serves marketplace home data from the shared API", async () => {
     prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
     prismaMock.marketplaceProduct.count.mockResolvedValue(12);

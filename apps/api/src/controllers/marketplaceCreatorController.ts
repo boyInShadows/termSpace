@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
+import { MarketplaceRequestError } from "../lib/marketplaceRequestError.js";
 import { marketplaceItemTypeKey } from "../lib/marketplaceManifest.js";
 
 const creatorProfileSelect = {
@@ -99,8 +100,6 @@ function initialsFor(name: string): string {
   return name.trim().split(/\s+/u).slice(0, 2).map((part) => Array.from(part)[0] ?? "").join("").toUpperCase();
 }
 
-class CreatorRoleRevokedError extends Error {}
-
 export async function getOwnedCreatorProfile(_req: Request, res: Response) {
   const creator = await prisma.marketplaceCreator.findUnique({
     where: { ownerUserId: res.locals.reader.id as string },
@@ -123,7 +122,7 @@ export async function createOwnedCreatorProfile(req: Request, res: Response) {
         tx.marketplaceRoleGrant.findUnique({ where: { userId_role: { userId, role: "CREATOR" } }, select: { revokedAt: true } }),
       ]);
       if (existingCreator) return null;
-      if (roleGrant?.revokedAt) throw new CreatorRoleRevokedError();
+      if (roleGrant?.revokedAt) throw new MarketplaceRequestError(403, "CREATOR_ACCESS_REVOKED", "Creator access was revoked; contact support before onboarding");
 
       const created = await tx.marketplaceCreator.create({
         data: {
@@ -150,10 +149,6 @@ export async function createOwnedCreatorProfile(req: Request, res: Response) {
     }
     res.status(201).json({ data: serializeCreatorProfile(creator) });
   } catch (error) {
-    if (error instanceof CreatorRoleRevokedError) {
-      res.status(403).json({ error: { code: "CREATOR_ACCESS_REVOKED", message: "Creator access was revoked; contact support before onboarding" } });
-      return;
-    }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const target = Array.isArray(error.meta?.target) ? error.meta.target.map(String).join(",") : String(error.meta?.target ?? "");
       const handleConflict = target.includes("handle");

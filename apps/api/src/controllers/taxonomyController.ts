@@ -15,11 +15,6 @@ export async function createTag(req: Request, res: Response) {
   res.status(201).json({ data: tag });
 }
 
-export async function updateTag(req: Request, res: Response) {
-  const tag = await prisma.tag.update({ where: { id: String(req.params.id) }, data: req.body });
-  res.json({ data: tag });
-}
-
 export async function deleteTag(req: Request, res: Response) {
   await prisma.tag.delete({ where: { id: String(req.params.id) } });
   res.status(204).send();

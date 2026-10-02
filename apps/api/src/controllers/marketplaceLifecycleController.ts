@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
+import { MarketplaceRequestError } from "../lib/marketplaceRequestError.js";
 import {
   MarketplaceLifecycleError,
   marketplaceProductProjectionFromManifest,
@@ -12,12 +13,6 @@ import {
   type MarketplaceListingStateValue,
 } from "../lib/marketplaceListingLifecycle.js";
 import { validateMarketplaceManifest } from "../lib/marketplaceManifest.js";
-
-class LifecycleRequestError extends Error {
-  constructor(public readonly status: number, public readonly code: string, message: string) {
-    super(message);
-  }
-}
 
 const productLifecycleSelect = {
   id: true,
@@ -84,15 +79,15 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
     const updated = await prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${productId}, 2))`;
       const product = await tx.marketplaceProduct.findUnique({ where: { id: productId }, select: productLifecycleSelect });
-      if (!product) throw new LifecycleRequestError(404, "LISTING_NOT_FOUND", "Marketplace listing not found");
+      if (!product) throw new MarketplaceRequestError(404, "LISTING_NOT_FOUND", "Marketplace listing not found");
       if (creatorRequest && product.creator.ownerUserId !== userId) {
-        throw new LifecycleRequestError(404, "LISTING_NOT_FOUND", "Marketplace listing not found");
+        throw new MarketplaceRequestError(404, "LISTING_NOT_FOUND", "Marketplace listing not found");
       }
       if (!creatorRequest && product.creator.ownerUserId === userId) {
-        throw new LifecycleRequestError(403, "SELF_MODERATION_FORBIDDEN", "Staff cannot moderate a listing they own");
+        throw new MarketplaceRequestError(403, "SELF_MODERATION_FORBIDDEN", "Staff cannot moderate a listing they own");
       }
       if (product.lifecycleVersion !== req.body.expectedVersion) {
-        throw new LifecycleRequestError(409, "LISTING_VERSION_CONFLICT", "The listing changed; reload it before trying again");
+        throw new MarketplaceRequestError(409, "LISTING_VERSION_CONFLICT", "The listing changed; reload it before trying again");
       }
       if (["SUBMIT", "PUBLISH", "REINSTATE"].includes(action) || (action === "RESTORE" && product.lifecycleResumePublished)) {
         const sourceSnapshot = action === "SUBMIT" || action === "PUBLISH" ? product.proposedSnapshot : product.approvedSnapshot;
@@ -119,7 +114,7 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
           && sourceSnapshot.releaseManifest.sourceResolvedAt,
         );
         if (!sourceVerified || !verifiedAfterRestriction) {
-          throw new LifecycleRequestError(409, "SOURCE_VERIFICATION_REQUIRED", "Resolve the exact release source and verify ownership before this transition");
+          throw new MarketplaceRequestError(409, "SOURCE_VERIFICATION_REQUIRED", "Resolve the exact release source and verify ownership before this transition");
         }
       }
 
@@ -147,18 +142,18 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
       }
       let publicationProjection = {};
       if (action === "PUBLISH") {
-        if (!product.proposedSnapshot) throw new LifecycleRequestError(409, "PROPOSED_SNAPSHOT_REQUIRED", "Approved publication candidate is missing");
+        if (!product.proposedSnapshot) throw new MarketplaceRequestError(409, "PROPOSED_SNAPSHOT_REQUIRED", "Approved publication candidate is missing");
         let manifest;
         try {
           manifest = validateMarketplaceManifest(product.proposedSnapshot.content).manifest;
         } catch {
-          throw new LifecycleRequestError(409, "INVALID_PROPOSED_SNAPSHOT", "The approved snapshot no longer satisfies the manifest contract");
+          throw new MarketplaceRequestError(409, "INVALID_PROPOSED_SNAPSHOT", "The approved snapshot no longer satisfies the manifest contract");
         }
         const category = await tx.marketplaceCategory.findUnique({ where: { slug: manifest.listing.categorySlug }, select: { id: true } });
-        if (!category) throw new LifecycleRequestError(409, "CATEGORY_NOT_FOUND", "The approved listing category is unavailable");
+        if (!category) throw new MarketplaceRequestError(409, "CATEGORY_NOT_FOUND", "The approved listing category is unavailable");
         publicationProjection = marketplaceProductProjectionFromManifest(manifest, category.id);
         const releaseManifest = product.proposedSnapshot.releaseManifest;
-        if (!releaseManifest) throw new LifecycleRequestError(409, "RELEASE_MANIFEST_REQUIRED", "The approved publication candidate has no release manifest");
+        if (!releaseManifest) throw new MarketplaceRequestError(409, "RELEASE_MANIFEST_REQUIRED", "The approved publication candidate has no release manifest");
         if (!releaseManifest.publishedAt) {
           await tx.marketplaceReleaseManifest.update({
             where: { id: releaseManifest.id },
@@ -222,10 +217,6 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
       correlationId: updated.correlationId,
     } });
   } catch (error) {
-    if (error instanceof LifecycleRequestError) {
-      res.status(error.status).json({ error: { code: error.code, message: error.message } });
-      return;
-    }
     if (error instanceof MarketplaceLifecycleError) {
       res.status(409).json({ error: { code: error.code, message: error.message } });
       return;

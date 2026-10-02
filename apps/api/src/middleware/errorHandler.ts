@@ -14,7 +14,7 @@ import { MarketplaceRequestError } from "../lib/marketplaceRequestError.js";
  * - Everything else -> 500 (details hidden in production)
  */
 
-export const notFoundHandler: RequestHandler = (req, res) => {
+export const notFoundHandler: RequestHandler = (_req, res) => {
   res.status(404).json({
     error: {
       code: "ROUTE_NOT_FOUND",
