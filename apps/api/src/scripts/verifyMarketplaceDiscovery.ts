@@ -29,6 +29,7 @@ try {
     ...process.env,
     DATABASE_URL: url.toString(),
     MARKETPLACE_TEST_DATABASE_URL: url.toString(),
+    EDITORIAL_TEST_DATABASE_URL: url.toString(),
     LOCAL_AUTO_VERIFY_EMAIL: "false",
     CORS_ORIGINS: "http://localhost:3000,http://localhost:3001",
     NODE_ENV: "test",
@@ -50,9 +51,21 @@ try {
       resolve(dirname(require.resolve("vitest/package.json")), "vitest.mjs"),
       "run",
       "src/marketplaceDiscovery.integration.test.ts",
+      "src/editorialWorkflows.integration.test.ts",
     ],
     { cwd: workspace, env, stdio: "inherit" },
   );
+  execFileSync(process.execPath, [require.resolve("tsx/cli"), "prisma/seed.ts"], {
+    cwd: workspace,
+    env: { ...env, ADMIN_EMAIL: "", ADMIN_PASSWORD: "" },
+    stdio: "inherit",
+  });
+  const seeded = new PrismaClient({ datasources: { db: { url: url.toString() } } });
+  try {
+    const articles = await seeded.article.count({ where: { series: { slug: "vibe-coding-checklist" }, published: true } });
+    const dossier = await seeded.series.findUnique({ where: { slug: "vibe-coding-checklist" }, select: { dossierPublished: true, dossierContent: true } });
+    if (articles !== 3 || !dossier?.dossierPublished || !dossier.dossierContent) throw new Error("Checklist series seed did not publish all three articles and dossier");
+  } finally { await seeded.$disconnect(); }
 } catch (error) {
   console.error((error as Error).message);
   process.exitCode = 1;

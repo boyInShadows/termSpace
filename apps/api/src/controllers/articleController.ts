@@ -12,6 +12,8 @@ import { isAdminRequest } from "../middleware/auth.js";
 const articleSelect = {
   id: true,
   title: true,
+  kind: true,
+  perspectivePrompt: true,
   slug: true,
   excerpt: true,
   heroImage: true,
@@ -53,6 +55,7 @@ function toArticleDetail<T extends { tags: { tag: { id: string; name: string; sl
 }
 
 type ArticleQuery = {
+  kind?: "ARTICLE" | "SIGNAL";
   page: number;
   limit: number;
   category?: string;
@@ -64,9 +67,10 @@ type ArticleQuery = {
 };
 
 class ArticleEditConflictError extends Error {}
+class SignalTooLongError extends Error {}
 
 export async function listArticles(req: Request, res: Response) {
-  const { page, limit, category, tag, series, search, published, sort } = req.query as unknown as ArticleQuery;
+  const { page, limit, category, tag, series, search, published, sort, kind } = req.query as unknown as ArticleQuery;
   if (published !== true && !(await isAdminRequest(req))) {
     res.status(401).json({
       error: {
@@ -96,6 +100,7 @@ export async function listArticles(req: Request, res: Response) {
   }
 
   const where: Prisma.ArticleWhereInput = {
+    ...(kind ? { kind } : {}),
     ...(published !== undefined ? { published } : {}),
     ...(category ? { category: { slug: category } } : {}),
     ...(tag ? { tags: { some: { tag: { slug: tag } } } } : {}),
@@ -193,6 +198,10 @@ export async function getArticlePreview(req: Request, res: Response) {
 
 export async function createArticle(req: Request, res: Response) {
   const body = req.body;
+  if (body.kind === "SIGNAL" && body.content.length > 1200) {
+    res.status(400).json({ error: { code: "SIGNAL_TOO_LONG", message: "Signals must be 1,200 characters or fewer" } });
+    return;
+  }
   const published = body.published ?? false;
   const publishedAt = body.publishedAt
     ? new Date(body.publishedAt)
@@ -203,6 +212,8 @@ export async function createArticle(req: Request, res: Response) {
   const article = await prisma.article.create({
     data: {
       title: body.title,
+      kind: body.kind ?? "ARTICLE",
+      perspectivePrompt: body.perspectivePrompt ?? null,
       slug: body.slug,
       excerpt: body.excerpt ?? null,
       content: body.content,
@@ -244,6 +255,7 @@ export async function updateArticle(req: Request, res: Response) {
       if (body.expectedUpdatedAt && existingSnapshot.updatedAt.toISOString() !== body.expectedUpdatedAt) {
         throw new ArticleEditConflictError();
       }
+      if ((body.kind ?? existingSnapshot.kind) === "SIGNAL" && (body.content ?? existingSnapshot.content).length > 1200) throw new SignalTooLongError();
 
       let publishedAtUpdate: Date | null | undefined;
       if (body.publishedAt !== undefined) {
@@ -266,6 +278,8 @@ export async function updateArticle(req: Request, res: Response) {
         where: { id },
         data: {
           ...(body.title !== undefined ? { title: body.title } : {}),
+          ...(body.kind !== undefined ? { kind: body.kind } : {}),
+          ...(body.perspectivePrompt !== undefined ? { perspectivePrompt: body.perspectivePrompt } : {}),
           ...(body.slug !== undefined ? { slug: body.slug } : {}),
           ...(body.excerpt !== undefined ? { excerpt: body.excerpt } : {}),
           ...(body.content !== undefined ? { content: body.content } : {}),
@@ -293,6 +307,10 @@ export async function updateArticle(req: Request, res: Response) {
   } catch (error) {
     if (error instanceof ArticleEditConflictError) {
       res.status(409).json({ error: { code: "EDIT_CONFLICT", message: "This article was changed in another session. Refresh before saving." } });
+      return;
+    }
+    if (error instanceof SignalTooLongError) {
+      res.status(400).json({ error: { code: "SIGNAL_TOO_LONG", message: "Signals must be 1,200 characters or fewer" } });
       return;
     }
     throw error;
@@ -330,6 +348,8 @@ export async function restoreArticleRevision(req: Request, res: Response) {
       where: { id },
       data: {
         title: String(snapshot.title), slug: String(snapshot.slug), excerpt: snapshot.excerpt as string | null,
+        kind: snapshot.kind === "SIGNAL" ? "SIGNAL" : "ARTICLE",
+        perspectivePrompt: typeof snapshot.perspectivePrompt === "string" ? snapshot.perspectivePrompt : null,
         content: String(snapshot.content), heroImage: snapshot.heroImage as string | null,
         published: Boolean(snapshot.published), publishedAt: snapshot.publishedAt ? new Date(String(snapshot.publishedAt)) : null,
         scheduledAt: snapshot.scheduledAt ? new Date(String(snapshot.scheduledAt)) : null,

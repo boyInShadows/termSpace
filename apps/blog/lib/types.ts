@@ -33,12 +33,17 @@ export interface Series {
   name: string;
   slug: string;
   description: string | null;
+  dossierContent: string | null;
+  dossierPublished: boolean;
+  dossierUpdatedAt: string | null;
   _count?: { articles: number };
 }
 
 export interface ArticleSummary {
   id: string;
   title: string;
+  kind: "ARTICLE" | "SIGNAL";
+  perspectivePrompt: string | null;
   slug: string;
   excerpt: string | null;
   heroImage: string | null;
@@ -88,6 +93,7 @@ export interface AuthorListResponse {
 }
 
 export interface ArticleListParams {
+  kind?: "ARTICLE" | "SIGNAL";
   page?: number;
   limit?: number;
   category?: string;
@@ -101,6 +107,8 @@ export interface ArticleListParams {
 export interface ArticleInput {
   expectedUpdatedAt?: string;
   title: string;
+  kind?: "ARTICLE" | "SIGNAL";
+  perspectivePrompt?: string | null;
   slug: string;
   excerpt?: string | null;
   content: string;
@@ -182,6 +190,21 @@ export interface Comment {
   name: string;
   body: string;
   createdAt: string;
+  parentId: string | null;
+  curated: boolean;
+}
+
+export interface NewsletterCampaign {
+  id: string;
+  subject: string;
+  previewText: string | null;
+  body: string;
+  articleId: string | null;
+  article: { title: string; slug: string } | null;
+  status: "DRAFT" | "QUEUED" | "COMPLETE";
+  createdAt: string;
+  queuedAt: string | null;
+  delivery: Record<string, number>;
 }
 
 export interface ReaderSession {

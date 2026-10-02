@@ -41,6 +41,7 @@ export default async function SeriesPage({params}: {params: Promise<{slug: strin
       <p className="text-sm uppercase tracking-widest text-ink-muted">{t("series")}</p>
       <h1 className="mt-3 font-serif text-4xl font-semibold">{series.name}</h1>
       {series.description && <p className="mt-4 text-ink-soft">{series.description}</p>}
+      {series.dossierPublished && <Link href={localePath(`/blog/dossiers/${series.slug}`, locale)} className="mt-4 inline-block text-sm font-medium text-accent">{locale === "fa" ? "پروندهٔ زنده" : "Living dossier"} →</Link>}
       <ol className="mt-10 space-y-4">
         {series.articles.map((article, index) => {
           const display = locale === "fa" ? localizeArticleFa(article) : article;

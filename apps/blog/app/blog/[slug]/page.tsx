@@ -105,6 +105,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <h1 className="mt-4 font-serif text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
           {displayArticle.title}
         </h1>
+        {article.kind === "SIGNAL" && <span className="mt-3 inline-block rounded-full bg-accent-tint px-3 py-1 text-xs font-semibold uppercase tracking-widest text-accent">Signal</span>}
         <div className="mt-4 flex flex-wrap gap-2">{article.tags.map((tag) => <Link key={tag.id} href={localePath(`/blog/tag/${tag.slug}`, locale)} className="rounded-full bg-paper-warm px-3 py-1 text-xs text-ink-soft">#{tag.name}</Link>)}</div>
         {displayArticle.excerpt && (
           <p className="mt-5 text-lg text-ink-soft max-w-prose">{displayArticle.excerpt}</p>
@@ -145,11 +146,16 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </div>
 
       {locale === "fa" && <p className="mx-auto mt-10 max-w-3xl rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">ترجمهٔ فارسی این مقاله هنوز آماده نشده است؛ متن اصلی انگلیسی نمایش داده می‌شود.</p>}
-      <div
-        lang="en" dir="ltr"
-        className="prose-article mx-auto max-w-3xl py-12"
-        dangerouslySetInnerHTML={{ __html: bodyHtml }}
-      />
+      <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,48rem)_16rem]">
+        <div lang="en" dir="ltr" className="prose-article py-12" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+        {(article.perspectivePrompt || commentsRes.data.some((comment) => comment.curated)) && <aside className="py-12" aria-label="Reader perspectives">
+          <div className="rounded-xl border border-line bg-paper-warm p-5 lg:sticky lg:top-24">
+            <h2 className="font-serif text-lg font-semibold">{locale === "fa" ? "دیدگاه خوانندگان" : "Reader perspectives"}</h2>
+            {article.perspectivePrompt && <p className="mt-3 text-sm text-ink-soft">{article.perspectivePrompt}</p>}
+            {commentsRes.data.filter((comment) => comment.curated).map((comment) => <blockquote key={comment.id} className="mt-4 border-s-2 border-accent ps-3 text-sm"><p className="whitespace-pre-wrap">{comment.body}</p><a className="mt-1 block text-accent" href={`#comment-${comment.id}`}>— {comment.name}</a></blockquote>)}
+          </div>
+        </aside>}
+      </div>
 
       {article.author.bio && (
         <aside className="mx-auto max-w-3xl rounded-xl border border-line bg-paper-warm p-6">
@@ -177,7 +183,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </div>
         </section>
       )}
-      <Comments slug={article.slug} initialComments={commentsRes.data} locale={locale} />
+      <Comments slug={article.slug} initialComments={commentsRes.data} locale={locale} prompt={article.perspectivePrompt} />
     </article>
   );
 }

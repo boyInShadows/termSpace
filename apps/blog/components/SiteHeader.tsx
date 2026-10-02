@@ -14,6 +14,8 @@ export function SiteHeader() {
   const links = [
     { href: "/", label: nav("home") },
     { href: "/blog", label: nav("blog") },
+    { href: "/blog/signals", label: "Signals" },
+    { href: "/blog/dossiers", label: locale === "fa" ? "پرونده‌ها" : "Dossiers" },
     { href: "/editions", label: nav("editions") },
     { href: "/topics", label: nav("topics") },
     { href: "/resources", label: nav("resources") },
@@ -21,7 +23,7 @@ export function SiteHeader() {
   ];
   const localPath = locale === "fa" ? pathname.slice(3) || "/" : pathname;
   const switchHref = locale === "fa" ? localPath : localePath(pathname, "fa");
-  const isActive = (href: string) => href === "/" ? localPath === "/" : localPath.startsWith(href);
+  const isActive = (href: string) => href === "/" || href === "/blog" ? localPath === href : localPath.startsWith(href);
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-paper/95 backdrop-blur">

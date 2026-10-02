@@ -46,6 +46,8 @@ model Article {
   slug         String    @unique
   excerpt      String?
   content      String
+  kind         String    @default("ARTICLE")
+  perspectivePrompt String?
   heroImage    String?
   published    Boolean   @default(false)
   publishedAt  DateTime?
@@ -69,6 +71,7 @@ model Article {
   bookmarks       ReaderBookmark[]
   readingProgress ReaderReadingProgress[]
   editions        EditionArticle[]
+  newsletterCampaigns NewsletterCampaign[]
 
   @@index([slug])
   @@index([published])
@@ -105,6 +108,9 @@ model Series {
   name        String
   slug        String    @unique
   description String?
+  dossierContent String?
+  dossierPublished Boolean @default(false)
+  dossierUpdatedAt DateTime?
   articles    Article[]
 
   @@index([name])
@@ -192,6 +198,10 @@ model Comment {
   name       String
   email      String
   body       String
+  parentId   String?
+  parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
+  replies    Comment[] @relation("CommentReplies")
+  curated    Boolean   @default(false)
   approved   Boolean   @default(false)
   createdAt  DateTime  @default(now())
   approvedAt DateTime?
@@ -199,6 +209,7 @@ model Comment {
 
   @@index([articleId, approved, createdAt])
   @@index([approved, createdAt])
+  @@index([parentId])
 }
 
 model SearchQuery {
@@ -216,12 +227,46 @@ model SearchQuery {
 model NewsletterSubscriber {
   id           String   @id @default(cuid())
   email        String   @unique
+  unsubscribeToken String @unique @default(uuid())
   active       Boolean  @default(true)
   subscribedAt DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  deliveries   NewsletterDelivery[]
 
   @@index([active])
   @@index([subscribedAt])
+}
+
+model NewsletterCampaign {
+  id          String   @id @default(cuid())
+  subject     String
+  previewText String?
+  body        String
+  articleId   String?
+  article     Article? @relation(fields: [articleId], references: [id], onDelete: SetNull)
+  status      String   @default("DRAFT")
+  createdAt   DateTime @default(now())
+  queuedAt    DateTime?
+  deliveries  NewsletterDelivery[]
+
+  @@index([createdAt])
+}
+
+model NewsletterDelivery {
+  id             String   @id @default(cuid())
+  campaignId     String
+  campaign       NewsletterCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  subscriberId   String
+  subscriber     NewsletterSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  status         String   @default("PENDING")
+  attempts       Int      @default(0)
+  nextAttemptAt  DateTime @default(now())
+  lockedAt       DateTime?
+  sentAt         DateTime?
+  lastErrorCode  String?
+
+  @@unique([campaignId, subscriberId])
+  @@index([status, nextAttemptAt])
 }
 
 model AdminUser {

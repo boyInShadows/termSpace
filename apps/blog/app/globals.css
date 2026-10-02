@@ -122,6 +122,19 @@ html[dir="rtl"] .prose-article blockquote {
   color: #2a2a2a;
 }
 
+.prose-article .editorial-timeline { border-inline-start: 2px solid #b45309; padding-inline-start: 1.5rem; }
+.prose-article .editorial-timeline li { padding-inline-start: .5rem; margin-block: 1.5rem; }
+.prose-article .editorial-annotations { background: #f8f4ed; border-inline-start: 3px solid #b45309; padding: 1.25rem; margin-block: 2rem; }
+.prose-article .editorial-annotations div + div { border-top: 1px solid #e5ddd1; padding-top: 1rem; }
+.prose-article .editorial-interview { display: grid; grid-template-columns: minmax(5rem, 1fr) 4fr; gap: .75rem; margin-block: 2rem; }
+.prose-article .editorial-interview dt { font-weight: 700; color: #92400e; }
+.prose-article .editorial-interview dd { margin: 0; }
+.prose-article .editorial-data { width: 100%; border-collapse: collapse; margin-block: 2rem; font-family: var(--font-sans); font-size: 1rem; }
+.prose-article .editorial-data th, .prose-article .editorial-data td { border-bottom: 1px solid #e5ddd1; padding: .75rem; text-align: start; }
+.prose-article .editorial-compare > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-block: 1rem; }
+.prose-article .editorial-compare p { background: #f8f4ed; padding: 1rem; margin: 0; }
+@media (max-width: 640px) { .prose-article .editorial-compare > div { grid-template-columns: 1fr; } }
+
 .prose-article h1 {
   font-family: var(--font-serif);
   font-size: 2.25rem;

@@ -31,8 +31,8 @@ The first community-library milestone is external-source-first: submissions refe
 GitHub or npm artifacts instead of uploading executable packages to TermSpace.
 Authenticated GitHub/npm source ingestion, creator-controlled immutable release
 management, and free add/install flows are implemented. Public community
-browsing and authenticated ratings/reviews remain active roadmap work tracked in
-[pending.md](pending.md).
+browsing, authenticated ratings/reviews, and creator operations are implemented;
+remaining deployment follow-ups are tracked in [pending.md](pending.md).
 
 ## Repository layout
 
@@ -125,8 +125,11 @@ The API applies every committed Prisma migration before it starts. The other
 services wait for the API health check, so a migration failure prevents a
 partially working stack from coming online.
 
-After configuring Cloudflare Email Service, start the transactional email worker
+After configuring Cloudflare Email Service, start the transactional and newsletter email worker
 with `docker compose --profile email up --build -d`.
+
+Blog editorial formats, moderated replies, dossiers, Signals, reader perspectives,
+and newsletter operations are documented in [Blog Editorial Workflows](docs/blog-editorial-workflows.md).
 
 With the example host ports, the loopback-only services are available at:
 

@@ -21,11 +21,21 @@ interface FieldErrors {
   [key: string]: string;
 }
 
+const editorialTemplates = {
+  timeline: ":::timeline\n2026 | What changed and why it matters\n2027 | What happened next\n:::",
+  annotations: ":::annotations\nClaim or artifact | Editorial context and source\n:::",
+  interview: ":::interview\nInterviewer | Question\nGuest | Answer\n:::",
+  data: ":::data\nMeasure | Value and source\n:::",
+  compare: ":::compare\nOne argument | A competing argument\n:::",
+} as const;
+
 export function ArticleForm({ authors, categories, tags, series, media, article }: ArticleFormProps) {
   const router = useRouter();
   const isEdit = Boolean(article);
 
   const [title, setTitle] = useState(article?.title ?? "");
+  const [kind, setKind] = useState<"ARTICLE" | "SIGNAL">(article?.kind ?? "ARTICLE");
+  const [perspectivePrompt, setPerspectivePrompt] = useState(article?.perspectivePrompt ?? "");
   const [slug, setSlug] = useState(article?.slug ?? "");
   const [excerpt, setExcerpt] = useState(article?.excerpt ?? "");
   const [content, setContent] = useState(article?.content ?? "");
@@ -44,7 +54,7 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
   const [saving, setSaving] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const previewHtml = renderMarkdown(content);
-  const currentSignature = JSON.stringify({ title, slug, excerpt, content, heroImage, published, authorId, categoryId, tagIds: [...tagIds].sort(), seriesId, seriesOrder, scheduledAt });
+  const currentSignature = JSON.stringify({ title, kind, perspectivePrompt, slug, excerpt, content, heroImage, published, authorId, categoryId, tagIds: [...tagIds].sort(), seriesId, seriesOrder, scheduledAt });
   const savedSignature = useRef(currentSignature);
   const hasChanges = currentSignature !== savedSignature.current;
 
@@ -68,6 +78,7 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
         setAutosaveStatus("Autosaving…");
         const saved = await api.updateArticle(article.id, {
           expectedUpdatedAt: version,
+          kind, perspectivePrompt: perspectivePrompt.trim() || null,
           title: title.trim(), slug: slug.trim(), excerpt: excerpt.trim() || null, content,
           heroImage: heroImage.trim() || null, published, authorId, categoryId, tagIds,
           seriesId: seriesId || null, seriesOrder: seriesOrder ? Number(seriesOrder) : null,
@@ -81,7 +92,7 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
       }
     }, 1500);
     return () => window.clearTimeout(timeout);
-  }, [article, hasChanges, currentSignature, title, slug, excerpt, content, heroImage, published, authorId, categoryId, tagIds, seriesId, seriesOrder, scheduledAt, version]);
+  }, [article, hasChanges, currentSignature, title, kind, perspectivePrompt, slug, excerpt, content, heroImage, published, authorId, categoryId, tagIds, seriesId, seriesOrder, scheduledAt, version]);
 
   function validate(): FieldErrors {
     const next: FieldErrors = {};
@@ -90,6 +101,7 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
       next.slug = "Slug must be lowercase with hyphens (e.g. my-post).";
     }
     if (content.trim().length < 10) next.content = "Content must be at least 10 characters.";
+    if (kind === "SIGNAL" && content.length > 1200) next.content = "Signals must be 1,200 characters or fewer.";
     if (!authorId) next.authorId = "Please choose an author.";
     if (!categoryId) next.categoryId = "Please choose a category.";
     if (heroImage && !/^https?:\/\/.+/.test(heroImage)) {
@@ -108,6 +120,8 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
     setSubmitError("");
     const payload = {
       title: title.trim(),
+      kind,
+      perspectivePrompt: perspectivePrompt.trim() || null,
       slug: slug.trim(),
       excerpt: excerpt.trim() || null,
       content: content.trim(),
@@ -149,6 +163,11 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
           {submitError}
         </div>
       )}
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <div><label htmlFor="article-kind" className="mb-1 block text-sm font-medium text-ink-soft">Editorial format</label><select id="article-kind" value={kind} onChange={(event) => setKind(event.target.value as "ARTICLE" | "SIGNAL")} className={inputClass("kind")}><option value="ARTICLE">Article</option><option value="SIGNAL">Signal (concise update)</option></select></div>
+        <div><label htmlFor="perspective-prompt" className="mb-1 block text-sm font-medium text-ink-soft">Reader perspective prompt</label><input id="perspective-prompt" value={perspectivePrompt} onChange={(event) => setPerspectivePrompt(event.target.value)} maxLength={300} className={inputClass("perspectivePrompt")} placeholder="What would you ask readers?" /></div>
+      </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <div>
@@ -212,13 +231,19 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={16}
+            maxLength={kind === "SIGNAL" ? 1200 : undefined}
             className={`${inputClass("content")} font-mono text-sm`}
             aria-invalid={Boolean(errors.content)}
           />
           {errors.content && <p className="mt-1 text-sm text-red-700">{errors.content}</p>}
           <p className="mt-1 text-xs text-ink-faint">
-            Supports headings, lists, blockquotes, inline code, and fenced code blocks.
+            Supports headings, lists, blockquotes, inline code, fenced code blocks, and editorial format blocks. Signals are limited to 1,200 characters.
           </p>
+          <label htmlFor="editorial-template" className="mt-3 block text-xs font-medium text-ink-soft">Insert editorial format block</label>
+          <select id="editorial-template" defaultValue="" className={`${inputClass("template")} mt-1`} onChange={(event) => { const key = event.target.value as keyof typeof editorialTemplates; if (editorialTemplates[key]) setContent((current) => `${current.trimEnd()}\n\n${editorialTemplates[key]}\n`); event.target.value = ""; }}>
+            <option value="">Choose format…</option>
+            <option value="timeline">Visual timeline</option><option value="annotations">Annotated case study</option><option value="interview">Interview</option><option value="data">Data story</option><option value="compare">Side-by-side argument</option>
+          </select>
         </div>
         <div>
           <p className="mb-1 text-sm font-medium text-ink-soft">Preview</p>

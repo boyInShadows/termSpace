@@ -16,4 +16,11 @@ describe("renderMarkdown", () => {
     expect(renderMarkdown("[Unsafe](/\\example.com/path)")).not.toContain("href=");
     expect(renderMarkdown("[Internal](/blog/article)")).toContain('href="/blog/article"');
   });
+
+  it("renders each editorial block without executing untrusted markup", () => {
+    const html = renderMarkdown(":::timeline\nNow | <img src=x onerror=alert(1)>\n:::\n:::annotations\nClaim | Note\n:::\n:::interview\nEditor | Answer\n:::\n:::data\nMetric | 42\n:::\n:::compare\nFor | Against\n:::");
+    for (const className of ["editorial-timeline", "editorial-annotations", "editorial-interview", "editorial-data", "editorial-compare"]) expect(html).toContain(className);
+    expect(html).toContain("&lt;img");
+    expect(html).not.toContain("<img");
+  });
 });

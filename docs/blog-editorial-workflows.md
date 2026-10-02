@@ -1,0 +1,11 @@
+# Blog editorial workflows
+
+Blog staff access still uses `AdminSession`; marketplace creator and moderator roles cannot publish, curate comments, or export subscriber data.
+
+The Blog editor offers **Article** and **Signal** posts and inserts safe timeline, annotation, interview, data, and comparison blocks into Markdown. The syntax is `:::timeline` (or `annotations`, `interview`, `data`, `compare`), one `left | right` row per line, then `:::`. All row text is escaped by the existing Markdown renderer. Signals have a dedicated public page and a 1,200-character editor limit. A series can also publish a living dossier with Markdown overview and linked published articles; the dossier records its last editorial update.
+
+Comments may reply to an approved comment on the same published article. Replies await moderation. Staff see parent context before approving and may feature approved comments in the article's reader-perspectives margin. Article prompts and featured responses are staff-managed; public responses never expose commenter emails.
+
+Newsletter staff can export subscribers as CSV, draft standalone or published-article campaigns, queue a snapshot of active subscribers, and see provider-accepted, failed, pending, and cancelled counts. Every email includes a one-click destination with a confirmation step; unsubscribing remains effective even after a campaign is queued. The email worker checks active status immediately before sending. Delivery counts reflect provider acceptance, not opens, unique readers, or inbox placement. Run `npm run newsletter:worker --workspace @termspace/api` periodically, or enable the Compose `email` profile. Configure `BLOG_PUBLIC_URL` and the Cloudflare sender credentials in the worker. The Blog's marketplace redirects require `MARKETPLACE_PUBLIC_URL`; Compose maps it from `WEB_PUBLIC_URL`.
+
+`npm run test:discovery --workspace @termspace/api` applies all migrations to a disposable local database, verifies editorial authorization and state transitions, runs the idempotent seed, and checks that the three checklist articles and their dossier are published. A deployed Blog needs the same seed run to make that editorial content live. See [the series plan](vibe-coding-checklist-series.md).

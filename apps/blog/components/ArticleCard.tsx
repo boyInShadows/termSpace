@@ -47,6 +47,7 @@ export function ArticleCard({ article, featured = false, highlight }: ArticleCar
         <div className="p-6">
           <div className="flex items-center gap-2 text-xs text-ink-muted">
             <span className="text-accent font-medium">{display.category.name}</span>
+            {article.kind === "SIGNAL" && <span className="font-semibold uppercase tracking-wide text-accent">Signal</span>}
             <span aria-hidden="true">·</span>
             <span>{formatDate(article.publishedAt, locale)}</span>
           </div>
@@ -84,6 +85,7 @@ export function ArticleCard({ article, featured = false, highlight }: ArticleCar
       <div className="flex flex-col gap-2 p-5">
         <div className="flex items-center gap-2 text-xs text-ink-muted">
           <span className="text-accent font-medium">{display.category.name}</span>
+          {article.kind === "SIGNAL" && <span className="font-semibold uppercase tracking-wide text-accent">Signal</span>}
           <span aria-hidden="true">·</span>
           <span>{formatDate(article.publishedAt, locale)}</span>
         </div>

@@ -34,6 +34,8 @@ const articleRelationsSchema = {
 };
 
 export const createArticleSchema = z.object({
+  kind: z.enum(["ARTICLE", "SIGNAL"]).optional(),
+  perspectivePrompt: z.string().trim().max(300).optional().nullable(),
   title: z.string().min(3, "Title must be at least 3 characters").max(200),
   slug: z
     .string()
@@ -50,6 +52,8 @@ export const createArticleSchema = z.object({
 });
 
 export const updateArticleSchema = z.object({
+  kind: z.enum(["ARTICLE", "SIGNAL"]).optional(),
+  perspectivePrompt: z.string().trim().max(300).optional().nullable(),
   expectedUpdatedAt: z.string().datetime().optional(),
   title: z.string().min(3).max(200).optional(),
   slug: z.string().regex(slugPattern).max(200).optional(),
@@ -64,6 +68,7 @@ export const updateArticleSchema = z.object({
 });
 
 export const articleQuerySchema = z.object({
+  kind: z.enum(["ARTICLE", "SIGNAL"]).optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(200).optional().default(9),
   category: z.string().optional(),
@@ -94,6 +99,14 @@ export const updateCategorySchema = z.object({
 
 export const newsletterSubscribeSchema = z.object({
   email: z.string().trim().toLowerCase().email("Must be a valid email address").max(320),
+});
+
+export const newsletterUnsubscribeSchema = z.object({ token: z.string().uuid() });
+export const newsletterCampaignSchema = z.object({
+  subject: z.string().trim().max(200).optional(),
+  previewText: z.string().trim().max(300).optional().nullable(),
+  body: z.string().trim().max(20_000).optional(),
+  articleId: routeIdSchema.optional().nullable(),
 });
 
 export const adminLoginSchema = z.object({
@@ -239,9 +252,17 @@ export const contentTaxonomySchema = z.object({
   description: z.string().trim().max(500).optional().nullable(),
 });
 
+export const seriesSchema = contentTaxonomySchema.extend({
+  dossierContent: z.string().trim().max(20_000).optional().nullable(),
+  dossierPublished: z.boolean().optional(),
+});
+
 export const commentSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().toLowerCase().email().max(320),
   body: z.string().trim().min(3).max(2000),
   website: z.string().max(200).optional(),
+  parentId: routeIdSchema.optional().nullable(),
 });
+
+export const commentCurationSchema = z.object({ curated: z.boolean() });

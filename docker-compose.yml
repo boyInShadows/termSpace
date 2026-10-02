@@ -89,6 +89,7 @@ services:
       API_URL: http://api:4001
       NEXT_PUBLIC_API_URL: /backend
       NEXT_PUBLIC_SITE_URL: ${BLOG_SITE_URL:-http://localhost:3001}
+      MARKETPLACE_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     depends_on:
       api:
@@ -120,15 +121,17 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public
       EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET:-}
       WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
+      BLOG_PUBLIC_URL: ${BLOG_SITE_URL:-http://localhost:3001}
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_EMAIL_API_TOKEN: ${CLOUDFLARE_EMAIL_API_TOKEN:-}
       EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-TermSpace}
       EMAIL_WORKER_BATCH_SIZE: ${EMAIL_WORKER_BATCH_SIZE:-10}
+      NEWSLETTER_WORKER_BATCH_SIZE: ${NEWSLETTER_WORKER_BATCH_SIZE:-10}
     depends_on:
       api:
         condition: service_healthy
-    command: ["sh", "-c", "while true; do node apps/api/dist/jobs/sendTransactionalEmails.js; sleep 30; done"]
+    command: ["sh", "-c", "while true; do node apps/api/dist/jobs/sendTransactionalEmails.js; node apps/api/dist/jobs/sendNewsletterEmails.js; sleep 30; done"]
 
   marketplace-source-worker:
     build:

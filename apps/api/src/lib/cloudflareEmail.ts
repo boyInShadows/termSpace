@@ -8,6 +8,8 @@ type SendVerificationEmailInput = {
   correlationId: string;
 };
 
+type SendEmailInput = { to: string; subject: string; text: string; html: string; correlationId: string };
+
 type FetchLike = typeof fetch;
 type CloudflareEmailResponse = { result?: { delivered?: unknown[]; queued?: unknown[]; permanent_bounces?: unknown[] } };
 
@@ -28,6 +30,16 @@ export async function sendVerificationEmail(
   input: SendVerificationEmailInput,
   fetchImpl: FetchLike = fetch,
 ): Promise<EmailDeliveryResult> {
+  return sendEmail({
+    to: input.to,
+    subject: "Verify your TermSpace email",
+    text: `Verify your email to use TermSpace creator features. This link expires in 30 minutes:\n\n${input.verificationUrl}\n\nIf you did not create this account, you can ignore this message.`,
+    html: `<p>Verify your email to use TermSpace creator features.</p><p><a href="${input.verificationUrl}">Verify email</a></p><p>This link expires in 30 minutes. If you did not create this account, you can ignore this message.</p>`,
+    correlationId: input.correlationId,
+  }, fetchImpl);
+}
+
+export async function sendEmail(input: SendEmailInput, fetchImpl: FetchLike = fetch): Promise<EmailDeliveryResult> {
   let config;
   try {
     config = emailConfig();
@@ -49,9 +61,9 @@ export async function sendVerificationEmail(
         body: JSON.stringify({
           from: { address: config.fromAddress, name: config.fromName },
           to: input.to,
-          subject: "Verify your TermSpace email",
-          text: `Verify your email to use TermSpace creator features. This link expires in 30 minutes:\n\n${input.verificationUrl}\n\nIf you did not create this account, you can ignore this message.`,
-          html: `<p>Verify your email to use TermSpace creator features.</p><p><a href="${input.verificationUrl}">Verify email</a></p><p>This link expires in 30 minutes. If you did not create this account, you can ignore this message.</p>`,
+          subject: input.subject,
+          text: input.text,
+          html: input.html,
         }),
         signal: AbortSignal.timeout(10_000),
       },

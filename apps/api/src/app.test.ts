@@ -218,6 +218,22 @@ describe("API", () => {
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
 
+  it("requires Blog staff for newsletter campaigns, export, and curated comments", async () => {
+    const cookie = "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456";
+    const responses = await Promise.all([
+      request(createApp()).get("/api/newsletter/admin/campaigns").set("Cookie", cookie),
+      request(createApp()).get("/api/newsletter/admin/subscribers/export").set("Cookie", cookie),
+      request(createApp()).put("/api/comments/comment-1/curated").set("Origin", "http://localhost:3001").set("Cookie", cookie).send({ curated: true }),
+    ]);
+    expect(responses.map((response) => response.status)).toEqual([401, 401, 401]);
+  });
+
+  it("rejects malformed unsubscribe tokens before looking up subscribers", async () => {
+    const response = await request(createApp()).post("/api/newsletter/unsubscribe").send({ token: "not-a-token" });
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
   it("rejects oversized JSON payloads with 413", async () => {
     const response = await request(createApp())
       .post("/api/newsletter/subscribers")

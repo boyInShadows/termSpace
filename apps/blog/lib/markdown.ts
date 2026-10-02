@@ -52,6 +52,8 @@ function inline(text: string): string {
  * dangerouslySetInnerHTML because all raw text is escaped and only the
  * supported constructs are converted to tags.
  */
+type EditorialBlock = "timeline" | "annotations" | "interview" | "data" | "compare";
+
 export function renderMarkdown(markdown: string): string {
   const lines = markdown.split("\n");
   const html: string[] = [];
@@ -59,6 +61,8 @@ export function renderMarkdown(markdown: string): string {
   let codeBuffer: string[] = [];
   let listType: "ul" | "ol" | null = null;
   let listBuffer: string[] = [];
+  let editorialBlock: EditorialBlock | null = null;
+  let editorialRows: string[] = [];
 
   function flushList() {
     if (listType && listBuffer.length) {
@@ -70,8 +74,33 @@ export function renderMarkdown(markdown: string): string {
     listBuffer = [];
   }
 
+  function flushEditorialBlock() {
+    if (!editorialBlock) return;
+    const rows = editorialRows.filter((row) => row.trim()).map((row) => row.split("|").map((part) => inline(part.trim())));
+    if (editorialBlock === "timeline") html.push(`<ol class="editorial-timeline">${rows.map(([when, event]) => `<li><strong>${when ?? ""}</strong><p>${event ?? ""}</p></li>`).join("")}</ol>`);
+    if (editorialBlock === "annotations") html.push(`<aside class="editorial-annotations" aria-label="Annotations">${rows.map(([anchor, note]) => `<div><strong>${anchor ?? ""}</strong><p>${note ?? ""}</p></div>`).join("")}</aside>`);
+    if (editorialBlock === "interview") html.push(`<dl class="editorial-interview">${rows.map(([speaker, answer]) => `<dt>${speaker ?? ""}</dt><dd>${answer ?? ""}</dd>`).join("")}</dl>`);
+    if (editorialBlock === "data") html.push(`<table class="editorial-data"><tbody>${rows.map(([label, value]) => `<tr><th scope="row">${label ?? ""}</th><td>${value ?? ""}</td></tr>`).join("")}</tbody></table>`);
+    if (editorialBlock === "compare") html.push(`<div class="editorial-compare">${rows.map(([left, right]) => `<div><p>${left ?? ""}</p><p>${right ?? ""}</p></div>`).join("")}</div>`);
+    editorialBlock = null;
+    editorialRows = [];
+  }
+
   for (const raw of lines) {
     const line = raw.trimEnd();
+
+    if (editorialBlock) {
+      if (line.trim() === ":::") flushEditorialBlock();
+      else editorialRows.push(line);
+      continue;
+    }
+
+    const editorialMatch = line.match(/^:::(timeline|annotations|interview|data|compare)$/);
+    if (!inCodeBlock && editorialMatch) {
+      flushList();
+      editorialBlock = editorialMatch[1] as EditorialBlock;
+      continue;
+    }
 
     if (line.startsWith("```")) {
       if (inCodeBlock) {
@@ -157,6 +186,7 @@ export function renderMarkdown(markdown: string): string {
   }
 
   flushList();
+  flushEditorialBlock();
   if (inCodeBlock) {
     html.push(`<pre><code>${escapeHtml(codeBuffer.join("\n"))}</code></pre>`);
   }

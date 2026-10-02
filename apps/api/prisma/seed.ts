@@ -49,6 +49,24 @@ const series = [
   { name: "Calm Digital Work", slug: "calm-digital-work", description: "Designing tools and habits that protect attention." },
 ];
 
+const checklistArticles = [
+  {
+    title: "Vibe Coding Checklist: Before You Prompt", slug: "vibe-coding-before-you-prompt",
+    excerpt: "Start an agent task with a clear outcome, boundary, and way to verify the result.",
+    content: `## The decision\n\nBefore asking an agent to write code, decide what must change and what must stay stable. A vague prompt produces a broad diff that is harder to review.\n\n## Checklist\n\n- Write one observable outcome, such as a page state or API response.\n- Name the files or product area the agent may change.\n- State the data, permissions, and privacy boundaries.\n- Identify the smallest check that would catch a wrong result.\n- Ask for an explanation of any tradeoff that affects users.\n\n## Verify it\n\nRead the proposed approach against the original problem. If you cannot explain the expected behavior in one sentence, narrow the task before generating code.\n\n## Related marketplace tools\n\n[Product Strategy Partner](/marketplace/products/product-strategy-partner) can help frame the outcome; treat its output as a draft to review.`,
+  },
+  {
+    title: "Vibe Coding Checklist: Review the Diff", slug: "vibe-coding-review-the-diff",
+    excerpt: "Inspect the actual change, not just the agent's summary.",
+    content: `## The decision\n\nAn agent's summary is a useful guide, but the diff is the evidence. Check every trust boundary and every behavior the user can observe.\n\n## Checklist\n\n- Read changed files and the call sites they affect.\n- Check authorization, input validation, and failure paths.\n- Look for secrets, unsafe previews, and untrusted instructions.\n- Run the smallest relevant test, then the repository checks.\n- Check keyboard access and readable error messages for UI changes.\n\n## Verify it\n\nReproduce the original scenario and one boundary case. Record what passed and what remains unverified.\n\n## Related marketplace tools\n\n[Pull Request Guardian](/marketplace/products/pull-request-guardian) and [Next Accessibility Auditor](/marketplace/products/next-accessibility-auditor) can provide extra review prompts; neither replaces a human reading the diff.`,
+  },
+  {
+    title: "Vibe Coding Checklist: Ship and Maintain", slug: "vibe-coding-ship-and-maintain",
+    excerpt: "Close the loop with a release check, ownership, and a way to respond when behavior changes.",
+    content: `## The decision\n\nA change is ready when someone can deploy it, observe it, and undo it if necessary. Agent-generated code needs the same ownership as any other code.\n\n## Checklist\n\n- Run type checks, tests, and a production build.\n- Verify migrations and environment changes in a disposable environment.\n- Describe the release behavior in terms users will notice.\n- Keep a rollback or recovery path for data-changing work.\n- Assign an owner for reports and follow-up fixes.\n\n## Verify it\n\nAfter release, check the real user journey and monitor failures. If the result differs from the plan, update the test and the documentation with what you learned.\n\n## Related marketplace tools\n\n[MCP Database Explorer](/marketplace/products/mcp-database-explorer) may assist with read-only investigation; verify every query and permission before connecting it to production data.`,
+  },
+];
+
 const markdownResources = [
   {
     title: "Project Brief Template", slug: "project-brief-template", category: "Planning",
@@ -561,6 +579,20 @@ async function main() {
       },
     });
     created++;
+  }
+
+  const checklistSeries = await prisma.series.upsert({ where: { slug: "vibe-coding-checklist" }, update: {}, create: { name: "Vibe Coding Checklist", slug: "vibe-coding-checklist", description: "A repeatable editorial checklist for planning, reviewing, and shipping work with coding agents." } });
+  if (!checklistSeries.dossierContent) {
+    await prisma.series.update({ where: { id: checklistSeries.id }, data: { dossierPublished: true, dossierUpdatedAt: new Date(), dossierContent: `## Key ideas\n\nAgent-assisted work starts with a specific outcome, continues through a human-reviewed diff, and ends with a verified release. The checklist articles below turn that sequence into a repeatable practice.\n\n## Timeline\n\n:::timeline\nPlan | Define the outcome, constraints, and smallest useful check.\nReview | Inspect the diff, trust boundaries, and user-facing behavior.\nShip | Verify the release path and assign follow-up ownership.\n:::\n\n## People\n\nMaya Chen curates this editorial series. Readers can add perspectives on each article; staff select the contributions shown in the margin.\n\n## Resources\n\n- [Project Brief Template](/resources/project-brief-template)\n- [Code Review Checklist](/resources/code-review-checklist)\n\n## New coverage\n\nThe linked articles below are ordered as the checklist evolves.` } });
+  }
+  const checklistCategory = categoryRecords.get("software-engineering");
+  if (checklistCategory) {
+    for (const [index, article] of checklistArticles.entries()) {
+      await prisma.article.upsert({
+        where: { slug: article.slug }, update: {},
+        create: { ...article, published: true, publishedAt: new Date(Date.now() - (checklistArticles.length - index) * 86_400_000), authorId: authorRecords[0].id, categoryId: checklistCategory.id, seriesId: checklistSeries.id, seriesOrder: index + 1, previewToken: randomBytes(24).toString("base64url") },
+      });
+    }
   }
 
   const editionArticles = await prisma.article.findMany({

@@ -15,6 +15,7 @@ const adminLinks = [
   { href: "/admin/editions", label: "Editions" },
   { href: "/admin/taxonomy", label: "Tags & series" },
   { href: "/admin/comments", label: "Comments" },
+  { href: "/admin/newsletter", label: "Newsletter" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

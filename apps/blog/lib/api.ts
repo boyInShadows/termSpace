@@ -29,6 +29,7 @@ import type {
   ReaderLibrary,
   Edition,
   EditionInput,
+  NewsletterCampaign,
 } from "./types";
 
 const API_URL = typeof window === "undefined"
@@ -118,6 +119,7 @@ function toQuery(params: Record<string, string | number | boolean | undefined>):
 export const api = {
   async listArticles(params: ArticleListParams = {}, options: { cookie?: string } = {}): Promise<ArticleListResponse> {
     const qs = toQuery({
+      kind: params.kind,
       page: params.page,
       limit: params.limit,
       category: params.category,
@@ -234,8 +236,8 @@ export const api = {
     return apiFetch<void>(`/api/tags/${encodeURIComponent(id)}`, { method: "DELETE" });
   },
 
-  async listSeries(): Promise<{ data: Series[] }> {
-    return apiFetch<{ data: Series[] }>("/api/series");
+  async listSeries(dossiersOnly = false, options: { cookie?: string } = {}): Promise<{ data: Series[] }> {
+    return apiFetch<{ data: Series[] }>(`/api/series${dossiersOnly ? "?dossiers=true" : ""}`, { headers: options.cookie ? { Cookie: options.cookie } : undefined });
   },
 
   async createSeries(input: { name: string; slug: string; description?: string | null }): Promise<{ data: Series }> {
@@ -244,6 +246,10 @@ export const api = {
 
   async deleteSeries(id: string): Promise<void> {
     return apiFetch<void>(`/api/series/${encodeURIComponent(id)}`, { method: "DELETE" });
+  },
+
+  async updateSeries(id: string, input: { dossierContent?: string | null; dossierPublished?: boolean }): Promise<{ data: Series }> {
+    return apiFetch<{ data: Series }>(`/api/series/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(input) });
   },
 
   async getSeries(slug: string): Promise<{ data: Series & { articles: ArticleSummary[] } }> {
@@ -317,16 +323,20 @@ export const api = {
     return apiFetch<{ data: Comment[] }>(`/api/comments?article=${encodeURIComponent(article)}`);
   },
 
-  async submitComment(slug: string, input: { name: string; email: string; body: string; website?: string }): Promise<{ data: { submitted: boolean; message: string } }> {
+  async submitComment(slug: string, input: { name: string; email: string; body: string; website?: string; parentId?: string | null }): Promise<{ data: { submitted: boolean; message: string } }> {
     return apiFetch<{ data: { submitted: boolean; message: string } }>(`/api/articles/${encodeURIComponent(slug)}/comments`, { method: "POST", body: JSON.stringify(input) });
   },
 
-  async listAdminComments(options: { cookie?: string } = {}): Promise<{ data: (Comment & { email: string; approved: boolean; article: { title: string; slug: string } })[] }> {
-    return apiFetch<{ data: (Comment & { email: string; approved: boolean; article: { title: string; slug: string } })[] }>("/api/comments/admin", { headers: options.cookie ? { Cookie: options.cookie } : undefined });
+  async listAdminComments(options: { cookie?: string } = {}): Promise<{ data: (Comment & { email: string; approved: boolean; parent: { name: string; body: string; approved: boolean } | null; article: { title: string; slug: string } })[] }> {
+    return apiFetch<{ data: (Comment & { email: string; approved: boolean; parent: { name: string; body: string; approved: boolean } | null; article: { title: string; slug: string } })[] }>("/api/comments/admin", { headers: options.cookie ? { Cookie: options.cookie } : undefined });
   },
 
   async approveComment(id: string): Promise<void> {
     await apiFetch(`/api/comments/${encodeURIComponent(id)}/approve`, { method: "PUT" });
+  },
+
+  async curateComment(id: string, curated: boolean): Promise<void> {
+    await apiFetch(`/api/comments/${encodeURIComponent(id)}/curated`, { method: "PUT", body: JSON.stringify({ curated }) });
   },
 
   async deleteComment(id: string): Promise<void> {
@@ -338,6 +348,22 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email }),
     });
+  },
+
+  async unsubscribeFromNewsletter(token: string): Promise<{ data: { submitted: true } }> {
+    return apiFetch("/api/newsletter/unsubscribe", { method: "POST", body: JSON.stringify({ token }) });
+  },
+
+  async listNewsletterCampaigns(options: { cookie?: string } = {}): Promise<{ data: NewsletterCampaign[] }> {
+    return apiFetch("/api/newsletter/admin/campaigns", { headers: options.cookie ? { Cookie: options.cookie } : undefined });
+  },
+
+  async createNewsletterCampaign(input: { subject?: string; previewText?: string; body?: string; articleId?: string | null }): Promise<{ data: NewsletterCampaign }> {
+    return apiFetch("/api/newsletter/admin/campaigns", { method: "POST", body: JSON.stringify(input) });
+  },
+
+  async queueNewsletterCampaign(id: string): Promise<{ data: { queued: number } }> {
+    return apiFetch(`/api/newsletter/admin/campaigns/${encodeURIComponent(id)}/send`, { method: "POST" });
   },
 
   async loginAdmin(email: string, password: string): Promise<{ data: { authenticated: boolean; user: { email: string } } }> {
