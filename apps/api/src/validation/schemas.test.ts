@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { articleQuerySchema, commentSchema, communityPlacementDecisionSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, markdownResourceMetadataSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, sourceCheckRequestSchema } from "./schemas.js";
+import { articleQuerySchema, commentSchema, communityPlacementDecisionSchema, createArticleSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorOnboardingSchema, editionSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, markdownResourceMetadataSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, readerPasswordResetConfirmSchema, readerPasswordResetRequestSchema, sourceCheckRequestSchema } from "./schemas.js";
 
 const article = {
   title: "A valid title",
@@ -78,6 +78,12 @@ describe("content validation", () => {
   it("validates reader password changes", () => {
     expect(readerPasswordChangeSchema.safeParse({ currentPassword: "old-password", newPassword: "new-password" }).success).toBe(true);
     expect(readerPasswordChangeSchema.safeParse({ currentPassword: "old-password", newPassword: "short" }).success).toBe(false);
+  });
+
+  it("validates password-reset emails, OTPs, and replacement passwords", () => {
+    expect(readerPasswordResetRequestSchema.parse({ email: " Reader@Example.com " })).toEqual({ email: "reader@example.com" });
+    expect(readerPasswordResetConfirmSchema.safeParse({ email: "reader@example.com", code: "123456", newPassword: "new-password" }).success).toBe(true);
+    expect(readerPasswordResetConfirmSchema.safeParse({ email: "reader@example.com", code: "12345a", newPassword: "short" }).success).toBe(false);
   });
 
   it("normalizes valid creator handles and rejects unstable forms", () => {

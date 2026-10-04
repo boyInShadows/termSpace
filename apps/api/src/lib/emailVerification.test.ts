@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createEmailVerificationToken, localEmailVerificationBypassEnabled, verifyEmailVerificationToken, verificationUrl } from "./emailVerification.js";
+import { createEmailVerificationToken, createPasswordResetCode, localEmailVerificationBypassEnabled, verifyEmailVerificationToken, verifyPasswordResetCode, verificationUrl } from "./emailVerification.js";
 
 describe("email verification tokens", () => {
   const previousSecret = process.env.EMAIL_VERIFICATION_SECRET;
@@ -29,6 +29,15 @@ describe("email verification tokens", () => {
     const url = verificationUrl("verification-1.signature");
     expect(url).toBe("https://termspace.example/account/verify-email#token=verification-1.signature");
     expect(new URL(url).search).toBe("");
+  });
+
+  it("derives a stable six-digit reset code without storing the code", () => {
+    const fields = { id: "reset-1", userId: "reader-1", expiresAt: new Date("2026-09-15T12:30:00.000Z") };
+    const code = createPasswordResetCode(fields);
+    expect(code).toMatch(/^\d{6}$/);
+    expect(verifyPasswordResetCode(code, fields)).toBe(true);
+    expect(verifyPasswordResetCode(code, { ...fields, userId: "reader-2" })).toBe(false);
+    expect(verifyPasswordResetCode("12345a", fields)).toBe(false);
   });
 
   it("allows the explicit local bypass only for loopback public URLs", () => {

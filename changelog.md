@@ -2,6 +2,35 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-04
+
+- Added email OTP password recovery for reader accounts. Reset requests return the same accepted
+  response for missing, Google-only, throttled, and eligible accounts; six-digit codes are derived
+  from signed database state rather than stored as plaintext, expire after 10 minutes, allow five
+  attempts, are single-use, and invalidate all reader sessions after a successful password change.
+- Reused the existing transactional email outbox and Cloudflare Email Service worker for reset
+  messages, including the documented named-sender format. Added migration
+  `202610040001_password_reset_otp` with an exactly-one-target constraint so verification and reset
+  jobs share the queue without ambiguous records.
+- Added the English and Persian forgot-password UI to `/account`, translated known auth errors,
+  and added registration password confirmation. Shared surfaces changed: `apps/web/lib/api.ts`,
+  `apps/web/lib/i18n/common.ts`, `apps/api/prisma/schema.prisma`, and the new migration.
+- Configured the installed `$ponytail:ponytail` workflow in `AGENTS.md` without pinning its stale
+  cache path. Its smallest-change rule is explicitly subordinate to the repository's security,
+  validation, accessibility, migration, and verification gates. Shared process surfaces changed:
+  `AGENTS.md` and this changelog.
+- Restored placeholder admin credentials in tracked `.env.example`; the local ignored `.env` was
+  not changed. The exposed password must still be rotated because it appeared in a tracked-file
+  diff.
+- Verification: Prisma client generation, schema validation, and deployment of all 29 migrations
+  to isolated schema `codex_preview`; root typecheck; 266 tests passing (153 API, 15 Blog, 98 web);
+  web lint; all production builds; `git diff --check`; a live API/database lifecycle covering
+  register, reset request, reset confirmation, old-password rejection, new-password login, replay
+  rejection, missing-account non-enumeration, and cleanup; plus a browser pass of the account and
+  OTP-entry screens against the running API and PostgreSQL. Cloudflare delivery was verified with
+  mocked provider responses because this machine does not have the Cloudflare account ID or Email
+  API token configured.
+
 ## 2026-09-25
 
 - Removed the duplicate `/api/community` creator and product mutation surface

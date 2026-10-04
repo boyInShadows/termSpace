@@ -10,9 +10,15 @@ import {
   EMAIL_VERIFICATION_RESEND_COOLDOWN_MS,
   EMAIL_VERIFICATION_RESEND_LIMIT,
   EMAIL_VERIFICATION_RESEND_WINDOW_MS,
+  PASSWORD_RESET_ATTEMPT_LIMIT,
+  PASSWORD_RESET_REQUEST_COOLDOWN_MS,
+  PASSWORD_RESET_REQUEST_LIMIT,
+  PASSWORD_RESET_REQUEST_WINDOW_MS,
   localEmailVerificationBypassEnabled,
+  newPasswordResetData,
   newVerificationData,
   verifyEmailVerificationToken,
+  verifyPasswordResetCode,
 } from "../lib/emailVerification.js";
 
 const sessionDays = Math.max(1, Number(process.env.READER_SESSION_DAYS ?? 30));
@@ -165,6 +171,98 @@ export async function confirmReaderEmailVerification(req: Request, res: Response
     return;
   }
   res.json({ data: { verified: true } });
+}
+
+export async function requestReaderPasswordReset(req: Request, res: Response) {
+  const email = String(req.body.email).trim().toLowerCase();
+  const genericResponse = { data: { accepted: true } };
+  const user = await prisma.readerUser.findUnique({
+    where: { email },
+    select: { id: true, passwordHash: true },
+  });
+  if (!user?.passwordHash) {
+    res.status(202).json(genericResponse);
+    return;
+  }
+
+  const correlationId = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`password-reset:${user.id}`}, 0))`;
+    const now = new Date();
+    const windowStart = new Date(now.getTime() - PASSWORD_RESET_REQUEST_WINDOW_MS);
+    const [mostRecent, recentCount] = await Promise.all([
+      tx.readerPasswordReset.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+      tx.readerPasswordReset.count({ where: { userId: user.id, createdAt: { gte: windowStart } } }),
+    ]);
+    if ((mostRecent && mostRecent.createdAt > new Date(now.getTime() - PASSWORD_RESET_REQUEST_COOLDOWN_MS)) || recentCount >= PASSWORD_RESET_REQUEST_LIMIT) return null;
+
+    const data = newPasswordResetData(now);
+    await tx.transactionalEmailOutbox.updateMany({
+      where: { passwordReset: { userId: user.id }, status: { in: ["PENDING", "PROCESSING", "RETRY"] } },
+      data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "SUPERSEDED" },
+    });
+    await tx.readerPasswordReset.updateMany({ where: { userId: user.id, consumedAt: null }, data: { consumedAt: now } });
+    await tx.readerPasswordReset.create({ data: { userId: user.id, ...data } });
+    return data.outbox.create.correlationId;
+  });
+  if (correlationId) req.log?.info({ correlationId }, "Password reset email queued");
+  res.status(202).json(genericResponse);
+}
+
+export async function confirmReaderPasswordReset(req: Request, res: Response) {
+  const email = String(req.body.email).trim().toLowerCase();
+  const code = String(req.body.code);
+  const user = await prisma.readerUser.findUnique({
+    where: { email },
+    select: { id: true, passwordHash: true, emailVerifiedAt: true },
+  });
+  const reset = user?.passwordHash ? await prisma.readerPasswordReset.findFirst({
+    where: { userId: user.id, consumedAt: null },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, userId: true, expiresAt: true, consumedAt: true, failedAttempts: true },
+  }) : null;
+  const now = new Date();
+  const active = Boolean(reset && !reset.consumedAt && reset.expiresAt > now && reset.failedAttempts < PASSWORD_RESET_ATTEMPT_LIMIT);
+  if (!user?.passwordHash || !reset || !active || !verifyPasswordResetCode(code, reset)) {
+    if (reset && active) {
+      const finalAttempt = reset.failedAttempts + 1 >= PASSWORD_RESET_ATTEMPT_LIMIT;
+      await prisma.readerPasswordReset.updateMany({
+        where: { id: reset.id, consumedAt: null, failedAttempts: reset.failedAttempts, expiresAt: { gt: now } },
+        data: { failedAttempts: { increment: 1 }, consumedAt: finalAttempt ? now : undefined },
+      });
+    }
+    res.status(400).json({ error: { code: "INVALID_OR_EXPIRED_OTP", message: "This reset code is invalid or expired" } });
+    return;
+  }
+  if (await compare(String(req.body.newPassword), user.passwordHash)) {
+    res.status(400).json({ error: { code: "PASSWORD_UNCHANGED", message: "Choose a different password" } });
+    return;
+  }
+
+  const passwordHash = await hash(String(req.body.newPassword), 12);
+  const changed = await prisma.$transaction(async (tx) => {
+    const consumed = await tx.readerPasswordReset.updateMany({
+      where: { id: reset.id, consumedAt: null, failedAttempts: reset.failedAttempts, expiresAt: { gt: now } },
+      data: { consumedAt: now },
+    });
+    if (consumed.count !== 1) return false;
+    await tx.readerUser.update({ where: { id: user.id }, data: { passwordHash, emailVerifiedAt: user.emailVerifiedAt ?? now } });
+    await tx.readerSession.deleteMany({ where: { userId: user.id } });
+    await tx.readerPasswordReset.updateMany({
+      where: { userId: user.id, id: { not: reset.id }, consumedAt: null },
+      data: { consumedAt: now },
+    });
+    await tx.transactionalEmailOutbox.updateMany({
+      where: { passwordReset: { userId: user.id }, status: { in: ["PENDING", "PROCESSING", "RETRY"] } },
+      data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "PASSWORD_RESET" },
+    });
+    return true;
+  });
+  if (!changed) {
+    res.status(400).json({ error: { code: "INVALID_OR_EXPIRED_OTP", message: "This reset code is invalid or expired" } });
+    return;
+  }
+  res.clearCookie(READER_SESSION_COOKIE, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/" });
+  res.json({ data: { reset: true } });
 }
 
 export async function loginReaderWithGoogle(req: Request, res: Response) {

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { Prisma, type TransactionalEmailStatus } from "@prisma/client";
-import { sendVerificationEmail } from "../lib/cloudflareEmail.js";
-import { createEmailVerificationToken, verificationUrl } from "../lib/emailVerification.js";
+import { sendPasswordResetEmail, sendVerificationEmail } from "../lib/cloudflareEmail.js";
+import { createEmailVerificationToken, createPasswordResetCode, verificationUrl } from "../lib/emailVerification.js";
 import { prisma } from "../lib/prisma.js";
 
 const MAX_ATTEMPTS = 5;
@@ -9,7 +9,8 @@ const RETRY_DELAYS_MS = [60_000, 5 * 60_000, 30 * 60_000, 2 * 60 * 60_000, 8 * 6
 
 type ClaimedEmail = {
   id: string;
-  verificationId: string;
+  verificationId: string | null;
+  passwordResetId: string | null;
   correlationId: string;
   attempts: number;
 };
@@ -32,29 +33,46 @@ export async function claimTransactionalEmails(limit = 10): Promise<ClaimedEmail
     SET "status" = 'PROCESSING', "lockedAt" = NOW(), "attempts" = outbox."attempts" + 1, "updatedAt" = NOW()
     FROM candidates
     WHERE outbox."id" = candidates."id"
-    RETURNING outbox."id", outbox."verificationId", outbox."correlationId", outbox."attempts"
+    RETURNING outbox."id", outbox."verificationId", outbox."passwordResetId", outbox."correlationId", outbox."attempts"
   `);
 }
 
 export async function processTransactionalEmailBatch(limit = Number(process.env.EMAIL_WORKER_BATCH_SIZE ?? 10)) {
   const claimed = await claimTransactionalEmails(limit);
   for (const job of claimed) {
-    const verification = await prisma.readerEmailVerification.findUnique({
-      where: { id: job.verificationId },
-      select: { id: true, userId: true, expiresAt: true, consumedAt: true, user: { select: { email: true, emailVerifiedAt: true } } },
-    });
-
-    if (!verification || verification.consumedAt || verification.expiresAt <= new Date() || verification.user.emailVerifiedAt) {
-      await prisma.transactionalEmailOutbox.update({ where: { id: job.id }, data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "VERIFICATION_INACTIVE" } });
+    let result: Awaited<ReturnType<typeof sendVerificationEmail>>;
+    if (job.verificationId) {
+      const verification = await prisma.readerEmailVerification.findUnique({
+        where: { id: job.verificationId },
+        select: { id: true, userId: true, expiresAt: true, consumedAt: true, user: { select: { email: true, emailVerifiedAt: true } } },
+      });
+      if (!verification || verification.consumedAt || verification.expiresAt <= new Date() || verification.user.emailVerifiedAt) {
+        await prisma.transactionalEmailOutbox.update({ where: { id: job.id }, data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "VERIFICATION_INACTIVE" } });
+        continue;
+      }
+      result = await sendVerificationEmail({
+        to: verification.user.email,
+        verificationUrl: verificationUrl(createEmailVerificationToken(verification)),
+        correlationId: job.correlationId,
+      });
+    } else if (job.passwordResetId) {
+      const reset = await prisma.readerPasswordReset.findUnique({
+        where: { id: job.passwordResetId },
+        select: { id: true, userId: true, expiresAt: true, consumedAt: true, failedAttempts: true, user: { select: { email: true, passwordHash: true } } },
+      });
+      if (!reset || reset.consumedAt || reset.expiresAt <= new Date() || !reset.user.passwordHash) {
+        await prisma.transactionalEmailOutbox.update({ where: { id: job.id }, data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "PASSWORD_RESET_INACTIVE" } });
+        continue;
+      }
+      result = await sendPasswordResetEmail({
+        to: reset.user.email,
+        code: createPasswordResetCode(reset),
+        correlationId: job.correlationId,
+      });
+    } else {
+      await prisma.transactionalEmailOutbox.update({ where: { id: job.id }, data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "INVALID_TARGET" } });
       continue;
     }
-
-    const token = createEmailVerificationToken(verification);
-    const result = await sendVerificationEmail({
-      to: verification.user.email,
-      verificationUrl: verificationUrl(token),
-      correlationId: job.correlationId,
-    });
 
     let status: TransactionalEmailStatus;
     if (result.outcome === "sent") status = "SENT";

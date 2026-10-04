@@ -4,6 +4,11 @@ export const EMAIL_VERIFICATION_TTL_MS = 30 * 60 * 1000;
 export const EMAIL_VERIFICATION_RESEND_COOLDOWN_MS = 60 * 1000;
 export const EMAIL_VERIFICATION_RESEND_WINDOW_MS = 60 * 60 * 1000;
 export const EMAIL_VERIFICATION_RESEND_LIMIT = 5;
+export const PASSWORD_RESET_TTL_MS = 10 * 60 * 1000;
+export const PASSWORD_RESET_REQUEST_COOLDOWN_MS = 60 * 1000;
+export const PASSWORD_RESET_REQUEST_WINDOW_MS = 60 * 60 * 1000;
+export const PASSWORD_RESET_REQUEST_LIMIT = 5;
+export const PASSWORD_RESET_ATTEMPT_LIMIT = 5;
 
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
@@ -49,6 +54,12 @@ function signature(fields: VerificationFields): Buffer {
     .digest();
 }
 
+function passwordResetDigest(fields: VerificationFields): Buffer {
+  return createHmac("sha256", verificationSecret())
+    .update(`password-reset.${fields.id}.${fields.userId}.${fields.expiresAt.getTime()}`)
+    .digest();
+}
+
 export function createEmailVerificationToken(fields: VerificationFields): string {
   return `${fields.id}.${signature(fields).toString("base64url")}`;
 }
@@ -68,6 +79,22 @@ export function verifyEmailVerificationToken(token: string, fields: Verification
 export function newVerificationData(now = new Date()) {
   return {
     expiresAt: new Date(now.getTime() + EMAIL_VERIFICATION_TTL_MS),
+    outbox: { create: { correlationId: randomUUID() } },
+  };
+}
+
+export function createPasswordResetCode(fields: VerificationFields): string {
+  return String(passwordResetDigest(fields).readUInt32BE(0) % 1_000_000).padStart(6, "0");
+}
+
+export function verifyPasswordResetCode(code: string, fields: VerificationFields): boolean {
+  if (!/^\d{6}$/.test(code)) return false;
+  return timingSafeEqual(Buffer.from(code), Buffer.from(createPasswordResetCode(fields)));
+}
+
+export function newPasswordResetData(now = new Date()) {
+  return {
+    expiresAt: new Date(now.getTime() + PASSWORD_RESET_TTL_MS),
     outbox: { create: { correlationId: randomUUID() } },
   };
 }

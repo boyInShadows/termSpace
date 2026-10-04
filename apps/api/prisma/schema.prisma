@@ -261,6 +261,7 @@ model ReaderUser {
   marketplaceRoleGrants  MarketplaceRoleGrant[]
   marketplaceRoleEvents  MarketplaceRoleEvent[]
   emailVerifications     ReaderEmailVerification[]
+  passwordResets         ReaderPasswordReset[]
   marketplaceCreator     MarketplaceCreator?                @relation("OwnedCreator")
   listingLifecycleEvents MarketplaceListingLifecycleEvent[]
   communityRequests      MarketplaceCommunityPlacementRequest[]
@@ -292,9 +293,24 @@ model ReaderEmailVerification {
   @@index([expiresAt, consumedAt])
 }
 
+model ReaderPasswordReset {
+  id             String                    @id @default(cuid())
+  userId         String
+  expiresAt      DateTime
+  consumedAt     DateTime?
+  failedAttempts Int                       @default(0)
+  createdAt      DateTime                  @default(now())
+  user           ReaderUser                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outbox         TransactionalEmailOutbox?
+
+  @@index([userId, createdAt])
+  @@index([expiresAt, consumedAt])
+}
+
 model TransactionalEmailOutbox {
   id             String                   @id @default(cuid())
-  verificationId String                   @unique
+  verificationId String?                  @unique
+  passwordResetId String?                 @unique
   correlationId  String                   @unique
   status         TransactionalEmailStatus @default(PENDING)
   attempts       Int                      @default(0)
@@ -305,7 +321,8 @@ model TransactionalEmailOutbox {
   lastErrorCode  String?
   createdAt      DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt
-  verification   ReaderEmailVerification  @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+  verification   ReaderEmailVerification? @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+  passwordReset  ReaderPasswordReset?     @relation(fields: [passwordResetId], references: [id], onDelete: Cascade)
 
   @@index([status, nextAttemptAt])
   @@index([lockedAt])

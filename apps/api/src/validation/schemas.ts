@@ -112,6 +112,16 @@ export const readerPasswordChangeSchema = z.object({
   newPassword: z.string().min(8, "New password must be at least 8 characters").max(128),
 });
 
+export const readerPasswordResetRequestSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Enter a valid email address").max(320),
+});
+
+export const readerPasswordResetConfirmSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Enter a valid email address").max(320),
+  code: z.string().regex(/^\d{6}$/, "Enter the six-digit code"),
+  newPassword: z.string().min(8, "New password must be at least 8 characters").max(128),
+});
+
 export const googleCredentialSchema = z.object({
   credential: z.string().min(100).max(5000),
 });

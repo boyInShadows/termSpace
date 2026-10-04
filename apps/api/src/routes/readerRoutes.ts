@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { addBookmark, changeReaderPassword, confirmReaderEmailVerification, getReaderLibrary, getReaderProfile, getReaderSession, loginReader, loginReaderWithGoogle, logoutReader, registerReader, removeBookmark, requestReaderEmailVerification, saveProgress, syncReaderLibrary } from "../controllers/readerController.js";
+import { addBookmark, changeReaderPassword, confirmReaderEmailVerification, confirmReaderPasswordReset, getReaderLibrary, getReaderProfile, getReaderSession, loginReader, loginReaderWithGoogle, logoutReader, registerReader, removeBookmark, requestReaderEmailVerification, requestReaderPasswordReset, saveProgress, syncReaderLibrary } from "../controllers/readerController.js";
 import { requireReader } from "../middleware/auth.js";
-import { emailVerificationAttemptRateLimit, emailVerificationRequestRateLimit, loginRateLimit } from "../middleware/security.js";
+import { emailVerificationAttemptRateLimit, emailVerificationRequestRateLimit, loginRateLimit, passwordResetAttemptRateLimit, passwordResetRequestRateLimit } from "../middleware/security.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
-import { emailVerificationConfirmSchema, googleCredentialSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, readerProgressSchema, routeSlugSchema } from "../validation/schemas.js";
+import { emailVerificationConfirmSchema, googleCredentialSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, readerPasswordResetConfirmSchema, readerPasswordResetRequestSchema, readerProgressSchema, routeSlugSchema } from "../validation/schemas.js";
 
 const router = Router();
 router.param("slug", validateRouteParam("slug", routeSlugSchema));
@@ -15,6 +15,8 @@ router.get("/session", requireReader, getReaderSession);
 router.get("/profile", requireReader, getReaderProfile);
 router.post("/email-verification/request", requireReader, emailVerificationRequestRateLimit, requestReaderEmailVerification);
 router.post("/email-verification/confirm", emailVerificationAttemptRateLimit, validate(emailVerificationConfirmSchema), confirmReaderEmailVerification);
+router.post("/password-reset/request", passwordResetRequestRateLimit, validate(readerPasswordResetRequestSchema), requestReaderPasswordReset);
+router.post("/password-reset/confirm", passwordResetAttemptRateLimit, validate(readerPasswordResetConfirmSchema), confirmReaderPasswordReset);
 router.put("/profile/password", requireReader, loginRateLimit, validate(readerPasswordChangeSchema), changeReaderPassword);
 router.get("/library", requireReader, getReaderLibrary);
 router.post("/library/sync", requireReader, validate(readerLibrarySyncSchema), syncReaderLibrary);

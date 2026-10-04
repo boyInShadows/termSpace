@@ -10,6 +10,7 @@ const prismaMock = vi.hoisted(() => ({
   readerUser: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
   readerSession: { findFirst: vi.fn(), deleteMany: vi.fn(), create: vi.fn() },
   readerEmailVerification: { findUnique: vi.fn(), findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
+  readerPasswordReset: { findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   transactionalEmailOutbox: { updateMany: vi.fn() },
   marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), groupBy: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceProductVersion: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
@@ -46,7 +47,7 @@ process.env.NODE_ENV = "test";
 process.env.GOOGLE_CLIENT_ID = "test-google-client-id";
 process.env.EMAIL_VERIFICATION_SECRET = "test-secret-that-is-definitely-longer-than-32-bytes";
 const { createApp } = await import("./app.js");
-const { createEmailVerificationToken } = await import("./lib/emailVerification.js");
+const { createEmailVerificationToken, createPasswordResetCode } = await import("./lib/emailVerification.js");
 
 function marketplaceManifestFixture() {
   return {
@@ -1637,6 +1638,94 @@ describe("API", () => {
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe("INVALID_OR_EXPIRED_VERIFICATION");
     expect(prismaMock.readerUser.update).not.toHaveBeenCalled();
+  });
+
+  it("returns the same password-reset response for missing and eligible accounts", async () => {
+    prismaMock.readerUser.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: "reader-1", passwordHash: "hash" });
+    prismaMock.readerPasswordReset.findFirst.mockResolvedValue(null);
+    prismaMock.readerPasswordReset.count.mockResolvedValue(0);
+    prismaMock.readerPasswordReset.updateMany.mockResolvedValue({ count: 0 });
+    prismaMock.readerPasswordReset.create.mockResolvedValue({});
+    prismaMock.transactionalEmailOutbox.updateMany.mockResolvedValue({ count: 0 });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const missing = await request(createApp()).post("/api/readers/password-reset/request").send({ email: "missing@example.com" });
+    const eligible = await request(createApp()).post("/api/readers/password-reset/request").send({ email: "reader@example.com" });
+
+    expect(missing.status).toBe(202);
+    expect(eligible.status).toBe(202);
+    expect(missing.body).toEqual(eligible.body);
+    expect(prismaMock.readerPasswordReset.create).toHaveBeenCalledWith({
+      data: { userId: "reader-1", expiresAt: expect.any(Date), outbox: { create: { correlationId: expect.any(String) } } },
+    });
+  });
+
+  it("does not create reset jobs for Google-only accounts", async () => {
+    prismaMock.readerUser.findUnique.mockResolvedValue({ id: "reader-1", passwordHash: null });
+
+    const response = await request(createApp()).post("/api/readers/password-reset/request").send({ email: "reader@example.com" });
+
+    expect(response.status).toBe(202);
+    expect(response.body).toEqual({ data: { accepted: true } });
+    expect(prismaMock.readerPasswordReset.create).not.toHaveBeenCalled();
+  });
+
+  it("counts wrong reset codes and keeps the response generic", async () => {
+    const reset = { id: "reset-1", userId: "reader-1", expiresAt: new Date(Date.now() + 60_000), consumedAt: null, failedAttempts: 2 };
+    const validCode = createPasswordResetCode(reset);
+    const wrongCode = `${validCode.slice(0, 5)}${validCode.endsWith("0") ? "1" : "0"}`;
+    prismaMock.readerUser.findUnique.mockResolvedValue({ id: "reader-1", passwordHash: await hash("old-password", 4), emailVerifiedAt: new Date() });
+    prismaMock.readerPasswordReset.findFirst.mockResolvedValue(reset);
+    prismaMock.readerPasswordReset.updateMany.mockResolvedValue({ count: 1 });
+
+    const response = await request(createApp()).post("/api/readers/password-reset/confirm").send({ email: "reader@example.com", code: wrongCode, newPassword: "new-password" });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("INVALID_OR_EXPIRED_OTP");
+    expect(prismaMock.readerPasswordReset.updateMany).toHaveBeenCalledWith(expect.objectContaining({ data: { failedAttempts: { increment: 1 }, consumedAt: undefined } }));
+  });
+
+  it("locks a reset after five failed OTP attempts and does not count expired attempts", async () => {
+    const activeReset = { id: "reset-active", userId: "reader-1", expiresAt: new Date(Date.now() + 60_000), consumedAt: null, failedAttempts: 4 };
+    const expiredReset = { ...activeReset, id: "reset-expired", expiresAt: new Date(Date.now() - 1), failedAttempts: 0 };
+    prismaMock.readerUser.findUnique.mockResolvedValue({ id: "reader-1", passwordHash: "hash", emailVerifiedAt: new Date() });
+    prismaMock.readerPasswordReset.findFirst.mockResolvedValueOnce(activeReset).mockResolvedValueOnce(expiredReset);
+    prismaMock.readerPasswordReset.updateMany.mockResolvedValue({ count: 1 });
+    const validCode = createPasswordResetCode(activeReset);
+    const wrongCode = `${validCode.slice(0, 5)}${validCode.endsWith("0") ? "1" : "0"}`;
+
+    const locked = await request(createApp()).post("/api/readers/password-reset/confirm").send({ email: "reader@example.com", code: wrongCode, newPassword: "new-password" });
+    const expired = await request(createApp()).post("/api/readers/password-reset/confirm").send({ email: "reader@example.com", code: "000000", newPassword: "new-password" });
+
+    expect(locked.status).toBe(400);
+    expect(expired.status).toBe(400);
+    expect(prismaMock.readerPasswordReset.updateMany).toHaveBeenCalledTimes(1);
+    expect(prismaMock.readerPasswordReset.updateMany).toHaveBeenCalledWith(expect.objectContaining({ data: { failedAttempts: { increment: 1 }, consumedAt: expect.any(Date) } }));
+  });
+
+  it("resets a password once and invalidates every active session", async () => {
+    const reset = { id: "reset-1", userId: "reader-1", expiresAt: new Date(Date.now() + 60_000), consumedAt: null, failedAttempts: 0 };
+    const user = { id: "reader-1", passwordHash: await hash("old-password", 4), emailVerifiedAt: null };
+    prismaMock.readerUser.findUnique.mockResolvedValue(user);
+    prismaMock.readerPasswordReset.findFirst.mockResolvedValueOnce(reset).mockResolvedValueOnce(null);
+    prismaMock.readerPasswordReset.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.readerUser.update.mockResolvedValue({});
+    prismaMock.readerSession.deleteMany.mockResolvedValue({ count: 2 });
+    prismaMock.transactionalEmailOutbox.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const payload = { email: "reader@example.com", code: createPasswordResetCode(reset), newPassword: "new-password" };
+    const first = await request(createApp()).post("/api/readers/password-reset/confirm").send(payload);
+    const replay = await request(createApp()).post("/api/readers/password-reset/confirm").send(payload);
+
+    expect(first.status).toBe(200);
+    expect(first.body).toEqual({ data: { reset: true } });
+    expect(first.headers["set-cookie"][0]).toContain("term_academy_reader=;");
+    expect(prismaMock.readerSession.deleteMany).toHaveBeenCalledWith({ where: { userId: "reader-1" } });
+    expect(prismaMock.readerUser.update).toHaveBeenCalledWith(expect.objectContaining({ data: { passwordHash: expect.any(String), emailVerifiedAt: expect.any(Date) } }));
+    expect(replay.status).toBe(400);
+    expect(replay.body.error.code).toBe("INVALID_OR_EXPIRED_OTP");
   });
 
   it("safely claims an unverified password account with a verified Google identity", async () => {

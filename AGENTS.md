@@ -40,6 +40,14 @@ Tool-agnostic rules first; Claude Code specifics are in their own section at the
 - Prefer editing an existing plan/checklist to re-explaining state in prose.
 - Never commit `.env*`, `node_modules`, Playwright traces, or Lighthouse reports.
 
+## Ponytail
+
+- For implementation and code-review work, use the installed `$ponytail:ponytail` skill in its
+  default full mode unless the user asks for a different mode. Resolve it from the active skill
+  catalog or installed plugin cache; do not pin a versioned cache path in project instructions.
+- Apply its smallest-change/YAGNI guidance without weakening validation, authentication,
+  authorization, security, accessibility, migrations, or the verification gates in this file.
+
 ## Claude Code session commands
 
 When to use each, not just what it does.
