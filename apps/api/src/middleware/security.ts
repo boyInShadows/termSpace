@@ -72,6 +72,22 @@ export const emailVerificationAttemptRateLimit = rateLimit({
   message: rateLimitResponse,
 });
 
+export const passwordResetRequestRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: (_req, res) => { res.status(202).json({ data: { accepted: true } }); },
+});
+
+export const passwordResetAttemptRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: rateLimitResponse,
+});
+
 export const newsletterRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 5,

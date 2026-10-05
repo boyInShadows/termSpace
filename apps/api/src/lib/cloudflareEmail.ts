@@ -8,6 +8,12 @@ type SendVerificationEmailInput = {
   correlationId: string;
 };
 
+type SendPasswordResetEmailInput = {
+  to: string;
+  code: string;
+  correlationId: string;
+};
+
 type FetchLike = typeof fetch;
 type CloudflareEmailResponse = { result?: { delivered?: unknown[]; queued?: unknown[]; permanent_bounces?: unknown[] } };
 
@@ -28,6 +34,32 @@ export async function sendVerificationEmail(
   input: SendVerificationEmailInput,
   fetchImpl: FetchLike = fetch,
 ): Promise<EmailDeliveryResult> {
+  return sendTransactionalEmail({
+    to: input.to,
+    correlationId: input.correlationId,
+    subject: "Verify your TermSpace email",
+    text: `Verify your email to use TermSpace creator features. This link expires in 30 minutes:\n\n${input.verificationUrl}\n\nIf you did not create this account, you can ignore this message.`,
+    html: `<p>Verify your email to use TermSpace creator features.</p><p><a href="${input.verificationUrl}">Verify email</a></p><p>This link expires in 30 minutes. If you did not create this account, you can ignore this message.</p>`,
+  }, fetchImpl);
+}
+
+export async function sendPasswordResetEmail(
+  input: SendPasswordResetEmailInput,
+  fetchImpl: FetchLike = fetch,
+): Promise<EmailDeliveryResult> {
+  return sendTransactionalEmail({
+    to: input.to,
+    correlationId: input.correlationId,
+    subject: "Reset your TermSpace password",
+    text: `Your TermSpace password reset code is ${input.code}. It expires in 10 minutes.\n\nIf you did not request this code, you can ignore this message.`,
+    html: `<p>Your TermSpace password reset code is:</p><p style="font-size:24px;font-weight:700;letter-spacing:0.2em">${input.code}</p><p>It expires in 10 minutes. If you did not request this code, you can ignore this message.</p>`,
+  }, fetchImpl);
+}
+
+async function sendTransactionalEmail(
+  input: { to: string; correlationId: string; subject: string; text: string; html: string },
+  fetchImpl: FetchLike,
+): Promise<EmailDeliveryResult> {
   let config;
   try {
     config = emailConfig();
@@ -47,11 +79,11 @@ export async function sendVerificationEmail(
           "X-Correlation-ID": input.correlationId,
         },
         body: JSON.stringify({
-          from: { address: config.fromAddress, name: config.fromName },
+          from: `${config.fromName} <${config.fromAddress}>`,
           to: input.to,
-          subject: "Verify your TermSpace email",
-          text: `Verify your email to use TermSpace creator features. This link expires in 30 minutes:\n\n${input.verificationUrl}\n\nIf you did not create this account, you can ignore this message.`,
-          html: `<p>Verify your email to use TermSpace creator features.</p><p><a href="${input.verificationUrl}">Verify email</a></p><p>This link expires in 30 minutes. If you did not create this account, you can ignore this message.</p>`,
+          subject: input.subject,
+          text: input.text,
+          html: input.html,
         }),
         signal: AbortSignal.timeout(10_000),
       },

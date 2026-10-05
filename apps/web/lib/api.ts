@@ -75,6 +75,8 @@ export type MarketplaceRole = "creator" | "moderator" | "administrator";
 export async function getSession() { return request<{ data: { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } }>("/api/readers/session"); }
 export async function login(email: string, password: string) { return request("/api/readers/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function register(email: string, password: string) { return request("/api/readers/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
+export async function requestPasswordReset(email: string) { return request<{ data: { accepted: true } }>("/api/readers/password-reset/request", { method: "POST", body: JSON.stringify({ email }) }); }
+export async function confirmPasswordReset(email: string, code: string, newPassword: string) { return request<{ data: { reset: true } }>("/api/readers/password-reset/confirm", { method: "POST", body: JSON.stringify({ email, code, newPassword }) }); }
 export async function logout() { return request("/api/readers/logout", { method: "POST" }); }
 export async function requestEmailVerification() { return request<{ data: { accepted: true } }>("/api/readers/email-verification/request", { method: "POST" }); }
 export async function confirmEmailVerification(token: string) { return request<{ data: { verified: true } }>("/api/readers/email-verification/confirm", { method: "POST", body: JSON.stringify({ token }) }); }

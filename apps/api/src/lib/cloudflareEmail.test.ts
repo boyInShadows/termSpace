@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { sendVerificationEmail } from "./cloudflareEmail.js";
+import { sendPasswordResetEmail, sendVerificationEmail } from "./cloudflareEmail.js";
 
 describe("Cloudflare transactional email", () => {
   beforeEach(() => {
@@ -19,7 +19,17 @@ describe("Cloudflare transactional email", () => {
     const request = fetchMock.mock.calls[0][1] as RequestInit;
     const body = JSON.parse(String(request.body));
     expect(body).toMatchObject({ to: "reader@example.com", subject: "Verify your TermSpace email", text: expect.any(String), html: expect.any(String) });
+    expect(body.from).toBe("TermSpace <account@termspace.example>");
     expect(request.headers).toMatchObject({ "X-Correlation-ID": "correlation-1" });
+  });
+
+  it("sends password reset OTPs through the same provider without logging message contents", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ result: { delivered: ["reader@example.com"] } }), { status: 200 }));
+    const result = await sendPasswordResetEmail({ to: "reader@example.com", code: "123456", correlationId: "correlation-reset" }, fetchMock);
+    expect(result).toEqual({ outcome: "sent", statusCode: 200 });
+    const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
+    expect(body).toMatchObject({ subject: "Reset your TermSpace password", text: expect.stringContaining("123456"), html: expect.stringContaining("123456") });
+    expect(console.info).toHaveBeenCalledWith(expect.not.stringContaining("123456"));
   });
 
   it.each([429, 500, 503])("retries retryable HTTP %s failures", async (status) => {
