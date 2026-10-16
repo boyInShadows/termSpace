@@ -258,6 +258,7 @@ model ReaderUser {
   progress               ReaderReadingProgress[]
   productFavorites       MarketplaceFavorite[]
   marketplaceOrders      MarketplaceOrder[]
+  marketplaceReviews     MarketplaceReview[]
   marketplaceRoleGrants  MarketplaceRoleGrant[]
   marketplaceRoleEvents  MarketplaceRoleEvent[]
   emailVerifications     ReaderEmailVerification[]
@@ -1102,14 +1103,24 @@ model MarketplaceWorkflowReleaseDetails {
 model MarketplaceReview {
   id               String             @id @default(cuid())
   productId        String
+  // Null only for legacy seeded rows; a real review always has its author's account.
+  userId           String?
+  // The display name the reviewer chose for this review; never derived from their email.
   author           String
   rating           Int
   body             String
   verifiedPurchase Boolean            @default(false)
   published        Boolean            @default(false)
+  // Set by a moderator when hiding; the owner cannot edit or delete a hidden review.
+  hiddenReason     String?
+  hiddenAt         DateTime?
+  hiddenById       String?
   createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @default(now()) @updatedAt
   product          MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user             ReaderUser?        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, productId])
   @@index([productId, published, createdAt])
 }
 

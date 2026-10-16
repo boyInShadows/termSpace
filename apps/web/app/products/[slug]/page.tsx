@@ -15,6 +15,7 @@ import { listingTransitionName } from "@/lib/listing-transition";
 import { ApiError, getProduct } from "@/lib/api";
 import { copy, localePath, type Locale } from "@/lib/i18n";
 import { ReleaseProvenance, provenanceTitle } from "@/features/product/release-provenance";
+import { ReviewComposer } from "@/features/product/review-composer";
 import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
 import type { ProductDetail } from "@/lib/types";
@@ -256,6 +257,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             )}
 
             <Section title={`${l.reviews} · ${product.rating}`} id="reviews">
+              <ReviewComposer slug={product.slug} />
               {product.reviews.length === 0 ? (
                 <p>{l.noReviews}</p>
               ) : (

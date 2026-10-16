@@ -1,4 +1,4 @@
-import type { CreatorDashboardResult, CreatorReleaseHistory, MarketplaceCommunity, MarketplaceCommunityPageResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceInstallation, MarketplaceItemType, MarketplaceLibraryEntry, MarketplaceModerationPreview, MarketplaceModerationQueueResult, MarketplaceProviderConnection, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
+import type { MyReviewState, OwnReview, ReviewInput, CreatorDashboardResult, CreatorReleaseHistory, MarketplaceCommunity, MarketplaceCommunityPageResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceInstallation, MarketplaceItemType, MarketplaceLibraryEntry, MarketplaceModerationPreview, MarketplaceModerationQueueResult, MarketplaceProviderConnection, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
 
 type ApiErrorDetail = { path: string; code?: string; message: string };
 type ErrorBody = { error?: { code?: string; message?: string; details?: ApiErrorDetail[]; correlationId?: string } };
@@ -107,4 +107,10 @@ export async function getMarketplaceLibrary(page = 1, limit = 24, signal?: Abort
 export async function setFavorite(slug: string, saved: boolean) { return request(`/api/marketplace/products/${encodeURIComponent(slug)}/favorite`, { method: saved ? "PUT" : "DELETE" }); }
 export async function acquireProduct(slug: string, idempotencyKey: string) { return request<{ data: { id: string; status: string; releaseManifestId: string | null; acquiredAt: string } }>(`/api/marketplace/products/${encodeURIComponent(slug)}/acquire`, { method: "POST", headers: { "Idempotency-Key": idempotencyKey } }); }
 export async function getProductInstallation(slug: string, signal?: AbortSignal) { return (await request<{ data: MarketplaceInstallation }>(`/api/marketplace/products/${encodeURIComponent(slug)}/installation`, { signal })).data; }
+const reviewsPath = (slug: string) => `/api/marketplace/products/${encodeURIComponent(slug)}/reviews`;
+export async function getMyReview(slug: string, signal?: AbortSignal) { return (await request<{ data: MyReviewState }>(`${reviewsPath(slug)}/mine`, { signal })).data; }
+export async function saveReview(slug: string, input: ReviewInput) { return (await request<{ data: OwnReview }>(reviewsPath(slug), { method: "PUT", body: JSON.stringify(input) })).data; }
+export async function deleteReview(slug: string) { return request<void>(reviewsPath(slug), { method: "DELETE" }); }
+export async function listReviewsForModeration(productId: string) { return (await request<{ data: OwnReview[] }>(`/api/marketplace/moderation/products/${encodeURIComponent(productId)}/reviews`)).data; }
+export async function setReviewVisibility(reviewId: string, input: { action: "hide" | "restore"; reason?: string }) { return (await request<{ data: { id: string; hidden: OwnReview["hidden"] } }>(`/api/marketplace/moderation/reviews/${encodeURIComponent(reviewId)}/visibility`, { method: "POST", body: JSON.stringify(input) })).data; }
 export async function subscribe(email: string) { return request("/api/newsletter/subscribers", { method: "POST", body: JSON.stringify({ email }) }); }

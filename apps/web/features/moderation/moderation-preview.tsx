@@ -11,6 +11,7 @@ import { localePath } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { intlLocale } from "@/lib/format";
+import { ModerationReviews } from "@/features/moderation/moderation-reviews";
 
 type Manifest = { listing?: Record<string, unknown>; release?: Record<string, unknown>; typeDetails?: Record<string, unknown> };
 type Action = "APPROVE" | "PUBLISH" | "REQUEST_CHANGES" | "REJECT" | "SUSPEND" | "REINSTATE" | "ARCHIVE" | "RESTORE";
@@ -174,6 +175,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
     </div>
 
     <div className="mt-6"><Panel title={t.moderation.auditTrail}>{preview.auditTrailTruncated && <p className="mb-4 text-sm text-amber-700 dark:text-amber-300">{t.moderation.auditLimited}</p>}{preview.auditTrail.length ? <ol className="space-y-3">{preview.auditTrail.map((event) => <li key={event.id} className="rounded-xl border p-4"><div className="flex flex-wrap items-center justify-between gap-2"><strong className="text-sm">{event.action.replaceAll("_", " ")}</strong><time className="text-xs text-muted-foreground" dateTime={event.createdAt}>{date.format(new Date(event.createdAt))}</time></div><p className="mt-1 text-xs text-muted-foreground">{event.actorType} · {event.reasonCode} · {event.previousState ?? "—"} → {event.resultingState}</p>{event.publicReason && <p className="mt-3 text-sm"><strong>{t.moderation.publicReasonLabel}:</strong> {event.publicReason}</p>}{event.internalNote && <p className="mt-3 rounded-lg bg-muted/50 p-3 text-sm"><strong>{t.moderation.internalNoteLabel}:</strong> {event.internalNote}</p>}<p className="mt-2 break-all font-mono text-[11px] text-muted-foreground">{t.moderation.correlation}: {event.correlationId}</p></li>)}</ol> : <p className="text-sm text-muted-foreground">{t.moderation.noAudit}</p>}</Panel></div>
+    <div className="mt-6"><ModerationReviews productId={productId} /></div>
   </section>;
 }
 

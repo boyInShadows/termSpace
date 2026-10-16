@@ -29,6 +29,15 @@ test.describe("product detail", () => {
     await expect(provenance.getByText("not a guarantee of safety", { exact: false })).toBeVisible();
   });
 
+  test("invites a signed-out visitor to sign in to review, and keeps them on the page afterwards", async ({ page }) => {
+    await page.goto("/products/conversion-copywriter");
+
+    const reviews = page.locator("#reviews");
+    await expect(reviews.getByRole("heading", { name: "Your review" })).toBeVisible();
+    await expect(reviews.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/account?next=%2Fproducts%2Fconversion-copywriter");
+    await expect(reviews.getByRole("button", { name: "Post review" })).toHaveCount(0);
+  });
+
   test("the version picker shows what changed in the chosen release", async ({ page }) => {
     await page.goto("/products/conversion-copywriter");
     await expect(page.getByText("Adds reviewer checklists for migrations.")).toBeVisible();

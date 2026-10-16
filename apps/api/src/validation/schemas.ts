@@ -183,6 +183,17 @@ export const moderationQueueQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).optional().default(24),
 });
 
+export const reviewWriteSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  displayName: z.string().trim().min(2).max(40),
+  body: z.string().trim().min(10).max(2000),
+}).strict();
+
+export const reviewVisibilitySchema = z.object({
+  action: z.enum(["hide", "restore"]),
+  reason: z.string().trim().min(5).max(500).optional(),
+}).strict().refine((value) => value.action === "restore" || Boolean(value.reason), { message: "A reason is required to hide a review", path: ["reason"] });
+
 export const moderationNoteSchema = z.object({
   expectedVersion: z.number().int().min(0),
   note: z.string().trim().min(2).max(4000),

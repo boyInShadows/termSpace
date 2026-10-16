@@ -278,7 +278,13 @@ export async function getMarketplaceProduct(req: Request, res: Response) {
         where: { releaseManifests: { some: { publishedAt: { not: null } } } },
         orderBy: { releasedAt: "desc" },
       },
-      reviews: { where: { published: true }, orderBy: { createdAt: "desc" } },
+      // Only what a visitor may see: never the reviewer's account or a moderator's notes.
+      reviews: {
+        where: { published: true },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        select: { id: true, author: true, rating: true, body: true, verifiedPurchase: true, createdAt: true },
+      },
     },
   });
   if (!product) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Product not found" } }); return; }

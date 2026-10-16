@@ -5,9 +5,11 @@ import { transitionModeratedMarketplaceListing, transitionOwnedMarketplaceListin
 import { createOwnedMarketplaceDraft, getOwnedMarketplaceDraft, listMarketplaceDraftOptions, updateOwnedMarketplaceDraft } from "../controllers/marketplaceDraftController.js";
 import { addMarketplaceModerationNote, getMarketplaceModerationPreview, listMarketplaceModerationQueue, moderateMarketplaceCommunityPlacement } from "../controllers/marketplaceModerationController.js";
 import { connectOwnedProvider, enqueueOwnedSourceCheck, listOwnedProviderConnections, revokeOwnedProvider } from "../controllers/marketplaceSourceController.js";
+import { deleteReview, getMyReview, listProductReviewsForModeration, saveReview, setReviewVisibility } from "../controllers/marketplaceReviewController.js";
 import { requireMarketplaceRole, requireReader, requireVerifiedReader } from "../middleware/auth.js";
+import { reviewWriteRateLimit } from "../middleware/security.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
-import { communityPlacementDecisionSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
+import { communityPlacementDecisionSchema, reviewVisibilitySchema, reviewWriteSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
 
 const router = Router();
 router.param("id", validateRouteParam("id", routeIdSchema));
@@ -45,4 +47,9 @@ router.put("/products/:slug/favorite", requireReader, addMarketplaceFavorite);
 router.delete("/products/:slug/favorite", requireReader, removeMarketplaceFavorite);
 router.get("/products/:slug/installation", requireReader, getMarketplaceInstallation);
 router.post("/products/:slug/acquire", requireReader, acquireMarketplaceProduct);
+router.get("/products/:slug/reviews/mine", requireReader, getMyReview);
+router.put("/products/:slug/reviews", requireReader, reviewWriteRateLimit, validate(reviewWriteSchema), saveReview);
+router.delete("/products/:slug/reviews", requireReader, reviewWriteRateLimit, deleteReview);
+router.get("/moderation/products/:id/reviews", requireMarketplaceRole("moderator", "administrator"), listProductReviewsForModeration);
+router.post("/moderation/reviews/:id/visibility", requireMarketplaceRole("moderator", "administrator"), validate(reviewVisibilitySchema), setReviewVisibility);
 export default router;

@@ -33,6 +33,44 @@ Project changes completed from `pending.md` should be recorded here with the dat
   Not yet run: e2e and LHCI. Port 3100 was held by a process outside this
   session and `playwright.config.ts` hard-codes it.
 
+- Phase C, reviews (from the improvement review; completes the core of the
+  `pending.md` P0 "Ratings and Reviews" block). A reader with a verified email
+  and a completed acquisition can post one review per listing, edit it, and
+  withdraw it, from a form in the product page's Reviews section (rating radios,
+  a display name they choose, since reader accounts have no name and the email
+  must not be shown, and text). Creators cannot review their own listing.
+  `rating` and `reviewCount` on the listing are recalculated from published
+  reviews inside the same transaction as every change, under a per-listing
+  advisory lock, and are never read from a request (the schema is `.strict()`).
+  Moderators get a Reviews panel on the moderation preview with Hide (reason
+  required, shown to the author) and Restore; a hidden review leaves the
+  aggregate, and its author can neither edit nor delete it, so a hide cannot be
+  undone by deleting and reposting. Staff cannot moderate reviews on their own
+  listings. The public product response now selects only `id, author, rating,
+  body, verifiedPurchase, createdAt` for at most 50 reviews; before, it returned
+  raw rows. Rate limit: 20 review writes per hour per IP.
+- Shared surfaces for Phase C: migration `202610080001_marketplace_user_reviews`
+  and `schema.prisma` (`MarketplaceReview` gains `userId`, `updatedAt`, hide
+  fields, a unique `(userId, productId)`, CHECKs for rating 1..5 and "hidden
+  implies unpublished"; seeded rows keep a NULL `userId`), plus `lib/types.ts`
+  and `lib/api.ts` in web. Routes: `GET/PUT/DELETE /products/:slug/reviews[/mine]`,
+  `GET /moderation/products/:id/reviews`, `POST /moderation/reviews/:id/visibility`.
+  After the first real review on a seeded listing, its rating and count become
+  those of its published review rows; the seed's static numbers are replaced.
+- Verification for Phase C: all of it also ran against a real Postgres 17, since
+  the API suite mocks Prisma. A throwaway cluster in the session scratchpad took
+  all 30 migrations, `prisma migrate diff` reported no drift, and a temporary
+  script (deleted) drove the real routes with real sessions: eligibility gates,
+  6 parallel edits by one reader leaving exactly 1 row, stored rating and count
+  equal to an independent SQL aggregate after create, edit, hide, restore and
+  delete, no leaked fields on the public response, and the CHECK and UNIQUE
+  constraints rejecting direct SQL. Suite: root typecheck; `npm run lint -w
+  apps/web`; 328 tests (167 API, 15 blog, 146 web); all builds; e2e 74 passed and
+  14 skipped; `lhci` all assertions passed (home 93, dashboard 89, product 94,
+  accessibility 100). Same spare-port workaround and flags as Phase B.
+- Not done, and recorded in `pending.md`: reader reports on reviews, creator
+  responses, automated holds beyond the rate limit, edit history, and rating
+  recalculation on account deletion. The Persian review strings need a native read.
 - Phase B, install and provenance (from the improvement review). Product pages
   now show a "Source & provenance" section to everyone, signed in or not: the
   source (npm package, GitHub repository or release, linked), the pinned

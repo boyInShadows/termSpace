@@ -25,6 +25,7 @@ const prismaMock = vi.hoisted(() => ({
   marketplaceCommunityPlacement: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceCommunityPlacementEvent: { create: vi.fn() },
   marketplaceListingLifecycleEvent: { create: vi.fn(), findMany: vi.fn() },
+  marketplaceReview: { findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), aggregate: vi.fn() },
   marketplaceOrder: { count: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn() },
   marketplaceCreator: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceRoleGrant: { findUnique: vi.fn(), create: vi.fn() },
@@ -1882,5 +1883,225 @@ describe("API", () => {
     expect(prismaMock.readerSession.deleteMany).toHaveBeenCalledWith({
       where: { userId: "reader-1", id: { not: "session-1" } },
     });
+  });
+});
+
+describe("marketplace reviews", () => {
+  const cookie = "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456";
+  const reviewBody = { rating: 4, displayName: "Priya", body: "Caught a migration mistake in its first week." };
+  const row = { id: "review-1", author: "Priya", rating: 4, body: reviewBody.body, createdAt: new Date("2026-10-01"), updatedAt: new Date("2026-10-01"), hiddenAt: null, hiddenReason: null };
+
+  function signIn(user: { id?: string; emailVerifiedAt?: Date | null; roles?: string[] } = {}) {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: {
+        id: user.id ?? "reader-1", email: "reader@example.com",
+        emailVerifiedAt: user.emailVerifiedAt === undefined ? new Date() : user.emailVerifiedAt,
+        marketplaceRoleGrants: (user.roles ?? []).map((role) => ({ role })),
+      },
+    });
+  }
+  const listing = (ownerUserId = "creator-owner") => ({ id: "product-1", creator: { ownerUserId } });
+  function runTransaction() {
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+  }
+  const put = (body: object = reviewBody) => request(createApp()).put("/api/marketplace/products/owned-skill/reviews").set("Origin", "http://localhost:3000").set("Cookie", cookie).send(body);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    prismaMock.$transaction.mockResolvedValue([]);
+    prismaMock.marketplacePlatform.findMany.mockResolvedValue([]);
+  });
+
+  it("tells a reader whether they may review and shows their own review", async () => {
+    signIn();
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue(listing());
+    prismaMock.marketplaceOrder.findFirst.mockResolvedValue({ id: "order-1" });
+    prismaMock.marketplaceReview.findUnique.mockResolvedValue(row);
+
+    const response = await request(createApp()).get("/api/marketplace/products/owned-skill/reviews/mine").set("Cookie", cookie);
+
+    expect(response.status).toBe(200);
+    expect(response.headers["cache-control"]).toBe("private, no-store");
+    expect(response.body.data).toMatchObject({ eligibility: "eligible", review: { id: "review-1", rating: 4, hidden: null } });
+  });
+
+  it.each([
+    ["not_acquired", null, "creator-owner"],
+    ["own_listing", { id: "order-1" }, "reader-1"],
+  ])("reports %s", async (expected, order, ownerUserId) => {
+    signIn();
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue(listing(ownerUserId));
+    prismaMock.marketplaceOrder.findFirst.mockResolvedValue(order);
+    prismaMock.marketplaceReview.findUnique.mockResolvedValue(null);
+
+    const response = await request(createApp()).get("/api/marketplace/products/owned-skill/reviews/mine").set("Cookie", cookie);
+
+    expect(response.body.data).toEqual({ eligibility: expected, review: null });
+  });
+
+  it("publishes a review from the reader's own account and recomputes the listing rating itself", async () => {
+    signIn();
+    runTransaction();
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue(listing());
+    prismaMock.marketplaceOrder.findFirst.mockResolvedValue({ id: "order-1" });
+    prismaMock.marketplaceReview.findUnique.mockResolvedValue(null);
+    prismaMock.marketplaceReview.create.mockResolvedValue(row);
+    prismaMock.marketplaceReview.aggregate.mockResolvedValue({ _avg: { rating: 4.25 }, _count: { _all: 4 } });
+    prismaMock.marketplaceProduct.update.mockResolvedValue({});
+
+    const response = await put();
+
+    expect(response.status).toBe(201);
+    expect(prismaMock.marketplaceReview.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ productId: "product-1", userId: "reader-1", author: "Priya", rating: 4, verifiedPurchase: true, published: true }),
+    }));
+    expect(prismaMock.marketplaceProduct.update).toHaveBeenCalledWith({ where: { id: "product-1" }, data: { rating: 4.3, reviewCount: 4 } });
+    expect(JSON.stringify(response.body)).not.toContain("reader-1");
+  });
+
+  it("replaces the reader's existing review instead of adding a second", async () => {
+    signIn();
+    runTransaction();
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue(listing());
+    prismaMock.marketplaceOrder.findFirst.mockResolvedValue({ id: "order-1" });
+    prismaMock.marketplaceReview.findUnique.mockResolvedValue({ id: "review-1", hiddenAt: null });
+    prismaMock.marketplaceReview.update.mockResolvedValue({ ...row, rating: 2 });
+    prismaMock.marketplaceReview.aggregate.mockResolvedValue({ _avg: { rating: 2 }, _count: { _all: 1 } });
+    prismaMock.marketplaceProduct.update.mockResolvedValue({});
+
+    const response = await put({ ...reviewBody, rating: 2 });
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.marketplaceReview.create).not.toHaveBeenCalled();
+    expect(prismaMock.marketplaceReview.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "review-1" } }));
+  });
+
+  it("sets the rating to 0 when the last review goes", async () => {
+    signIn();
+    runTransaction();
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue({ id: "product-1" });
+    prismaMock.marketplaceReview.findUnique.mockResolvedValue({ id: "review-1", hiddenAt: null });
+    prismaMock.marketplaceReview.delete.mockResolvedValue({});
+    prismaMock.marketplaceReview.aggregate.mockResolvedValue({ _avg: { rating: null }, _count: { _all: 0 } });
+    prismaMock.marketplaceProduct.update.mockResolvedValue({});
+
+    const response = await request(createApp()).delete("/api/marketplace/products/owned-skill/reviews").set("Origin", "http://localhost:3000").set("Cookie", cookie);
+
+    expect(response.status).toBe(204);
+    expect(prismaMock.marketplaceProduct.update).toHaveBeenCalledWith({ where: { id: "product-1" }, data: { rating: 0, reviewCount: 0 } });
+  });
+
+  it("rejects reviews from people who are signed out, unverified, not in the library, or the creator", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue(null);
+    expect((await put()).status).toBe(401);
+
+    signIn({ emailVerifiedAt: null });
+    const unverified = await put();
+    expect(unverified.status).toBe(403);
+    expect(unverified.body.error.code).toBe("EMAIL_VERIFICATION_REQUIRED");
+
+    signIn();
+    runTransaction();
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue(listing());
+    prismaMock.marketplaceOrder.findFirst.mockResolvedValue(null);
+    const notAcquired = await put();
+    expect(notAcquired.status).toBe(403);
+    expect(notAcquired.body.error.code).toBe("ACQUISITION_REQUIRED");
+
+    runTransaction();
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue(listing("reader-1"));
+    const own = await put();
+    expect(own.status).toBe(403);
+    expect(own.body.error.code).toBe("OWN_LISTING");
+    expect(prismaMock.marketplaceReview.create).not.toHaveBeenCalled();
+  });
+
+  it("will not let a reader edit or delete a review a moderator hid", async () => {
+    signIn();
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue(listing());
+    prismaMock.marketplaceOrder.findFirst.mockResolvedValue({ id: "order-1" });
+    prismaMock.marketplaceReview.findUnique.mockResolvedValue({ id: "review-1", hiddenAt: new Date() });
+
+    runTransaction();
+    const edit = await put();
+    runTransaction();
+    const remove = await request(createApp()).delete("/api/marketplace/products/owned-skill/reviews").set("Origin", "http://localhost:3000").set("Cookie", cookie);
+
+    expect([edit.status, edit.body.error.code]).toEqual([409, "REVIEW_HIDDEN"]);
+    expect([remove.status, remove.body.error.code]).toEqual([409, "REVIEW_HIDDEN"]);
+    expect(prismaMock.marketplaceReview.update).not.toHaveBeenCalled();
+    expect(prismaMock.marketplaceReview.delete).not.toHaveBeenCalled();
+  });
+
+  it("validates the review and refuses fields the server owns", async () => {
+    signIn();
+    expect((await put({ ...reviewBody, body: "short" })).status).toBe(400);
+    expect((await put({ ...reviewBody, rating: 6 })).status).toBe(400);
+    expect((await put({ ...reviewBody, rating: 4.5 })).status).toBe(400);
+    expect((await put({ ...reviewBody, displayName: "x" })).status).toBe(400);
+    expect((await put({ ...reviewBody, reviewCount: 999 })).status).toBe(400);
+    expect((await put({ ...reviewBody, verifiedPurchase: false })).status).toBe(400);
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("lets a moderator hide a review with a reason, and restore it, recomputing each time", async () => {
+    signIn({ id: "moderator-1", roles: ["MODERATOR"] });
+    prismaMock.marketplaceReview.findUnique.mockResolvedValue({ id: "review-1", productId: "product-1", product: { creator: { ownerUserId: "creator-owner" } } });
+    prismaMock.marketplaceReview.aggregate.mockResolvedValue({ _avg: { rating: null }, _count: { _all: 0 } });
+    prismaMock.marketplaceProduct.update.mockResolvedValue({});
+    const moderate = (body: object) => request(createApp()).post("/api/marketplace/moderation/reviews/review-1/visibility").set("Origin", "http://localhost:3000").set("Cookie", cookie).send(body);
+
+    expect((await moderate({ action: "hide" })).status).toBe(400);
+
+    runTransaction();
+    prismaMock.marketplaceReview.update.mockResolvedValueOnce({ id: "review-1", hiddenAt: new Date("2026-10-02"), hiddenReason: "Abusive language" });
+    const hidden = await moderate({ action: "hide", reason: "Abusive language" });
+    expect(hidden.status).toBe(200);
+    expect(hidden.body.data.hidden).toMatchObject({ reason: "Abusive language" });
+    expect(prismaMock.marketplaceReview.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ published: false, hiddenReason: "Abusive language", hiddenById: "moderator-1" }),
+    }));
+
+    runTransaction();
+    prismaMock.marketplaceReview.update.mockResolvedValueOnce({ id: "review-1", hiddenAt: null, hiddenReason: null });
+    const restored = await moderate({ action: "restore" });
+    expect(restored.body.data.hidden).toBeNull();
+    expect(prismaMock.marketplaceReview.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: { published: true, hiddenAt: null, hiddenReason: null, hiddenById: null },
+    }));
+    expect(prismaMock.marketplaceProduct.update).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps review moderation to staff, and away from their own listings", async () => {
+    const moderate = () => request(createApp()).post("/api/marketplace/moderation/reviews/review-1/visibility").set("Origin", "http://localhost:3000").set("Cookie", cookie).send({ action: "hide", reason: "Spam links" });
+
+    signIn({ roles: ["CREATOR"] });
+    expect((await moderate()).status).toBe(403);
+
+    signIn({ id: "moderator-1", roles: ["MODERATOR"] });
+    runTransaction();
+    prismaMock.marketplaceReview.findUnique.mockResolvedValue({ id: "review-1", productId: "product-1", product: { creator: { ownerUserId: "moderator-1" } } });
+    const own = await moderate();
+    expect([own.status, own.body.error.code]).toEqual([403, "SELF_MODERATION_FORBIDDEN"]);
+    expect(prismaMock.marketplaceReview.update).not.toHaveBeenCalled();
+  });
+
+  it("returns only public fields for reviews on a product page", async () => {
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue({
+      id: "product-1", slug: "owned-skill", name: "Owned", type: "Skill", itemType: "SKILL", rating: 4, priceMinor: 0, currency: "USD", pricingModel: "free",
+      platforms: [], models: [], categoryId: "c", category: { name: "x", slug: "x" }, creatorId: "creator-1",
+      creator: { id: "creator-1", name: "C", handle: "c", initials: "C", verified: true, bio: "", followers: 0, _count: { products: 1 } },
+      versions: [], reviews: [],
+    });
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+
+    await request(createApp()).get("/api/marketplace/products/owned-skill");
+
+    const include = prismaMock.marketplaceProduct.findFirst.mock.calls[0][0].include;
+    expect(include.reviews.where).toEqual({ published: true });
+    expect(Object.keys(include.reviews.select).sort()).toEqual(["author", "body", "createdAt", "id", "rating", "verifiedPurchase"]);
+    expect(include.reviews.take).toBe(50);
   });
 });

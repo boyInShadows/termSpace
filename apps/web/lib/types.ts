@@ -110,6 +110,14 @@ export interface Product {
   featured?: boolean; trending?: boolean; verified: boolean; tags: string[];
   communities: Array<{ slug: string; nameEn: string; nameFa: string | null; primaryPlatform: string }>;
 }
+export type ReviewEligibility = "eligible" | "not_acquired" | "own_listing";
+/** A review as its author and moderators see it: includes a moderator's hide decision. */
+export interface OwnReview {
+  id: string; author: string; rating: number; body: string; createdAt: string; updatedAt: string;
+  hidden: { at: string; reason: string | null } | null;
+}
+export interface MyReviewState { eligibility: ReviewEligibility; review: OwnReview | null }
+export interface ReviewInput { rating: number; displayName: string; body: string }
 export interface ProductRelease {
   version: string;
   source: MarketplaceInstallation["release"]["source"];

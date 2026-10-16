@@ -40,16 +40,22 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Ratings and Reviews
 
-- Link each review to an authenticated user instead of storing an arbitrary
-  author string, enforce one active review per user and item, and support edits.
-- Permit ratings only after a meaningful acquisition or other defined
-  eligibility event, and label verified use consistently.
-- Calculate rating and review counts transactionally from published reviews;
-  never accept aggregate values from clients or creator edits.
-- Add review submission, moderation, reporting, creator responses, and accessible
-  rating UI in both English and Persian.
-- Add abuse controls for review spam, coordinated manipulation, and creator
-  conflicts of interest, following ADR 0004 review eligibility and hold rules.
+Reviews are live (2026-10-08, see `changelog.md`): linked to a verified account
+with a completed acquisition, one per reader and listing, editable and
+withdrawable, aggregates calculated transactionally, moderators can hide and
+restore. Still open, per ADR 0004:
+
+- Reader reports on reviews, which move a published review into a held state
+  while it is investigated, and the case workflow they feed.
+- Creator responses: one labelled response per review, same content rules, no
+  effect on the rating.
+- Automated holds beyond the per-hour rate limit: duplicate and coordinated
+  content signals, account and acquisition age, repeated edits, and
+  creator-team conflicts of interest.
+- Preserve the original and edited text of a review for audit. Edits currently
+  overwrite the row.
+- Recalculate a listing's rating when a reader's account is deleted (the
+  review is removed by cascade; no account deletion exists yet).
 
 ## Marketplace — P1 Operations and Growth
 
