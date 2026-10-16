@@ -15,10 +15,11 @@ Project changes completed from `pending.md` should be recorded here with the dat
     replaced when the hero redesign ships.
   - `apps/web/.impeccable/`: `config.json` (`buildPath: code`), the 2026-10-16
     critique snapshots for `/`, `/dashboard` and `/explore`, and the decision
-    sketches from the hero direction round. **Direction chosen: The Card
-    Catalogue** (library catalogue drawer; the search is the brass label holder;
-    one synthetic example card with leader-line callouts and ghost lines for
-    undeclared fields). The brief is awaiting confirmation; nothing is built.
+    sketches from the hero direction round. **No direction is chosen yet.** The
+    decision page recorded "The Card Catalogue", but that was not the
+    maintainer's choice; the maintainer asked for a minimal hero with little
+    graphics and few colours, which none of the sketches is. The sketches are
+    kept as references only. Nothing is built.
     `hook.cache.json`, `live/` and `questions/` are generated and not committed.
 - **Listing cards state what the listing declares (critique-driven `layout`,
   branch `redesign`).**
