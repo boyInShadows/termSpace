@@ -62,7 +62,7 @@ describe("DashboardOverview", () => {
 
     const table = screen.getByRole("table");
     const row = within(table).getByRole("link", { name: /Conversion Copywriter 0/ });
-    expect(row).toHaveAttribute("href", "/creator/listings/listing-0/releases");
+    expect(row).toHaveAttribute("href", "/dashboard/studio/listings/listing-0/releases");
     expect(within(table).getByText(copy.en.creatorHub.statusChangesRequested)).toBeInTheDocument();
     expect(within(table).getByText("v2.4.0")).toBeInTheDocument();
 
@@ -83,7 +83,7 @@ describe("DashboardOverview", () => {
     render(<DashboardOverview />);
 
     const cta = await screen.findByRole("link", { name: copy.en.dashboardHome.noProfileCta });
-    expect(cta).toHaveAttribute("href", "/creator");
+    expect(cta).toHaveAttribute("href", "/dashboard/studio");
     expect(screen.getAllByText("—")).toHaveLength(4);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/, kasra\.$/);
     expect(screen.getByText(copy.en.dashboardHome.emptyActivity)).toBeInTheDocument();
@@ -94,7 +94,7 @@ describe("DashboardOverview", () => {
     render(<DashboardOverview />);
 
     const cta = await screen.findByRole("link", { name: copy.en.dashboardHome.emptyListingsCta });
-    expect(cta).toHaveAttribute("href", "/creator/listings/new");
+    expect(cta).toHaveAttribute("href", "/dashboard/studio/listings/new");
     expect(screen.getByText(copy.en.dashboardHome.summaryEmpty)).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
     // Nothing reviewed yet reads as "no rating", never as a score of zero.

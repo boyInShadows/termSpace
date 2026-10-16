@@ -190,7 +190,7 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
         body={t.homePage.emptyCreatorsBody}
         action={{
           label: t.homePage.emptyCreatorsCta,
-          href: localePath("/creator", locale),
+          href: localePath("/dashboard/studio", locale),
         }}
       />
     );

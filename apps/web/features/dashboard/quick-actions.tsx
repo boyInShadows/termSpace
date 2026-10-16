@@ -9,8 +9,8 @@ export function QuickActions() {
   const { locale, t } = useLocale();
   const copy = t.dashboardHome;
   const items = [
-    { label: copy.quickPublish, href: "/creator/listings/new" },
-    { label: copy.quickManage, href: "/creator" },
+    { label: copy.quickPublish, href: "/dashboard/studio/listings/new" },
+    { label: copy.quickManage, href: "/dashboard/studio" },
     { label: copy.quickSettings, href: "/dashboard/settings" },
   ];
 

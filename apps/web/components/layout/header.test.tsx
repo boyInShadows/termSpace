@@ -35,8 +35,17 @@ describe("Header", () => {
     pathname = "/explore";
     render(<Header />);
     expect(
-      screen.getByRole("link", { name: "Design system" }),
+      screen.getByRole("link", { name: "Share your work" }),
     ).not.toHaveAttribute("aria-current");
+  });
+
+  it("points Share your work at the dashboard studio and has no Design system link", () => {
+    render(<Header />);
+    expect(screen.getByRole("link", { name: "Share your work" })).toHaveAttribute(
+      "href",
+      "/dashboard/studio",
+    );
+    expect(screen.queryByRole("link", { name: "Design system" })).not.toBeInTheDocument();
   });
 
   it("dismisses the announcement and remembers it for next time", async () => {

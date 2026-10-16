@@ -48,8 +48,7 @@ export function Header() {
     session.marketplaceRoles.includes("administrator");
   const NAV = [
     { href: "/explore", label: t.explore },
-    { href: "/design-system", label: t.designSystem },
-    { href: "/creator", label: t.shareWork },
+    { href: "/dashboard/studio", label: t.shareWork },
     ...(canModerate ? [{ href: "/moderation", label: t.moderation.nav }] : []),
     ...(session.email ? [{ href: "/dashboard", label: t.dashboard }] : []),
   ];

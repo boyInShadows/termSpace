@@ -46,7 +46,7 @@ placement request, and `DRAFT_SAVED` audit records. Published listings keep
 their approved snapshot and public projection while the replacement draft is
 edited. Public version responses include only versions linked to a release
 whose `publishedAt` timestamp is set, so draft release metadata is not exposed.
-The creator release workspace at `/creator/listings/:id/releases` shows the
+The creator release workspace at `/dashboard/studio/listings/:id/releases` shows the
 immutable source identity, moderation status, and acquisition count for each
 release. Preparing a new release starts from the listing's controlled draft
 editor and requires a new version label whenever published release metadata

@@ -129,7 +129,7 @@ export function DashboardTabBar() {
 function PublishLink({ className, iconOnly = false }: { className?: string; iconOnly?: boolean }) {
   const { locale, t } = useLocale();
   const session = useMarketplaceSession();
-  const href = session.marketplaceRoles.includes("creator") ? "/creator/listings/new" : "/creator";
+  const href = session.marketplaceRoles.includes("creator") ? "/dashboard/studio/listings/new" : "/dashboard/studio";
 
   return (
     <Link

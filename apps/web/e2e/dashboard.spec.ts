@@ -35,4 +35,19 @@ test.describe("dashboard", () => {
     await page.keyboard.press("ControlOrMeta+k");
     await expect(page.locator("#dashboard-search")).toBeFocused();
   });
+
+  test("the old /creator addresses redirect into the dashboard studio", async ({ page, context, baseURL }) => {
+    await signInAs(context, baseURL!, "creator");
+    await page.goto("/creator");
+    await expect(page).toHaveURL(/\/dashboard\/studio$/);
+    await expect(page.getByRole("heading", { name: "Your work on TermSpace" })).toBeVisible();
+
+    await page.goto("/creator/listings/new");
+    await expect(page).toHaveURL(/\/dashboard\/studio\/listings\/new$/);
+    // Inside the dashboard shell, not the marketing site's header and footer.
+    await expect(page.getByRole("contentinfo")).toHaveCount(0);
+
+    await page.goto("/fa/creator");
+    await expect(page).toHaveURL(/\/fa\/dashboard\/studio$/);
+  });
 });

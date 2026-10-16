@@ -21,6 +21,23 @@ Project changes completed from `pending.md` should be recorded here with the dat
     lines are an explicit `dir="ltr"` island and creator bios use `.ts-bidi`.
     Verification: unit test renders `Process` in `fa`; e2e asserts every
     `main h2` on `/fa` contains Persian; checked by eye at 768 px.
+  - One creator surface, `/dashboard` (items 5, 6, 7 and 8 of the audit).
+    **Decision (maintainer, 2026-10-16): the creator workspace lives under
+    `/dashboard` only.** This reverses the plan to retire studio in favour of
+    `/creator` and settles the three open questions about that redirect.
+    `/creator` and `/creator/listings/**` moved to
+    `/dashboard/studio` and `/dashboard/studio/listings/**` (new, edit,
+    releases), now inside the dashboard shell; the old addresses 308 to the new
+    ones in both locales (`next.config.ts`). Every link, the header's
+    "Share your work", quick actions and the docs point at the new routes; the
+    transitional `StudioNotice` is gone. The measured layout shift on
+    `/creator` (CLS 0.65 to 1.06, from the marketing footer jumping into
+    place) is gone with the page: 0 on `/dashboard/studio` at 735, 768 and
+    1440. "New listing" no longer wraps. "Design system" is out of the primary
+    nav (the page stays, footer links unchanged).
+    Verification: typecheck, 163 unit tests, lint, e2e `dashboard.spec.ts`
+    (new case: `/creator`, `/creator/listings/new` and `/fa/creator` redirect,
+    and the editor renders without the site footer).
 
 - CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
   typecheck saw an empty Prisma client and failed, and the fail-fast matrix

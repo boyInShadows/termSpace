@@ -72,7 +72,7 @@ export function CreatorReleaseManager({ productId }: { productId: string }) {
     } catch { setActionMessage(copy.actionError); } finally { setBusy(null); }
   };
   return <div className="mx-auto max-w-5xl">
-    <Link className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground" href={localePath("/creator", locale)}>
+    <Link className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground" href={localePath("/dashboard/studio", locale)}>
       {locale === "fa" ? <ArrowRight className="size-4" aria-hidden="true" /> : <ArrowLeft className="size-4" aria-hidden="true" />}{copy.back}
     </Link>
     <header className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
@@ -82,7 +82,7 @@ export function CreatorReleaseManager({ productId }: { productId: string }) {
         <h2 className="mt-3 text-xl font-semibold">{copy.title}</h2>
         <p className="mt-2 text-muted-foreground">{copy.intro}</p>
       </div>
-      <Link className={buttonVariants()} href={localePath(`/creator/listings/${productId}/edit`, locale)}>
+      <Link className={buttonVariants()} href={localePath(`/dashboard/studio/listings/${productId}/edit`, locale)}>
         <Layers3 className="size-4" aria-hidden="true" />{copy.prepare}
       </Link>
     </header>

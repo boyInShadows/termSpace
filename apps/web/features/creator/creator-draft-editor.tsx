@@ -198,7 +198,7 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
       setRecord(next);
       setDirty(false);
       setSaved(true);
-      if (!productId) router.replace(localePath(`/creator/listings/${next.id}/edit`, locale));
+      if (!productId) router.replace(localePath(`/dashboard/studio/listings/${next.id}/edit`, locale));
     } catch (cause) {
       if (cause instanceof ApiError && cause.code === "LISTING_VERSION_CONFLICT") setError(copy.versionConflict);
       else if (cause instanceof ApiError && cause.code === "VERSION_ALREADY_PUBLISHED") setError(copy.publishedVersionConflict);
@@ -220,7 +220,7 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
   const permissions = Array.isArray(release.permissions) ? release.permissions as Array<{ capability: string; required: boolean; scope?: string; destinations: string[]; purpose: string }> : [];
 
   return <div className="mx-auto max-w-5xl">
-    <Link className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground" href={localePath("/creator", locale)}>
+    <Link className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground" href={localePath("/dashboard/studio", locale)}>
       {locale === "fa" ? <ArrowRight className="size-4" aria-hidden="true" /> : <ArrowLeft className="size-4" aria-hidden="true" />}{copy.back}
     </Link>
     <header className="mt-6 max-w-3xl">
@@ -285,7 +285,7 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
 
       <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-xl border bg-surface/95 p-4 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between">
         <div>{error && <p id="draft-errors" tabIndex={-1} className="flex items-start gap-2 text-sm text-destructive" role="alert"><AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />{error}</p>}{saved && <p className="text-sm text-emerald-700" role="status">{copy.saved}</p>}</div>
-        <div className="flex gap-3"><Link className={buttonVariants({ variant: "secondary" })} href={localePath("/creator", locale)}>{copy.cancel}</Link><Button disabled={saving}><Save className="size-4" aria-hidden="true" />{saving ? copy.saving : copy.save}</Button></div>
+        <div className="flex gap-3"><Link className={buttonVariants({ variant: "secondary" })} href={localePath("/dashboard/studio", locale)}>{copy.cancel}</Link><Button disabled={saving}><Save className="size-4" aria-hidden="true" />{saving ? copy.saving : copy.save}</Button></div>
       </div>
     </form>
   </div>;

@@ -26,7 +26,7 @@ export function ListingsTable({ state, now, onRetry }: { state: OverviewState; n
   const { locale, t } = useLocale();
   const copy = t.dashboardHome;
   const viewAll = (
-    <Link href={localePath("/creator", locale)} className="text-sm text-primary transition-colors hover:text-primary-hover">
+    <Link href={localePath("/dashboard/studio", locale)} className="text-sm text-primary transition-colors hover:text-primary-hover">
       {copy.viewAll} <span aria-hidden>{locale === "fa" ? "←" : "→"}</span>
     </Link>
   );
@@ -36,14 +36,14 @@ export function ListingsTable({ state, now, onRetry }: { state: OverviewState; n
       {state.status === "loading" && <ListingsSkeleton />}
       {state.status === "error" && <CardError onRetry={onRetry} />}
       {state.status === "ready" && state.home.kind === "no-profile" && (
-        <EmptyListings title={copy.noProfile} cta={copy.noProfileCta} href={localePath("/creator", locale)} />
+        <EmptyListings title={copy.noProfile} cta={copy.noProfileCta} href={localePath("/dashboard/studio", locale)} />
       )}
       {state.status === "ready" && state.home.kind === "creator" && (
         state.home.dashboard.listings.length === 0 ? (
           <EmptyListings
             title={copy.emptyListings}
             cta={copy.emptyListingsCta}
-            href={localePath("/creator/listings/new", locale)}
+            href={localePath("/dashboard/studio/listings/new", locale)}
           />
         ) : (
           <ListingRows rows={state.home.dashboard.listings.slice(0, OVERVIEW_LISTING_LIMIT)} now={now} />
@@ -77,7 +77,7 @@ function ListingRows({ rows, now }: { rows: CreatorDashboardListing[]; now: numb
             <tr key={row.id} className="h-12 border-b border-border/60 transition-colors last:border-0 hover:bg-surface-raised/60">
               <td className="max-w-0 ps-5 sm:max-w-none">
                 <Link
-                  href={localePath(`/creator/listings/${row.id}/releases`, locale)}
+                  href={localePath(`/dashboard/studio/listings/${row.id}/releases`, locale)}
                   className="flex min-w-0 items-center gap-2"
                 >
                   <span className="truncate font-medium">{row.name}</span>

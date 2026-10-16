@@ -59,7 +59,7 @@ describe("DashboardShell", () => {
 
     // A creator's Publish goes straight to a new listing.
     for (const link of screen.getAllByRole("link", { name: copy.en.dashboardHome.publish })) {
-      expect(link).toHaveAttribute("href", "/creator/listings/new");
+      expect(link).toHaveAttribute("href", "/dashboard/studio/listings/new");
     }
   });
 
@@ -68,7 +68,7 @@ describe("DashboardShell", () => {
     render(<DashboardShell><p>content</p></DashboardShell>);
 
     for (const link of screen.getAllByRole("link", { name: copy.en.dashboardHome.publish })) {
-      expect(link).toHaveAttribute("href", "/creator");
+      expect(link).toHaveAttribute("href", "/dashboard/studio");
     }
   });
 });

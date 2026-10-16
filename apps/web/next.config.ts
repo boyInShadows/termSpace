@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: { useTypeScriptCli: false },
+  // The creator workspace used to live at /creator, beside the dashboard's own
+  // studio. There is one place now: /dashboard/studio.
+  async redirects() {
+    return ["", "/fa"].flatMap((prefix) => [
+      { source: `${prefix}/creator`, destination: `${prefix}/dashboard/studio`, permanent: true },
+      { source: `${prefix}/creator/listings/:path*`, destination: `${prefix}/dashboard/studio/listings/:path*`, permanent: true },
+    ]);
+  },
   async headers() {
     return [
       { source: "/:path*", headers: [
