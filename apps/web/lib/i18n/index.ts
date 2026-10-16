@@ -10,6 +10,7 @@ import { catalog } from "./catalog";
 import { creator } from "./creator";
 import { moderation } from "./moderation";
 import { home } from "./home";
+import { titles } from "./titles";
 
 export { footerLabels, localePath, type Locale } from "./common";
 
@@ -21,6 +22,7 @@ export const copy = {
     ...creator.en,
     ...moderation.en,
     ...home.en,
+    ...titles.en,
   },
   fa: {
     ...common.fa,
@@ -29,5 +31,6 @@ export const copy = {
     ...creator.fa,
     ...moderation.fa,
     ...home.fa,
+    ...titles.fa,
   },
 } as const;

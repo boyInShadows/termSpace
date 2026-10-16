@@ -90,3 +90,28 @@ test.describe("search engines and sharing", () => {
     expect(pngSize(await card.body())).toEqual({ width: 1200, height: 630 });
   });
 });
+
+test.describe("page titles", () => {
+  test("pages that used to share the homepage title have their own", async ({ page }) => {
+    await page.goto("/account");
+    await expect(page).toHaveTitle("Your account · termspace");
+    await page.goto("/products/no-such-listing");
+    await expect(page).toHaveTitle("Listing not found · termspace");
+  });
+
+  test("Persian pages are titled in Persian", async ({ page }) => {
+    await page.goto("/fa/explore");
+    await expect(page).toHaveTitle("کاوش · ترم‌اسپیس");
+    await page.goto("/fa/products/conversion-copywriter");
+    const title = await page.title();
+    expect(title).toMatch(/· ترم‌اسپیس$/);
+    expect(title).toMatch(/[؀-ۿ]/);
+    expect(title).not.toContain("Skill for");
+  });
+
+  test("the creator studio is titled, signed in", async ({ page, context, baseURL }) => {
+    await context.addCookies([{ name: "e2e_persona", value: "creator", url: baseURL! }]);
+    await page.goto("/dashboard/studio");
+    await expect(page).toHaveTitle("Creator studio · termspace");
+  });
+});

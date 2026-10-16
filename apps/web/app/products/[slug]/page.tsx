@@ -24,17 +24,21 @@ import { formatNumber, intlLocale } from "@/lib/format";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const locale = await getLocale();
+  const t = copy[locale];
   let product: ProductDetail;
   try {
     product = await getProduct((await params).slug);
   } catch {
-    return { title: "Resource" };
+    return { title: t.titles.listingNotFound };
   }
   const platform = product.compatibility.platforms[0];
+  const typeLabel = t.productCard.types[product.type] ?? product.type;
   // The root layout's title template appends " · termspace".
   const path = `/products/${product.slug}`;
+  const values = { "{name}": product.name, "{type}": typeLabel, "{platform}": platform ?? "" };
+  const template = platform ? t.titles.productFor : t.titles.product;
   return {
-    title: platform ? `${product.name} — ${product.type} for ${platform}` : `${product.name} — ${product.type}`,
+    title: template.replace(/\{(name|type|platform)\}/g, (token) => values[token as keyof typeof values]),
     description: product.outcome,
     alternates: pageAlternates(path, locale),
     openGraph: { title: product.name, description: product.outcome, type: "website", url: localePath(path, locale) },

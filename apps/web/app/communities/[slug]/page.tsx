@@ -8,13 +8,17 @@ import type { ProductFilters } from "@/lib/types";
 import { filtersFromParams } from "@/lib/discovery-url";
 import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
+import { copy } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const result = await getMarketplaceCommunity(slug, { page: 1, limit: 1 }).catch(() => null);
-  return { title: result?.data.community.nameEn ?? "Community", alternates: pageAlternates(`/communities/${slug}`, await getLocale()) };
+  const locale = await getLocale();
+  const community = result?.data.community;
+  const name = locale === "fa" ? community?.nameFa ?? community?.nameEn : community?.nameEn;
+  return { title: name ?? copy[locale].productCard.communities, alternates: pageAlternates(`/communities/${slug}`, locale) };
 }
 
 export default async function CommunityPage({ params, searchParams }: {

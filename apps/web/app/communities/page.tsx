@@ -7,10 +7,11 @@ import { getMarketplaceCommunities } from "@/lib/api";
 import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
 import { intlLocale } from "@/lib/format";
-import { localePath } from "@/lib/i18n";
+import { copy, localePath } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: "Communities", alternates: pageAlternates("/communities", await getLocale()) };
+  const locale = await getLocale();
+  return { title: copy[locale].productCard.communities, alternates: pageAlternates("/communities", locale) };
 }
 export const dynamic = "force-dynamic";
 

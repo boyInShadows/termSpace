@@ -7,8 +7,10 @@ import { discoveryHref, filtersFromParams, toSearchParams, type RawSearchParams 
 import { localePath } from "@/lib/i18n";
 import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
+import { copy } from "@/lib/i18n";
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: "Explore", alternates: pageAlternates("/explore", await getLocale()) };
+  const locale = await getLocale();
+  return { title: copy[locale].explore, alternates: pageAlternates("/explore", locale) };
 }
 export default async function ExplorePage({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
   const [raw, locale] = await Promise.all([searchParams, getLocale()]);

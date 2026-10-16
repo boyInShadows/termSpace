@@ -60,6 +60,15 @@ Project changes completed from `pending.md` should be recorded here with the dat
     Escape now closes it and returns focus to the toggle. `Button` accepts
     `ref` (typed from `ComponentProps<"button">`). Verification: unit test
     opens the menu, presses Escape, asserts `aria-expanded` and focus.
+  - Page titles: `/account`, the sign-in redirect and the creator pages had the
+    homepage title; a missing listing was "Resource"; Persian pages said
+    "Explore" and "Skill for Claude" in English. Titles are now built from the
+    dictionaries (new `lib/i18n/titles.ts` for the three strings that had no
+    home, spread in `lib/i18n/index.ts`; everything else reuses existing
+    keys), for explore, communities, product, account, dashboard overview,
+    studio, settings, new listing, edit and releases. A missing listing is
+    "Listing not found" (its HTTP 200 is still open in `pending.md`).
+    Verification: three new e2e cases in `e2e/seo.spec.ts`.
 
 - CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
   typecheck saw an empty Prisma client and failed, and the fail-fast matrix
