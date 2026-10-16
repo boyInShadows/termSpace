@@ -57,6 +57,15 @@ restore. Still open, per ADR 0004:
 - Recalculate a listing's rating when a reader's account is deleted (the
   review is removed by cascade; no account deletion exists yet).
 
+## Marketplace — Search
+
+- Escape `%` and `_` in catalogue search terms. Prisma's `contains` does not,
+  so a search for `_` matches every listing. It only widens results, but it is
+  wrong. Found while benchmarking search on 2026-10-08.
+- If a deployment sits behind a CDN, add `Cache-Control: public, s-maxage=30`
+  to the public catalogue routes. The API already sends ETags and answers
+  conditional requests with 304; nothing is added without knowing the CDN.
+
 ## Marketplace — P1 Operations and Growth
 
 - Add creator notifications for moderation decisions, reviews, reports, and

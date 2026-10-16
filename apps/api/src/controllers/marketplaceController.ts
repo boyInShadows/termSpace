@@ -60,13 +60,15 @@ function serializeProduct(product: any) {
   };
 }
 
+const searchTerms = (q: unknown): string[] => (q ? String(q).split(/\s+/).filter(Boolean).slice(0, 8) : []);
+
 function marketplaceProductWhere(filters: any, communitySlug?: string): Prisma.MarketplaceProductWhereInput {
   const { q, type, category, community, platform, verified, minRating } = filters;
   const selectedCommunity = communitySlug ?? community;
-  const searchTerms = q ? String(q).split(/\s+/).filter(Boolean).slice(0, 8) : [];
+  const terms = searchTerms(q);
   return {
     published: true,
-    ...(searchTerms.length ? { AND: searchTerms.map((term) => {
+    ...(terms.length ? { AND: terms.map((term) => {
       const tag = term.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
       return { OR: [
         { slug: { contains: term, mode: "insensitive" as const } },
@@ -217,14 +219,63 @@ export async function getMarketplaceHome(_req: Request, res: Response) {
   } });
 }
 
+/**
+ * Orders already-matched listings by how well each search term hit them: the
+ * name first, then tags, outcome, creator, category and description. Every id
+ * here already matched every term, so this only decides the order.
+ */
+async function rankMatchedProducts(ids: string[], terms: string[], offset: number, limit: number): Promise<string[]> {
+  const lowered = terms.map((term) => term.toLowerCase());
+  const rows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+    SELECT p.id
+    FROM "MarketplaceProduct" p
+    JOIN "MarketplaceCreator" c ON c.id = p."creatorId"
+    JOIN "MarketplaceCategory" k ON k.id = p."categoryId"
+    WHERE p.id = ANY(${ids}::text[])
+    ORDER BY (
+      SELECT COALESCE(SUM(
+          (CASE WHEN lower(p.name) = t THEN 20 ELSE 0 END)
+        + (CASE WHEN strpos(lower(p.name), t) > 0 THEN 10 ELSE 0 END)
+        + (CASE WHEN strpos(' ' || lower(p.name), ' ' || t) > 0 THEN 5 ELSE 0 END)
+        + (CASE WHEN EXISTS (SELECT 1 FROM unnest(p.tags) AS tag WHERE strpos(lower(tag), t) > 0) THEN 6 ELSE 0 END)
+        + (CASE WHEN strpos(lower(p.outcome), t) > 0 THEN 4 ELSE 0 END)
+        + (CASE WHEN strpos(lower(c.name), t) > 0 OR strpos(lower(c.handle), t) > 0 THEN 3 ELSE 0 END)
+        + (CASE WHEN strpos(lower(k.name), t) > 0 THEN 2 ELSE 0 END)
+        + (CASE WHEN strpos(lower(p.description), t) > 0 THEN 1 ELSE 0 END)
+      ), 0)
+      FROM unnest(${lowered}::text[]) AS t
+    ) DESC, p.featured DESC, p."usageCount" DESC, p.id ASC
+    OFFSET ${offset} LIMIT ${limit}`);
+  return rows.map((row) => row.id);
+}
+
+/** One page of listings plus the total, shared by the catalogue and community lists. */
+async function findProductPage(where: Prisma.MarketplaceProductWhereInput, filters: { q?: string; sort: string; page: number; limit: number }) {
+  const { q, sort, page, limit } = filters;
+  const terms = searchTerms(q);
+  if (sort !== "relevance" || !terms.length) {
+    const orderBy = productOrderBy(sort === "relevance" ? "featured" : sort);
+    const [products, total] = await Promise.all([
+      prisma.marketplaceProduct.findMany({ where, include: productInclude, orderBy, skip: (page - 1) * limit, take: limit }),
+      prisma.marketplaceProduct.count({ where }),
+    ]);
+    return { products, total };
+  }
+  // ponytail: the text match is evaluated once, over ids only, and its length is
+  // the total. Every match id is held and ranked, which measured fine for
+  // thousands of matches over 20k listings (a text search is ~100 ms there);
+  // past tens of thousands of matches, move to pg_trgm/tsvector instead.
+  const matches = await prisma.marketplaceProduct.findMany({ where, select: { id: true } });
+  const total = matches.length;
+  const pageIds = total ? await rankMatchedProducts(matches.map((match) => match.id), terms, (page - 1) * limit, limit) : [];
+  const rows = pageIds.length ? await prisma.marketplaceProduct.findMany({ where: { id: { in: pageIds } }, include: productInclude }) : [];
+  const position = new Map(pageIds.map((id, index) => [id, index]));
+  return { products: rows.sort((a, b) => (position.get(a.id) ?? 0) - (position.get(b.id) ?? 0)), total };
+}
+
 export async function listMarketplaceProducts(req: Request, res: Response) {
-  const { sort, page, limit } = req.query as any;
-  const where = marketplaceProductWhere(req.query);
-  const orderBy = productOrderBy(sort);
-  const [products, total] = await Promise.all([
-    prisma.marketplaceProduct.findMany({ where, include: productInclude, orderBy, skip: (page - 1) * limit, take: limit }),
-    prisma.marketplaceProduct.count({ where }),
-  ]);
+  const { q, sort, page, limit } = req.query as any;
+  const { products, total } = await findProductPage(marketplaceProductWhere(req.query), { q, sort, page, limit });
   res.json({ data: products.map(serializeProduct), meta: { page, limit, total, totalPages: Math.ceil(total / limit) } });
 }
 
@@ -258,11 +309,7 @@ export async function getMarketplaceCommunity(req: Request, res: Response) {
     res.json({ data: { community: { ...community, state: "archived" }, products: [] }, meta: { page, limit, total: 0, totalPages: 0 } });
     return;
   }
-  const where = marketplaceProductWhere(req.query, community.slug);
-  const [products, total] = await Promise.all([
-    prisma.marketplaceProduct.findMany({ where, include: productInclude, orderBy: productOrderBy(sort), skip: (page - 1) * limit, take: limit }),
-    prisma.marketplaceProduct.count({ where }),
-  ]);
+  const { products, total } = await findProductPage(marketplaceProductWhere(req.query, community.slug), { q: (req.query as any).q, sort, page, limit });
   res.json({
     data: { community: { ...community, state: "active" }, products: products.map(serializeProduct) },
     meta: { page, limit, total, totalPages: Math.ceil(total / limit) },

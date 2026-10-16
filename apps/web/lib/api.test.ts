@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, getMarketplaceItemTypes, subscribe } from "./api";
+import { ApiError, getFavorites, getMarketplaceItemTypes, getProduct, getProducts, subscribe } from "./api";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -36,5 +36,67 @@ describe("marketplace API client reliability", () => {
     expect(error).toMatchObject({ status: 400, code: "VALIDATION_ERROR", correlationId: "request-12345678" });
     expect(error.details).toEqual([expect.objectContaining({ path: "email" })]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("marketplace API client caching", () => {
+  const ok = () => new Response(JSON.stringify({ data: [], meta: {} }), { status: 200, headers: { "Content-Type": "application/json" } });
+  function stubFetch() {
+    const fetchMock = vi.fn().mockImplementation(async () => ok());
+    vi.stubGlobal("fetch", fetchMock);
+    return () => fetchMock.mock.calls[0][1] as RequestInit & { next?: { revalidate: number } };
+  }
+  const onServer = () => vi.stubGlobal("window", undefined);
+
+  it("lets the server reuse public catalogue reads for a short while", async () => {
+    onServer();
+    const init = stubFetch();
+
+    await getMarketplaceItemTypes();
+
+    expect(init().next).toEqual({ revalidate: 30 });
+    expect(init().cache).toBeUndefined();
+  });
+
+  it.each([
+    ["a listing", () => getProduct("some-skill").catch(() => undefined)],
+    ["the catalogue", () => getProducts({})],
+    ["a whitespace-only search", () => getProducts({ q: "   " })],
+  ])("caches %s on the server", async (_label, call) => {
+    onServer();
+    const init = stubFetch();
+
+    await call();
+
+    expect(init().next).toEqual({ revalidate: 30 });
+  });
+
+  it("never caches a search term, which is almost never asked twice", async () => {
+    onServer();
+    const init = stubFetch();
+
+    await getProducts({ q: "review" });
+
+    expect(init().cache).toBe("no-store");
+    expect(init().next).toBeUndefined();
+  });
+
+  it("never caches anything that belongs to a signed-in reader", async () => {
+    onServer();
+    const init = stubFetch();
+
+    await getFavorites();
+
+    expect(init().cache).toBe("no-store");
+    expect(init().next).toBeUndefined();
+  });
+
+  it("leaves caching to the browser's own rules in the browser", async () => {
+    const init = stubFetch();
+
+    await getMarketplaceItemTypes();
+
+    expect(init().cache).toBe("no-store");
+    expect(init().next).toBeUndefined();
   });
 });

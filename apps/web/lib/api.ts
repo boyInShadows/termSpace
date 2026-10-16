@@ -21,7 +21,17 @@ export class ApiError extends Error {
 
 function apiBase() { return typeof window === "undefined" ? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001" : process.env.NEXT_PUBLIC_API_URL ?? "/backend"; }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+/**
+ * Public, slow-changing reads (catalogue, listing, communities) are identical
+ * for every visitor, so the server may reuse them for a short while (AGENTS.md
+ * "Caching"). Short on purpose: a suspended listing must stop showing quickly.
+ * Never used for anything that varies by session, and never in the browser.
+ */
+const PUBLIC_REVALIDATE_SECONDS = 30;
+
+async function request<T>(path: string, init?: RequestInit & { revalidate?: number }): Promise<T> {
+  const { revalidate, ...fetchInit } = init ?? {};
+  const cacheable = revalidate !== undefined && typeof window === "undefined";
   const method = (init?.method ?? "GET").toUpperCase();
   const attempts = method === "GET" ? 2 : 1;
 
@@ -29,7 +39,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const timeoutSignal = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
     const signal = init?.signal ? AbortSignal.any([init.signal, timeoutSignal]) : timeoutSignal;
     try {
-      const response = await fetch(`${apiBase()}${path}`, { ...init, signal, credentials: "include", headers: { "Content-Type": "application/json", ...init?.headers }, cache: init?.cache ?? "no-store" });
+      const response = await fetch(`${apiBase()}${path}`, { ...fetchInit, signal, credentials: "include", headers: { "Content-Type": "application/json", ...init?.headers }, ...(cacheable ? { next: { revalidate } } : { cache: init?.cache ?? "no-store" }) });
       if (RETRYABLE_STATUSES.has(response.status) && attempt < attempts) {
         await response.body?.cancel();
         continue;
@@ -57,20 +67,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   throw new ApiError(0, "NETWORK_ERROR", "The service could not be reached");
 }
-export async function getMarketplaceHome() { return (await request<{ data: MarketplaceHome }>("/api/marketplace/home")).data; }
-export async function getMarketplaceItemTypes() { return (await request<{ data: MarketplaceItemType[] }>("/api/marketplace/item-types")).data; }
-export async function getMarketplaceCommunities() { return (await request<{ data: MarketplaceCommunity[] }>("/api/marketplace/communities")).data; }
+// A search term is almost never asked twice, so caching it only fills the cache.
+const publicRevalidate = (filters: ProductFilters) => (filters.q?.trim() ? undefined : PUBLIC_REVALIDATE_SECONDS);
+export async function getMarketplaceHome() { return (await request<{ data: MarketplaceHome }>("/api/marketplace/home", { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
+export async function getMarketplaceItemTypes() { return (await request<{ data: MarketplaceItemType[] }>("/api/marketplace/item-types", { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
+export async function getMarketplaceCommunities() { return (await request<{ data: MarketplaceCommunity[] }>("/api/marketplace/communities", { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
 export async function getMarketplaceCommunity(slug: string, filters: ProductFilters = {}) {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => { if (key !== "community" && value !== undefined && value !== "" && value !== "All" && value !== false) params.set(key, String(value)); });
-  return request<MarketplaceCommunityPageResult>(`/api/marketplace/communities/${encodeURIComponent(slug)}?${params}`);
+  return request<MarketplaceCommunityPageResult>(`/api/marketplace/communities/${encodeURIComponent(slug)}?${params}`, { revalidate: publicRevalidate(filters) });
 }
 export async function getProducts(filters: ProductFilters = {}, signal?: AbortSignal) {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== "" && value !== "All" && value !== false) params.set(key, String(value)); });
-  return request<ProductPageResult>(`/api/marketplace/products?${params}`, { signal });
+  return request<ProductPageResult>(`/api/marketplace/products?${params}`, { signal, revalidate: publicRevalidate(filters) });
 }
-export async function getProduct(slug: string) { return (await request<{ data: ProductDetail }>(`/api/marketplace/products/${encodeURIComponent(slug)}`)).data; }
+export async function getProduct(slug: string) { return (await request<{ data: ProductDetail }>(`/api/marketplace/products/${encodeURIComponent(slug)}`, { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
 export type MarketplaceRole = "creator" | "moderator" | "administrator";
 export async function getSession() { return request<{ data: { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } }>("/api/readers/session"); }
 export async function login(email: string, password: string) { return request("/api/readers/login", { method: "POST", body: JSON.stringify({ email, password }) }); }

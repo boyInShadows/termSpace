@@ -64,7 +64,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
   const platform = initialFilters.platform ?? "All";
   const verified = initialFilters.verified ?? false;
   const minRating = initialFilters.minRating ?? 0;
-  const sort = initialFilters.sort ?? "featured";
+  const sort = initialFilters.sort === "relevance" && !urlQuery.trim() ? "featured" : initialFilters.sort ?? "featured";
   const [view, setView] = useState<"grid" | "list">("grid");
   const result = initial.data;
   const meta = initial.meta;
@@ -261,6 +261,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                 onChange={(e) => update({ sort: e.target.value })}
                 className="min-h-10 rounded-md border bg-surface px-3 text-sm"
               >
+                {urlQuery.trim() && <option value="relevance">{d.bestMatch}</option>}
                 <option value="featured">{d.featured}</option>
                 <option value="rating">{d.topRated}</option>
                 <option value="newest">{d.recentlyUpdated}</option>

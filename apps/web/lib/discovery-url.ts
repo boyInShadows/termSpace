@@ -8,7 +8,8 @@ import type { ProductFilters } from "./types";
  */
 
 export const DISCOVERY_PAGE_SIZE = 12;
-const DEFAULT_SORT = "featured";
+/** A search is ordered by how well it matches; browsing is ordered by featured. */
+const defaultSort = (query: string | null | undefined) => (query?.trim() ? "relevance" : "featured");
 
 export type RawSearchParams = Record<string, string | string[] | undefined>;
 type ParamValue = string | number | boolean | null | undefined;
@@ -31,7 +32,7 @@ export function filtersFromParams(raw: RawSearchParams): ProductFilters {
     platform: first(raw.platform),
     verified: first(raw.verified) === "true" || undefined,
     minRating: Number.isFinite(minRating) && minRating > 0 ? minRating : undefined,
-    sort: first(raw.sort) ?? DEFAULT_SORT,
+    sort: first(raw.sort) ?? defaultSort(first(raw.q)),
     page: positiveInt(first(raw.page)),
     limit: DISCOVERY_PAGE_SIZE,
   };
@@ -42,7 +43,6 @@ function isDefault(key: string, value: ParamValue): boolean {
   if (value === undefined || value === null || value === "" || value === false || value === "All") return true;
   if (key === "page") return Number(value) <= 1;
   if (key === "minRating") return Number(value) <= 0;
-  if (key === "sort") return value === DEFAULT_SORT;
   return false;
 }
 
@@ -58,6 +58,9 @@ export function discoveryHref(pathname: string, current: URLSearchParams | strin
     else params.set(key, String(value));
   }
   if (!("page" in changes)) params.delete("page");
+  // Whether a sort is the default depends on the search text, so decide it last.
+  const sort = params.get("sort");
+  if (sort === defaultSort(params.get("q")) || (sort === "relevance" && !params.get("q")?.trim())) params.delete("sort");
   const query = params.toString();
   return query ? `${pathname}?${query}` : pathname;
 }

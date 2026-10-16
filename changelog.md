@@ -33,6 +33,58 @@ Project changes completed from `pending.md` should be recorded here with the dat
   Not yet run: e2e and LHCI. Port 3100 was held by a process outside this
   session and `playwright.config.ts` hard-codes it.
 
+- Phase D, search and caching (from the improvement review). Measured first, on
+  a throwaway Postgres 17 with 20,004 listings and 51,677 compatibility rows:
+  a plain listing, `sort=newest`, home and product detail take 7-12 ms, an
+  unindexed `sort=rating` 20 ms, page 500 15 ms; only text search is slow, at
+  98-138 ms. So no new indexes were added, and `pg_trgm`/`tsvector` was not
+  adopted. Search had no relevance ordering, which mattered more than its speed.
+- Search: new `sort=relevance` on `GET /api/marketplace/products` and the
+  community list. It evaluates the text match once over ids (the length is the
+  total, so the second `count` is gone), ranks those ids in one SQL statement
+  (name exact 20, name contains 10, word start 5, tag 6, outcome 4, creator 3,
+  category 2, description 1, per term), then loads only that page's rows. The
+  web app makes relevance the default sort whenever there is search text and
+  offers "Best match" in the sort control only then; choosing Featured while
+  searching is kept in the URL. At 20k listings it costs +4% to +40% over the
+  old query (e.g. `review` 94 to 113 ms, `codex`, 6,668 matches, 102 to 143 ms),
+  and the right listing comes first: `review` returns "Financial Model Reviewer"
+  and `pull request` returns "Pull Request Guardian" ahead of description-only
+  matches. Ceiling, marked `ponytail:` in code: every match id is held and
+  ranked; past tens of thousands of matches use `pg_trgm`/`tsvector`. Hostile
+  input (quotes, `%`, `_`, `\`, Persian, a `DROP TABLE` string) was run against
+  the real database and is parameterised; a search for `_` matches everything
+  because Prisma's `contains` does not escape wildcards (existing behaviour,
+  logged in `pending.md`).
+- Caching, following the `AGENTS.md` rule that lib/api.ts previously ignored:
+  server-side public reads (home, item types, communities, community pages,
+  catalogue pages, listing detail) now use `next: { revalidate: 30 }`. Search
+  terms, anything session-scoped, and every browser request stay `no-store`.
+  Verified with a request-counting proxy in front of the mock API and a
+  production build: 5 loads of a product page made 1 upstream call, English and
+  Persian share it, a cold load makes 1 call (so `generateMetadata` and the page
+  were already deduplicated, and a React `cache()` wrapper is not needed), 3
+  searches made 3 calls, and the entry refetched once after 32 s. The
+  `AbortSignal` on every request does not defeat the cache. Effect on Lighthouse
+  LCP is nil (home still ~3.2 s) because the cost saved is the API round trip,
+  not rendering; the real LCP work remains the `[locale]` route segment, not
+  done here. Staleness bound: a suspended listing can show on the web pages for
+  up to 30 s, while the API and the installation endpoint still fail closed at
+  once.
+- Also: `app/explore/loading.tsx`, so a search or filter navigation shows the
+  page frame at once. Deliberately not added for `/communities`, since a loading
+  boundary there would wrap `/communities/[slug]` and make its 404 a streamed 200.
+  `lib/i18n/catalog.ts` (shared surface) gains `bestMatch`. API schema: `sort`
+  accepts `relevance`; the default stays `featured`, so existing callers are
+  unchanged.
+- Checked and not changed: the API already sends weak ETags and answers
+  conditional requests with 304 (verified), so the review's "no ETag" was wrong;
+  `Cache-Control` and compression were left out because no CDN is known
+  (`pending.md`).
+- Verification for Phase D: root typecheck; `npm run lint -w apps/web`; 346
+  tests (172 API, 15 blog, 159 web) with the usual env flags; all builds; e2e 74
+  passed and 14 skipped; `lhci` all assertions passed (home 93, dashboard 90,
+  product 93, accessibility 100). Same spare-port workaround as Phase B.
 - Phase C, reviews (from the improvement review; completes the core of the
   `pending.md` P0 "Ratings and Reviews" block). A reader with a verified email
   and a completed acquisition can post one review per listing, edit it, and

@@ -153,7 +153,7 @@ export const marketplaceProductQuerySchema = z.object({
   platform: z.enum(MARKETPLACE_PLATFORM_KEYS).optional(),
   verified: z.enum(["true", "false"]).optional().transform((value) => value === "true" ? true : undefined),
   minRating: z.coerce.number().min(0).max(5).optional().default(0),
-  sort: z.enum(["featured", "rating", "newest"]).optional().default("featured"),
+  sort: z.enum(["featured", "rating", "newest", "relevance"]).optional().default("featured"),
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(48).optional().default(12),
 });

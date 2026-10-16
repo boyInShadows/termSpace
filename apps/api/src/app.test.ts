@@ -211,6 +211,73 @@ describe("API", () => {
     expect(prismaMock.marketplaceProduct.findMany).toHaveBeenLastCalledWith(expect.objectContaining({ orderBy }));
   });
 
+  describe("relevance search", () => {
+    const row = (id: string) => ({
+      id, slug: id, name: id, type: "Skill", itemType: "SKILL", rating: 0, priceMinor: 0, currency: "USD", pricingModel: "free",
+      platforms: [], models: [], category: { name: "Developer tools", slug: "developer-tools" }, creator: { id: "c", name: "C", handle: "c", initials: "C", verified: true, bio: "", followers: 0, _count: { products: 1 } },
+    });
+
+    it("matches once over ids, ranks in SQL, and returns the page in ranked order with the true total", async () => {
+      prismaMock.marketplaceProduct.findMany
+        .mockResolvedValueOnce([{ id: "a" }, { id: "b" }, { id: "c" }])
+        .mockResolvedValueOnce([row("c"), row("a")]);
+      prismaMock.$queryRaw.mockResolvedValueOnce([{ id: "c" }, { id: "a" }]);
+
+      const response = await request(createApp()).get("/api/marketplace/products?q=Pull%20Request&sort=relevance&limit=2");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.map((item: { id: string }) => item.id)).toEqual(["c", "a"]);
+      expect(response.body.meta).toEqual({ page: 1, limit: 2, total: 3, totalPages: 2 });
+      expect(prismaMock.marketplaceProduct.count).not.toHaveBeenCalled();
+      expect(prismaMock.marketplaceProduct.findMany.mock.calls[0][0]).toMatchObject({ select: { id: true } });
+      expect(prismaMock.marketplaceProduct.findMany.mock.calls[1][0].where).toEqual({ id: { in: ["c", "a"] } });
+      // Prisma.sql keeps the bound values apart from the SQL text: ids, lowered terms, offset, limit.
+      const [ids, terms, offset, limit] = prismaMock.$queryRaw.mock.calls[0][0].values;
+      expect([ids, terms, offset, limit]).toEqual([["a", "b", "c"], ["pull", "request"], 0, 2]);
+    });
+
+    it("pages through the ranking with an offset, never re-sorting in the app", async () => {
+      prismaMock.marketplaceProduct.findMany.mockResolvedValueOnce([{ id: "a" }, { id: "b" }, { id: "c" }]).mockResolvedValueOnce([row("c")]);
+      prismaMock.$queryRaw.mockResolvedValueOnce([{ id: "c" }]);
+
+      await request(createApp()).get("/api/marketplace/products?q=x&sort=relevance&limit=2&page=2");
+
+      expect(prismaMock.$queryRaw.mock.calls[0][0].values.slice(2)).toEqual([2, 2]);
+    });
+
+    it("skips ranking and the second query when nothing matches", async () => {
+      prismaMock.marketplaceProduct.findMany.mockResolvedValueOnce([]);
+
+      const response = await request(createApp()).get("/api/marketplace/products?q=zzz&sort=relevance");
+
+      expect(response.body).toMatchObject({ data: [], meta: { total: 0, totalPages: 0 } });
+      expect(prismaMock.$queryRaw).not.toHaveBeenCalled();
+      expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledTimes(1);
+    });
+
+    it("falls back to featured ordering when there is no search text", async () => {
+      prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+      prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+
+      expect((await request(createApp()).get("/api/marketplace/products?sort=relevance")).status).toBe(200);
+
+      expect(prismaMock.$queryRaw).not.toHaveBeenCalled();
+      expect(prismaMock.marketplaceProduct.findMany).toHaveBeenLastCalledWith(expect.objectContaining({
+        orderBy: [{ featured: "desc" }, { usageCount: "desc" }, { id: "asc" }],
+      }));
+    });
+
+    it("leaves an explicit sort alone even when searching", async () => {
+      prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+      prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+
+      await request(createApp()).get("/api/marketplace/products?q=review&sort=rating");
+
+      expect(prismaMock.$queryRaw).not.toHaveBeenCalled();
+      expect(prismaMock.marketplaceProduct.count).toHaveBeenCalled();
+    });
+  });
+
   it("lists active communities with approved published placement counts", async () => {
     prismaMock.marketplaceCommunity.findMany.mockResolvedValue([{
       slug: "codex", nameEn: "Codex", nameFa: "کودکس", descriptionEn: "Codex tools", descriptionFa: null,
