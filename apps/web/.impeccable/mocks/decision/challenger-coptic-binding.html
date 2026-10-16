@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>termspace - exposed binding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--oak:#6B4A2B;--oak-d:#4A3119;--paper:#C4B89C;--fold:#A99E82;--ink:#2B2A27;--madder:#B3342B;--linen:#EDE6D2;--soft:#3A382F}
+*{box-sizing:border-box}
+body{margin:0;background:var(--oak)}
+.root{position:relative;width:1440px;height:900px;margin:0;overflow:hidden;background:var(--oak);font-family:Bitter,Georgia,serif;color:var(--ink)}
+.root::before{content:"";position:absolute;inset:10px;border:1px solid var(--oak-d);box-shadow:inset 1px 1px 0 rgba(0,0,0,.25),1px 1px 0 rgba(255,255,255,.12);pointer-events:none}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.bar{position:absolute;left:40px;right:40px;top:0;height:68px;display:flex;align-items:center;justify-content:space-between;color:var(--linen)}
+.mark{font-weight:700;font-size:24px;letter-spacing:.01em;text-decoration:none}
+.bar nav{display:flex;gap:32px;font-size:16px}
+.bar nav a{padding:10px 2px;text-decoration:none;border-bottom:2px solid transparent}
+.bar nav a:hover{border-color:var(--linen)}
+.book{position:absolute;left:40px;top:68px;width:1360px;height:796px;display:grid;grid-template-columns:1fr 1fr;background:var(--paper);box-shadow:0 0 0 8px var(--oak-d),0 0 0 9px #2A1B0D}
+.pg{position:relative;display:flex;flex-direction:column;justify-content:center}
+.pg::before{content:"";position:absolute;inset:20px;border:1px solid rgba(43,42,39,.28);box-shadow:inset 1px 1px 0 rgba(0,0,0,.14),1px 1px 0 rgba(255,255,255,.28);pointer-events:none}
+.l{padding:56px 56px 56px 80px;box-shadow:inset 4px 0 0 #B4A98C,inset 0 -3px 0 #B4A98C}
+.r{padding:56px 64px 56px 132px;box-shadow:inset -4px 0 0 #B4A98C,inset 0 -3px 0 #B4A98C}
+h1{margin:0;font-size:56px;line-height:1.06;font-weight:700;letter-spacing:-.01em}
+.sub{margin:28px 0 0;max-width:500px;font-size:19px;line-height:1.55;color:var(--soft)}
+form{display:flex;gap:16px;align-items:flex-end;margin-top:44px}
+input{flex:1;min-width:0;height:56px;padding:0 2px;background:transparent;border:0;border-bottom:2px solid var(--ink);border-radius:0;font:400 18px Bitter,Georgia,serif;color:var(--ink)}
+input::placeholder{color:#4A4638;opacity:1}
+button{height:56px;padding:0 26px;border:0;border-radius:2px;background:var(--madder);color:#F6F0DE;font:700 18px Bitter,Georgia,serif;cursor:pointer;box-shadow:0 3px 0 #7E2019}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 #7E2019}
+.kinds{margin:22px 0 0;font-size:16px;color:var(--soft);letter-spacing:.02em}
+.gut{position:absolute;left:50%;top:0;bottom:0;width:24px;margin-left:-12px;background:var(--fold);box-shadow:inset 3px 0 0 #8C8168,inset -3px 0 0 #8C8168}
+.chain{position:absolute;left:50%;top:44px;bottom:44px;margin-left:-2px;border-left:4px dotted var(--linen)}
+.st{--t:var(--linen);position:absolute;left:50%;margin-left:-32px;width:64px;height:16px}
+.st::before{content:"";position:absolute;left:4px;right:4px;top:3px;height:10px;border-radius:5px;background:var(--t);box-shadow:0 2px 0 rgba(43,42,39,.55)}
+.st::after{content:"";position:absolute;left:0;top:4px;width:8px;height:8px;border-radius:50%;background:var(--ink);box-shadow:56px 0 0 var(--ink)}
+.st b{position:absolute;left:80px;top:-3px;font:700 17px "Courier Prime",monospace;color:var(--ink)}
+.st.new{--t:var(--madder)}
+.st.new b{color:var(--madder);font-size:19px}
+.slip{align-self:flex-start;margin:0 0 14px;padding:2px 10px;border:1px solid var(--ink);font:700 14px "Courier Prime",monospace;letter-spacing:.04em}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+h2{margin:0;font-size:36px;line-height:1.1;font-weight:700}
+.by{margin:10px 0 0;font:400 17px "Courier Prime",monospace}
+.stamp{flex:none;width:136px;height:136px;margin-top:-4px;border-radius:50%;display:grid;place-items:center;text-align:center;transform:rotate(-7deg);color:#34322A;font-weight:700;font-size:15px;letter-spacing:.14em;text-transform:uppercase;line-height:1.35;text-shadow:0 1px 0 rgba(255,255,255,.45);box-shadow:inset 3px 3px 4px rgba(0,0,0,.5),inset -2px -2px 0 rgba(255,255,255,.5),1px 1px 0 rgba(255,255,255,.35)}
+.stamp span{display:grid;place-items:center;width:104px;height:104px;border-radius:50%;box-shadow:inset 1px 1px 0 rgba(0,0,0,.45),1px 1px 0 rgba(255,255,255,.35)}
+table{width:100%;margin-top:26px;border-collapse:collapse}
+th,td{padding:11px 0;text-align:left;border-bottom:1px solid rgba(43,42,39,.55);vertical-align:baseline}
+tr:first-child th,tr:first-child td{border-top:2px solid var(--ink)}
+th{width:150px;font-weight:600;font-size:15px;color:var(--soft)}
+td{font:400 18px "Courier Prime",monospace}
+td.warn{color:var(--madder);font-weight:700;font-size:19px}
+.install{margin-top:26px;padding:14px 16px;font:700 15px "Courier Prime",monospace;box-shadow:inset 2px 2px 3px rgba(0,0,0,.32),inset -1px -1px 0 rgba(255,255,255,.35);background:#BBAF93}
+.install i{font-style:normal;color:var(--madder)}
+</style>
+</head>
+<body>
+<div class="root">
+  <header class="bar">
+    <a class="mark" href="#">termspace</a>
+    <nav><a href="#">Explore</a><a href="#">Share your work</a><a href="#">Sign in</a></nav>
+  </header>
+  <main class="book">
+    <section class="pg l">
+      <h1>Stop prompting from scratch. Start from what works.</h1>
+      <p class="sub">Prompts, skills, agents and MCP servers built by people who already got the model to behave, each one listed with its permissions, compatibility and safety review in plain sight.</p>
+      <form role="search">
+        <input type="search" aria-label="Search termspace" placeholder="review my pull request like a staff engineer">
+        <button type="submit">Search</button>
+      </form>
+      <p class="kinds">Skills · Agents · MCP servers · Prompts · Rules</p>
+    </section>
+    <section class="pg r" aria-label="Example listing">
+      <div class="slip">Example listing</div>
+      <div class="head">
+        <div>
+          <h2>Staff Engineer Review</h2>
+          <p class="by">Skill · v2.4.0 · by Ellis North</p>
+        </div>
+        <div class="stamp" role="img" aria-label="Safety reviewed"><span>Safety<br>reviewed</span></div>
+      </div>
+      <table>
+        <tr><th scope="row">Safety</th><td>Safety reviewed</td></tr>
+        <tr><th scope="row">Licence</th><td>MIT</td></tr>
+        <tr><th scope="row">Reads</th><td>the diff under review</td></tr>
+        <tr><th scope="row">Writes</th><td class="warn">not declared</td></tr>
+        <tr><th scope="row">Network</th><td>none</td></tr>
+        <tr><th scope="row">Works with</th><td>Claude, Cursor, VS Code</td></tr>
+        <tr><th scope="row">Pinned release</th><td>0123abc</td></tr>
+      </table>
+      <div class="install"><i>$</i> termspace install staff-engineer-review@0123abc</div>
+    </section>
+    <div class="gut" aria-hidden="true"></div>
+    <div class="chain" aria-hidden="true"></div>
+    <div class="st new" style="top:96px"><b>2.4.0</b></div>
+    <div class="st" style="top:290px"><b>2.3.0</b></div>
+    <div class="st" style="top:484px"><b>2.0.0</b></div>
+    <div class="st" style="top:678px"><b>1.0.0</b></div>
+  </main>
+</div>
+</body>
+</html>

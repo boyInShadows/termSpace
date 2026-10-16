@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>termspace - the annotated rulebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B2A4A;--cot:#F4F5F7;--red:#C8102E;--gold:#E5B800;--mute:#4A5670;--part:#E4E8EF}
+html,body{margin:0;background:var(--navy)}
+#r{position:relative;width:1440px;height:900px;overflow:hidden;margin:0;background:var(--navy);color:var(--navy);font:400 16px/1.4 "Archivo",Arial,sans-serif}
+header{position:absolute;left:32px;right:32px;top:0;height:64px;display:flex;align-items:center;justify-content:space-between;color:var(--cot)}
+.wm{font-weight:800;font-size:24px;letter-spacing:-.02em}
+nav{display:flex;gap:32px;font-size:15px;font-weight:500}
+nav a{color:var(--cot);text-decoration:none;padding:10px 0}
+nav a:last-child{border:1.5px solid var(--cot);padding:8px 16px}
+.sheet{position:absolute;left:32px;top:64px;width:1376px;height:804px;background:var(--cot)}
+.lab{font:600 14px/1 "Barlow Condensed",Arial Narrow,sans-serif;letter-spacing:.09em;text-transform:uppercase}
+h1{position:absolute;left:48px;top:64px;width:480px;margin:0;font-weight:800;font-size:56px;line-height:1.02;letter-spacing:-.025em}
+.sub{position:absolute;left:48px;top:312px;width:470px;margin:0;font-size:17px;line-height:1.5;color:var(--mute)}
+.rule1{position:absolute;left:48px;top:462px;width:480px}
+.rule1 .lab{display:block;margin-bottom:12px}
+form{display:flex;height:58px}
+input{flex:1;min-width:0;border:2px solid var(--navy);border-right:0;background:var(--cot);padding:0 16px;font:400 16px "Archivo",Arial,sans-serif;color:var(--navy);border-radius:0}
+input::placeholder{color:var(--mute);opacity:1}
+input:focus-visible,button:focus-visible{outline:3px solid var(--navy);outline-offset:3px}
+button{width:116px;border:2px solid var(--navy);background:var(--navy);color:var(--cot);font:600 16px "Archivo",Arial,sans-serif;border-radius:0}
+.cats{position:absolute;left:48px;top:586px;margin:0;font:500 16px "Barlow Condensed",Arial Narrow,sans-serif;letter-spacing:.06em;color:var(--mute)}
+svg{position:absolute;left:548px;top:20px;overflow:visible}
+svg text{fill:var(--navy)}
+.l{font:600 14px "Barlow Condensed",Arial Narrow,sans-serif;letter-spacing:.09em;text-transform:uppercase}
+.v{font:600 16px "Archivo",Arial,sans-serif}
+.x{font:400 15px "Archivo",Arial,sans-serif;fill:var(--mute);text-decoration:line-through}
+.k{position:absolute;left:48px;right:48px;bottom:16px;height:52px;border-top:2px solid var(--navy);display:flex;align-items:center;gap:32px;font-size:15px}
+.k i{display:inline-block;width:40px;height:10px;margin-right:10px;vertical-align:middle}
+.k s{color:var(--mute);margin-left:auto;text-decoration:line-through}
+.k span.n{color:var(--mute)}
+</style></head><body>
+<div id="r">
+<header><span class="wm">termspace</span><nav><a href="#">Explore</a><a href="#">Share your work</a><a href="#">Sign in</a></nav></header>
+<main class="sheet">
+<h1>Stop prompting from scratch. Start from what works.</h1>
+<p class="sub">Prompts, skills, agents and MCP servers built by people who already got the model to behave, each one listed with its permissions, compatibility and safety review in plain sight.</p>
+<div class="rule1"><span class="lab">1 &middot; Search first</span>
+<form onsubmit="return false"><input type="search" aria-label="Search the library" placeholder="review my pull request like a staff engineer"><button type="button">Search</button></form></div>
+<p class="cats">Skills &middot; Agents &middot; MCP servers &middot; Prompts &middot; Rules</p>
+
+<svg width="826" height="650" viewBox="0 0 826 650" role="img" aria-label="Annotated diagram of the Staff Engineer Review skill listing: manifest, instructions file, examples and a pinned release, each tied to a rule">
+ <text class="l" x="300" y="34">Example listing</text><line x1="420" y1="30" x2="570" y2="30" stroke="#1B2A4A" stroke-width="1"/>
+ <g stroke="#1B2A4A" stroke-width="1.5">
+  <rect x="300" y="60" width="270" height="130" fill="#1B2A4A"/>
+  <rect x="300" y="206" width="270" height="100" fill="#E4E8EF"/>
+  <rect x="300" y="322" width="270" height="100" fill="#E4E8EF"/>
+  <rect x="300" y="438" width="270" height="100" fill="#F4F5F7" stroke-width="3"/>
+  <path d="M435 190v16M435 306v16M435 422v16" fill="none"/>
+ </g>
+ <rect x="288" y="60" width="12" height="130" fill="#E5B800"/><line x1="294" y1="62" x2="294" y2="188" stroke="#1B2A4A" stroke-width="1.5" stroke-dasharray="5 4"/>
+ <g fill="#F4F5F7"><text class="l" x="316" y="86" style="fill:#F4F5F7">manifest.json</text>
+  <text x="316" y="122" style="font:800 28px Archivo,Arial,sans-serif;fill:#F4F5F7">Staff Engineer</text>
+  <text x="316" y="152" style="font:800 28px Archivo,Arial,sans-serif;fill:#F4F5F7">Review</text>
+  <text x="316" y="177" style="font:500 14px Archivo,Arial,sans-serif;fill:#F4F5F7">Skill &middot; v2.4.0 &middot; by Ellis North</text></g>
+ <text class="l" x="316" y="238">SKILL.md</text><text class="v" x="316" y="266">Instructions file</text>
+ <text class="l" x="316" y="354">examples/</text><text class="v" x="316" y="382">Worked reviews</text>
+ <text class="l" x="316" y="470">release</text><text class="v" x="316" y="498">Pinned to 0123abc</text>
+ <text x="300" y="582" style="font:500 14px 'Barlow Condensed',Arial Narrow,sans-serif;letter-spacing:.06em;fill:#4A5670">FIG. 1 &mdash; FOUR PARTS, EACH READABLE BEFORE YOU INSTALL</text>
+ <!-- leaders: left -->
+ <g stroke="#1B2A4A" stroke-width="1" fill="#1B2A4A">
+  <path d="M222 125H288M222 256H300M222 372H300M222 488H300" fill="none"/>
+  <circle cx="288" cy="125" r="3.5"/><circle cx="300" cy="256" r="3.5"/><circle cx="300" cy="372" r="3.5"/><circle cx="300" cy="488" r="3.5"/>
+  <path d="M570 125H616M570 256H616M570 372H616M570 488H616" fill="none"/>
+  <circle cx="570" cy="125" r="3.5"/><circle cx="570" cy="256" r="3.5"/><circle cx="570" cy="372" r="3.5"/><circle cx="570" cy="488" r="3.5"/>
+ </g>
+ <g><text class="l" x="0" y="108">2 &middot; Review state</text><text class="v" x="0" y="132">Safety reviewed</text><rect x="0" y="142" width="40" height="8" fill="#E5B800"/>
+  <text class="l" x="0" y="228">3 &middot; Reads</text><text class="x" x="0" y="250">the whole repo</text><text class="v" x="0" y="274">the diff under review</text>
+  <text class="l" x="0" y="358">4 &middot; Writes</text><text class="v" x="0" y="382">not declared</text>
+  <text class="l" x="0" y="474">5 &middot; Pinned to</text><text class="v" x="0" y="498">0123abc</text>
+  <text class="l" x="626" y="108">6 &middot; Licence</text><text class="v" x="626" y="132">MIT</text>
+  <text class="l" x="626" y="240">7 &middot; Network</text><text class="v" x="626" y="264">none</text>
+  <text class="l" x="626" y="358">8 &middot; Works with</text><text class="v" x="626" y="382">Claude, Cursor, VS Code</text>
+  <text class="l" x="626" y="474">9 &middot; Release</text><text class="v" x="626" y="498">immutable</text></g>
+</svg>
+
+<div class="k"><span class="lab">Stripe key</span>
+ <span><i style="background:var(--gold)"></i>Safety reviewed</span>
+ <span><i style="background:var(--red)"></i>Changes requested</span>
+ <span><i style="border:2px solid var(--navy);height:6px"></i>Not yet reviewed</span>
+ <s>Struck through: not allowed in a conforming listing</s></div>
+</main>
+</div>
+</body></html>

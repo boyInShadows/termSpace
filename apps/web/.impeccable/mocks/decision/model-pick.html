@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>termspace - datasheet direction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#101114;--blue:#0B3D91;--red:#D1242F;--mute:#5d6068;--rule:#c9ccd2}
+*{box-sizing:border-box}
+body{margin:0;background:#fff}
+.sheet{width:1440px;height:900px;overflow:hidden;margin:0;background:#fff;color:var(--ink);font:400 14px/1.4 "Archivo",sans-serif;display:flex;flex-direction:column;padding:0 56px;font-variant-numeric:tabular-nums}
+.mono,.v{font-family:"JetBrains Mono",monospace}
+nav{height:52px;display:flex;align-items:center;border-bottom:1px solid var(--ink);flex:none}
+nav b{font:700 20px "Archivo";font-stretch:90%;letter-spacing:-.01em}
+nav span{margin-left:auto;display:flex;gap:32px;font-weight:500}
+nav a{color:var(--ink);text-decoration:none}
+nav a:last-child{border:1px solid var(--ink);padding:5px 14px}
+.dbl{border-top:1px solid var(--ink);margin-top:3px;flex:none}
+.title{display:grid;grid-template-columns:1fr 292px;gap:48px;padding:24px 0 22px;flex:none}
+h1{text-wrap:balance;margin:0;font:700 58px/1.02 "Archivo";font-stretch:88%;letter-spacing:-.025em;max-width:980px}
+.sub{margin:14px 0 0;max-width:700px;font-size:16px;line-height:1.5;color:#2b2d33}
+.rev{border:1px solid var(--ink);align-self:start;font-size:12px}
+.rev div{display:flex;justify-content:space-between;padding:5px 10px;border-bottom:1px solid var(--rule)}
+.rev div:last-child{border:0}
+.rev div:first-child{background:var(--ink);color:#fff;font-weight:600;letter-spacing:.08em}
+.rev .mono{font-size:11.5px}
+.find{display:flex;align-items:stretch;gap:0;flex:none}
+.find label{display:flex;align-items:center;width:150px;font:600 12px "Archivo";letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--ink);border-right:0;padding:0 14px;background:#f3f4f6}
+.find .in{flex:1;border:1px solid var(--ink);border-right:0;display:flex;align-items:center;padding:0 16px;height:50px;font:400 17px "JetBrains Mono";color:var(--mute)}
+.find .in:before{content:">";color:var(--blue);margin-right:12px;font-weight:700}
+.find button{background:var(--blue);color:#fff;border:0;width:140px;font:600 16px "Archivo";letter-spacing:.02em}
+.types{margin:9px 0 0;font-size:13px;color:var(--mute);display:flex;gap:0}
+.types i{font-style:normal;margin:0 9px;color:var(--rule)}
+.types span:first-child{margin-right:10px;color:var(--ink);font-weight:600}
+.part{margin-top:28px;border:1px solid var(--ink);flex:none;display:flex;flex-direction:column}
+.ph{display:grid;grid-template-columns:auto 1fr auto;align-items:stretch;border-bottom:3px double var(--ink)}
+.ph>div{padding:10px 16px}
+.ph .tag{background:var(--ink);color:#fff;font:600 11px "Archivo";letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center}
+.ph h2{margin:0;font:700 26px/1.1 "Archivo";font-stretch:90%;letter-spacing:-.01em}
+.ph small{display:block;color:var(--mute);font-size:12.5px;margin-top:3px}
+.ph .r{text-align:right;border-left:1px solid var(--ink);font-size:12.5px;display:flex;flex-direction:column;justify-content:center}
+.ph .r b{font:700 20px "JetBrains Mono"}
+.cols{display:grid;grid-template-columns:330px 1fr 290px}
+.cols>section{padding:16px 16px 18px}
+.cols>section+section{border-left:1px solid var(--ink)}
+h3{margin:0 0 8px;font:700 12px "Archivo";letter-spacing:.09em;text-transform:uppercase}
+h3 em{font:500 12px "JetBrains Mono";color:var(--blue);margin-right:8px;font-style:normal}
+ul{margin:0;padding:0;list-style:none;font-size:14px}
+li{padding:7px 0 7px 16px;border-bottom:1px solid #e4e6ea;position:relative}
+li:before{content:"";position:absolute;left:0;top:14px;width:6px;height:6px;border:1px solid var(--ink)}
+li:last-child{border:0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font:600 11px "Archivo";letter-spacing:.08em;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid var(--blue);color:var(--blue)}
+td{padding:9px 8px;border-bottom:1px solid #e4e6ea}
+td:first-child{font-weight:600}
+td.v{font-size:12.5px}
+.red{color:var(--red);font-weight:700;border:1px solid var(--red);padding:0 5px}
+.dash{color:var(--mute)}
+.ic{width:100%;height:170px;display:block}
+.ic text{font:500 12px "JetBrains Mono";fill:var(--ink)}
+.ord{display:grid;grid-template-columns:210px 150px 1fr;border-top:1px solid var(--ink);font-size:13px}
+.ord div{padding:9px 16px}
+.ord div+div{border-left:1px solid var(--ink)}
+.ord .h{background:#f3f4f6;font:600 11px "Archivo";letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+.ord .v{font-size:13.5px}
+.ord .cmd{background:var(--ink);color:#fff}
+.ord .cmd b{color:#8fb2f5;font-weight:500}
+footer{margin-top:auto;height:40px;flex:none;border-top:1px solid var(--ink);display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--mute)}
+footer b{color:var(--ink);font-family:"JetBrains Mono";font-weight:500}
+</style></head><body>
+<div class="sheet">
+  <nav><b>termspace</b><span><a href="#">Explore</a><a href="#">Share your work</a><a href="#">Sign in</a></span></nav>
+  <div class="dbl"></div>
+  <header class="title">
+    <div>
+      <h1>Stop prompting from scratch. Start from what works.</h1>
+      <p class="sub">Prompts, skills, agents and MCP servers built by people who already got the model to behave, each one listed with its permissions, compatibility and safety review in plain sight.</p>
+    </div>
+    <div class="rev">
+      <div><span>TITLE BLOCK</span><span>1/1</span></div>
+      <div><span>Document</span><span class="mono">TS-0001</span></div>
+      <div><span>Revision</span><span class="mono">2.4.0</span></div>
+      <div><span>Safety review</span><span class="mono">Reviewed</span></div>
+      <div><span>Pinned release</span><span class="mono">0123abc</span></div>
+    </div>
+  </header>
+  <form class="find" onsubmit="return false">
+    <label>Find a part</label><div class="in">review my pull request like a staff engineer</div><button type="button">Search</button>
+  </form>
+  <p class="types"><span>Browse by type</span><span>Skills</span><i>·</i><span>Agents</span><i>·</i><span>MCP servers</span><i>·</i><span>Prompts</span><i>·</i><span>Rules</span></p>
+
+  <article class="part">
+    <div class="ph">
+      <div class="tag">Example listing</div>
+      <div><h2>Staff Engineer Review</h2><small>Skill &nbsp;·&nbsp; by Ellis North &nbsp;·&nbsp; Safety reviewed &nbsp;·&nbsp; Licence MIT</small></div>
+      <div class="r"><span>REVISION</span><b>v2.4.0</b></div>
+    </div>
+    <div class="cols">
+      <section><h3><em>1</em>Features</h3>
+        <ul><li>Safety reviewed, state shown on the listing</li><li>Licence MIT</li><li>Reads only the diff under review</li><li>No network access declared</li><li>Pinned to immutable release 0123abc</li></ul>
+      </section>
+      <section><h3><em>2</em>Absolute maximum ratings</h3>
+        <table><tr><th>Parameter</th><th>Value</th><th>Limit / declared</th></tr>
+          <tr><td>Reads</td><td class="v">the diff under review</td><td class="v">declared</td></tr>
+          <tr><td>Writes</td><td class="v dash">&mdash;</td><td><span class="red v">not declared</span></td></tr>
+          <tr><td>Network</td><td class="v">none</td><td class="v">declared</td></tr>
+          <tr><td>Shell</td><td class="v dash">&mdash;</td><td class="v dash">&mdash;</td></tr>
+          <tr><td>Environment</td><td class="v dash">&mdash;</td><td class="v dash">&mdash;</td></tr>
+        </table>
+      </section>
+      <section><h3><em>3</em>Compatibility</h3>
+        <svg class="ic" viewBox="0 0 258 150" role="img" aria-label="Pin diagram: pin 1 Claude, pin 2 Cursor, pin 3 VS Code">
+          <g stroke="#101114" fill="none" stroke-width="1.2">
+            <rect x="112" y="14" width="64" height="116" fill="#fff"/><path d="M134 14a10 10 0 0 0 20 0"/>
+            <path d="M84 40h28M84 72h28M84 104h28"/>
+            <path d="M176 40h28M176 72h28M176 104h28" stroke-dasharray="3 3" stroke="#9aa0a8"/>
+          </g>
+          <g text-anchor="end"><text x="78" y="44">Claude</text><text x="78" y="76">Cursor</text><text x="78" y="108">VS Code</text></g>
+          <g text-anchor="middle" fill="#5d6068"><text x="104" y="36" style="font-size:10px">1</text><text x="104" y="68" style="font-size:10px">2</text><text x="104" y="100" style="font-size:10px">3</text></g>
+          <text x="144" y="78" text-anchor="middle" style="font-weight:700;fill:#0B3D91" transform="rotate(-90 144 78)">SKILL v2.4.0</text>
+          <g text-anchor="start" style="fill:#5d6068"><text x="208" y="44" style="font-size:10px;fill:#5d6068">NC</text><text x="208" y="76" style="font-size:10px;fill:#5d6068">NC</text><text x="208" y="108" style="font-size:10px;fill:#5d6068">NC</text></g>
+        </svg>
+      </section>
+    </div>
+    <div class="ord">
+      <div class="h">4 &nbsp;Ordering information</div>
+      <div class="v"><span style="color:var(--mute);font-family:Archivo;font-size:11px;letter-spacing:.08em">PINNED </span><b>0123abc</b></div>
+      <div class="v cmd"><b>$</b> termspace add staff-engineer-review@0123abc</div>
+    </div>
+  </article>
+
+  <footer><span>termspace &nbsp;·&nbsp; Listing datasheet &nbsp;·&nbsp; Example only, not a real listing</span><b>Rev. 2.4.0 · Page 1 of 1</b></footer>
+</div>
+</body></html>

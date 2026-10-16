@@ -4,6 +4,22 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-16
 
+- **Design context and hero direction (branch `redesign`, no behaviour change).**
+  - New `apps/web/PRODUCT.md`: users, purpose, positioning (declared permissions
+    and provenance), constraints (free, external sources, untrusted
+    submissions, Persian and English as equals), evidence (all current
+    listings are fixtures) and principles. Written from `docs/product-direction.md`
+    plus three answers from the maintainer.
+  - New `apps/web/DESIGN.md` and `.impeccable/design.json`: the current
+    "Signal & Void" system recorded as a **pre-redesign baseline**; it is
+    replaced when the hero redesign ships.
+  - `apps/web/.impeccable/`: `config.json` (`buildPath: code`), the 2026-10-16
+    critique snapshots for `/`, `/dashboard` and `/explore`, and the decision
+    sketches from the hero direction round. **Direction chosen: The Card
+    Catalogue** (library catalogue drawer; the search is the brass label holder;
+    one synthetic example card with leader-line callouts and ghost lines for
+    undeclared fields). The brief is awaiting confirmation; nothing is built.
+    `hook.cache.json`, `live/` and `questions/` are generated and not committed.
 - **Listing cards state what the listing declares (critique-driven `layout`,
   branch `redesign`).**
   - `components/marketplace/product-card.tsx` and `product-parts.tsx`: a
