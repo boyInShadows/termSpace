@@ -17,6 +17,18 @@ test.describe("product detail", () => {
     await expect(page).toHaveTitle("Conversion Copywriter — Skill for Claude · termspace");
   });
 
+  test("shows where the release comes from and how to fetch it, without signing in", async ({ page }) => {
+    await page.goto("/products/conversion-copywriter");
+
+    const provenance = page.locator("#provenance");
+    await expect(provenance.getByRole("heading", { name: "Source & provenance" })).toBeVisible();
+    await expect(provenance.getByText("GitHub repository")).toBeVisible();
+    await expect(provenance.getByText("Reads the diff it reviews.")).toBeVisible();
+    await expect(provenance.getByText("git clone https://github.com/termspace-fixtures/conversion-copywriter.git")).toBeVisible();
+    await expect(provenance.getByRole("button", { name: "Copy" })).toBeVisible();
+    await expect(provenance.getByText("not a guarantee of safety", { exact: false })).toBeVisible();
+  });
+
   test("the version picker shows what changed in the chosen release", async ({ page }) => {
     await page.goto("/products/conversion-copywriter");
     await expect(page.getByText("Adds reviewer checklists for migrations.")).toBeVisible();

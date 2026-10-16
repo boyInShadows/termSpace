@@ -112,5 +112,17 @@ export function productDetail(slug) {
       { id: `${product.id}-r1`, author: "Priya S.", rating: 5, createdAt: released(3), body: "Caught a migration mistake in its first week.", verifiedPurchase: true },
     ],
     related: CATALOG.filter((candidate) => candidate.slug !== slug).slice(0, 3).map(withPlatformKeys),
+    release: {
+      version: product.version,
+      source: {
+        kind: "github_repository", url: `https://github.com/termspace-fixtures/${product.slug}`, ref: "0123456789abcdef0123456789abcdef01234567",
+        path: null, integrityDigest: null, artifactSizeBytes: null, status: "verified", checkedAt: released(1),
+      },
+      installation: { method: "git", url: `https://github.com/termspace-fixtures/${product.slug}/archive/0123456789abcdef0123456789abcdef01234567.tar.gz` },
+      permissions: [{ capability: "filesystem_read", required: true, scope: "The current selection", destinations: [], purpose: "Reads the diff it reviews." }],
+      environment: [],
+      license: "MIT",
+      mcp: null,
+    },
   };
 }

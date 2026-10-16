@@ -110,6 +110,15 @@ export interface Product {
   featured?: boolean; trending?: boolean; verified: boolean; tags: string[];
   communities: Array<{ slug: string; nameEn: string; nameFa: string | null; primaryPlatform: string }>;
 }
+export interface ProductRelease {
+  version: string;
+  source: MarketplaceInstallation["release"]["source"];
+  installation: { method: string; url: string };
+  permissions: Array<{ capability: string; required: boolean; scope: string | null; destinations: string[]; purpose: string }>;
+  environment: Array<{ name: string; purpose: string; required: boolean; sensitive: boolean }>;
+  license: string | null;
+  mcp: { transport: string } | null;
+}
 export interface ProductDetail extends Product {
   packageFileCount: number | null; packageSizeBytes: number | null; benefits: string[];
   useCases: { title: string; description: string }[] | null;
@@ -119,6 +128,7 @@ export interface ProductDetail extends Product {
   requirements: string | null; permissions: string | null; license: string | null;
   updatesPolicy: string | null; refundPolicy: string | null;
   versions: ProductVersion[]; reviews: Review[]; related: Product[];
+  release: ProductRelease | null;
 }
 export interface MarketplaceInstallation {
   acquisition: { id: string; status: string; acquiredAt: string };

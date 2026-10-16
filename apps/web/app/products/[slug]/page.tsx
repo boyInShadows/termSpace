@@ -14,6 +14,7 @@ import { VersionPicker } from "@/components/catalog/version-picker";
 import { listingTransitionName } from "@/lib/listing-transition";
 import { ApiError, getProduct } from "@/lib/api";
 import { copy, localePath, type Locale } from "@/lib/i18n";
+import { ReleaseProvenance, provenanceTitle } from "@/features/product/release-provenance";
 import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
 import type { ProductDetail } from "@/lib/types";
@@ -203,6 +204,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <Section title={l.manifest} id="manifest">
               <ManifestTable rows={manifestRows(product, l, locale)} />
             </Section>
+
+            {product.release && (
+              <Section title={provenanceTitle(locale)} id="provenance">
+                <ReleaseProvenance release={product.release} slug={product.slug} locale={locale} />
+              </Section>
+            )}
 
             {(product.useCases ?? []).length > 0 && (
               <Section title={l.useCases}>

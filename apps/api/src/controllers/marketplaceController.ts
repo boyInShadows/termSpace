@@ -140,6 +140,54 @@ function trustedInstallationUrl(sourceKind: string, value: string | null): boole
   }
 }
 
+function serializeReleaseSource(release: {
+  sourceKind: string; sourceUrl: string; sourceRef: string; sourcePath: string | null;
+  providerIntegrityDigest: string | null; artifactSizeBytes: number | null;
+  sourceCheckStatus: string; sourceCheckedAt: Date | null;
+}) {
+  return {
+    kind: release.sourceKind.toLowerCase(),
+    url: release.sourceUrl,
+    ref: release.sourceRef,
+    path: release.sourcePath,
+    integrityDigest: release.providerIntegrityDigest,
+    artifactSizeBytes: release.artifactSizeBytes,
+    status: release.sourceCheckStatus.toLowerCase(),
+    checkedAt: release.sourceCheckedAt,
+  };
+}
+
+/**
+ * What anyone may see about the newest published release: where it comes from,
+ * what it declares, how to fetch the exact pinned artifact. Creator-written
+ * installation steps stay behind the library entitlement.
+ */
+async function findPublicRelease(productId: string) {
+  const release = await prisma.marketplaceReleaseManifest.findFirst({
+    where: { productVersion: { productId }, publishedAt: { not: null }, sourceCheckStatus: { in: ["VERIFIED", "STALE"] } },
+    orderBy: { publishedAt: "desc" },
+    select: {
+      sourceKind: true, sourceUrl: true, sourceRef: true, sourcePath: true,
+      providerIntegrityDigest: true, artifactSizeBytes: true, sourceCheckStatus: true, sourceCheckedAt: true,
+      resolvedInstallationUrl: true, installationMethod: true, licenseIdentifier: true, customLicenseUrl: true,
+      productVersion: { select: { version: true } },
+      permissions: { select: { capability: true, required: true, scope: true, destinations: true, purpose: true } },
+      environmentVariables: { select: { name: true, purpose: true, required: true, sensitive: true } },
+      mcpServerDetails: { select: { transport: true } },
+    },
+  });
+  if (!release || !trustedInstallationUrl(release.sourceKind, release.resolvedInstallationUrl)) return null;
+  return {
+    version: release.productVersion.version,
+    source: serializeReleaseSource(release),
+    installation: { method: release.installationMethod.toLowerCase(), url: release.resolvedInstallationUrl },
+    permissions: release.permissions.map((item) => ({ ...item, capability: item.capability.toLowerCase() })),
+    environment: release.environmentVariables,
+    license: release.licenseIdentifier ?? release.customLicenseUrl,
+    mcp: release.mcpServerDetails ? { transport: release.mcpServerDetails.transport } : null,
+  };
+}
+
 export function listMarketplaceItemTypes(_req: Request, res: Response) {
   res.json({ data: MARKETPLACE_ITEM_TYPES.map((key) => ({ key, ...MARKETPLACE_ITEM_TYPE_REGISTRY[key] })) });
 }
@@ -234,13 +282,16 @@ export async function getMarketplaceProduct(req: Request, res: Response) {
     },
   });
   if (!product) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Product not found" } }); return; }
-  const related = await prisma.marketplaceProduct.findMany({
-    where: { published: true, id: { not: product.id }, categoryId: product.categoryId },
-    include: productInclude,
-    orderBy: [{ featured: "desc" }, { usageCount: "desc" }],
-    take: 3,
-  });
-  res.json({ data: { ...serializeProduct(product), versions: product.versions, reviews: product.reviews, related: related.map(serializeProduct) } });
+  const [related, release] = await Promise.all([
+    prisma.marketplaceProduct.findMany({
+      where: { published: true, id: { not: product.id }, categoryId: product.categoryId },
+      include: productInclude,
+      orderBy: [{ featured: "desc" }, { usageCount: "desc" }],
+      take: 3,
+    }),
+    findPublicRelease(product.id),
+  ]);
+  res.json({ data: { ...serializeProduct(product), versions: product.versions, reviews: product.reviews, related: related.map(serializeProduct), release } });
 }
 
 export async function listMarketplaceFavorites(_req: Request, res: Response) {
@@ -375,16 +426,7 @@ export async function getMarketplaceInstallation(req: Request, res: Response) {
     release: {
       id: release.id,
       version: release.productVersion.version,
-      source: {
-        kind: release.sourceKind.toLowerCase(),
-        url: release.sourceUrl,
-        ref: release.sourceRef,
-        path: release.sourcePath,
-        integrityDigest: release.providerIntegrityDigest,
-        artifactSizeBytes: release.artifactSizeBytes,
-        status: release.sourceCheckStatus.toLowerCase(),
-        checkedAt: release.sourceCheckedAt,
-      },
+      source: serializeReleaseSource(release),
       installation: {
         method: release.installationMethod.toLowerCase(),
         url: release.resolvedInstallationUrl,

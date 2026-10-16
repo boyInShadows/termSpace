@@ -15,12 +15,19 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { copyToClipboard } from "@/components/patterns/copy-block";
 import type { MarketplaceInstallation, ProductDetail } from "@/lib/types";
 import { acquireProduct, ApiError, getProductInstallation } from "@/lib/api";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
 import { intlLocale } from "@/lib/format";
 import { localePath } from "@/lib/i18n";
+type CopyState = "copied" | "failed" | null;
+
+async function copyAndReport(value: string, report: (state: CopyState) => void) {
+  report((await copyToClipboard(value)) ? "copied" : "failed");
+}
+
 export function ProductActions({ product }: { product: ProductDetail }) {
   const { fa, locale } = useLocale();
   const copy = fa ? {
@@ -30,7 +37,7 @@ export function ProductActions({ product }: { product: ProductDetail }) {
     free: "منبع رایگان جامعه", license: "جزئیات مجوز در بالا",
     viewInstall: "مشاهدهٔ نصب", installTitle: "نصب نسخهٔ دریافت‌شده", installIntro: "این اطلاعات به همان نسخه‌ای متصل است که به کتابخانهٔ شما افزوده شد.",
     installUnavailable: "نصب این نسخه اکنون در دسترس نیست.", sourceStatus: "وضعیت منبع", checked: "آخرین بررسی", immutableRef: "مرجع تغییرناپذیر",
-    openPackage: "باز کردن بستهٔ تأییدشده", copyUrl: "کپی پیوند", copied: "پیوند کپی شد.", steps: "مراحل نصب", exactVersion: "نسخهٔ دقیق",
+    openPackage: "باز کردن بستهٔ تأییدشده", copyUrl: "کپی پیوند", copied: "پیوند کپی شد.", copyFailed: "کپی خودکار انجام نشد. متن را انتخاب کنید و Ctrl+C را بزنید.", excerptCopied: "گزیده کپی شد.", steps: "مراحل نصب", exactVersion: "نسخهٔ دقیق",
     stale: "بررسی ارائه‌دهنده موقتاً قدیمی است؛ آخرین مرجع تأییدشده بدون تغییر باقی مانده است.",
   } : {
     added: "Added to your library.", failed: "Could not add this resource. Please try again.", adding: "Adding…", add: "Add to library",
@@ -39,13 +46,15 @@ export function ProductActions({ product }: { product: ProductDetail }) {
     free: "Free community resource", license: "License details above",
     viewInstall: "View installation", installTitle: "Install acquired release", installIntro: "These details are pinned to the exact version added to your library.",
     installUnavailable: "Installation for this release is currently unavailable.", sourceStatus: "Source status", checked: "Last checked", immutableRef: "Immutable reference",
-    openPackage: "Open verified package", copyUrl: "Copy link", copied: "Link copied.", steps: "Installation steps", exactVersion: "Exact version",
+    openPackage: "Open verified package", copyUrl: "Copy link", copied: "Link copied.", copyFailed: "Couldn’t copy automatically. Select the text and press Ctrl+C.", excerptCopied: "Excerpt copied.", steps: "Installation steps", exactVersion: "Exact version",
     stale: "The provider check is temporarily stale; the last verified reference remains unchanged.",
   };
   const session = useMarketplaceSession();
   const router = useRouter();
   const saved = session.isFavorite(product.slug);
   const [message, setMessage] = useState<string | null>(null);
+  const [linkStatus, setLinkStatus] = useState<CopyState>(null);
+  const [excerptStatus, setExcerptStatus] = useState<CopyState>(null);
   const [adding, setAdding] = useState(false);
   const [installation, setInstallation] = useState<MarketplaceInstallation | null>(null);
   const [installationBlocked, setInstallationBlocked] = useState(false);
@@ -94,7 +103,7 @@ export function ProductActions({ product }: { product: ProductDetail }) {
             </div>
             {installation.release.source.status === "stale" && <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-800 dark:text-amber-300">{copy.stale}</p>}
             <div className="mt-6"><p className="eyebrow">{copy.steps}</p><ol className="mt-3 space-y-3">{installation.release.installation.instructions.map((step, index) => <li className="flex gap-3 text-sm" key={`${index}-${step}`}><span className="font-mono text-xs text-primary">{String(index + 1).padStart(2, "0")}</span><span>{step}</span></li>)}</ol></div>
-            <div className="mt-6 rounded-lg bg-foreground p-4 text-background"><div className="flex items-center gap-2 text-xs font-semibold"><ShieldCheck className="size-4" />{installation.release.installation.method} · {installation.release.source.kind}</div><p className="mt-3 break-all font-mono text-xs text-background/75" dir="ltr">{installation.release.installation.url}</p><div className="mt-4 flex flex-wrap gap-2"><a className={buttonVariants({ size: "sm", variant: "secondary" })} href={installation.release.installation.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="size-4" />{copy.openPackage}</a><Button size="sm" variant="secondary" onClick={() => { void navigator.clipboard.writeText(installation.release.installation.url); setMessage(copy.copied); }}><Copy className="size-4" />{copy.copyUrl}</Button></div></div>
+            <div className="mt-6 rounded-lg bg-foreground p-4 text-background"><div className="flex items-center gap-2 text-xs font-semibold"><ShieldCheck className="size-4" />{installation.release.installation.method} · {installation.release.source.kind}</div><p className="mt-3 break-all font-mono text-xs text-background/75" dir="ltr">{installation.release.installation.url}</p><div className="mt-4 flex flex-wrap gap-2"><a className={buttonVariants({ size: "sm", variant: "secondary" })} href={installation.release.installation.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="size-4" />{copy.openPackage}</a><Button size="sm" variant="secondary" onClick={() => void copyAndReport(installation.release.installation.url, setLinkStatus)}><Copy className="size-4" />{copy.copyUrl}</Button></div><p role="status" className="mt-2 min-h-4 text-xs text-background/75">{linkStatus === "copied" ? copy.copied : linkStatus === "failed" ? copy.copyFailed : ""}</p></div>
           </Dialog.Content>}
         </Dialog.Portal>
       </Dialog.Root>
@@ -144,10 +153,11 @@ export function ProductActions({ product }: { product: ProductDetail }) {
                 <div>
                   <p className="eyebrow">{copy.excerpt}</p>
                   <pre className="mt-3 whitespace-pre-wrap rounded-lg border bg-surface p-4 font-mono text-xs leading-6 text-muted-foreground">{product.previewExcerpt ?? copy.unavailable}</pre>
-                  <Button variant="ghost" size="sm" className="mt-2" onClick={() => void navigator.clipboard.writeText(product.previewExcerpt ?? "")} disabled={!product.previewExcerpt}>
+                  <Button variant="ghost" size="sm" className="mt-2" onClick={() => void copyAndReport(product.previewExcerpt ?? "", setExcerptStatus)} disabled={!product.previewExcerpt}>
                     <Copy size={14} />
                     {copy.copyExcerpt}
                   </Button>
+                  <p role="status" className="mt-1 min-h-4 text-xs text-muted-foreground">{excerptStatus === "copied" ? copy.excerptCopied : excerptStatus === "failed" ? copy.copyFailed : ""}</p>
                 </div>
               </div>
             </Dialog.Content>

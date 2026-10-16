@@ -14,7 +14,7 @@ const prismaMock = vi.hoisted(() => ({
   transactionalEmailOutbox: { updateMany: vi.fn() },
   marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), groupBy: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceProductVersion: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
-  marketplaceReleaseManifest: { create: vi.fn(), update: vi.fn() },
+  marketplaceReleaseManifest: { create: vi.fn(), update: vi.fn(), findFirst: vi.fn() },
   marketplaceProviderConnection: { findMany: vi.fn(), findUnique: vi.fn(), upsert: vi.fn(), updateMany: vi.fn() },
   marketplaceSourceCheckJob: { findFirst: vi.fn(), create: vi.fn() },
   marketplaceSkillReleaseDetails: { create: vi.fn() },
@@ -266,6 +266,60 @@ describe("API", () => {
     }));
     expect(response.body.data).not.toHaveProperty("installationSteps");
     expect(JSON.stringify(response.body)).not.toContain("private installation step");
+  });
+
+  describe("public release on a product page", () => {
+    const productRow = {
+      id: "product-1", slug: "published-skill", name: "Published Skill", type: "Skill", itemType: "SKILL",
+      rating: 0, priceMinor: 0, currency: "USD", pricingModel: "free", platforms: ["Codex"], models: [],
+      categoryId: "category-1", category: { name: "Developer tools", slug: "developer-tools" },
+      creatorId: "creator-1", creator: { id: "creator-1", name: "Creator", handle: "creator", initials: "CR", verified: true, bio: "Creator biography", followers: 0, _count: { products: 1 } },
+      versions: [], reviews: [],
+    };
+    const releaseRow = {
+      sourceKind: "NPM", sourceUrl: "https://registry.npmjs.org/@acme/tool", sourceRef: "1.2.3", sourcePath: null,
+      providerIntegrityDigest: "sha512-abc", artifactSizeBytes: 2048, sourceCheckStatus: "VERIFIED", sourceCheckedAt: new Date("2026-10-01T00:00:00Z"),
+      resolvedInstallationUrl: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz", installationMethod: "NPM",
+      licenseIdentifier: "MIT", customLicenseUrl: null, installationInstructions: ["private installation step"],
+      productVersion: { version: "1.2.3" },
+      permissions: [{ capability: "NETWORK_ACCESS", required: true, scope: null, destinations: ["api.acme.test"], purpose: "Calls the Acme API" }],
+      environmentVariables: [{ name: "ACME_TOKEN", purpose: "Auth", required: true, sensitive: true }],
+      mcpServerDetails: { transport: "stdio" },
+    };
+
+    it("shows the pinned source, declarations and fetch target, but not the creator's steps", async () => {
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(productRow);
+      prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(releaseRow);
+
+      const response = await request(createApp()).get("/api/marketplace/products/published-skill");
+
+      expect(response.status).toBe(200);
+      expect(prismaMock.marketplaceReleaseManifest.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+        where: { productVersion: { productId: "product-1" }, publishedAt: { not: null }, sourceCheckStatus: { in: ["VERIFIED", "STALE"] } },
+      }));
+      expect(response.body.data.release).toMatchObject({
+        version: "1.2.3",
+        source: { kind: "npm", url: "https://registry.npmjs.org/@acme/tool", ref: "1.2.3", status: "verified", integrityDigest: "sha512-abc" },
+        installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz" },
+        permissions: [{ capability: "network_access", destinations: ["api.acme.test"] }],
+        environment: [{ name: "ACME_TOKEN", sensitive: true }],
+        license: "MIT",
+        mcp: { transport: "stdio" },
+      });
+      expect(JSON.stringify(response.body)).not.toContain("private installation step");
+    });
+
+    it("withholds a release whose installation URL is not on a trusted host", async () => {
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(productRow);
+      prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue({ ...releaseRow, resolvedInstallationUrl: "https://evil.example/tool.tgz" });
+
+      const response = await request(createApp()).get("/api/marketplace/products/published-skill");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.release).toBeNull();
+    });
   });
 
   it("does not expose an unpublished listing through the public product route", async () => {

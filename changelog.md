@@ -33,6 +33,49 @@ Project changes completed from `pending.md` should be recorded here with the dat
   Not yet run: e2e and LHCI. Port 3100 was held by a process outside this
   session and `playwright.config.ts` hard-codes it.
 
+- Phase B, install and provenance (from the improvement review). Product pages
+  now show a "Source & provenance" section to everyone, signed in or not: the
+  source (npm package, GitHub repository or release, linked), the pinned
+  version or commit, the integrity digest, last source check with an overdue
+  warning, declared permissions with purpose and destinations, required
+  environment variables, and licence, with a note that this is origin and
+  declared scope, not a safety guarantee. Under it, a copyable command fetches
+  the exact pinned artifact (`npm install pkg@x.y.z`, `git clone` plus
+  `git checkout <sha>`, or `curl` plus `sha256sum -c` when a sha256 digest is
+  declared), and stdio MCP servers published on npm also get an `mcpServers`
+  snippet with placeholders for required env vars. Both are built in
+  `apps/web/lib/install.ts`, which validates every creator-supplied value
+  against a strict pattern and returns nothing rather than guess. Creator-
+  written installation steps stay behind "Add to library".
+- API (shared surface `marketplaceController.ts`, no schema change):
+  `GET /api/marketplace/products/:slug` gains `release`, the newest published
+  release whose source check is verified or stale and whose install URL is on
+  github.com or registry.npmjs.org, else `null`. The source fields now come
+  from one `serializeReleaseSource` shared with the installation endpoint, so
+  the two cannot drift. Web type `ProductRelease` added to `lib/types.ts`
+  (shared surface).
+- Clipboard: the install dialog's "Copy link" used to announce "Link copied"
+  even when the copy failed, and showed that message in the page rail behind
+  the overlay; the preview "Copy excerpt" had no error handling. Both now go
+  through `copyToClipboard`, report success or failure inside the dialog, and
+  the new `CopyBlock` selects the text when the clipboard is unavailable.
+- Decisions taken with the product owner: trust details and the fetch command
+  are public (the sources are public GitHub and npm); MCP config only for
+  stdio plus npm, because `connectionMethod` and `distributionIdentity` are
+  free text in the manifest. Not done: config for other transports or sources,
+  per-platform install commands (needs the platform registry decision), and
+  moving the new strings into `lib/i18n/` (they sit in the component, like
+  `product-actions.tsx`). The Persian copy should be read by a Persian speaker.
+- Verification: root typecheck; `npm run lint -w apps/web`; 297 tests passing
+  (155 API, 15 blog, 127 web) with `LOCAL_AUTO_VERIFY_EMAIL=false` and
+  `NODE_OPTIONS=--no-experimental-webstorage`; all three production builds;
+  e2e 72 passed and 14 skipped with 2 workers (a first run with default
+  workers failed two timing-sensitive tests, view-transition morph and hero
+  pause, that pass 4 of 4 in isolation); `lhci` all assertions passed, medians
+  home 93, dashboard 91, product 95, accessibility 100. e2e and lhci ran on
+  spare ports (3199, 3198) through a temporary wrapper config and a scratch
+  copy of `lighthouserc.cjs`, with `PW_CHANNEL=chrome`, because port 3100 is
+  held outside this session and both configs hard-code it.
 - Phase A, repair (from the improvement review). CI: `npm run lint` now runs
   with `--if-present`, because `apps/api` and `apps/blog` have no lint script
   and their matrix jobs failed at that step. Canonicals: the root layout no
@@ -55,8 +98,8 @@ Project changes completed from `pending.md` should be recorded here with the dat
   (153 API, 15 blog, 100 web) with `LOCAL_AUTO_VERIFY_EMAIL=false` and
   `NODE_OPTIONS=--no-experimental-webstorage`; all three production builds;
   canonical and hreflang output checked by curl against `next start` on a
-  spare port. Added an e2e assertion for canonicals in `e2e/seo.spec.ts` that
-  has not been run: port 3100 is still held by a process outside this session.
+  spare port. The e2e canonical assertion added in `e2e/seo.spec.ts` was not
+  run when this phase was committed; it passed in the Phase B e2e run above.
 
 ## 2026-10-04
 
