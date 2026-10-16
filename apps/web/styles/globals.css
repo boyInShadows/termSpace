@@ -188,6 +188,19 @@ select {
   background: linear-gradient(90deg, transparent, var(--primary), var(--spark), transparent);
 }
 
+/* A horizontally scrolling strip on the page background, with a soft edge
+   wherever more is hidden. Pure CSS: the `local` layers (page colour) scroll
+   with the content and cover the `scroll` layers (a faint shade) at the ends,
+   so a shade only shows on a side that still has something past it. Both
+   ends are drawn, so it needs no change in RTL. */
+.ts-scroll-fade {
+  background:
+    linear-gradient(to right, var(--background) 25%, transparent) left / 2rem 100% no-repeat local,
+    linear-gradient(to left, var(--background) 25%, transparent) right / 2rem 100% no-repeat local,
+    linear-gradient(to right, color-mix(in oklab, var(--foreground) 16%, transparent), transparent) left / 1.25rem 100% no-repeat scroll,
+    linear-gradient(to left, color-mix(in oklab, var(--foreground) 16%, transparent), transparent) right / 1.25rem 100% no-repeat scroll;
+}
+
 /* --- surfaces ---------------------------------------------------------- */
 .panel {
   background: color-mix(in oklab, var(--surface) 82%, transparent);

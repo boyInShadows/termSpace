@@ -73,6 +73,13 @@ Project changes completed from `pending.md` should be recorded here with the dat
     only a placeholder, so it had no accessible name. It now carries the same
     text as `aria-label`. Verification: e2e finds it by role and name in both
     locales.
+  - Category tabs (`styles/globals.css` `.ts-scroll-fade`, used by
+    `features/discovery/discovery-experience.tsx`): the strip scrolls sideways
+    at narrow widths with nothing to say so ("Workflow" was cut off at 735 and
+    768 on the live stack). A CSS-only edge shade now appears on whichever
+    side still has tabs past it; both ends are drawn, so RTL needs nothing
+    extra. Verification: checked by eye at 300 px, English and Persian, at the
+    start and midway; no shade when everything fits (1000 px).
 
 - CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
   typecheck saw an empty Prisma client and failed, and the fail-fast matrix

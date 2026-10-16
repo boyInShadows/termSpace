@@ -179,7 +179,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
         />
       </div>
       <div
-        className="mt-6 flex gap-2 overflow-x-auto pb-2"
+        className="ts-scroll-fade mt-6 flex gap-2 overflow-x-auto pb-2"
         role="tablist"
         aria-label={d.productType}
       >
