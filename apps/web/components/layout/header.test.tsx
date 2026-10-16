@@ -48,6 +48,19 @@ describe("Header", () => {
     expect(screen.queryByRole("link", { name: "Design system" })).not.toBeInTheDocument();
   });
 
+  it("closes the mobile menu on Escape and returns focus to its button", async () => {
+    const user = userEvent.setup();
+    render(<Header />);
+    const toggle = screen.getByRole("button", { name: "Open menu" });
+    await user.click(toggle);
+    expect(screen.getByRole("button", { name: "Close menu" })).toHaveAttribute("aria-expanded", "true");
+
+    await user.keyboard("{Escape}");
+    const closed = screen.getByRole("button", { name: "Open menu" });
+    expect(closed).toHaveAttribute("aria-expanded", "false");
+    expect(closed).toHaveFocus();
+  });
+
   it("dismisses the announcement and remembers it for next time", async () => {
     const user = userEvent.setup();
     const { unmount } = render(<Header />);

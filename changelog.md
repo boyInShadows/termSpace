@@ -56,6 +56,10 @@ Project changes completed from `pending.md` should be recorded here with the dat
     and the account link truncates a long address (full address in `title`).
     Verification: e2e at 768 px, English and Persian, asserts one-line links
     and no horizontal scroll; checked by eye at 735 and 768.
+  - Mobile menu (`components/layout/header.tsx`, `components/ui/button.tsx`):
+    Escape now closes it and returns focus to the toggle. `Button` accepts
+    `ref` (typed from `ComponentProps<"button">`). Verification: unit test
+    opens the menu, presses Escape, asserts `aria-expanded` and focus.
 
 - CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
   typecheck saw an empty Prisma client and failed, and the fail-fast matrix

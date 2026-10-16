@@ -56,6 +56,7 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [dismissed, setDismissed] = useStoredString(ANNOUNCEMENT_KEY);
   const progressRef = useRef<HTMLDivElement | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const isAnnouncementVisible = dismissed !== ANNOUNCEMENT_ID;
 
@@ -63,6 +64,19 @@ export function Header() {
   // sibling routes, but `/` must not match everything.
   const isCurrent = (href: string) =>
     href === "/" ? currentPath === "/" : currentPath.startsWith(href);
+
+  // Escape closes the open menu and hands focus back to the button that opened
+  // it, so a keyboard user is not left on a control that has just disappeared.
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setIsMenuOpen(false);
+      menuButtonRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isMenuOpen]);
 
   useEffect(() => {
     let queued = false;
@@ -214,6 +228,7 @@ export function Header() {
               <span className="truncate" dir="auto">{session.email ?? t.signIn}</span>
             </Link>
             <Button
+              ref={menuButtonRef}
               variant="ghost"
               size="icon"
               className="md:hidden"
