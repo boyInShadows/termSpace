@@ -150,7 +150,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <Header />
       <main className="container-page py-8">
         <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground">
-          <Link href={localePath("/explore", locale)} className="hover:text-foreground">{l.explore}</Link> / {typeLabel} /{" "}
+          <Link href={localePath("/explore", locale)} className="-my-2 inline-block py-2 hover:text-foreground">{l.explore}</Link> / {typeLabel} /{" "}
           <span className="text-foreground">{product.name}</span>
         </nav>
 

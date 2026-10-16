@@ -71,8 +71,8 @@ export function AccountForm() {
       <Button className="w-full" disabled={submitting}>{submitting ? t.wait : mode === "login" ? t.signIn : mode === "register" ? t.createAccount : mode === "forgot" ? t.sendResetCode : t.resetPassword}</Button>
     </form>
     <div className="mt-5 flex flex-col items-start gap-3">
-      {mode === "login" && <button type="button" className="text-sm font-semibold text-primary" onClick={() => { setMode("forgot"); setError(null); setStatus(null); }}>{t.forgotPassword}</button>}
-      <button type="button" className="text-sm font-semibold text-primary" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(null); setStatus(null); }}>
+      {mode === "login" && <button type="button" className="inline-flex min-h-8 items-center text-sm font-semibold text-primary" onClick={() => { setMode("forgot"); setError(null); setStatus(null); }}>{t.forgotPassword}</button>}
+      <button type="button" className="inline-flex min-h-8 items-center text-sm font-semibold text-primary" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(null); setStatus(null); }}>
         {mode === "login" ? t.needAccount : mode === "register" ? t.registered : t.backToSignIn}
       </button>
     </div>

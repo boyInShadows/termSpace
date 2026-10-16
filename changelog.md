@@ -80,6 +80,16 @@ Project changes completed from `pending.md` should be recorded here with the dat
     side still has tabs past it; both ends are drawn, so RTL needs nothing
     extra. Verification: checked by eye at 300 px, English and Persian, at the
     start and midway; no shade when everything fits (1000 px).
+  - Small click targets (item 14): the announcement link (60x16), card titles
+    (20 px), the trust-section link, "View all N listings", "Previous/Next
+    page", "Browse all communities", "Clear all", the breadcrumb link, the
+    sign-in screen's "Forgot password?" and "Register" buttons, and the
+    dashboard's "View all" and listing links were under 24 px tall. Each now
+    has at least a 24 px target (most 28 to 32) by padding, with negative
+    margins where the layout would otherwise grow. New `e2e/targets.spec.ts`
+    asserts WCAG 2.2 target size on `/`, `/explore`, a product, `/account` and
+    `/dashboard`; a native radio or checkbox counts through its wrapping
+    label. Verified that it fails when the threshold is raised.
 
 - CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
   typecheck saw an empty Prisma client and failed, and the fail-fast matrix

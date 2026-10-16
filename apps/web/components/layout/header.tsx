@@ -133,7 +133,8 @@ export function Header() {
               </span>
               <Link
                 href={localePath("/explore", locale)}
-                className="group inline-flex shrink-0 items-center gap-1 font-semibold text-primary"
+                // -my/py: a 32px hit area inside the 36px strip, without growing it.
+                className="group -my-2 inline-flex shrink-0 items-center gap-1 py-2 font-semibold text-primary"
               >
                 {t.explore}
                 <ArrowRight

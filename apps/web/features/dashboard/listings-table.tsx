@@ -26,7 +26,7 @@ export function ListingsTable({ state, now, onRetry }: { state: OverviewState; n
   const { locale, t } = useLocale();
   const copy = t.dashboardHome;
   const viewAll = (
-    <Link href={localePath("/dashboard/studio", locale)} className="text-sm text-primary transition-colors hover:text-primary-hover">
+    <Link href={localePath("/dashboard/studio", locale)} className="inline-flex min-h-8 items-center text-sm text-primary transition-colors hover:text-primary-hover">
       {copy.viewAll} <span aria-hidden>{locale === "fa" ? "←" : "→"}</span>
     </Link>
   );
@@ -78,7 +78,7 @@ function ListingRows({ rows, now }: { rows: CreatorDashboardListing[]; now: numb
               <td className="max-w-0 ps-5 sm:max-w-none">
                 <Link
                   href={localePath(`/dashboard/studio/listings/${row.id}/releases`, locale)}
-                  className="flex min-w-0 items-center gap-2"
+                  className="flex min-h-8 min-w-0 items-center gap-2"
                 >
                   <span className="truncate font-medium">{row.name}</span>
                   <span className="shrink-0 rounded-md bg-primary-soft px-1.5 py-0.5 font-mono text-[10px] uppercase text-foreground/80">

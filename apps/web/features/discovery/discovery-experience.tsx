@@ -124,7 +124,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           <option value="All">{d.all}</option>
           {communities.map((item) => <option key={item.slug} value={item.slug}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
         </select>
-        <Link href={localePath("/communities", locale)} className="mt-2 inline-flex text-xs font-semibold text-primary hover:underline">{fa ? "مشاهدهٔ همهٔ جامعه‌ها" : "Browse all communities"}</Link>
+        <Link href={localePath("/communities", locale)} className="mt-0.5 inline-flex min-h-8 items-center text-xs font-semibold text-primary hover:underline">{fa ? "مشاهدهٔ همهٔ جامعه‌ها" : "Browse all communities"}</Link>
       </label>}
       <label className="block text-sm font-semibold">
         {d.compatibility}
@@ -302,7 +302,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
               ))}
               <button
                 onClick={reset}
-                className="text-xs font-semibold text-primary"
+                className="min-h-8 text-xs font-semibold text-primary"
               >
                 {d.clearAll}
               </button>
@@ -337,7 +337,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           {meta.totalPages > 1 && (
             <nav aria-label={fa ? "صفحه‌ها" : "Pages"} className="mt-10 flex items-center justify-between gap-4 border-t border-border pt-6">
               {meta.page > 1 ? (
-                <Link rel="prev" href={pageHref(meta.page - 1)} className="text-sm font-semibold text-primary hover:underline">
+                <Link rel="prev" href={pageHref(meta.page - 1)} className="-my-1.5 py-1.5 text-sm font-semibold text-primary hover:underline">
                   {fa ? "صفحهٔ قبل" : "Previous page"}
                 </Link>
               ) : <span />}
@@ -345,7 +345,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                 {fa ? `صفحهٔ ${meta.page} از ${meta.totalPages}` : `Page ${meta.page} of ${meta.totalPages}`}
               </p>
               {meta.page < meta.totalPages ? (
-                <Link rel="next" href={pageHref(meta.page + 1)} className="text-sm font-semibold text-primary hover:underline">
+                <Link rel="next" href={pageHref(meta.page + 1)} className="-my-1.5 py-1.5 text-sm font-semibold text-primary hover:underline">
                   {fa ? "صفحهٔ بعد" : "Next page"}
                 </Link>
               ) : <span />}

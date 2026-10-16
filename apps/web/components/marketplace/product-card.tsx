@@ -83,7 +83,7 @@ export function ProductCard({
           <ListingLink
             href={href}
             listingId={product.id}
-            className="rounded-sm group-hover:text-primary focus-visible:outline-none focus-visible:underline"
+            className="-my-1 inline-block rounded-sm py-1 group-hover:text-primary focus-visible:outline-none focus-visible:underline"
           >
             {product.name}
           </ListingLink>

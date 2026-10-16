@@ -107,7 +107,7 @@ async function FeaturedLink({ locale }: { locale: Locale }) {
   return (
     <Link
       href={localePath("/explore", locale)}
-      className="group inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
+      className="group -my-1.5 inline-flex items-center gap-1.5 py-1.5 text-sm font-semibold text-primary"
     >
       {t.viewAll.replace("{count}", formatNumber(home.total, locale))}
       <ArrowRight
@@ -324,7 +324,7 @@ export default async function Home() {
                   <footer className="mt-4 font-sans text-sm not-italic text-muted-foreground">
                     <Link
                       href={localePath("/design-system", locale)}
-                      className="transition-colors hover:text-primary"
+                      className="-my-1.5 inline-block py-1.5 transition-colors hover:text-primary"
                     >
                       {t.homePage.trustQuoteLink}
                     </Link>
