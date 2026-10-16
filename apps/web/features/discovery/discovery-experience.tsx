@@ -174,6 +174,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={d.search}
+          aria-label={d.search}
           className="h-14 ps-12 text-base"
         />
       </div>

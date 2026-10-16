@@ -103,6 +103,13 @@ test.describe("product detail", () => {
 });
 
 test.describe("explore", () => {
+  test("the search field has an accessible name, not only a placeholder", async ({ page }) => {
+    await page.goto("/explore");
+    await expect(page.getByRole("textbox", { name: /Search resources/ })).toBeVisible();
+    await page.goto("/fa/explore");
+    await expect(page.getByRole("textbox", { name: /جست‌وجو/ })).toBeVisible();
+  });
+
   test("a filter changes the URL and the results", async ({ page }) => {
     await page.goto("/explore");
     const count = page.locator("section p[role=status]");

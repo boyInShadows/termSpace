@@ -69,6 +69,10 @@ Project changes completed from `pending.md` should be recorded here with the dat
     studio, settings, new listing, edit and releases. A missing listing is
     "Listing not found" (its HTTP 200 is still open in `pending.md`).
     Verification: three new e2e cases in `e2e/seo.spec.ts`.
+  - `/explore` search field (`features/discovery/discovery-experience.tsx`) had
+    only a placeholder, so it had no accessible name. It now carries the same
+    text as `aria-label`. Verification: e2e finds it by role and name in both
+    locales.
 
 - CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
   typecheck saw an empty Prisma client and failed, and the fail-fast matrix
