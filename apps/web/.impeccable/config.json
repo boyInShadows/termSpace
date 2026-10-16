@@ -15,6 +15,18 @@
         "value": "geist mono",
         "createdAt": "2026-10-16T13:54:47.007Z",
         "reason": "model triage, not user confirmed: Geist and Geist Mono are the documented self-hosted faces (DESIGN.md Typography lists them as Geist Variable and Geist Mono Variable); the detector only trips on the name variant"
+      },
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "createdAt": "2026-10-16T14:01:17.491Z",
+        "reason": "user confirmed 2026-10-16: the hero reuses the site's existing Geist and Geist Mono (already self-hosted, covers the app) rather than adding a new face"
+      },
+      {
+        "rule": "overused-font",
+        "value": "geist mono",
+        "createdAt": "2026-10-16T14:01:17.496Z",
+        "reason": "user confirmed 2026-10-16: the hero reuses the site's existing Geist and Geist Mono (already self-hosted, covers the app) rather than adding a new face"
       }
     ]
   }
