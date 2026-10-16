@@ -50,4 +50,19 @@ test.describe("dashboard", () => {
     await page.goto("/fa/creator");
     await expect(page).toHaveURL(/\/fa\/dashboard\/studio$/);
   });
+
+  for (const path of ["/explore", "/fa/explore"]) {
+    test(`the signed-in header keeps its nav on one line at 768px (${path})`, async ({ page, context, baseURL }, testInfo) => {
+      test.skip(testInfo.project.name.startsWith("mobile"), "Checks a fixed 768px viewport.");
+      await signInAs(context, baseURL!, "creator");
+      await page.setViewportSize({ width: 768, height: 900 });
+      await page.goto(path);
+      const links = page.locator("header nav").first().getByRole("link");
+      await expect(links).toHaveCount(3);
+      for (const height of await links.evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height))) {
+        expect(height).toBeLessThan(40);
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(768);
+    });
+  }
 });

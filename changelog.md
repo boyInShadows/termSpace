@@ -49,6 +49,13 @@ Project changes completed from `pending.md` should be recorded here with the dat
     inside a view transition and React keeps a hidden copy beside the visible
     one, so strict text locators matched twice. The test now waits for the copy
     to go; 0 failures in 20 cold starts.
+  - Signed-in header at 735 and 768 px (`components/layout/header.tsx`): with
+    four nav items and the full email, "Design system" wrapped to two lines
+    and "Share your work" to three. Removing Design system (above) leaves
+    three; the nav is also `whitespace-nowrap` with a tighter gap below `lg`,
+    and the account link truncates a long address (full address in `title`).
+    Verification: e2e at 768 px, English and Persian, asserts one-line links
+    and no horizontal scroll; checked by eye at 735 and 768.
 
 - CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
   typecheck saw an empty Prisma client and failed, and the fail-fast matrix

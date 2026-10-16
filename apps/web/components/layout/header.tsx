@@ -150,7 +150,7 @@ export function Header() {
           <Logo />
 
           <nav
-            className="hidden items-center gap-8 text-sm md:flex"
+            className="hidden items-center gap-5 whitespace-nowrap text-sm md:flex lg:gap-8"
             aria-label={t.primary}
           >
             {NAV.map((item) => {
@@ -203,12 +203,15 @@ export function Header() {
             </a>
             <Link
               href={localePath("/account", locale)}
+              title={session.email ?? undefined}
               className={cn(
                 buttonVariants({ variant: "ghost" }),
-                "hidden sm:inline-flex",
+                "hidden max-w-40 sm:inline-flex lg:max-w-64",
               )}
             >
-              {session.email ?? t.signIn}
+              {/* A real address can be long; it truncates rather than pushing
+                  the nav onto a second line. */}
+              <span className="truncate" dir="auto">{session.email ?? t.signIn}</span>
             </Link>
             <Button
               variant="ghost"
