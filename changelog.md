@@ -15,11 +15,13 @@ Project changes completed from `pending.md` should be recorded here with the dat
     replaced when the hero redesign ships.
   - `apps/web/.impeccable/`: `config.json` (`buildPath: code`), the 2026-10-16
     critique snapshots for `/`, `/dashboard` and `/explore`, and the decision
-    sketches from the hero direction round. **No direction is chosen yet.** The
-    decision page recorded "The Card Catalogue", but that was not the
-    maintainer's choice; the maintainer asked for a minimal hero with little
-    graphics and few colours, which none of the sketches is. The sketches are
-    kept as references only. Nothing is built.
+    sketches from the hero direction round. **Direction chosen by the
+    maintainer: The Datasheet** (`model-pick.html`): the hero as a component
+    datasheet, white page, hairline rules, spec blue only on Search. The decision
+    page had first recorded "The Card Catalogue", which was not their choice; they
+    had asked for a minimal hero with little graphics and few colours.
+    `minimal.html` is a plainer reference. The other sketches are references only.
+    Nothing is built.
     `hook.cache.json`, `live/` and `questions/` are generated and not committed.
 - **Listing cards state what the listing declares (critique-driven `layout`,
   branch `redesign`).**
