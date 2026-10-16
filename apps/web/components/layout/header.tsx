@@ -186,7 +186,12 @@ export function Header() {
             {/* A real button, not 11px of low-contrast text pushed against the
                 window edge. Same padding as Sign in, and a globe so it reads
                 as a language switch before you can read the script. */}
-            <Link
+            {/* A plain anchor on purpose: the two locales are two root
+                layouts' worth of `lang`/`dir` (proxy.ts rewrites /fa onto the
+                same routes), and a client-side <Link> keeps the old root
+                layout, so the URL changed while the page stayed in the old
+                language and direction until a reload. */}
+            <a
               href={switchHref}
               lang={locale === "fa" ? "en" : "fa"}
               className={cn(
@@ -196,7 +201,7 @@ export function Header() {
             >
               <Globe size={15} aria-hidden />
               {t.language}
-            </Link>
+            </a>
             <Link
               href={localePath("/account", locale)}
               className={cn(
@@ -256,15 +261,14 @@ export function Header() {
             >
               {session.email ?? t.signIn}
             </Link>
-            <Link
+            <a
               href={switchHref}
               lang={locale === "fa" ? "en" : "fa"}
-              onClick={() => setIsMenuOpen(false)}
               className="inline-flex items-center gap-2 border-t border-border/60 py-3 text-sm"
             >
               <Globe size={15} aria-hidden />
               {t.language}
-            </Link>
+            </a>
           </nav>
         </div>
       )}

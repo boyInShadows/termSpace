@@ -35,6 +35,20 @@ test.describe("persian", () => {
     });
   }
 
+  test("the language switch changes lang and dir without a manual reload", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/products/conversion-copywriter");
+    await page.locator('header a[lang="fa"]').click();
+    await expect(page).toHaveURL(/\/fa\/products\/conversion-copywriter$/);
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await expect(page.locator("html")).toHaveAttribute("lang", "fa");
+
+    await page.locator('header a[lang="en"]').click();
+    await expect(page).toHaveURL(/\/products\/conversion-copywriter$/);
+    await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  });
+
   test("display type runs smaller, looser and lighter than the English", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     const measure = () =>

@@ -4,6 +4,15 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-16
 
+- **Web audit fixes (branch `redesign`, `apps/web` presentation lane at the
+  maintainer's request).** From a Playwright pass at 735, 768 and 1440 px over
+  the main routes, signed out and as a creator. One bullet per fixed item.
+  - Language switch (`components/layout/header.tsx`): the switch was a client
+    `<Link>`, so `/fa` showed an English, left-to-right page until a reload
+    (the root layout keeps `lang`/`dir` across a soft navigation). It is now a
+    plain anchor. Verification: new `e2e/persian.spec.ts` case round-trips
+    en to fa to en and asserts `lang` and `dir` without a reload.
+
 - CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
   typecheck saw an empty Prisma client and failed, and the fail-fast matrix
   cancelled the blog and web jobs, so CI on `main` had been red since at least
