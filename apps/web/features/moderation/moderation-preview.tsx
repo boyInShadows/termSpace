@@ -10,6 +10,7 @@ import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { intlLocale } from "@/lib/format";
 
 type Manifest = { listing?: Record<string, unknown>; release?: Record<string, unknown>; typeDetails?: Record<string, unknown> };
 type Action = "APPROVE" | "PUBLISH" | "REQUEST_CHANGES" | "REJECT" | "SUSPEND" | "REINSTATE" | "ARCHIVE" | "RESTORE";
@@ -108,7 +109,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
     && preview.proposedSnapshot.releaseManifest.ownershipVerifiedAt
     && preview.proposedSnapshot.releaseManifest.sourceCheckStatus === "VERIFIED");
   const actionBlocked = selectedAction === "PUBLISH" && !releaseSourceReady;
-  const date = new Intl.DateTimeFormat(locale === "fa" ? "fa-IR" : "en-US", { dateStyle: "medium", timeStyle: "short" });
+  const date = new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium", timeStyle: "short" });
 
   return <section aria-labelledby="moderation-preview-title">
     <Link href={localePath("/moderation", locale)} className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">{locale === "fa" ? <ArrowRight className="size-4" /> : <ArrowLeft className="size-4" />}{t.moderation.back}</Link>

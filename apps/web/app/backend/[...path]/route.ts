@@ -11,12 +11,7 @@ function upstreamUrl(request: NextRequest): string {
   return `${baseUrl.replace(/\/$/, "")}${path}${request.nextUrl.search}`;
 }
 
-export async function GET(request: NextRequest) { return proxyRequest(request); }
-export async function POST(request: NextRequest) { return proxyRequest(request); }
-export async function PUT(request: NextRequest) { return proxyRequest(request); }
-export async function PATCH(request: NextRequest) { return proxyRequest(request); }
-export async function DELETE(request: NextRequest) { return proxyRequest(request); }
-export async function HEAD(request: NextRequest) { return proxyRequest(request); }
+export { proxyRequest as GET, proxyRequest as POST, proxyRequest as PUT, proxyRequest as PATCH, proxyRequest as DELETE, proxyRequest as HEAD };
 
 async function proxyRequest(request: NextRequest): Promise<Response> {
   const headers = new Headers(request.headers);

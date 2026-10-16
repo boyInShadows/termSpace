@@ -2,6 +2,37 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-08
+
+- `AGENTS.md`: removed the second shared-surfaces list (it still named the old
+  `apps/web/lib/i18n.ts`); "Announce shared-surface changes" now points to the
+  single list in Repository facts. The verification gate now names
+  `npm run lint -w apps/web`, since no root or other-app lint script exists.
+- Verification: docs only; checked that `apps/web/lib/i18n/` is a directory and
+  that only `apps/web/package.json` defines `lint`.
+- Over-engineering audit cleanup (v.2 side). Removed eight unused or demo-only
+  web dependencies: `geist` (fonts are self-hosted from `public/fonts`),
+  `prettier` (no config or script), and the Radix `select`, `tooltip`,
+  `dropdown-menu`, `tabs`, `checkbox` and `radio-group` packages. Removed the
+  dead `formatCount` (web `lib/utils.ts`) and `listingSnapshotFromManifest`
+  (API `marketplaceListingLifecycle.ts`). Added `intlLocale()` to
+  `apps/web/lib/format.ts` and routed the 20 hand-written
+  `"fa-IR" : "en-US"` ternaries in 13 files through it, unchanged in output.
+  Collapsed the six one-line method handlers in both `/backend` proxy routes
+  into one re-export.
+- Lane note for Ramtin: this touched `apps/web/app/design-system/showroom.tsx`
+  (checkbox and radios are now native inputs with `accent-primary`, the tooltip
+  is a `title`, the dropdown is a `<details>` disclosure, the tabs demo is gone
+  because no product surface uses tabs and `Rating` is shown again below) and
+  `components/marketplace/product-card.tsx` / `components/catalog/version-picker.tsx`
+  (locale tag only). Reason: those demos were the only users of five packages.
+- Verification: root typecheck; `npm run lint -w apps/web`; 266 tests passing
+  (153 API, 15 blog, 98 web) with `LOCAL_AUTO_VERIFY_EMAIL=false` and
+  `NODE_OPTIONS=--no-experimental-webstorage`; all three production builds.
+  `prisma:generate` was needed after merging main's password-reset model.
+  Not yet run: e2e and LHCI. Port 3100 was held by a process outside this
+  session and `playwright.config.ts` hard-codes it.
+
 ## 2026-10-04
 
 - Added email OTP password recovery for reader accounts. Reset requests return the same accepted

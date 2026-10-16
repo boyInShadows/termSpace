@@ -17,7 +17,7 @@ import { copy, localePath, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/serverLocale";
 import type { ProductDetail } from "@/lib/types";
 import { SITE_URL } from "@/lib/site";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, intlLocale } from "@/lib/format";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   let product: ProductDetail;
@@ -103,7 +103,7 @@ function Section({ title, children, id }: { title: string; children: React.React
 
 function manifestRows(product: ProductDetail, l: Labels, locale: Locale): ManifestRow[] {
   const m = l.manifestLabels;
-  const date = new Intl.DateTimeFormat(locale === "fa" ? "fa-IR" : "en-US", { dateStyle: "medium" }).format(new Date(product.updatedAt));
+  const date = new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" }).format(new Date(product.updatedAt));
   const rows: ManifestRow[] = [
     { key: "type", label: m.type, value: copy[locale].productCard.types[product.type] ?? product.type },
     { key: "platforms", label: m.platforms, value: product.compatibility.platforms.join(" · ") || l.notStated },
@@ -134,7 +134,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     throw error;
   }
   const typeLabel = copy[locale].productCard.types[product.type] ?? product.type;
-  const numbers = fa ? "fa-IR" : "en-US";
+  const numbers = intlLocale(locale);
 
   return (
     <>

@@ -10,6 +10,7 @@ import type { CreatorDashboardListing } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CardError, DashboardCard, Skeleton } from "./dashboard-card";
 import type { OverviewState } from "./overview-state";
+import { intlLocale } from "@/lib/format";
 
 const TONE_CLASS: Record<ListingTone, string> = {
   live: "bg-success/15 text-success",
@@ -55,7 +56,7 @@ export function ListingsTable({ state, now, onRetry }: { state: OverviewState; n
 function ListingRows({ rows, now }: { rows: CreatorDashboardListing[]; now: number }) {
   const { locale, t } = useLocale();
   const copy = t.dashboardHome;
-  const localeTag = locale === "fa" ? "fa-IR" : "en-US";
+  const localeTag = intlLocale(locale);
   const number = new Intl.NumberFormat(localeTag);
   const fullDate = new Intl.DateTimeFormat(localeTag, { dateStyle: "medium", timeStyle: "short" });
 

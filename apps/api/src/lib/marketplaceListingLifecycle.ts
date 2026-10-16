@@ -1,4 +1,4 @@
-import { MARKETPLACE_DATABASE_ITEM_TYPES, MARKETPLACE_ITEM_TYPE_REGISTRY, validateMarketplaceManifest, type MarketplaceManifestV1 } from "./marketplaceManifest.js";
+import { MARKETPLACE_DATABASE_ITEM_TYPES, MARKETPLACE_ITEM_TYPE_REGISTRY, type MarketplaceManifestV1 } from "./marketplaceManifest.js";
 
 export const MARKETPLACE_LISTING_STATES = [
   "DRAFT", "SUBMITTED", "CHANGES_REQUESTED", "APPROVED", "PUBLISHED", "REJECTED", "SUSPENDED", "ARCHIVED",
@@ -108,11 +108,6 @@ export function resolveMarketplaceListingTransition(
     return { ...unchanged, state: context.resumeState, published: context.resumePublished, resumeState: null, resumePublished: null, eventAction: "RESTORED" };
   }
   return invalid(context.state, action);
-}
-
-export function listingSnapshotFromManifest(input: unknown) {
-  const { manifest, snapshot, digestSha256 } = validateMarketplaceManifest(input);
-  return { schemaVersion: manifest.manifestVersion, itemType: manifest.type, content: snapshot, digestSha256 };
 }
 
 export function marketplaceProductProjectionFromManifest(manifest: MarketplaceManifestV1, categoryId: string) {

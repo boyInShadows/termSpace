@@ -3,19 +3,20 @@
 import { useId, useState } from "react";
 import type { ProductVersion } from "@/lib/types";
 import { useLocale } from "@/lib/locale-context";
+import { intlLocale } from "@/lib/format";
 
 /**
  * Pick a release and read what changed in it. Newest first; the first entry
  * is the current version.
  */
 export function VersionPicker({ versions }: { versions: ProductVersion[] }) {
-  const { fa } = useLocale();
+  const { fa, locale } = useLocale();
   const id = useId();
   const [selectedId, setSelectedId] = useState(versions[0]?.id);
   const selected = versions.find((version) => version.id === selectedId) ?? versions[0];
   if (!selected) return null;
 
-  const date = new Intl.DateTimeFormat(fa ? "fa-IR" : "en-US", { dateStyle: "medium" }).format(new Date(selected.releasedAt));
+  const date = new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" }).format(new Date(selected.releasedAt));
   return (
     <div>
       <label htmlFor={id} className="eyebrow">{fa ? "نسخه" : "Version"}</label>

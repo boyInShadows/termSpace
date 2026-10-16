@@ -1,11 +1,6 @@
 "use client";
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import * as Tooltip from "@radix-ui/react-tooltip";
-import * as Dropdown from "@radix-ui/react-dropdown-menu";
-import * as Tabs from "@radix-ui/react-tabs";
-import * as Checkbox from "@radix-ui/react-checkbox";
-import * as RadioGroup from "@radix-ui/react-radio-group";
 import * as Switch from "@radix-ui/react-switch";
 import {
   AlertTriangle,
@@ -34,7 +29,7 @@ import { products, creators } from "@/lib/fixtures";
 export function Showroom() {
   const [toast, setToast] = useState(false);
   return (
-    <Tooltip.Provider>
+    <>
       <div className="space-y-16">
         <Show
           title="Actions"
@@ -94,29 +89,17 @@ export function Showroom() {
           </div>
           <div className="mt-7 flex flex-wrap gap-8">
             <label className="flex items-center gap-2 text-sm">
-              <Checkbox.Root
-                defaultChecked
-                className="flex size-5 items-center justify-center rounded-sm border border-input bg-surface data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-              >
-                <Checkbox.Indicator>
-                  <Check size={14} />
-                </Checkbox.Indicator>
-              </Checkbox.Root>
+              <input type="checkbox" defaultChecked className="size-5 accent-primary" />
               Include updates
             </label>
-            <RadioGroup.Root defaultValue="one" className="flex gap-4">
+            <div role="radiogroup" className="flex gap-4">
               {["One-time", "Free"].map((x, i) => (
                 <label className="flex items-center gap-2 text-sm" key={x}>
-                  <RadioGroup.Item
-                    value={i ? "free" : "one"}
-                    className="flex size-5 items-center justify-center rounded-full border border-input"
-                  >
-                    <RadioGroup.Indicator className="size-2.5 rounded-full bg-primary" />
-                  </RadioGroup.Item>
+                  <input type="radio" name="pricing" value={i ? "free" : "one"} defaultChecked={!i} className="size-5 accent-primary" />
                   {x}
                 </label>
               ))}
-            </RadioGroup.Root>
+            </div>
             <label className="flex items-center gap-3 text-sm">
               Verified only
               <Switch.Root className="h-6 w-11 rounded-full bg-border-strong p-0.5 data-[state=checked]:bg-primary">
@@ -126,73 +109,26 @@ export function Showroom() {
           </div>
         </Show>
         <Show title="Navigation & overlays">
-          <Tabs.Root defaultValue="details">
-            <Tabs.List className="flex border-b">
-              {["details", "reviews", "updates"].map((x) => (
-                <Tabs.Trigger
-                  value={x}
-                  key={x}
-                  className="border-b-2 border-transparent px-4 py-3 text-sm capitalize text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-foreground"
-                >
-                  {x}
-                </Tabs.Trigger>
-              ))}
-            </Tabs.List>
-            <Tabs.Content
-              value="details"
-              className="py-5 text-sm text-muted-foreground"
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="secondary"
+              size="icon"
+              aria-label="Product health"
+              title="Product health score"
             >
-              Clear product facts with important trust information kept visible.
-            </Tabs.Content>
-            <Tabs.Content value="reviews" className="py-5">
-              <Rating rating={4.9} count={184} />
-            </Tabs.Content>
-            <Tabs.Content value="updates" className="py-5 text-sm">
-              Version 2.4.0 · current
-            </Tabs.Content>
-          </Tabs.Root>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  aria-label="Product health"
-                >
-                  <Zap size={17} />
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content
-                  sideOffset={6}
-                  className="rounded bg-foreground px-3 py-2 text-xs text-background shadow"
-                >
-                  Product health score
-                  <Tooltip.Arrow className="fill-foreground" />
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-            <Dropdown.Root>
-              <Dropdown.Trigger asChild>
-                <Button variant="secondary">
-                  Actions <ChevronDown size={15} />
-                </Button>
-              </Dropdown.Trigger>
-              <Dropdown.Portal>
-                <Dropdown.Content className="z-50 min-w-40 rounded-md border bg-surface p-1 shadow-lift">
-                  <Dropdown.Item className="rounded px-3 py-2 text-sm outline-none focus:bg-muted">
-                    Edit listing
-                  </Dropdown.Item>
-                  <Dropdown.Item className="rounded px-3 py-2 text-sm outline-none focus:bg-muted">
-                    View analytics
-                  </Dropdown.Item>
-                  <Dropdown.Separator className="my-1 h-px bg-border" />
-                  <Dropdown.Item className="rounded px-3 py-2 text-sm text-destructive outline-none focus:bg-muted">
-                    Unpublish
-                  </Dropdown.Item>
-                </Dropdown.Content>
-              </Dropdown.Portal>
-            </Dropdown.Root>
+              <Zap size={17} />
+            </Button>
+            <details className="relative">
+              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md border bg-secondary px-4 text-sm font-semibold">
+                Actions <ChevronDown size={15} />
+              </summary>
+              <ul className="absolute z-50 mt-1 min-w-40 rounded-md border bg-surface p-1 shadow-lift">
+                <li><button className="w-full rounded px-3 py-2 text-start text-sm hover:bg-muted focus:bg-muted">Edit listing</button></li>
+                <li><button className="w-full rounded px-3 py-2 text-start text-sm hover:bg-muted focus:bg-muted">View analytics</button></li>
+                <li className="my-1 h-px bg-border" role="separator" />
+                <li><button className="w-full rounded px-3 py-2 text-start text-sm text-destructive hover:bg-muted focus:bg-muted">Unpublish</button></li>
+              </ul>
+            </details>
             <Dialog.Root>
               <Dialog.Trigger asChild>
                 <Button variant="secondary">Open dialog</Button>
@@ -340,7 +276,7 @@ export function Showroom() {
           </nav>
         </Show>
       </div>
-    </Tooltip.Provider>
+    </>
   );
 }
 function Show({

@@ -9,6 +9,7 @@ import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { intlLocale } from "@/lib/format";
 
 export function CreatorReleaseManager({ productId }: { productId: string }) {
   const { locale, t } = useLocale();
@@ -43,8 +44,8 @@ export function CreatorReleaseManager({ productId }: { productId: string }) {
     </Button>
   </div>;
 
-  const date = new Intl.DateTimeFormat(locale === "fa" ? "fa-IR" : "en-US", { dateStyle: "medium" });
-  const number = new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US");
+  const date = new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" });
+  const number = new Intl.NumberFormat(intlLocale(locale));
   const connect = async (provider: "github" | "npm") => {
     setBusy(provider); setActionMessage("");
     try {

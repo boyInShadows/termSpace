@@ -9,6 +9,7 @@ import { ListingsTable } from "./listings-table";
 import type { OverviewState } from "./overview-state";
 import { QuickActions } from "./quick-actions";
 import { StatTile, StatTileSkeleton, type StatDelta } from "./stat-tile";
+import { intlLocale } from "@/lib/format";
 
 /** Fetches the overview once, and again on Retry. */
 export function DashboardOverview() {
@@ -87,7 +88,7 @@ function LoadingStatus() {
 function OverviewHeader({ state, now, name }: { state: OverviewState; now: number; name?: string }) {
   const { locale, t } = useLocale();
   const copy = t.dashboardHome;
-  const localeTag = locale === "fa" ? "fa-IR" : "en-US";
+  const localeTag = intlLocale(locale);
   const number = new Intl.NumberFormat(localeTag);
   const known = name !== undefined;
 
@@ -156,7 +157,7 @@ function OverviewStats({ state }: { state: OverviewState }) {
     );
   }
 
-  const localeTag = locale === "fa" ? "fa-IR" : "en-US";
+  const localeTag = intlLocale(locale);
   const number = new Intl.NumberFormat(localeTag);
   const rating = new Intl.NumberFormat(localeTag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const totals = state.status === "ready" && state.home.kind === "creator" ? state.home.dashboard.summary : null;

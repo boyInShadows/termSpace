@@ -11,6 +11,7 @@ import { localePath } from "@/lib/i18n";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { intlLocale } from "@/lib/format";
 
 const PAGE_SIZE = 24;
 
@@ -52,8 +53,8 @@ export function ModerationQueue() {
   if (error && !result) return <StatusCard message={t.moderation.loadError} error action={<Button variant="secondary" onClick={() => setReload((value) => value + 1)}><RotateCcw className="size-4" />{t.moderation.retry}</Button>} />;
   if (!result) return null;
 
-  const number = new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US");
-  const date = new Intl.DateTimeFormat(locale === "fa" ? "fa-IR" : "en-US", { dateStyle: "medium" });
+  const number = new Intl.NumberFormat(intlLocale(locale));
+  const date = new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" });
 
   return <section aria-labelledby="moderation-queue-title">
     <header className="max-w-3xl">

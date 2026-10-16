@@ -19,8 +19,9 @@ import type { MarketplaceInstallation, ProductDetail } from "@/lib/types";
 import { acquireProduct, ApiError, getProductInstallation } from "@/lib/api";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
+import { intlLocale } from "@/lib/format";
 export function ProductActions({ product }: { product: ProductDetail }) {
-  const { fa } = useLocale();
+  const { fa, locale } = useLocale();
   const copy = fa ? {
     added: "به کتابخانهٔ شما افزوده شد.", failed: "افزودن منبع انجام نشد. دوباره تلاش کنید.", adding: "در حال افزودن…", add: "افزودن به کتابخانه",
     preview: "پیش‌نمایش", inside: "محتوای", previewDescription: "پیش‌نمایش فقط‌خواندنی ساختار بسته و یک نمونه.", close: "بستن پیش‌نمایش",
@@ -88,7 +89,7 @@ export function ProductActions({ product }: { product: ProductDetail }) {
               <InstallFact label={copy.exactVersion} value={`v${installation.release.version}`} />
               <InstallFact label={copy.sourceStatus} value={installation.release.source.status} />
               <InstallFact label={copy.immutableRef} value={installation.release.source.ref} mono />
-              <InstallFact label={copy.checked} value={installation.release.source.checkedAt ? new Intl.DateTimeFormat(fa ? "fa-IR" : "en-US", { dateStyle: "medium" }).format(new Date(installation.release.source.checkedAt)) : "—"} />
+              <InstallFact label={copy.checked} value={installation.release.source.checkedAt ? new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" }).format(new Date(installation.release.source.checkedAt)) : "—"} />
             </div>
             {installation.release.source.status === "stale" && <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-800 dark:text-amber-300">{copy.stale}</p>}
             <div className="mt-6"><p className="eyebrow">{copy.steps}</p><ol className="mt-3 space-y-3">{installation.release.installation.instructions.map((step, index) => <li className="flex gap-3 text-sm" key={`${index}-${step}`}><span className="font-mono text-xs text-primary">{String(index + 1).padStart(2, "0")}</span><span>{step}</span></li>)}</ol></div>

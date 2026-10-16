@@ -25,7 +25,8 @@ Tool-agnostic rules first; Claude Code specifics are in their own section at the
    session (or `plan.md`) with: goal, files, acceptance, verification.
 3. Implement one phase. Don't start the next phase in the same session.
 4. Verification gate before commit (existing rule, unchanged): root typecheck, the affected
-   app's tests, lint, production build. Web UI changes additionally: `npm run e2e -w apps/web`
+   app's tests, lint (`npm run lint -w apps/web` — only `apps/web` has a lint script),
+   production build. Web UI changes additionally: `npm run e2e -w apps/web`
    and `npm run lhci -w apps/web` when `/`, `/dashboard` or a product page changed.
 5. Record what changed and what was verified at the top of `changelog.md`. Squash, push.
 
@@ -198,13 +199,7 @@ main cause of painful merges. If you spot an unrelated problem, add it to
 
 **Announce shared-surface changes.** These files are edited by both sides and
 conflict badly. When you touch one, say so explicitly in the commit body and pull
-request description:
-
-- `apps/api/prisma/schema.prisma` and `apps/api/prisma/migrations/`
-- `apps/web/lib/i18n.ts` and `apps/web/lib/types.ts`
-- `apps/web/lib/api.ts`
-- `apps/api/src/app.ts` (route mounting)
-- `AGENTS.md`, `pending.md`, `changelog.md`
+request description. The list lives once, under "Shared surfaces" in Repository facts.
 
 **Migrations must not collide.** Name every migration
 `<YYYYMMDD><NNNN>_<snake_case>` and check `apps/api/prisma/migrations/` for the

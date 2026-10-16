@@ -13,7 +13,11 @@ export type NumberContext = "prose" | "data";
 
 type FormatOptions = Intl.NumberFormatOptions & { context?: NumberContext; compact?: boolean };
 
+/** The Intl locale tag for a reader locale under the numerals policy above. */
+export function intlLocale(locale: Locale, context: NumberContext = "prose"): string {
+  return locale === "fa" && context === "prose" ? "fa-IR" : "en-US";
+}
+
 export function formatNumber(value: number, locale: Locale, { context = "prose", compact = false, ...options }: FormatOptions = {}): string {
-  const tag = locale === "fa" && context === "prose" ? "fa-IR" : "en-US";
-  return new Intl.NumberFormat(tag, compact ? { notation: "compact", maximumFractionDigits: 1, ...options } : options).format(value);
+  return new Intl.NumberFormat(intlLocale(locale, context), compact ? { notation: "compact", maximumFractionDigits: 1, ...options } : options).format(value);
 }

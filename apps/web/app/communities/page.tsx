@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { getMarketplaceCommunities } from "@/lib/api";
 import { getLocale } from "@/lib/serverLocale";
+import { intlLocale } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Communities" };
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ export default async function CommunitiesPage() {
           <h2 className="editorial mt-3 text-2xl">{fa ? community.nameFa ?? community.nameEn : community.nameEn}</h2>
           <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">{fa ? community.descriptionFa ?? community.descriptionEn : community.descriptionEn}</p>
           <div className="mt-6 flex items-center justify-between gap-4 border-t pt-4 text-sm">
-            <span>{new Intl.NumberFormat(fa ? "fa-IR" : "en-US").format(community.products ?? 0)} {fa ? "فهرست تأییدشده" : "approved listings"}</span>
+            <span>{new Intl.NumberFormat(intlLocale(locale)).format(community.products ?? 0)} {fa ? "فهرست تأییدشده" : "approved listings"}</span>
             <Link href={`/communities/${community.slug}`} className="inline-flex min-h-11 items-center gap-1 font-semibold text-primary hover:underline">{fa ? "مشاهده" : "Browse"}<ArrowUpRight className="size-4" aria-hidden="true" /></Link>
           </div>
         </article>)}

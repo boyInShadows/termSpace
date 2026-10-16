@@ -5,7 +5,7 @@ import { listingTransitionName } from "@/lib/listing-transition";
 import { ArrowUpRight, Clock3, Heart } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, intlLocale } from "@/lib/format";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocale } from "@/lib/locale-context";
@@ -124,7 +124,7 @@ export function ProductCard({
             {formatNumber(product.usageCount, locale, { compact: true })} {card.uses}
           </span>
           <span dir="ltr">
-            {new Intl.DateTimeFormat(fa ? "fa-IR" : "en-US", { month: "short", day: "numeric" }).format(new Date(product.updatedAt))}
+            {new Intl.DateTimeFormat(intlLocale(locale), { month: "short", day: "numeric" }).format(new Date(product.updatedAt))}
           </span>
         </div>
 

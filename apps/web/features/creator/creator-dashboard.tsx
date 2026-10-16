@@ -9,6 +9,7 @@ import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { intlLocale } from "@/lib/format";
 
 const PAGE_SIZE = 12;
 
@@ -64,7 +65,7 @@ export function CreatorDashboard() {
   }
 
   if (!result) return null;
-  const number = new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US");
+  const number = new Intl.NumberFormat(intlLocale(locale));
   const { summary, listings } = result.data;
 
   return <section aria-labelledby="creator-dashboard-title">
@@ -131,8 +132,8 @@ function SummaryCard({ label, value, icon }: { label: string; value: string; ico
 
 function ListingCard({ listing }: { listing: CreatorDashboardListing }) {
   const { locale, t } = useLocale();
-  const number = new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US");
-  const date = new Intl.DateTimeFormat(locale === "fa" ? "fa-IR" : "en-US", { dateStyle: "medium" });
+  const number = new Intl.NumberFormat(intlLocale(locale));
+  const date = new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" });
   const stateLabel = listingStateLabel(listing.state, t.creatorHub);
 
   return <article className="rounded-2xl border bg-surface p-5 sm:p-6">

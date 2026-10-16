@@ -5,6 +5,7 @@ import { activityTone, collectActivity, formatRelative, type ActivityTone } from
 import { useLocale } from "@/lib/locale-context";
 import { CardError, DashboardCard, Skeleton } from "./dashboard-card";
 import type { OverviewState } from "./overview-state";
+import { intlLocale } from "@/lib/format";
 
 const TONE_ICON: Record<ActivityTone, React.ReactElement> = {
   positive: <ShieldCheck className="size-3 text-success" />,
@@ -25,7 +26,7 @@ const MARKER = "absolute -start-[34.5px] top-0.5 grid size-5 place-items-center 
 export function ActivityFeed({ state, now, onRetry }: { state: OverviewState; now: number; onRetry: () => void }) {
   const { locale, t } = useLocale();
   const copy = t.dashboardHome;
-  const localeTag = locale === "fa" ? "fa-IR" : "en-US";
+  const localeTag = intlLocale(locale);
 
   if (state.status === "error") {
     return (
