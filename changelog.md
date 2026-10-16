@@ -12,6 +12,15 @@ Project changes completed from `pending.md` should be recorded here with the dat
     (the root layout keeps `lang`/`dir` across a soft navigation). It is now a
     plain anchor. Verification: new `e2e/persian.spec.ts` case round-trips
     en to fa to en and asserts `lang` and `dir` without a reload.
+  - Persian home page (`app/page.tsx`, `components/sections/process.tsx`,
+    `lib/i18n/home.ts`): the process steps, the trust section, the collection
+    shelves and the newsletter blurb were hard-coded English, so everything
+    below the hero was English inside an RTL page and its full stops landed on
+    the wrong side. All of it now comes from `home.ts` in both locales
+    (shared surface `lib/i18n/`, additions only). The process panel's terminal
+    lines are an explicit `dir="ltr"` island and creator bios use `.ts-bidi`.
+    Verification: unit test renders `Process` in `fa`; e2e asserts every
+    `main h2` on `/fa` contains Persian; checked by eye at 768 px.
 
 - CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
   typecheck saw an empty Prisma client and failed, and the fail-fast matrix

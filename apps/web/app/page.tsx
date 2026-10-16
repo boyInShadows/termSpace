@@ -73,41 +73,9 @@ const loadHome = cache(
  * response as everything else makes that disagreement impossible, and a
  * missing category yields no count rather than a confident zero.
  */
-const COLLECTION_SHELVES = [
-  {
-    title: "Tools for careful research",
-    copy: "Evidence-first workflows that keep sources, caveats, and reasoning visible.",
-    category: "Research",
-  },
-  {
-    title: "Ship better software",
-    copy: "Review, accessibility, and database tools made by practicing engineers.",
-    category: "Engineering",
-  },
-  {
-    title: "Find the words that work",
-    copy: "Brand and conversion systems grounded in customer language, not hype.",
-    category: "Marketing",
-  },
-];
+const COLLECTION_CATEGORIES = ["Research", "Engineering", "Marketing"] as const;
 
-const trustFacts = [
-  {
-    icon: FileCheck2,
-    title: "Human-readable permissions",
-    copy: "Every listing states what it reads, writes and calls out to — in a sentence, not a config file.",
-  },
-  {
-    icon: RefreshCw,
-    title: "Visible update history",
-    copy: "Every version, with notes from the person who shipped it. Pin the one you inspected.",
-  },
-  {
-    icon: ScrollText,
-    title: "Licence on the label",
-    copy: "Use, redistribution and attribution are clear before you install anything.",
-  },
-];
+const TRUST_ICONS = [FileCheck2, RefreshCw, ScrollText] as const;
 
 /**
  * A distinct tint per trust card, so the three scan as three different
@@ -188,12 +156,16 @@ async function FeaturedGrid({ locale }: { locale: Locale }) {
 async function BrowsePanels({ locale }: { locale: Locale }) {
   const { home } = await loadHome();
 
-  const collections: BrowseCollection[] = COLLECTION_SHELVES.map((shelf) => ({
-    ...shelf,
-    count:
-      home.categories.find((category) => category.name === shelf.category)
-        ?.products ?? null,
-  }));
+  const collections: BrowseCollection[] = copy[locale].homePage.shelves.map(
+    (shelf, index) => ({
+      ...shelf,
+      category: COLLECTION_CATEGORIES[index],
+      count:
+        home.categories.find(
+          (category) => category.name === COLLECTION_CATEGORIES[index],
+        )?.products ?? null,
+    }),
+  );
 
   return (
     <Browse
@@ -230,7 +202,7 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
         <div key={creator.id} className="ts-reveal">
           <div className="ts-lift h-full rounded-xl border border-border bg-background/70 p-6">
             <CreatorIdentity creator={creator} />
-            <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            <p className="ts-bidi mt-4 text-sm leading-6 text-muted-foreground">
               {creator.bio}
             </p>
             <p className="mt-5 font-mono text-xs text-muted-foreground">
@@ -340,35 +312,29 @@ export default async function Home() {
               <div className="ts-reveal">
                 <span className="inline-flex items-center gap-2 rounded-full border border-verified/30 bg-verified/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-verified">
                   <ShieldCheck size={13} />
-                  Verified
+                  {t.homePage.trustBadge}
                 </span>
-                <h2 className={SECTION_HEADING}>
-                  Trust is product information.
-                </h2>
+                <h2 className={SECTION_HEADING}>{t.trustEyebrow}</h2>
                 <p className="mt-5 max-w-md leading-8 text-muted-foreground">
-                  Most catalogues bury what a tool actually does inside a
-                  paragraph of marketing. We break compatibility, permissions,
-                  requirements, licence and safety status into separate fields
-                  so you can judge a product before it touches your workflow.
+                  {t.homePage.trustBody}
                 </p>
                 <blockquote className="editorial mt-8 border-s-2 border-primary/50 ps-5 text-xl leading-8">
                   <Quote size={20} className="mb-3 text-primary" />
-                  A good AI product should tell you what it does, what it
-                  touches, and why you can trust it.
+                  {t.homePage.trustQuote}
                   <footer className="mt-4 font-sans text-sm not-italic text-muted-foreground">
                     <Link
                       href={localePath("/design-system", locale)}
                       className="transition-colors hover:text-primary"
                     >
-                      The termspace quality standard
+                      {t.homePage.trustQuoteLink}
                     </Link>
                   </footer>
                 </blockquote>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                {trustFacts.map((fact, index) => {
-                  const Icon = fact.icon;
+                {t.homePage.trustFacts.map((fact, index) => {
+                  const Icon = TRUST_ICONS[index];
                   return (
                     <div key={fact.title} className="ts-reveal">
                       <div className="ts-lift h-full rounded-xl border border-border bg-surface/70 p-6 backdrop-blur">
@@ -462,8 +428,7 @@ export default async function Home() {
                     {t.inboxTitle}
                   </h2>
                   <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
-                    What shipped, what got reviewed, and what is worth your
-                    attention. No launch announcements.
+                    {t.homePage.inboxBody}
                   </p>
                 </div>
                 <NewsletterForm />

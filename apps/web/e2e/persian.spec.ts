@@ -35,6 +35,14 @@ test.describe("persian", () => {
     });
   }
 
+  test("every section heading on /fa is in Persian", async ({ page }) => {
+    await page.goto("/fa");
+    await expect(page.locator("h1").first()).toBeVisible();
+    const headings = await page.locator("main h2").allTextContents();
+    expect(headings.length).toBeGreaterThanOrEqual(5);
+    expect(headings.filter((text) => !/[؀-ۿ]/.test(text))).toEqual([]);
+  });
+
   test("the language switch changes lang and dir without a manual reload", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/products/conversion-copywriter");

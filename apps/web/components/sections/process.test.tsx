@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { LocaleProvider } from "@/lib/locale-context";
 import { Process } from "./process";
 
 describe("Process", () => {
@@ -36,5 +37,18 @@ describe("Process", () => {
     expect(container).toHaveTextContent(
       "termspace add conversion-copywriter@2.4.0",
     );
+  });
+
+  it("is translated, with the terminal lines kept as a left-to-right island", () => {
+    const { container } = render(
+      <LocaleProvider locale="fa">
+        <Process />
+      </LocaleProvider>,
+    );
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("از نیاز تا ابزار کارآمد");
+    expect(screen.queryByText("Search by outcome")).not.toBeInTheDocument();
+    for (const island of container.querySelectorAll(".font-mono.leading-7")) {
+      expect(island).toHaveAttribute("dir", "ltr");
+    }
   });
 });

@@ -3,12 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Compass, FileCheck2, Download, ShieldCheck, Lock, Boxes } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/locale-context";
 
 type Step = {
   id: string;
   icon: typeof Compass;
-  title: string;
-  copy: string;
   /** Terminal lines shown in the pinned panel while this step is active. */
   lines: ReadonlyArray<{ label: string; value: string; tone?: "verified" | "accent" }>;
 };
@@ -17,8 +16,6 @@ const STEPS: readonly Step[] = [
   {
     id: "discover",
     icon: Compass,
-    title: "Search by outcome",
-    copy: "Describe the job, not the file format. Results rank on whether the thing actually does what you asked, and compare across platforms and models before you commit.",
     lines: [
       { label: "query", value: "review my PR like a staff engineer" },
       { label: "matches", value: "34 across 6 platforms", tone: "accent" },
@@ -28,8 +25,6 @@ const STEPS: readonly Step[] = [
   {
     id: "inspect",
     icon: FileCheck2,
-    title: "Read what it touches",
-    copy: "Contents, permissions, requirements, licence and update history are separate fields on every listing — not paragraphs in a README you have to trust.",
     lines: [
       { label: "reads", value: "current selection only" },
       { label: "network", value: "none requested", tone: "verified" },
@@ -40,8 +35,6 @@ const STEPS: readonly Step[] = [
   {
     id: "install",
     icon: Download,
-    title: "Put it to work",
-    copy: "One command, the exact version you inspected, and updates that arrive with notes from the person who wrote them.",
     lines: [
       // Version-pinned on purpose: the step's whole claim is that you install
       // the exact thing you just read, so the command has to show the pin.
@@ -68,6 +61,7 @@ const PANEL_ICONS = [Boxes, Lock, ShieldCheck] as const;
  * the scrolling column, so nothing is lost if the observer never fires.
  */
 export function Process() {
+  const { t } = useLocale();
   const [active, setActive] = useState(0);
   const stepRefs = useRef<Array<HTMLDivElement | null>>([]);
 
@@ -120,9 +114,9 @@ export function Process() {
     <section className="border-y border-border bg-surface/40">
       <div className="container-page section-y">
         <div className="max-w-2xl">
-          <p className="eyebrow">How it works</p>
+          <p className="eyebrow">{t.homePage.processEyebrow}</p>
           <h2 className="editorial mt-3 text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]">
-            From need to useful, without the leap of faith.
+            {t.homePage.processTitle}
           </h2>
         </div>
 
@@ -136,6 +130,7 @@ export function Process() {
             />
             {STEPS.map((step, index) => {
               const Icon = step.icon;
+              const text = t.homePage.processSteps[index];
               const isActive = index === active;
               return (
                 <li key={step.id}>
@@ -171,10 +166,10 @@ export function Process() {
                         isActive ? "text-foreground" : "text-muted-foreground",
                       )}
                     >
-                      {step.title}
+                      {text.title}
                     </h3>
                     <p className="mt-3 max-w-md leading-7 text-muted-foreground">
-                      {step.copy}
+                      {text.copy}
                     </p>
 
                     {/* Below lg there is no column to pin a panel in, so each
@@ -239,7 +234,9 @@ function StepPanel({ step, index }: { step: Step; index: number }) {
         </span>
       </div>
 
-      <div className="p-5 font-mono text-[13px] leading-7 lg:min-h-56">
+      {/* A Latin data island, like the hero's terminal card: in an RTL page
+          the lines would otherwise reorder ("across 6 platforms 34"). */}
+      <div dir="ltr" className="p-5 font-mono text-[13px] leading-7 lg:min-h-56">
         {step.lines.map((line, position) => (
           <div
             key={line.label + line.value}
