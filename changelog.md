@@ -4,6 +4,14 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-16
 
+- CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
+  typecheck saw an empty Prisma client and failed, and the fail-fast matrix
+  cancelled the blog and web jobs, so CI on `main` had been red since at least
+  2026-09-23 with blog and web never verified. Found when the launch-readiness
+  push's new `api-integration` job (which already generated) passed while
+  `verify (apps/api)` failed. Verification: YAML parses; the generate step is
+  the one `api-integration` ran successfully on GitHub.
+
 - Launch readiness (v.2 side), from a walk of the real flows on a throwaway
   Postgres 17: register, verify, creator profile, draft, submit, moderate,
   publish, acquire, review, hide/restore.

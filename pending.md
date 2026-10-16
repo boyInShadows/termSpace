@@ -33,6 +33,11 @@ This file tracks known improvement work that has not been completed yet. When an
   hoisted from `app/explore/page.tsx:29-30`. Separately, the landing pause test
   and the card-morph test fail under default parallelism and pass with 2
   workers. Make the suite pass with default workers.
+- The `lhci` job in "Web e2e and performance" has failed on every push to
+  `main` since at least 2026-10-05: `total-blocking-time` (budget 150 ms) and
+  `max-potential-fid` (130 ms) exceed on GitHub's runners while the same
+  budgets pass locally. Decide between a CI-specific throttling profile and
+  real TBT work; the ratchet rule forbids just raising the budgets.
 - A missing, suspended or archived product renders the branded not-found page
   with `noindex` but HTTP 200: `app/products/[slug]/loading.tsx` makes the route
   stream, so `notFound()` arrives after the status is sent. Unknown routes are

@@ -23,6 +23,9 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci
         working-directory: .
+      # npm ci at the root cannot find the API schema, so the client is empty until generated.
+      - run: npm run prisma:generate --workspace @termspace/api
+        working-directory: .
       - run: npm run typecheck
       - run: npm test
       - run: npm run lint --if-present
