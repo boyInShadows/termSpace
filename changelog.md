@@ -33,6 +33,31 @@ Project changes completed from `pending.md` should be recorded here with the dat
   Not yet run: e2e and LHCI. Port 3100 was held by a process outside this
   session and `playwright.config.ts` hard-codes it.
 
+- Phase A, repair (from the improvement review). CI: `npm run lint` now runs
+  with `--if-present`, because `apps/api` and `apps/blog` have no lint script
+  and their matrix jobs failed at that step. Canonicals: the root layout no
+  longer sets `alternates`, which every title-only page (`/explore`,
+  `/communities*`) inherited as `canonical: "/"`; new `lib/alternates.ts`
+  `pageAlternates()` gives home, explore, communities, community and product
+  pages a self-canonical in their own locale plus `en`/`fa`/`x-default`
+  hreflang (the `/fa/products/*` canonical used to point at the English page).
+  Locale links: the product card (listing and community links), communities
+  page, explore's "all communities" link, and the sign-in redirects in
+  `marketplace-session.tsx` and `product-actions.tsx` now use `localePath`, so
+  Persian readers stay on `/fa`. The Persian product-card test had the old
+  unprefixed community link written into it and now expects `/fa/...`.
+- Reviewed and not changed: the email worker stays behind the `email` compose
+  profile (README documents it, and it fails without Cloudflare credentials);
+  rate limiting already honours `TRUST_PROXY` (compose defaults it to 1). The
+  open question there is whether server-side renders from the web container
+  share one rate-limit bucket, which needs deployment knowledge.
+- Verification: root typecheck; `npm run lint -w apps/web`; 268 tests passing
+  (153 API, 15 blog, 100 web) with `LOCAL_AUTO_VERIFY_EMAIL=false` and
+  `NODE_OPTIONS=--no-experimental-webstorage`; all three production builds;
+  canonical and hreflang output checked by curl against `next start` on a
+  spare port. Added an e2e assertion for canonicals in `e2e/seo.spec.ts` that
+  has not been run: port 3100 is still held by a process outside this session.
+
 ## 2026-10-04
 
 - Added email OTP password recovery for reader accounts. Reset requests return the same accepted

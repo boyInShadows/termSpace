@@ -1,4 +1,5 @@
 import { Suspense, cache } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -31,6 +32,7 @@ import { getMarketplaceHome } from "@/lib/api";
 import { mockHome } from "@/lib/mock-home";
 import type { MarketplaceHome } from "@/lib/types";
 import { NewsletterForm } from "@/features/newsletter/newsletter-form";
+import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
 import { copy, localePath, type Locale } from "@/lib/i18n";
 import { formatNumber } from "@/lib/format";
@@ -276,6 +278,10 @@ async function CreatorGrid({ locale }: { locale: Locale }) {
 }
 
 /* --- page ---------------------------------------------------------------- */
+
+export async function generateMetadata(): Promise<Metadata> {
+  return { alternates: pageAlternates("/", await getLocale()) };
+}
 
 export default async function Home() {
   const locale = await getLocale();

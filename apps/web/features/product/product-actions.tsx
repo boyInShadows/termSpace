@@ -20,6 +20,7 @@ import { acquireProduct, ApiError, getProductInstallation } from "@/lib/api";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
 import { intlLocale } from "@/lib/format";
+import { localePath } from "@/lib/i18n";
 export function ProductActions({ product }: { product: ProductDetail }) {
   const { fa, locale } = useLocale();
   const copy = fa ? {
@@ -62,7 +63,7 @@ export function ProductActions({ product }: { product: ProductDetail }) {
     return () => controller.abort();
   }, [product.slug, session.email, session.loading]);
   async function acquire() {
-    if (!session.email) { router.push(`/account?next=${encodeURIComponent(window.location.pathname)}`); return; }
+    if (!session.email) { router.push(`${localePath("/account", locale)}?next=${encodeURIComponent(window.location.pathname)}`); return; }
     if (installation) { setInstallationOpen(true); return; }
     setAdding(true); setMessage(null);
     acquisitionKey.current ??= crypto.randomUUID();

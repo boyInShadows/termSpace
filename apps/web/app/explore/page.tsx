@@ -5,8 +5,11 @@ import { DiscoveryExperience } from "@/features/discovery/discovery-experience";
 import { getMarketplaceCommunities, getMarketplaceHome, getMarketplaceItemTypes, getProducts } from "@/lib/api";
 import { discoveryHref, filtersFromParams, toSearchParams, type RawSearchParams } from "@/lib/discovery-url";
 import { localePath } from "@/lib/i18n";
+import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
-export const metadata: Metadata = { title: "Explore" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: "Explore", alternates: pageAlternates("/explore", await getLocale()) };
+}
 export default async function ExplorePage({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
   const [raw, locale] = await Promise.all([searchParams, getLocale()]);
   const filters = filtersFromParams(raw);

@@ -2,6 +2,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, getFavorites, getSession, setFavorite, type MarketplaceRole } from "@/lib/api";
+import { localePath } from "@/lib/i18n";
+import { useLocale } from "@/lib/locale-context";
 
 type SessionState = {
   loading: boolean; email: string | null; emailVerified: boolean; marketplaceRoles: MarketplaceRole[]; error: string | null;
@@ -12,6 +14,7 @@ const SessionContext = createContext<SessionState>(anonymousSession);
 
 export function MarketplaceSessionProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { locale } = useLocale();
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
   const [emailVerified, setEmailVerified] = useState(false);
@@ -43,7 +46,7 @@ export function MarketplaceSessionProvider({ children }: { children: React.React
     return () => window.clearTimeout(timer);
   }, [refresh]);
   const toggleFavorite = useCallback(async (slug: string) => {
-    if (!email) { router.push(`/account?next=${encodeURIComponent(window.location.pathname)}`); return; }
+    if (!email) { router.push(`${localePath("/account", locale)}?next=${encodeURIComponent(window.location.pathname)}`); return; }
     const wasSaved = favorites.has(slug);
     setFavorites((current) => {
       const next = new Set(current);
@@ -59,7 +62,7 @@ export function MarketplaceSessionProvider({ children }: { children: React.React
       });
       console.error("Favorite update failed", cause); setError("Could not update your saved products.");
     }
-  }, [email, favorites, router]);
+  }, [email, favorites, locale, router]);
   const value = useMemo(() => ({ loading, email, emailVerified, marketplaceRoles, error, isFavorite: (slug: string) => favorites.has(slug), toggleFavorite, refresh }), [loading, email, emailVerified, marketplaceRoles, error, favorites, toggleFavorite, refresh]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

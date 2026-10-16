@@ -14,12 +14,14 @@ import { VersionPicker } from "@/components/catalog/version-picker";
 import { listingTransitionName } from "@/lib/listing-transition";
 import { ApiError, getProduct } from "@/lib/api";
 import { copy, localePath, type Locale } from "@/lib/i18n";
+import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
 import type { ProductDetail } from "@/lib/types";
 import { SITE_URL } from "@/lib/site";
 import { formatNumber, intlLocale } from "@/lib/format";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const locale = await getLocale();
   let product: ProductDetail;
   try {
     product = await getProduct((await params).slug);
@@ -32,8 +34,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: platform ? `${product.name} — ${product.type} for ${platform}` : `${product.name} — ${product.type}`,
     description: product.outcome,
-    alternates: { canonical: path, languages: { en: path, fa: `/fa${path}` } },
-    openGraph: { title: product.name, description: product.outcome, type: "website", url: path },
+    alternates: pageAlternates(path, locale),
+    openGraph: { title: product.name, description: product.outcome, type: "website", url: localePath(path, locale) },
   };
 }
 

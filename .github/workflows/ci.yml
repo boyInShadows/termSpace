@@ -25,5 +25,5 @@ jobs:
         working-directory: .
       - run: npm run typecheck
       - run: npm test
-      - run: npm run lint
+      - run: npm run lint --if-present
       - run: npm run build

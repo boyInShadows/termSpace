@@ -39,6 +39,23 @@ test.describe("search engines and sharing", () => {
     expect(xml).toContain("<loc>http://localhost:3000/explore</loc>");
   });
 
+  test("each public page canonicalises to itself, in its own locale", async ({ page }) => {
+    for (const [path, canonical] of [
+      ["/", "/"],
+      ["/explore", "/explore"],
+      ["/communities", "/communities"],
+      ["/products/conversion-copywriter", "/products/conversion-copywriter"],
+      ["/fa", "/fa"],
+      ["/fa/explore", "/fa/explore"],
+      ["/fa/products/conversion-copywriter", "/fa/products/conversion-copywriter"],
+    ]) {
+      await page.goto(path);
+      const href = await page.locator('link[rel="canonical"]').getAttribute("href");
+      expect(new URL(href!).pathname, path).toBe(canonical);
+      expect(await page.locator('link[rel="alternate"][hreflang="x-default"]').count(), path).toBe(1);
+    }
+  });
+
   test("robots.txt keeps private surfaces out and points at the sitemap", async ({ request }) => {
     const robots = await (await request.get("/robots.txt")).text();
     expect(robots).toContain("Disallow: /dashboard");

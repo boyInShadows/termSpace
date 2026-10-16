@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
 import { discoveryHref } from "@/lib/discovery-url";
+import { localePath } from "@/lib/i18n";
 
 /** Typing settles for this long before the URL, and so the results, change. */
 const QUERY_DEBOUNCE_MS = 300;
@@ -42,7 +43,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
   initialFilters: ProductFilters;
   context?: { eyebrow: string; title: string; intro: string; rules?: string; archived?: boolean };
 }) {
-  const { fa, t } = useLocale();
+  const { fa, t, locale } = useLocale();
   const d = t.discovery;
   const router = useRouter();
   const pathname = usePathname() ?? "/explore";
@@ -123,7 +124,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           <option value="All">{d.all}</option>
           {communities.map((item) => <option key={item.slug} value={item.slug}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
         </select>
-        <Link href="/communities" className="mt-2 inline-flex text-xs font-semibold text-primary hover:underline">{fa ? "مشاهدهٔ همهٔ جامعه‌ها" : "Browse all communities"}</Link>
+        <Link href={localePath("/communities", locale)} className="mt-2 inline-flex text-xs font-semibold text-primary hover:underline">{fa ? "مشاهدهٔ همهٔ جامعه‌ها" : "Browse all communities"}</Link>
       </label>}
       <label className="block text-sm font-semibold">
         {d.compatibility}

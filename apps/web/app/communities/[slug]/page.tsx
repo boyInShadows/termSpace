@@ -6,6 +6,7 @@ import { DiscoveryExperience } from "@/features/discovery/discovery-experience";
 import { getMarketplaceCommunities, getMarketplaceCommunity, getMarketplaceHome, getMarketplaceItemTypes } from "@/lib/api";
 import type { ProductFilters } from "@/lib/types";
 import { filtersFromParams } from "@/lib/discovery-url";
+import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const result = await getMarketplaceCommunity(slug, { page: 1, limit: 1 }).catch(() => null);
-  return { title: result?.data.community.nameEn ?? "Community" };
+  return { title: result?.data.community.nameEn ?? "Community", alternates: pageAlternates(`/communities/${slug}`, await getLocale()) };
 }
 
 export default async function CommunityPage({ params, searchParams }: {

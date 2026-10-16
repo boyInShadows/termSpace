@@ -53,7 +53,8 @@ describe("ProductCard", () => {
     expect(screen.getByText("انتخاب سردبیر")).toBeInTheDocument();
     expect(screen.getByText("پرطرفدار")).toBeInTheDocument();
     expect(screen.getByText("مهارت")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "کودکس" })).toHaveAttribute("href", "/communities/codex");
+    expect(screen.getByRole("link", { name: "کودکس" })).toHaveAttribute("href", "/fa/communities/codex");
+    expect(screen.getAllByRole("link").some((link) => link.getAttribute("href") === `/fa/products/${product.slug}`)).toBe(true);
     expect(screen.getByRole("button", { name: /علاقه‌مندی‌ها/ })).toBeInTheDocument();
     expect(screen.queryByText(/Editor’s pick|Trending|uses|favorites|^Skill$/)).not.toBeInTheDocument();
   });

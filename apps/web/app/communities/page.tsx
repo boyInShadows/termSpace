@@ -4,10 +4,14 @@ import { ArrowUpRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { getMarketplaceCommunities } from "@/lib/api";
+import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
 import { intlLocale } from "@/lib/format";
+import { localePath } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Communities" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: "Communities", alternates: pageAlternates("/communities", await getLocale()) };
+}
 export const dynamic = "force-dynamic";
 
 export default async function CommunitiesPage() {
@@ -31,7 +35,7 @@ export default async function CommunitiesPage() {
           <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">{fa ? community.descriptionFa ?? community.descriptionEn : community.descriptionEn}</p>
           <div className="mt-6 flex items-center justify-between gap-4 border-t pt-4 text-sm">
             <span>{new Intl.NumberFormat(intlLocale(locale)).format(community.products ?? 0)} {fa ? "فهرست تأییدشده" : "approved listings"}</span>
-            <Link href={`/communities/${community.slug}`} className="inline-flex min-h-11 items-center gap-1 font-semibold text-primary hover:underline">{fa ? "مشاهده" : "Browse"}<ArrowUpRight className="size-4" aria-hidden="true" /></Link>
+            <Link href={localePath(`/communities/${community.slug}`, locale)} className="inline-flex min-h-11 items-center gap-1 font-semibold text-primary hover:underline">{fa ? "مشاهده" : "Browse"}<ArrowUpRight className="size-4" aria-hidden="true" /></Link>
           </div>
         </article>)}
       </div> : <p role="status" className="mt-10 rounded-xl border bg-surface p-6 text-muted-foreground">{fa ? "در حال حاضر جامعهٔ فعالی برای نمایش وجود ندارد." : "There are no active communities to display."}</p>}

@@ -16,6 +16,7 @@ import {
   Rating,
 } from "./product-parts";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
+import { localePath } from "@/lib/i18n";
 
 /**
  * A listing card.
@@ -37,7 +38,7 @@ export function ProductCard({
   const { isFavorite, toggleFavorite } = useMarketplaceSession();
   const saved = isFavorite(product.slug);
   const card = t.productCard;
-  const href = `/products/${product.slug}`;
+  const href = localePath(`/products/${product.slug}`, locale);
   const isList = variant === "list";
 
   return (
@@ -100,7 +101,7 @@ export function ProductCard({
         {product.communities.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2" aria-label={card.communities}>
             {product.communities.slice(0, 3).map((community) => (
-              <Link key={community.slug} href={`/communities/${community.slug}`} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <Link key={community.slug} href={localePath(`/communities/${community.slug}`, locale)} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 <Badge variant="outline">{fa ? community.nameFa ?? community.nameEn : community.nameEn}</Badge>
               </Link>
             ))}
