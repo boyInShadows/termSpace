@@ -1,3 +1,21 @@
 {
-  "buildPath": "code"
+  "buildPath": "code",
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "geist",
+        "createdAt": "2026-10-16T13:54:47.001Z",
+        "reason": "model triage, not user confirmed: Geist and Geist Mono are the documented self-hosted faces (DESIGN.md Typography lists them as Geist Variable and Geist Mono Variable); the detector only trips on the name variant"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "geist mono",
+        "createdAt": "2026-10-16T13:54:47.007Z",
+        "reason": "model triage, not user confirmed: Geist and Geist Mono are the documented self-hosted faces (DESIGN.md Typography lists them as Geist Variable and Geist Mono Variable); the detector only trips on the name variant"
+      }
+    ]
+  }
 }
