@@ -16,9 +16,14 @@ Project changes completed from `pending.md` should be recorded here with the dat
     `lib/i18n/home.ts`): the process steps, the trust section, the collection
     shelves and the newsletter blurb were hard-coded English, so everything
     below the hero was English inside an RTL page and its full stops landed on
-    the wrong side. All of it now comes from `home.ts` in both locales
-    (shared surface `lib/i18n/`, additions only). The process panel's terminal
-    lines are an explicit `dir="ltr"` island and creator bios use `.ts-bidi`.
+    the wrong side. All of it now comes from `lib/i18n/home-sections.ts` in
+    both locales (new file in the shared `lib/i18n/`). That file is **not**
+    spread into `copy`: `copy` is imported by client components, so putting
+    about 4 KB of home-only text in it pushed the product page's first-load JS
+    to 196.9 kB gz against its 195 kB ratchet gate. `app/page.tsx` reads it on
+    the server and passes the three process steps to the one client component
+    that needs them as a prop. The process panel's terminal lines are an
+    explicit `dir="ltr"` island and creator bios use `.ts-bidi`.
     Verification: unit test renders `Process` in `fa`; e2e asserts every
     `main h2` on `/fa` contains Persian; checked by eye at 768 px.
   - One creator surface, `/dashboard` (items 5, 6, 7 and 8 of the audit).

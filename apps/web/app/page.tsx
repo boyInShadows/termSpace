@@ -35,6 +35,7 @@ import { NewsletterForm } from "@/features/newsletter/newsletter-form";
 import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
 import { copy, localePath, type Locale } from "@/lib/i18n";
+import { homeSections } from "@/lib/i18n/home-sections";
 import { formatNumber } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -156,7 +157,7 @@ async function FeaturedGrid({ locale }: { locale: Locale }) {
 async function BrowsePanels({ locale }: { locale: Locale }) {
   const { home } = await loadHome();
 
-  const collections: BrowseCollection[] = copy[locale].homePage.shelves.map(
+  const collections: BrowseCollection[] = homeSections[locale].shelves.map(
     (shelf, index) => ({
       ...shelf,
       category: COLLECTION_CATEGORIES[index],
@@ -258,6 +259,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Home() {
   const locale = await getLocale();
   const t = copy[locale];
+  const sections = homeSections[locale];
 
   return (
     <>
@@ -290,7 +292,7 @@ export default async function Home() {
         </section>
 
         {/* --- how it works (pinned narrative) ------------------------------- */}
-        <Process />
+        <Process copy={sections} />
 
         {/* --- trust, inverted ----------------------------------------------
             The one full-bleed dark section on the page. Every other section is
@@ -312,28 +314,28 @@ export default async function Home() {
               <div className="ts-reveal">
                 <span className="inline-flex items-center gap-2 rounded-full border border-verified/30 bg-verified/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-verified">
                   <ShieldCheck size={13} />
-                  {t.homePage.trustBadge}
+                  {sections.trustBadge}
                 </span>
                 <h2 className={SECTION_HEADING}>{t.trustEyebrow}</h2>
                 <p className="mt-5 max-w-md leading-8 text-muted-foreground">
-                  {t.homePage.trustBody}
+                  {sections.trustBody}
                 </p>
                 <blockquote className="editorial mt-8 border-s-2 border-primary/50 ps-5 text-xl leading-8">
                   <Quote size={20} className="mb-3 text-primary" />
-                  {t.homePage.trustQuote}
+                  {sections.trustQuote}
                   <footer className="mt-4 font-sans text-sm not-italic text-muted-foreground">
                     <Link
                       href={localePath("/design-system", locale)}
                       className="-my-1.5 inline-block py-1.5 transition-colors hover:text-primary"
                     >
-                      {t.homePage.trustQuoteLink}
+                      {sections.trustQuoteLink}
                     </Link>
                   </footer>
                 </blockquote>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                {t.homePage.trustFacts.map((fact, index) => {
+                {sections.trustFacts.map((fact, index) => {
                   const Icon = TRUST_ICONS[index];
                   return (
                     <div key={fact.title} className="ts-reveal">
@@ -428,7 +430,7 @@ export default async function Home() {
                     {t.inboxTitle}
                   </h2>
                   <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
-                    {t.homePage.inboxBody}
+                    {sections.inboxBody}
                   </p>
                 </div>
                 <NewsletterForm />

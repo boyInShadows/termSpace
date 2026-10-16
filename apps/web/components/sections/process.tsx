@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Compass, FileCheck2, Download, ShieldCheck, Lock, Boxes } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLocale } from "@/lib/locale-context";
+import type { HomeSections } from "@/lib/i18n/home-sections";
 
 type Step = {
   id: string;
@@ -60,8 +60,7 @@ const PANEL_ICONS = [Boxes, Lock, ShieldCheck] as const;
  * The panel is decorative reinforcement: each step's full text is already in
  * the scrolling column, so nothing is lost if the observer never fires.
  */
-export function Process() {
-  const { t } = useLocale();
+export function Process({ copy }: { copy: Pick<HomeSections, "processEyebrow" | "processTitle" | "processSteps"> }) {
   const [active, setActive] = useState(0);
   const stepRefs = useRef<Array<HTMLDivElement | null>>([]);
 
@@ -114,9 +113,9 @@ export function Process() {
     <section className="border-y border-border bg-surface/40">
       <div className="container-page section-y">
         <div className="max-w-2xl">
-          <p className="eyebrow">{t.homePage.processEyebrow}</p>
+          <p className="eyebrow">{copy.processEyebrow}</p>
           <h2 className="editorial mt-3 text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]">
-            {t.homePage.processTitle}
+            {copy.processTitle}
           </h2>
         </div>
 
@@ -130,7 +129,7 @@ export function Process() {
             />
             {STEPS.map((step, index) => {
               const Icon = step.icon;
-              const text = t.homePage.processSteps[index];
+              const text = copy.processSteps[index];
               const isActive = index === active;
               return (
                 <li key={step.id}>
