@@ -268,7 +268,7 @@ export default async function Home() {
         {/* A promise, not awaited: the hero is the page shell and must not
             wait on the catalogue. The chips render at once and their counts
             stream in behind their own boundary. */}
-        <Hero types={loadHome().then((result) => result.home.types)} />
+        <Hero locale={locale} types={loadHome().then((result) => result.home.types)} />
 
         {/* --- featured ------------------------------------------------------ */}
         <section className="container-page section-y">

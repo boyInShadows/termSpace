@@ -1,322 +1,211 @@
 ---
 name: TermSpace
-description: A marketplace for agentic coding tools, dressed as a terminal for the AI era.
+description: A marketplace for agentic coding tools, set as a component datasheet. Only the landing hero is built in this direction so far.
 colors:
-  void: "oklch(14.5% 0.022 286)"
-  void-deep: "oklch(10.5% 0.020 286)"
-  void-surface: "oklch(18.5% 0.026 286)"
-  void-surface-raised: "oklch(23% 0.03 288)"
-  void-muted: "oklch(26% 0.026 286)"
-  void-border: "oklch(30% 0.028 286)"
-  void-border-strong: "oklch(54% 0.036 288)"
-  void-input: "oklch(52% 0.032 286)"
-  starlight: "oklch(96% 0.01 286)"
-  starlight-muted: "oklch(73% 0.024 286)"
-  plasma: "oklch(68% 0.195 292)"
-  plasma-hover: "oklch(74% 0.185 292)"
-  plasma-soft: "oklch(30% 0.085 292)"
-  plasma-ink: "oklch(13% 0.03 292)"
-  signal: "oklch(80% 0.135 196)"
-  signal-soft: "oklch(30% 0.06 200)"
-  signal-ink: "oklch(15% 0.04 220)"
-  ion: "oklch(72% 0.215 340)"
-  verified: "oklch(82% 0.175 152)"
-  caution: "oklch(83% 0.15 85)"
-  alert: "oklch(66% 0.205 22)"
-  plasma-text-1: "oklch(80% 0.150 292)"
-  plasma-text-2: "oklch(78% 0.170 340)"
-  plasma-text-3: "oklch(84% 0.120 200)"
-  daylight: "oklch(97.6% 0.006 286)"
-  daylight-deep: "oklch(94.5% 0.012 286)"
-  daylight-surface: "oklch(99.3% 0.003 286)"
-  daylight-border: "oklch(89.5% 0.012 286)"
-  daylight-ink: "oklch(19% 0.028 286)"
-  daylight-ink-muted: "oklch(45% 0.026 286)"
-  daylight-plasma: "oklch(50% 0.225 292)"
-  daylight-signal: "oklch(50% 0.115 210)"
-  daylight-ion: "oklch(55% 0.235 340)"
-  daylight-verified: "oklch(48% 0.135 152)"
+  ground: "oklch(14.5% 0.022 286)"
+  ink: "oklch(96% 0.01 286)"
+  ink-muted: "oklch(73% 0.024 286)"
+  hairline: "oklch(30% 0.028 286)"
+  header-cell: "oklch(26% 0.026 286)"
+  accent: "oklch(68% 0.195 292)"
+  accent-hover: "oklch(74% 0.185 292)"
+  accent-ink: "oklch(13% 0.03 292)"
+  not-declared: "oklch(66% 0.205 22)"
+  reviewed: "oklch(82% 0.175 152)"
+  ground-light: "oklch(97.6% 0.006 286)"
+  ink-light: "oklch(19% 0.028 286)"
 typography:
-  display:
-    fontFamily: "Newsreader Variable, Newsreader Fallback, Georgia, serif"
-    fontSize: "clamp(2.6rem, 1.2rem + 5.6vw, 4.9rem)"
-    fontWeight: 500
-    lineHeight: 0.98
-    letterSpacing: "-0.03em"
   headline:
-    fontFamily: "Newsreader Variable, Newsreader Fallback, Georgia, serif"
-    fontSize: "1.875rem"
-    fontWeight: 400
-    lineHeight: 1.2
+    fontFamily: "Geist Variable, Geist Fallback, sans-serif"
+    fontSize: "clamp(2.1rem, 1rem + 3.6vw, 3.6rem)"
+    fontWeight: 700
+    lineHeight: 1.04
     letterSpacing: "-0.025em"
-  title:
-    fontFamily: "Newsreader Variable, Newsreader Fallback, Georgia, serif"
+  sheet-title:
+    fontFamily: "Geist Variable, Geist Fallback, sans-serif"
     fontSize: "1.25rem"
-    fontWeight: 600
-    lineHeight: 1.375
+    fontWeight: 700
+    lineHeight: 1.25
     letterSpacing: "-0.025em"
   body:
-    fontFamily: "Geist Variable, Geist Fallback, ui-sans-serif, sans-serif"
-    fontSize: "0.875rem"
+    fontFamily: "Geist Variable, Geist Fallback, sans-serif"
+    fontSize: "1rem"
     fontWeight: 400
-    lineHeight: 1.5rem
-  label:
+    lineHeight: "1.75rem"
+  data:
     fontFamily: "Geist Mono Variable, ui-monospace, monospace"
-    fontSize: "0.75rem"
-    fontWeight: 600
-    lineHeight: 1.1rem
-    letterSpacing: "0.16em"
-  meta:
-    fontFamily: "Geist Variable, Geist Fallback, ui-sans-serif, sans-serif"
+    fontSize: "13px"
+    fontWeight: 400
+    lineHeight: 1.5
+  label:
+    fontFamily: "Geist Variable, Geist Fallback, sans-serif"
     fontSize: "11px"
-    fontWeight: 400
-    lineHeight: 1
-  persian:
-    fontFamily: "Estedad Variable, Geist Variable, sans-serif"
-    fontWeight: 400
-    lineHeight: 1.8
-    letterSpacing: "normal"
+    fontWeight: 600
+    letterSpacing: "0.08em"
 rounded:
-  sm: "0.35rem"
-  md: "0.6rem"
-  lg: "0.9rem"
-  xl: "1.25rem"
-  full: "9999px"
+  none: "0px"
 spacing:
-  gutter: "1rem"
-  card: "20px"
-  section-y: "clamp(4rem, 3rem + 4vw, 7rem)"
-  container-content: "76rem"
-  container-copy: "44rem"
-  grid-cell: "56px"
+  cell-x: "16px"
+  cell-y: "10px"
+  hero-y: "56px"
+  col-gap: "56px"
 components:
-  button-primary:
-    backgroundColor: "{colors.plasma}"
-    textColor: "{colors.plasma-ink}"
-    typography: "{typography.body}"
-    rounded: "{rounded.md}"
+  search-field:
+    backgroundColor: "{colors.ground}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.none}"
+    height: "56px"
+  search-button:
+    backgroundColor: "{colors.accent}"
+    textColor: "{colors.accent-ink}"
+    rounded: "{rounded.none}"
+    height: "44px"
     padding: "0 16px"
-    height: "44px"
-  button-primary-hover:
-    backgroundColor: "{colors.plasma-hover}"
-  button-secondary:
-    backgroundColor: "{colors.void-surface}"
-    textColor: "{colors.starlight}"
-    rounded: "{rounded.md}"
+  search-button-hover:
+    backgroundColor: "{colors.accent-hover}"
+  tag-cell:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.ground}"
+    typography: "{typography.label}"
     padding: "0 16px"
-    height: "44px"
-  button-secondary-hover:
-    backgroundColor: "{colors.void-muted}"
-  button-ghost:
-    textColor: "{colors.starlight}"
-    rounded: "{rounded.md}"
-    padding: "0 16px"
-    height: "44px"
-  button-ghost-hover:
-    backgroundColor: "{colors.void-muted}"
-  button-outline:
-    textColor: "{colors.plasma}"
-    rounded: "{rounded.md}"
-    padding: "0 16px"
-    height: "44px"
-  button-outline-hover:
-    backgroundColor: "{colors.plasma}"
-    textColor: "{colors.plasma-ink}"
-  button-sm:
-    padding: "0 12px"
-    height: "36px"
-  input:
-    backgroundColor: "{colors.void-surface}"
-    textColor: "{colors.starlight}"
-    typography: "{typography.body}"
-    rounded: "{rounded.md}"
-    padding: "0 12px"
-    height: "44px"
-  badge:
-    backgroundColor: "{colors.void-muted}"
-    textColor: "{colors.starlight}"
-    typography: "{typography.meta}"
-    rounded: "{rounded.sm}"
-    padding: "4px 8px"
-  listing-card:
-    backgroundColor: "{colors.void-surface}"
-    textColor: "{colors.starlight}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.card}"
-  trust-chip:
-    textColor: "{colors.starlight}"
-    rounded: "{rounded.xl}"
-    padding: "8px 10px"
+  table-header-cell:
+    textColor: "{colors.accent}"
+    typography: "{typography.label}"
+    padding: "6px 8px"
+  ordering-command:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.ground}"
+    typography: "{typography.data}"
+    padding: "10px 16px"
 ---
-
-<!-- BASELINE (2026-10-16, branch `redesign`): this documents the incumbent
-     "Signal & Void" system as built, before the redesign. Treat it as evidence
-     and anti-reference for the new world, not as the target. Replace this file
-     when the redesign's world is committed. Source of truth for values:
-     styles/tokens.css and styles/globals.css; motion spec: docs/motion.md. -->
 
 # Design System: TermSpace
 
 ## Overview
 
-**Creative North Star: "Signal & Void"**
+**Creative North Star: "The Datasheet"**
 
-A terminal for the AI era: signal separated from noise. The page is a deep, violet-cast void, never grey and never cream. Light shows up in it as emission rather than paint. A single plasma violet carries the brand. A cyan signal marks the technical metadata (versions, commands, live state), the way a cursor marks the active line. The editorial serif headline set against mono labels says the catalog is curated, but the goods are developer tools.
+A listing is a part, and the page shows it the way a component manufacturer would: a title block with a revision table, thin and double rules, numbered sections, tabular values, one header cell in solid ink. The system is typographic and linear. Structure comes from rules and aligned columns, never from fills, shadows or effects. Voice is dry and exact; the hero's example shows what a listing declares (reads, writes, network, compatibility) and prints what it does not.
 
-Density is moderate. Catalog grids are calm cards on a flat surface, and the atmosphere (CSS nebula, optional WebGL plasma field, faint 56px grid, grain) lives only behind the hero. Motion is short and purposeful. Nothing except the hero manifest sequence and the marquee runs longer than 640 ms, and every effect has a reduced-motion end state that renders without script.
-
-Persian (RTL) is first-class. Estedad replaces both faces, tracking and capitals are removed from joined script everywhere, and creator-supplied English inside a Persian page keeps its own direction.
+**Transition (read this first).** Only the landing hero is built in this direction. It owns: the headline, the title block, the search field, the example part (tag cell, name row, features, ratings table, pin diagram, ordering row, footer). Everything else still ships the earlier "Signal & Void" system from `styles/tokens.css` and `styles/globals.css`: the violet "Plasma" primary used as a large-area brand colour, the Newsreader serif `.editorial` headings, the plasma-text gradient tokens, the nebula, `--shadow-soft`/`--shadow-lift`/`--glow-*`, 0.9rem card radius, rounded pill chips, the 160 to 640ms motion tokens, and the header, footer, sections below the hero, dashboard, explore and product pages. Those are slated to be replaced, not extended. Do not add new surfaces in Signal & Void, and do not invent site-wide datasheet tokens: the datasheet uses the existing theme tokens only (ink, ground, hairline, one accent).
 
 **Key Characteristics:**
-- Violet-cast dark void as the default theme; a hand-tuned "Daylight Void" light theme, not an inversion.
-- One brand hue (Plasma 292) covering large areas; cyan Signal (196) only on small technical elements.
-- Plasma → Ion → Signal sweep as the one signature gradient, for display text and hairline rules.
-- Newsreader editorial serif for headings, Geist for UI, Geist Mono for uppercase eyebrows.
-- Terminal motifs: blinking caret in the logo, typed manifest in the hero, mono metadata.
-- Flat tonal surfaces with a hover lift; glow reserved for rare brand moments.
+- Ink on ground, one accent, one red, one green; no gradients, glow, shadows, photography or texture.
+- Square corners inside the sheet and the search; rules do the work of cards.
+- Three-column part with a double rule under its name row; a title-block table beside the headline from `lg`.
+- Geist for words, Geist Mono for values and commands, Estedad for Persian.
+- Static: no animation in the sheet; the sheet is server-rendered markup that works without script.
 
 ## Colors
 
-A violet-tinted night with one emissive brand hue, one technical accent, and a green that is legally a trust claim.
+A two-tone sheet: theme ink on theme ground, with the site's one primary used sparingly as the accent. Values below are the dark default; the light theme (`.light`) swaps ground and ink and deepens the accent, using the same token names.
 
 ### Primary
-- **Plasma** (`plasma`): the brand. Primary buttons, current nav item, favourite heart, focus ring (`plasma-hover`), selected states, `primary-soft` washes. It's the only hue allowed to cover large areas. In light mode it deepens to `daylight-plasma` so it stays legible on paper.
+- **Accent** (`--primary`, oklch(68% 0.195 292) dark): the Search button fill, the table header cells and their 2px bottom rule, section numbers, the ordering-row heading, the rotated part label in the pin diagram, and the search field's focus border. Nothing else.
 
 ### Secondary
-- **Signal** (`signal`): technical precision. Live-status dots, the typed-manifest caret, info states, metadata accents, `glow-signal`. Always small. On paper it becomes `daylight-signal`.
-
-### Tertiary
-- **Ion** (`ion`): the gradient partner. It exists only inside the Plasma → Ion → Signal sweep, the nebula and `rule-plasma` hairlines. It's never a flat fill.
-- **Plasma text stops** (`plasma-text-1..3`): dedicated stops for the headline gradient, pushed for contrast. Every point clears 9:1 on the void (6.5:1 on daylight), and still clears AA at 90% opacity mid-decode.
-
-### Semantic
-- **Verified** (`verified`, also `--success`): trust, safety and verification. Nothing else.
-- **Caution** (`caution`) and **Alert** (`alert`): warning badges and destructive actions respectively.
+- **Not-declared red** (`--destructive`, oklch(66% 0.205 22)): only the bordered "not declared" status mark in the ratings table.
+- **Reviewed green** (`--verified`, oklch(82% 0.175 152)): reserved for review state. The shipped hero does not use it yet (the title block prints "Reviewed" in ink); do not use it for anything that is not a review claim.
 
 ### Neutral
-- **Void** (`void`): page background. `void-deep` sits behind it for recessed bands.
-- **Void Surface** (`void-surface`): cards, inputs, secondary buttons. `void-surface-raised` is for popovers and stacked panels.
-- **Void Muted** (`void-muted`): hover fills, badge backgrounds, disabled inputs.
-- **Void Border** (`void-border`): every default hairline (applied globally to `*`). `void-border-strong` is for card hover, secondary-button outlines and focused containers. `void-input` is for field strokes.
-- **Starlight** (`starlight`): body text. `starlight-muted` is for secondary copy and eyebrows (8.25:1 on the void, 6.98:1 on daylight).
-- **Daylight set** (`daylight-*`): the light theme keeps the same 286 violet cast so the brand survives the switch.
+- **Ground** (`--background`): the page and the search field.
+- **Ink** (`--foreground`): text, strong rules at 60% opacity, and the solid tag cell, title-block header and install command (ink fill, ground text).
+- **Ink muted** (`--muted-foreground`): meta lines, labels in the title block, undeclared dashes.
+- **Hairline** (`--border`): row dividers inside tables and lists, the hero's bottom edge.
+- **Header cell** (`--muted`): the "Find a listing" cell and the ordering heading cell.
 
 ### Named Rules
-**The Plasma Coverage Rule.** Plasma is the only colour allowed to cover large areas. Every other hue is a detail.
+**The One Accent Rule.** Accent is a mark, not a surface. It appears on the Search button, table header rule and numerals, and nowhere as a panel or background wash.
 
-**The Signal Stays Small Rule.** Signal lives on dots, carets, version chips and info text. If a Signal shape is bigger than a button, it's wrong.
+**The Red Means Absent Rule.** Red marks "not declared" and nothing else. It is never an error colour inside the sheet.
 
-**The Ion Never Fills Rule.** Ion appears only inside gradients. A flat Ion fill breaks the system.
-
-**The Verified Lock Rule.** If it's green, it's a trust claim. Green never decorates.
+**The Strong-Rule Rule.** Outer frames and column dividers are ink at 60% (`border-foreground/60`); interior row dividers are the hairline token. Two weights, no third.
 
 ## Typography
 
-**Display Font:** Newsreader Variable (with a metric-matched Times New Roman fallback, then Georgia)
-**Body Font:** Geist Variable (with a metric-matched Arial fallback)
-**Label/Mono Font:** Geist Mono Variable
-**Persian:** Estedad Variable replaces both the serif and the sans under `dir="rtl"`
+**Display and Body Font:** Geist (Variable, with a metric-matched local fallback)
+**Data Font:** Geist Mono (Variable)
+**Persian:** Estedad (Variable), replacing both on `html[dir="rtl"]`
 
-**Character:** a literary serif with tight negative tracking over an engineered grotesk and a mono label voice. It's a curated publication about command-line tools.
+**Character:** Plain grotesque headline, bold and tight, with mono used strictly for values the reader might copy or compare.
 
 ### Hierarchy
-- **Display** (500, `clamp(2.6rem, 1.2rem + 5.6vw, 4.9rem)`, 0.98): the hero headline only, usually wrapped in `.text-plasma`. Persian caps it at `clamp(2.6rem, 6.5vw, 4.4rem)`.
-- **Headline** (400, 1.875–2.25rem, -0.025em): section and page `h2`s, always with the `.editorial` class.
-- **Title** (600, 1.25rem, 1.375): listing card names and panel titles. The serif stays.
-- **Body** (400, 0.875rem / 1.5rem): almost all UI copy. Long-form copy is capped at `container-copy` (44rem).
-- **Label** (600, 0.75rem, 0.16em, uppercase, mono): `.eyebrow` above headings and on metadata. In Persian it switches to Estedad with no tracking and no capitals.
-- **Meta** (11px): card footers, badges, ratings, dates. Dates and versions are wrapped `dir="ltr"`.
+- **Headline** (700, clamp(2.1rem, 1rem + 3.6vw, 3.6rem), 1.04, -0.025em): the hero h1, two balanced blocks. Persian runs clamp(1.9rem, 1rem + 2.8vw, 2.9rem) at 600 weight and 1.35 leading.
+- **Sheet title** (700, 1.25rem to 1.5rem at `sm`, tight): the example listing's name.
+- **Body** (400, 1rem to 1.125rem at `sm`, 1.75 to 2rem leading, muted): hero introduction, max 42rem.
+- **Data** (13px): the two known 13px sizes, the ratings table text and the install command at `sm` and up. Values in the table cell are mono at 12px; the command drops to 11px on phones and wraps.
+- **Small** (12px, `text-xs`): title-block rows, meta line, footer, status marks.
+- **Label** (600, 11px, 0.08em tracking, uppercase): tag cell, table header cells, section headings, "Find a listing", "Pinned". Persian drops tracking and capitals globally (`html[lang="fa"]`), so labels there differ by size and weight only.
 
 ### Named Rules
-**The Joined Script Rule.** No tracking and no capitals on Persian text, anywhere. Eyebrows are told apart by colour and size alone. Latin data islands (`dir="ltr"`) keep their styling.
+**The Mono Is Data Rule.** Geist Mono is for versions, hashes, commands and table values. Prose and filters stay in Geist. In Persian, values that are not Latin fall back to Estedad (`rtl:font-sans`), because the mono face has no Persian glyphs.
 
-**The Bidi Plaintext Rule.** Creator-supplied text (`.ts-bidi`) takes its direction from its first strong character, so English in a Persian page keeps its full stop at the end.
-
-**The Metric Fallback Rule.** Every web font has a size-adjusted local fallback, so the swap never moves text.
+**The Latin Island Rule.** Versions, document numbers, hashes and the command are wrapped `dir="ltr"` (`bdi`) so they hold their shape inside Persian text.
 
 ## Layout
 
-The layout is one centred column, `min(100% - 2rem, 76rem)` (`.container-page`). That gives a 1rem gutter on phones and caps at 76rem. Prose caps at 44rem. Every page section uses the same vertical rhythm, `--section-y` (`clamp(4rem, 3rem + 4vw, 7rem)`). That replaced per-section padding pairs, which left ~250 px of dead space at wide widths.
+One centred column, `container-page` (`min(100% - 2rem, 76rem)`). The hero is vertically padded 2.5rem, 3.5rem from `lg`. From `lg` the top is a two-column grid: headline on the left, an 18rem title block on the right, 3.5rem gap; below `lg` the title block is dropped, because the example repeats its facts. The search runs full width under it (2rem gap). The example part sits 2.5rem below.
 
-The header is sticky: 64 px, condensing to 56 px on scroll. It sits on `void` at 80% opacity with a heavy backdrop blur. A plasma hairline along its bottom edge doubles as the reading-progress bar. Primary nav shows from `md` up. Below that, the menu is a sticky sheet under the header. There's an extra `xs` breakpoint at 30rem. Cards sit in responsive grids with a list variant that becomes a row from `sm`, its footer moving to a 16rem inline-end column. Card internals use a floor height on the clamped outcome line so every card in a row reaches its divider at the same y.
-
-All direction-sensitive spacing uses logical properties (`ms-`, `pe-`, `border-s`). Directional icons flip under `rtl:`.
+The part is a single bordered box with horizontal bands: a name row (tag cell, name and meta, revision cell from `sm`), three columns from `lg` in the ratio `1fr 1.55fr 1fr` (features, ratings, compatibility) with cell padding 1rem, an ordering row (`auto auto 1fr` from `sm`), and a footer line. On phones everything stacks and each band is divided by a strong rule. Mirrored in RTL through logical properties (`border-s`, `ps-`, `me-`); the pin diagram stays left-to-right.
 
 ### Named Rules
-**The One Rhythm Rule.** Sections never set their own block padding. They use `.section-y`.
+**The Ruled-Cell Rule.** Regions are separated by a rule and cell padding, not by gaps between floating boxes.
 
 ## Elevation & Depth
 
-Surfaces are flat and tonal at rest. Depth comes from the void → surface → surface-raised lightness steps and hairline borders. Lift appears as a response to state: a 2 px rise plus `shadow-lift` on hover (`.ts-lift`, cards). Glow is light being emitted, used on a few brand moments (the browse section, the home page, the process panel) and never as structure. Translucent blurred `.panel`s are kept for elements floating over the hero atmosphere, such as trust chips.
-
-### Shadow Vocabulary
-- **Soft** (`--shadow-soft`): resting separation for floating elements. It's barely visible on the void.
-- **Lift** (`--shadow-lift`): hover and active elevation for cards and trust chips.
-- **Plasma glow** (`--glow-plasma`, utility `shadow-plasma`): a 1 px plasma ring plus a 34 px plasma bloom, for brand moments only.
-- **Signal glow** (`--glow-signal`, utility `shadow-signal`): a 28 px cyan bloom on live and technical highlights.
-
-Exact values for both themes are in the sidecar and in `styles/tokens.css`.
+None. The sheet and the search are flat: no shadows, gradients, glow, blur or translucency. Depth is conveyed by weight of rule (the 3px double rule under the name row, ink-filled cells) and by one inverted ink cell per band. Focus is the one state change: the search field border goes to the accent with a 2px ring at 25% opacity, and global `:focus-visible` outlines (2px, offset 3px) apply to links and buttons.
 
 ### Named Rules
-**The Emission Rule.** Glow means something is emitting signal. If nothing is live or branded, there's no glow.
-
-**The Atmosphere Stays Behind the Hero Rule.** The nebula, plasma field, grid field and grain belong to the hero. Catalog and dashboard surfaces stay quiet.
+**The No-Decoration Rule.** Nothing in the sheet exists only to look good: no icon without a function, no fill without information, no ornament. The pin diagram is the only drawing, and it states compatibility.
 
 ## Shapes
 
-Corners are gentle and step up with the element's size: small for badges (0.35rem), medium for buttons and inputs (0.6rem), large for cards (0.9rem), extra-large for trust chips and hero panels (1.25rem). Pills (`full`) are for community tags, status dots and avatars. Borders are 1 px hairlines. The logo is a lowercase serif wordmark followed by a 2 px plasma caret that blinks with `steps(2)`, like a real cursor, not a fade.
-
-**Known drift (baseline).** Tailwind's default `rounded-2xl` (1rem) is used on moderation and dashboard panels and is *smaller* than this system's `rounded-xl` (1.25rem), so the scale inverts there. `rounded-[var(--radius-card)]` duplicates `rounded-lg`.
+Square. `rounded-none` on the search field and its button, and every cell and frame of the sheet. Bullets in the features list are 6px hollow squares. The signature geometry is the part's double rule (`3px double`, ink at 60%) under the name row and the IC-style notch drawn in the pin diagram: a rectangle with a semicircular notch at its top edge and three lead lines left, dashed "NC" leads right.
 
 ## Components
 
-### Buttons
-Confident, tactile and quick. A 1 px rise on hover, settling in 80 ms on press.
-- **Shape:** gently rounded (`rounded.md`), 44 px minimum height (36 px `sm`, 48 px `lg`, 44 px square `icon`).
-- **Primary:** Plasma fill, plasma-ink text, semibold 0.875rem, and a small shadow. On hover it changes to `plasma-hover`.
-- **Secondary:** Void Surface with a strong border and Starlight text, changing to Void Muted on hover. It's the "View details" button on cards, and it turns plasma as the card is hovered.
-- **Ghost:** text only, with a Void Muted fill on hover. Used for header actions, the language switch and icon buttons.
-- **Outline:** a Plasma border and text that fill solid on hover.
-- **Destructive:** an Alert fill.
-- **Focus:** a 2 px Plasma ring with a 2 px void offset. Disabled is 45% opacity with no pointer events.
+### Search field
+- **Shape:** square, 1px ink-60% border, ground fill, 56px tall input.
+- **Label cell:** from `sm`, a `--muted` cell on the left reading "Find a listing" in the label style, divided by a strong rule.
+- **Button:** accent fill, accent-ink text, square, 44px tall, 16px padding, hover to the lighter accent; on phones an icon-only 44px square.
+- **Focus:** accent border plus a 2px ring at 25%.
+- **Under it:** type shortcuts as plain underlined text, minimum 32px high; muted with a hairline underline, ink and semibold when active.
+- **Carried, not canonical:** the hero search still shares the band variant's code: a typing placeholder (disabled under reduced motion), a lucide Search glyph, and a suggestions dropdown with rounded-xl corners, `--shadow-lift` and lucide icons. These are Signal & Void remnants.
 
-### Badges / Chips
-- **Style:** small radius, 1 px border, 11 px semibold, with tinted variants at 10% fill / 20–25% border: Plasma ("Editor's pick"), Caution ("Trending"), Verified, Signal (info), and Outline for community tags.
-- **Trust chip:** a signature chip. It's a blurred `.panel` with `rounded.xl` and lift shadow, a 24 px icon tile, an 11 px label and a 9 px mono uppercase sub-line. The same component states one claim on the hero and on the detail header.
+### Title block
+Bordered table beside the headline. Header row in solid ink with ground text and label type ("Title block · example", "1/1"). Rows: document, revision, safety review, pinned release; muted 12px keys, mono values for codes, hairline dividers.
 
-### Cards / Containers
-- **Listing card:** `rounded.lg`, Void Surface, hairline border, 20 px padding. On hover it lifts by 2 px, its border strengthens and it picks up `shadow-lift`. With focus inside, its border turns Plasma. The layout is type badges and a favourite heart, then the serif title (which shares a view-transition name with the detail header and morphs into it), a two-line clamped outcome, the creator, community pills, a divided footer with compatibility, meta, and the action.
-- **Panels:** Void Surface with a hairline border and 20–28 px padding, holding dashboard and moderation sections.
+### Tag cell
+Solid ink, ground text, label type, full height of the name row: "Example listing". It is the label that tells the reader the part is synthetic; the footer repeats it.
 
-### Inputs / Fields
-- **Style:** 44 px, `rounded.md`, a Void Input stroke on Void Surface, muted placeholder. The stroke strengthens on hover.
-- **Focus:** the border turns Plasma, plus a 2 px ring at 20% Plasma.
-- **Disabled:** Void Muted fill at 60% opacity.
+### Ratings table
+"Absolute maximum ratings". Header cells in accent label type over a 2px accent bottom rule; row headers semibold; values mono 12px; status column 12px. A declared status is plain mono; a "not declared" status is a 1px red-bordered square mark in bold red; an empty parameter is a muted em dash. Table text is 13px.
 
-### Navigation
-- **Header nav:** 0.875rem with 32 px gaps. Hover turns the link Plasma and grows a `rule-plasma` underline from the inline start. The current route is semibold Plasma and keeps its underline.
-- **Announcement bar:** a 36 px strip above the header with a Signal dot, muted text and a Plasma link.
-- **Mobile:** stacked links in a blurred sheet under the header, separated by hairlines.
+### Pin diagram
+Inline SVG, 1.2px lines in currentColor, no fills: a labelled part body, three pins (platform names right-aligned, pin numbers above the leads), dashed 40% leads marked "NC" on the far side, and a rotated bold accent label. Max width 17rem, `role="img"` with a full-sentence label.
 
-### Hero manifest sequence (signature)
-A terminal card that types a manifest one monospace character at a time (`clip-path` stepping by `1ch`). It has a Signal block caret, rows that fade up 4–6 px, and chips that spring in. Lines are laid out from the start and only revealed, so the card never changes size. Under reduced motion the finished frame renders from first paint with no script. The stage carries a resting 3D tilt (−3° X, −9° Y) that the pointer and scroll add to.
+### Ordering row
+Heading cell on `--muted` with accent label type and a mono numeral, a "Pinned" label with its mono hash, and the install command in a solid ink band: mono, a 60% opacity `$` prompt, 13px from `sm`.
+
+### Named Rules
+**The Example-Is-Labelled Rule.** Synthetic content is named as such twice, in the tag cell and in the footer. Never show a made-up listing as real.
+
+**The State-Absence Rule.** Undeclared is printed, never omitted: a parameter with no declaration keeps its row, shows a dash or a red "not declared" mark, and is never hidden to make a listing look cleaner.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** reference colours through the theme tokens (`bg-primary`, `text-muted-foreground`), never raw OKLCH in components, so both themes work.
-- **Do** keep Plasma as the only large-area colour, and keep Signal on elements no bigger than a button.
-- **Do** use `.editorial` for every heading and `.eyebrow` for every label above one.
-- **Do** use `.section-y` and `.container-page` for every section.
-- **Do** give every effect a reduced-motion end state that renders without script. Use durations from the token set (80–640 ms) and `--ease-out-expo` for entrances.
-- **Do** use `data-enter="nudge"` (rise, no fade) on the LCP text. A fade on it costs ~430 ms of mobile LCP.
-- **Do** use logical properties and `rtl:` icon flips, and wrap versions, commands and dates in `dir="ltr"`.
+- **Do** build new sheet surfaces from the existing theme tokens only: ink, ground, hairline, `--muted`, `--primary`, `--destructive`, `--verified`.
+- **Do** use the two rule weights: `border-foreground/60` for structure, `border-border` for rows.
+- **Do** set values and commands in Geist Mono, wrapped in `dir="ltr"`, and give Persian its own face and no tracking.
+- **Do** number sections with accent mono numerals and put labels at 11px, 0.08em, uppercase.
+- **Do** keep the sheet static and readable without JavaScript; targets at least 24px (shortcuts 32px, buttons 44px).
+- **Do** print "not declared" rows and mark examples as examples.
 
 ### Don't:
-- **Don't** use Ion as a flat fill, or green for anything that isn't a trust claim.
-- **Don't** put tracking or uppercase on Persian text.
-- **Don't** put the nebula, grid field or glow on catalog or dashboard surfaces.
-- **Don't** cancel the focus ring with `outline-none` unless a ring replaces it.
-- **Don't** set type below 11 px. The trust chip's 9 px sub-line and the stray 10 px labels are baseline drift, not precedent.
-- **Don't** invent tracking values. The baseline already scatters 0.12em, 0.14em and 0.16em; the eyebrow's 0.16em is the token.
-- **Don't** reach for `rounded-2xl`. It sits below `rounded-xl` in this scale.
+- **Don't** use gradients, glow, shadows, blur, photography or textures on the datasheet, and don't reintroduce the nebula or a gradient headline.
+- **Don't** round the corners of the sheet or the hero search.
+- **Don't** use accent as a panel, card or background fill, or red for anything but absence.
+- **Don't** hide undeclared rows, or ship an unlabelled example.
+- **Don't** extend Signal & Void for new surfaces: the Plasma large-area primary, Newsreader `.editorial` headings, pill chips, `--shadow-*`/`--glow-*` and the long motion tokens remain on the header, footer, lower sections, dashboard, explore and product pages and are slated to be replaced. Reuse of them is a migration debt, not a precedent.
+- **Don't** treat the hero search's carried remnants (suggestions dropdown shape and shadow, placeholder typing, lucide glyphs) as part of the datasheet system.

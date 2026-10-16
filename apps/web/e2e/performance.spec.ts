@@ -1,7 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-const isMobile = (projectName: string) => projectName.startsWith("mobile");
-
 test.describe("performance wiring", () => {
   test("preloads exactly the two fonts the English first paint needs", async ({ request }) => {
     const html = await (await request.get("/")).text();
@@ -15,25 +13,16 @@ test.describe("performance wiring", () => {
     expect(html).toMatch(/<link[^>]+rel="preload"[^>]+href="\/fonts\/estedad-arabic-wght-v5\.3\.0\.woff2"/);
   });
 
-  test("phones get the CSS nebula and never a WebGL canvas", async ({ page }, testInfo) => {
-    test.skip(!isMobile(testInfo.project.name), "Phone tier only.");
+  test("the hero draws no canvas and starts no animation on any device", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("[data-plasma-tier]")).toHaveAttribute("data-plasma-tier", "css");
-    await page.waitForTimeout(3_000);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await page.waitForTimeout(1_500);
     await expect(page.locator("canvas")).toHaveCount(0);
-  });
-
-  test("a capable desktop is offered the WebGL tier", async ({ page }, testInfo) => {
-    test.skip(isMobile(testInfo.project.name), "Desktop tier only.");
-    await page.goto("/");
-    await expect(page.locator("[data-plasma-tier]")).toHaveAttribute("data-plasma-tier", "webgl");
-  });
-
-  test("reduced motion holds the nebula still", async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
-    await expect(page.locator("[data-plasma-tier]")).toHaveAttribute("data-plasma-tier", "static");
-    await expect(page.locator(".ts-nebula-swirl")).toHaveCSS("animation-name", "none");
+    await expect(page.locator("[data-plasma-tier]")).toHaveCount(0);
+    const running = await page.locator("main section").first().evaluate((node) =>
+      node.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running").length,
+    );
+    expect(running).toBe(0);
   });
 });
 

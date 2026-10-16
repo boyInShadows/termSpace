@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
 import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 import { useStoredString } from "@/lib/hooks/use-stored-string";
+import { formatNumber } from "@/lib/format";
 import type { MarketplaceTypeCount } from "@/lib/types";
 
 /** The `type` values the shortcut chips filter on; labels come from i18n. */
@@ -55,8 +56,14 @@ function parseRecent(raw: string | null): string[] {
 export function ConsoleSearch({
   variant = "band",
   types,
+  label,
+  browseLabel,
 }: {
   variant?: "hero" | "band";
+  /** Hero only: a visible label cell at the start of the field. */
+  label?: string;
+  /** Hero only: the text before the type shortcuts. */
+  browseLabel?: string;
   /**
    * Per-type listing counts, or a promise of them.
    *
@@ -141,24 +148,38 @@ export function ConsoleSearch({
       <form
         action="/explore"
         onSubmit={() => remember(query)}
-        className={cn("group relative", isHero ? "max-w-xl" : "mx-auto max-w-3xl")}
+        className={cn("group relative", isHero ? "w-full" : "mx-auto max-w-3xl")}
       >
-        {/* Plasma bloom behind the field — the only place on the page where
-            the brand gradient touches a form control. */}
-        <div
-          aria-hidden
-          className="absolute -inset-px rounded-xl opacity-0 blur-md transition-opacity duration-500 group-focus-within:opacity-70"
-          style={{
-            background:
-              "linear-gradient(100deg, var(--primary), var(--spark), var(--accent))",
-          }}
-        />
+        {/* Plasma bloom behind the field. The hero is plain: its field is a
+            ruled box that takes the accent on focus. */}
+        {!isHero && (
+          <div
+            aria-hidden
+            className="absolute -inset-px rounded-xl opacity-0 blur-md transition-opacity duration-500 group-focus-within:opacity-70"
+            style={{
+              background:
+                "linear-gradient(100deg, var(--primary), var(--spark), var(--accent))",
+            }}
+          />
+        )}
 
         {/* The active scope travels with the form, so pressing Enter searches
             inside it and an empty query still lands on that type's listing. */}
         {scope && <input type="hidden" name="type" value={scope} />}
 
-        <div className="relative flex items-center rounded-xl border border-border-strong bg-surface/90 shadow-soft backdrop-blur transition-colors focus-within:border-transparent">
+        <div
+          className={cn(
+            "relative flex items-center transition-colors",
+            isHero
+              ? "overflow-hidden rounded-none border border-foreground/60 bg-background focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/25"
+              : "rounded-xl border border-border-strong bg-surface/90 shadow-soft backdrop-blur focus-within:border-transparent",
+          )}
+        >
+          {isHero && label && (
+            <span className="hidden self-stretch whitespace-nowrap border-e border-foreground/60 bg-muted px-4 text-[11px] font-semibold uppercase tracking-[0.08em] sm:flex sm:items-center">
+              {label}
+            </span>
+          )}
           <Search
             size={19}
             className="ms-5 shrink-0 text-muted-foreground transition-colors group-focus-within:text-primary"
@@ -189,15 +210,15 @@ export function ConsoleSearch({
           />
           <button
             type="submit"
-            className="me-2 hidden h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover sm:flex"
+            className={cn("me-2 hidden h-11 items-center gap-2 bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover sm:flex", isHero ? "rounded-none" : "rounded-lg")}
           >
             {t.homePage.searchCta}
-            <CornerDownLeft size={14} aria-hidden />
+            {!isHero && <CornerDownLeft size={14} aria-hidden />}
           </button>
           <button
             type="submit"
             aria-label={t.homePage.searchCta}
-            className="me-2 grid size-11 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground transition hover:bg-primary-hover sm:hidden"
+            className={cn("me-2 grid size-11 shrink-0 place-items-center bg-primary text-primary-foreground transition hover:bg-primary-hover sm:hidden", isHero ? "rounded-none" : "rounded-lg")}
           >
             <Search size={17} aria-hidden />
           </button>
@@ -242,20 +263,24 @@ export function ConsoleSearch({
 
       <div
         className={cn(
-          "mt-5 flex flex-wrap gap-2",
-          isHero ? "justify-start" : "justify-center",
+          "flex flex-wrap",
+          isHero ? "mt-3 items-center gap-x-1 gap-y-1 text-sm" : "mt-5 justify-center gap-2",
         )}
       >
+        {isHero && browseLabel && (
+          <span className="me-2 font-semibold">{browseLabel}</span>
+        )}
         {types && !Array.isArray(types) ? (
-          <Suspense fallback={<ScopeChips scope={scope} onToggle={setScope} />}>
+          <Suspense fallback={<ScopeChips scope={scope} onToggle={setScope} plain={isHero} />}>
             <CountedScopeChips
               typesPromise={types}
               scope={scope}
               onToggle={setScope}
+              plain={isHero}
             />
           </Suspense>
         ) : (
-          <ScopeChips types={types} scope={scope} onToggle={setScope} />
+          <ScopeChips types={types} scope={scope} onToggle={setScope} plain={isHero} />
         )}
       </div>
     </div>
@@ -266,12 +291,14 @@ function CountedScopeChips({
   typesPromise,
   scope,
   onToggle,
+  plain,
 }: {
   typesPromise: Promise<MarketplaceTypeCount[]>;
   scope: string | null;
   onToggle: (value: string | null) => void;
+  plain?: boolean;
 }) {
-  return <ScopeChips types={use(typesPromise)} scope={scope} onToggle={onToggle} />;
+  return <ScopeChips types={use(typesPromise)} scope={scope} onToggle={onToggle} plain={plain} />;
 }
 
 /**
@@ -287,12 +314,15 @@ function ScopeChips({
   types = [],
   scope,
   onToggle,
+  plain = false,
 }: {
   types?: MarketplaceTypeCount[];
   scope: string | null;
   onToggle: (value: string | null) => void;
+  /** Quiet underlined text instead of pills (the hero). */
+  plain?: boolean;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   return (
     <>
       {SHORTCUTS.map((value) => {
@@ -308,15 +338,21 @@ function ScopeChips({
             className={cn(
               // Sans, not mono: these are filters, and in monospace they read
               // as code tokens rather than as things you can press.
-              "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3.5 text-xs font-medium transition",
-              isActive
-                ? "border-primary bg-primary-soft text-primary"
-                : "border-border bg-surface/60 text-muted-foreground hover:border-primary/50 hover:text-primary",
+              plain
+                ? "inline-flex min-h-8 items-center gap-1 px-1.5 underline underline-offset-4 transition-colors"
+                : "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3.5 text-xs font-medium transition",
+              plain
+                ? isActive
+                  ? "font-semibold text-foreground decoration-foreground"
+                  : "text-muted-foreground decoration-border hover:text-foreground hover:decoration-foreground"
+                : isActive
+                  ? "border-primary bg-primary-soft text-primary"
+                  : "border-border bg-surface/60 text-muted-foreground hover:border-primary/50 hover:text-primary",
             )}
           >
             {label}
             {count !== null && (
-              <span className="font-mono text-xs">· {count}</span>
+              <span className="font-mono text-xs">· {formatNumber(count, locale)}</span>
             )}
             {isActive && <X size={12} aria-hidden />}
           </button>

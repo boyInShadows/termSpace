@@ -4,6 +4,53 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-16
 
+- **Landing hero rebuilt as a component datasheet (branch `redesign`,
+  `apps/web` presentation lane at the maintainer's request).** Direction chosen
+  by the maintainer from the decision round: The Datasheet, with the site's
+  existing Geist, Geist Mono and Estedad (no new font files). Contract in
+  `.impeccable/surfaces/app-page-tsx.md`.
+  - `components/hero/hero.tsx` (now a server component) and new
+    `components/hero/datasheet.tsx`: headline and subcopy, a title block (from
+    `lg`), the search with a "Find a listing" cell and a quiet "Browse by type"
+    line, and one synthetic example listing set as a part: features, an Absolute
+    Maximum Ratings table (undeclared rows marked in red, not omitted), a plain
+    SVG pin diagram, ordering information with the pinned release and install
+    command, and a footer. Labelled "Example listing" in three places. Static
+    markup, no animation, readable without JavaScript.
+  - Removed: the nebula, the WebGL plasma field, the typed manifest card, the
+    platform ticker, the 3D stage, the scroll-progress hook, the pointer store
+    and their CSS, tests and copy keys (`components/hero/*` old files,
+    `components/motion/marquee.tsx`, `lib/pointer.ts`,
+    `lib/hooks/use-scroll-progress.ts`). "Share your work" left the hero
+    (it stays in the header). `docs/motion.md` rewritten to match.
+  - Copy: the sheet's text is in `lib/i18n/home-sections.ts` (server-only, so it
+    costs the page no JavaScript), English and Persian. **The Persian text was
+    written by the assistant and awaits the maintainer's review.**
+  - `components/sections/console-search.tsx`: the hero variant is a ruled,
+    square field with a visible label cell and underlined type shortcuts (counts
+    now use the locale's digits); search behaviour is unchanged, including the
+    placeholder that types through example intents (the hero's own visuals do
+    not animate, the placeholder is search behaviour; say if you want it
+    static).
+  - Accent: the sketch's blue became the site's existing primary violet (Search
+    and the table header rule) until the system-wide recolour; red marks "not
+    declared"; green stays reserved for review state (the hero prints "Reviewed"
+    in ink, so it uses none).
+  - Finish review (fresh reviewer): disposition fix, seven items, all applied:
+    Persian part-header alignment, an "example" mark on the title block, one
+    block per headline sentence, square search grammar, Persian digits for
+    counts, light-theme capture, and a corrected seed line in the brief (the
+    roll printed no reference; the owner's pick overrode it).
+  - Measured: home first-load JS 181.0 KiB (was 186.9), gate lowered from 190 to
+    184; Lighthouse mobile (mock) perf 0.93, a11y 1.0, CLS 0, TBT 20 to 30 ms
+    (was 40); simulated LCP unchanged at 3.2 s (see `pending.md`).
+  - Verification: typecheck, lint, 157 unit tests, full e2e 118 passed and 16
+    skipped (landing and Persian specs rewritten for the new hero; new checks for
+    the labelled example, an undeclared row marked, search above the fold on a
+    phone, no canvas and no running animation), root build. Not done: a real
+    phone. `DESIGN.md` and `.impeccable/design.json` were regenerated from the
+    built hero (the rest of the site still ships Signal & Void and the document
+    says so).
 - **Design context and hero direction (branch `redesign`, no behaviour change).**
   - New `apps/web/PRODUCT.md`: users, purpose, positioning (declared permissions
     and provenance), constraints (free, external sources, untrusted

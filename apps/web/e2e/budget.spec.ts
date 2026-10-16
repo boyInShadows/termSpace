@@ -15,9 +15,11 @@ import { expect, test } from "@playwright/test";
 // Ratchet, like lighthouserc.cjs: gated at the measured baseline plus
 // headroom (/ 185 kB, /dashboard 182 kB on 2026-09-24; the detail page
 // 189 kB when added in P4). The plan's targets are 170, 200 and 180; move a
-// gate down when a phase meets it, never back up.
+// gate down when a phase meets it, never back up. `/` moved from 190 to 184
+// kB on 2026-10-16 when the datasheet hero removed the WebGL field, the
+// manifest card and the ticker (181.0 kB measured).
 const BUDGETS_KB: Record<string, number> = {
-  "/": 190,
+  "/": 184,
   "/dashboard": 200,
   "/products/conversion-copywriter": 195,
 };

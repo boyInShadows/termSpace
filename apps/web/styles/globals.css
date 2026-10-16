@@ -115,7 +115,9 @@ html[lang="fa"] .editorial {
   line-height: 1.35;
 }
 html[lang="fa"] .ts-hero-title {
-  font-size: clamp(2.6rem, 6.5vw, 4.4rem);
+  font-size: clamp(1.9rem, 1rem + 2.8vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1.35;
 }
 /* No tracking and no capitals on Persian text, anywhere: tracking pulls a
    joined script apart. Eyebrows are told apart by colour and size alone.
@@ -173,16 +175,6 @@ select {
   color: var(--muted-foreground);
 }
 
-/* Plasma → Ion sweep. The single signature gradient of the brand.
-   Uses the dedicated --plasma-text-* stops, not the UI colours: this is the
-   only place the brand gradient carries readable text, so the stops are tuned
-   for contrast rather than for fills. */
-.text-plasma {
-  background: linear-gradient(102deg, var(--plasma-text-1) 0%, var(--plasma-text-2) 52%, var(--plasma-text-3) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
 
 .rule-plasma {
   background: linear-gradient(90deg, transparent, var(--primary), var(--spark), transparent);
@@ -208,22 +200,7 @@ select {
   backdrop-filter: blur(12px);
 }
 
-.grid-field {
-  background-image:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 56px 56px;
-}
 
-.noise::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.5;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
-}
 
 /* --- fonts ----------------------------------------------------------------
    Self-hosted from public/fonts; lib/fonts.ts lists what the root layout
@@ -284,27 +261,6 @@ select {
 }
 
 /* --- motion primitives ------------------------------------------------- */
-@keyframes ts-rise {
-  from {
-    opacity: 0;
-    transform: translate3d(0, var(--rise-from, 22px), 0);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes ts-marquee {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-50%, 0, 0); }
-}
-/* An RTL track is anchored at the right edge, so it has to travel the other
-   way; running the LTR keyframes in reverse would open a gap at the right. */
-@keyframes ts-marquee-rtl {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(50%, 0, 0); }
-}
 
 /* The logo's terminal caret. `steps(2)` so it snaps on and off like a real
    cursor instead of fading, which would read as a pulsing decoration. The
@@ -314,31 +270,7 @@ select {
   50% { opacity: 0; }
 }
 
-@keyframes ts-pulse-ring {
-  0% { opacity: 0.85; transform: scale(1); }
-  70%, 100% { opacity: 0; transform: scale(2.4); }
-}
-
-@keyframes ts-drift {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(0, -14px, 0); }
-}
-
-@keyframes ts-scan {
-  from { transform: translate3d(0, -100%, 0); }
-  to { transform: translate3d(0, 900%, 0); }
-}
-
-/* Every marquee state lives here, not in utility classes on the element: this
-   rule is unlayered, so it would override any layered utility that tried to
-   pause or turn the animation. */
-.animate-marquee { animation: ts-marquee var(--marquee-duration, 42s) linear infinite; }
-[dir="rtl"] .animate-marquee { animation-name: ts-marquee-rtl; }
-.animate-marquee[data-reverse] { animation-direction: reverse; }
-.group:hover > .animate-marquee,
-.group:focus-within > .animate-marquee { animation-play-state: paused; }
 .ts-caret { animation: ts-blink 1.15s steps(2, jump-none) infinite; }
-.animate-drift { animation: ts-drift 7s var(--ease-out-quart) infinite; }
 
 /* Each line of the pinned process panel cross-fades in when the step
    changes. React remounts them (the key includes the value), so the animation
@@ -349,25 +281,6 @@ select {
 }
 .ts-panel-line {
   animation: ts-fade var(--duration-panel) var(--ease-out-expo) backwards;
-}
-
-/* --- page-load entrance ---------------------------------------------------
-   Above the fold, once, in reading order: pass --enter-i as 0, 1, 2…
-   CSS only, so it runs on the server-rendered HTML before hydration. */
-.ts-enter {
-  --rise-from: 8px;
-  animation: ts-rise var(--duration-enter) var(--ease-out-expo) backwards;
-  animation-delay: calc(var(--enter-i, 0) * var(--stagger-enter));
-}
-/* For the largest text above the fold: the rise without the fade. The
-   browser does not count an element as painted while its opacity is 0, so a
-   fade on an LCP candidate delays LCP by its whole stagger and more under a
-   throttled CPU. Measured: +430ms on mobile. */
-@keyframes ts-nudge {
-  from { transform: translate3d(0, 8px, 0); }
-}
-.ts-enter[data-enter="nudge"] {
-  animation-name: ts-nudge;
 }
 
 /* --- hover lift -----------------------------------------------------------
@@ -404,54 +317,6 @@ select {
   }
 }
 
-/* --- hero atmosphere -------------------------------------------------------
-   The CSS nebula: what the server renders, what phones keep, and what sits
-   under the WebGL field while it loads (hero-atmosphere.tsx). The drift is
-   an oversized conic layer turning on the compositor. Animating a registered
-   custom property inside the gradients would look the same but repaint on
-   the main thread every frame, which is the cost this tier exists to avoid. */
-.ts-nebula {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  opacity: var(--nebula-opacity);
-  background-color: var(--background);
-  background-image:
-    radial-gradient(60% 55% at 22% 28%, color-mix(in oklab, var(--primary) 45%, transparent), transparent 70%),
-    radial-gradient(50% 50% at 78% 34%, color-mix(in oklab, var(--spark) 34%, transparent), transparent 72%),
-    radial-gradient(70% 60% at 52% 88%, color-mix(in oklab, var(--accent) 26%, transparent), transparent 70%);
-}
-.ts-nebula-swirl {
-  position: absolute;
-  inset: -50%;
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    color-mix(in oklab, var(--primary) 22%, transparent),
-    transparent 22%,
-    color-mix(in oklab, var(--accent) 18%, transparent) 40%,
-    transparent 58%,
-    color-mix(in oklab, var(--spark) 20%, transparent) 76%,
-    color-mix(in oklab, var(--primary) 22%, transparent)
-  );
-  mask-image: radial-gradient(closest-side, black, transparent);
-  animation: ts-swirl 24s linear infinite;
-  will-change: transform;
-}
-.ts-nebula[data-still] .ts-nebula-swirl {
-  animation: none;
-}
-@keyframes ts-swirl {
-  to { transform: rotate(1turn); }
-}
-/* The WebGL field fades in over the nebula once its first frame is drawn. */
-.ts-plasma {
-  opacity: 0;
-  transition: opacity var(--duration-scene) var(--ease-out-expo);
-}
-.ts-plasma[data-drawn] {
-  opacity: 1;
-}
-
 /* --- listing morph ------------------------------------------------------
    A card title and its detail page header share a view-transition-name
    (listing-{id}), and ListingLink runs the transition, so navigating moves
@@ -469,19 +334,6 @@ select {
   ::view-transition-group(.listing-morph) {
     animation: none;
   }
-}
-
-/* --- hero 3D stage -------------------------------------------------------
-   A resting tilt is baked in so the object reads as dimensional before the
-   cursor ever arrives; pointer and scroll add on top of it. No transition
-   here on purpose - the pointer values are already eased upstream, so a
-   transition would only fight them. */
-.ts-stage {
-  transform:
-    rotateX(calc(-3deg + var(--rx, 0deg) + var(--progress, 0) * 16deg))
-    rotateY(calc(-9deg + var(--ry, 0deg)))
-    translateY(calc(var(--progress, 0) * -26px));
-  will-change: transform;
 }
 
 /* --- theme toggle --------------------------------------------------------
@@ -512,69 +364,11 @@ html.light [data-theme-icon="moon"] {
   transform: rotate(0deg) scale(1);
 }
 
-/* --- hero manifest sequence ---------------------------------------------
-   manifest-sequence.tsx sets data-on and --typed from its clock; everything
-   else is here. Lines are laid out from the start and only revealed, so the
-   card never changes size while it plays. The default (data-on="false",
-   nothing typed) is the idle frame the server renders. */
-.ts-typed {
-  /* Monospace, so 1ch is one typed character. */
-  clip-path: inset(0 calc(100% - var(--typed, 0) * 1ch) 0 0);
-}
-.ts-seq-caret {
-  position: absolute;
-  top: 0.3em;
-  bottom: 0.3em;
-  left: calc(var(--typed, 0) * 1ch);
-  width: 0.55em;
-  background: var(--accent);
-  animation: ts-blink 1s steps(2, jump-none) infinite;
-}
-.ts-seq [data-dim] {
-  opacity: 0.55;
-  transition: opacity var(--duration-chip) var(--ease-out-expo);
-}
-.ts-seq-line,
-.ts-seq-row {
-  transition:
-    opacity var(--duration-chip) var(--ease-out-expo),
-    translate var(--duration-chip) var(--ease-out-expo);
-}
-.ts-seq-row {
-  transition-duration: var(--duration-panel);
-}
-.ts-seq-line[data-on="false"] {
-  opacity: 0;
-  translate: 0 6px;
-}
-.ts-seq-row[data-on="false"] {
-  opacity: 0;
-  translate: 0 4px;
-}
-.ts-chip {
-  transition:
-    opacity var(--duration-chip) var(--ease-spring),
-    scale var(--duration-chip) var(--ease-spring);
-}
-.ts-chip[data-on="false"] {
-  opacity: 0;
-  scale: 0.92;
-}
-
 /* --- accessibility ------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .ts-reveal { animation: none !important; }
-  .ts-enter { animation: none !important; }
-  .animate-marquee { animation: none; }
-  .ts-nebula-swirl { animation: none; }
   .ts-lift:hover { translate: none; }
-  /* The finished frame, from the first paint and without any script. */
-  .ts-typed { clip-path: none; }
-  .ts-seq-caret { display: none; }
-  .ts-seq [data-on],
-  .ts-chip[data-on] { opacity: 1 !important; translate: none !important; scale: none !important; }
-  .ts-stage { transform: rotateX(-3deg) rotateY(-9deg) !important; }
   *,
   *::before,
   *::after {

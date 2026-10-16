@@ -21,12 +21,20 @@ This file tracks known improvement work that has not been completed yet. When an
   email" instead. Found in the 2026-09-24 P0 browser pass.
 - Meet the plan's performance budgets, then tighten the ratchet gates in
   `lighthouserc.cjs` and `apps/web/e2e/budget.spec.ts` to them. Still
-  missing as of 2026-09-24: mobile LCP (`/` 3.16 s vs 2.2 s, `/dashboard`
-  3.62 s vs 2.0 s), `/dashboard` performance (89 vs 92), `/` first-load JS
-  (185 kB vs 170 kB). Expected from plan P2 (motion diet) and P3 (fonts,
-  plasma tiers).
-- Preload the display serif used on the hero headline. This needs the fonts
-  moved from `@fontsource-variable` to `next/font/local`.
+  missing as of 2026-10-16: mobile LCP (`/` 3.2 s simulated vs 2.2 s,
+  `/dashboard` 3.62 s vs 2.0 s), `/dashboard` performance (89 vs 92) and `/`
+  first-load JS (181 KiB vs 170). The datasheet hero removed the WebGL field,
+  the manifest card and the ticker (home JS down 6 KiB, TBT 20 to 30 ms) but did
+  not move the simulated LCP: Lighthouse reports the hero paragraph with about
+  2.8 s of render delay against a 1.1 s FCP, so look at what the simulation
+  charges before the paint (hydration JS and font requests), not at the hero.
+- The "How it works" panel (`components/sections/process.tsx`, the terminal
+  card under each step below `lg`) is 23 px wider than the viewport at 320 px
+  (page scroll width 343). It is below the hero and predates it; the landing
+  e2e only checks 375 px. Found 2026-10-16.
+- The root layout still preloads the Newsreader face, which no longer sets any
+  text above the fold (the hero headline is Geist now). Dropping the preload
+  needs `e2e/performance.spec.ts` ("exactly two fonts") updated with it.
 - `/explore` intermittently has two identical `<link rel="next">` tags in
   `<head>`, so `e2e/catalog.spec.ts:107` fails in strict mode about 35-55% of
   runs (both on Next 16.3.6 and 16.3.8, measured 2026-10-16). The tags are

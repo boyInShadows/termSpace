@@ -38,7 +38,8 @@ test.describe("persian", () => {
   test("every section heading on /fa is in Persian", async ({ page }) => {
     await page.goto("/fa");
     await expect(page.locator("h1").first()).toBeVisible();
-    const headings = await page.locator("main h2").allTextContents();
+    // The example listing's own name is creator content and stays in its language.
+    const headings = await page.locator("main h2:not(#sheet-title)").allTextContents();
     expect(headings.length).toBeGreaterThanOrEqual(5);
     expect(headings.filter((text) => !/[؀-ۿ]/.test(text))).toEqual([]);
   });
@@ -74,21 +75,13 @@ test.describe("persian", () => {
     expect(persian.weight).toBe("600");
   });
 
-  test("the ticker runs mirrored, towards the reading end", async ({ page }) => {
+  test("prose counts use Persian digits; the sheet's code values keep Latin ones", async ({ page }) => {
     await page.goto("/fa");
-    const track = page.locator(".animate-marquee");
-    await expect(track).toHaveCSS("animation-name", "ts-marquee-rtl");
-    const x = () => track.evaluate((node) => node.getBoundingClientRect().left);
-    const before = await x();
-    await page.waitForTimeout(800);
-    expect(await x()).toBeGreaterThan(before);
-  });
-
-  test("prose counts use Persian digits; the terminal card keeps Latin ones", async ({ page }) => {
-    await page.goto("/fa");
-    const featured = page.locator("article").first();
+    const featured = page.locator("article:not([aria-labelledby=sheet-title])").first();
     await expect(featured).toContainText(PERSIAN_DIGITS);
-    await expect(page.locator(".ts-seq")).toHaveAttribute("dir", "ltr");
-    await expect(page.locator(".ts-seq")).not.toContainText(PERSIAN_DIGITS);
+    const sheet = page.locator("article[aria-labelledby=sheet-title]");
+    await expect(sheet.getByText("termspace add staff-engineer-review@0123abc")).toHaveAttribute("dir", "ltr");
+    await expect(sheet.getByText("termspace add staff-engineer-review@0123abc")).not.toContainText(PERSIAN_DIGITS);
+    await expect(sheet.getByRole("heading", { name: "حداکثر دسترسی‌های اعلام‌شده" })).toBeVisible();
   });
 });
