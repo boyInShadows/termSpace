@@ -150,43 +150,65 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <span className="text-foreground">{product.name}</span>
         </nav>
 
-        <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_21rem]">
-          <div className="min-w-0">
-            {/* --- header: the listing card, grown -------------------------- */}
-            <header className="pb-9">
-              <div className="flex flex-wrap items-center gap-2">
-                <ProductTypeBadge type={product.type} label={typeLabel} />
-                <span className="font-mono text-xs text-muted-foreground" dir="ltr">v{product.version}</span>
+        {/* Below lg the order is header, then the acquire panel, then the
+            page: the call to action used to sit after every section (about
+            3,500 px down at tablet width). From lg the aside is the right
+            rail, spanning both rows so its sticky panel follows the page. */}
+        <div className="mt-8 grid gap-y-8 lg:grid-cols-[1fr_21rem] lg:gap-x-10 lg:gap-y-0">
+          <header className="min-w-0 pb-1 lg:col-start-1 lg:row-start-1 lg:pb-9">
+            <div className="flex flex-wrap items-center gap-2">
+              <ProductTypeBadge type={product.type} label={typeLabel} />
+              <span className="font-mono text-xs text-muted-foreground" dir="ltr">v{product.version}</span>
+            </div>
+            {/* Shares its name with the card title, so the title travels
+                from the card into this header on navigation. */}
+            <h1
+              className="ts-listing-title ts-bidi editorial mt-5 max-w-3xl text-5xl font-medium leading-none sm:text-6xl"
+              style={{ viewTransitionName: listingTransitionName(product.id) }}
+              data-listing-header={product.id}
+            >
+              {product.name}
+            </h1>
+            <p className="ts-bidi mt-5 max-w-2xl text-xl leading-8 text-muted-foreground">{product.outcome}</p>
+            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <CreatorIdentity creator={product.creator} />
+              <Rating rating={product.rating} count={product.reviewCount} />
+              <span className="text-xs text-muted-foreground">
+                {formatNumber(product.usageCount, locale)} {l.uses}
+              </span>
+            </div>
+            {/* The same three claims, in the same order and style, as the
+                hero card's corner chips. */}
+            <div className="mt-8 flex flex-wrap gap-3" aria-label={l.manifest}>
+              <TrustChip
+                icon={<ShieldCheck size={12} className={product.verified ? "text-verified" : "text-warning"} />}
+                label={product.verified ? l.verified : l.notReviewed}
+                sub={product.verified ? l.safety : l.pending}
+              />
+              <TrustChip className="max-w-xs" icon={<Lock size={12} className="text-accent" />} label={product.permissions ?? l.notDeclared} sub={l.scope} />
+              <TrustChip icon={<FileText size={12} className="text-primary" />} label={product.license ?? l.notStated} sub={l.licence} />
+            </div>
+          </header>
+
+          {/* --- right rail -------------------------------------------------- */}
+          <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <div className="space-y-5 rounded-xl border border-border-strong bg-surface-raised p-5 shadow-soft lg:sticky lg:top-24">
+              <div>
+                <p className="text-xs text-muted-foreground">{l.sharing}</p>
+                <p className="mt-1 text-2xl font-semibold">{l.free}</p>
               </div>
-              {/* Shares its name with the card title, so the title travels
-                  from the card into this header on navigation. */}
-              <h1
-                className="ts-listing-title ts-bidi editorial mt-5 max-w-3xl text-5xl font-medium leading-none sm:text-6xl"
-                style={{ viewTransitionName: listingTransitionName(product.id) }}
-                data-listing-header={product.id}
-              >
-                {product.name}
-              </h1>
-              <p className="ts-bidi mt-5 max-w-2xl text-xl leading-8 text-muted-foreground">{product.outcome}</p>
-              <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
-                <CreatorIdentity creator={product.creator} />
-                <Rating rating={product.rating} count={product.reviewCount} />
-                <span className="text-xs text-muted-foreground">
-                  {formatNumber(product.usageCount, locale)} {l.uses}
-                </span>
-              </div>
-              {/* The same three claims, in the same order and style, as the
-                  hero card's corner chips. */}
-              <div className="mt-8 flex flex-wrap gap-3" aria-label={l.manifest}>
-                <TrustChip
-                  icon={<ShieldCheck size={12} className={product.verified ? "text-verified" : "text-warning"} />}
-                  label={product.verified ? l.verified : l.notReviewed}
-                  sub={product.verified ? l.safety : l.pending}
-                />
-                <TrustChip className="max-w-xs" icon={<Lock size={12} className="text-accent" />} label={product.permissions ?? l.notDeclared} sub={l.scope} />
-                <TrustChip icon={<FileText size={12} className="text-primary" />} label={product.license ?? l.notStated} sub={l.licence} />
-              </div>
-            </header>
+              {/* Install instructions are pinned to the release a reader
+                  acquires, so acquiring is the install path. */}
+              <ProductActions product={product} />
+              <p className="text-xs leading-5 text-muted-foreground">{l.installNote}</p>
+              {product.versions.length > 0 && (
+                <div className="border-t pt-5">
+                  <VersionPicker versions={product.versions} />
+                </div>
+              )}
+            </div>
+          </aside>
+          <div className="min-w-0 lg:col-start-1 lg:row-start-2">
 
             <Section title={l.whatItDoes}>
               <p className="ts-bidi">{product.description}</p>
@@ -298,25 +320,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
             </Section>
           </div>
-
-          {/* --- right rail -------------------------------------------------- */}
-          <aside>
-            <div className="space-y-5 rounded-xl border border-border-strong bg-surface-raised p-5 shadow-soft lg:sticky lg:top-24">
-              <div>
-                <p className="text-xs text-muted-foreground">{l.sharing}</p>
-                <p className="mt-1 text-2xl font-semibold">{l.free}</p>
-              </div>
-              {/* Install instructions are pinned to the release a reader
-                  acquires, so acquiring is the install path. */}
-              <ProductActions product={product} />
-              <p className="text-xs leading-5 text-muted-foreground">{l.installNote}</p>
-              {product.versions.length > 0 && (
-                <div className="border-t pt-5">
-                  <VersionPicker versions={product.versions} />
-                </div>
-              )}
-            </div>
-          </aside>
         </div>
 
         {product.related.length > 0 && (

@@ -7,6 +7,10 @@ test.describe("product detail", () => {
     await page.goto("/products/conversion-copywriter");
 
     await expect(page.getByRole("heading", { level: 1, name: "Conversion Copywriter" })).toBeVisible();
+    // A streamed page is revealed inside a view transition, and until it ends
+    // React keeps a hidden copy of the content beside the visible one, which a
+    // strict text locator counts twice. Wait for the copy to go.
+    await expect(page.locator('[id^="S:"][hidden]')).toHaveCount(0);
     for (const claim of ["Verified", "Reads the current selection · no network access", "MIT"]) {
       await expect(page.locator("header").getByText(claim, { exact: true })).toBeVisible();
     }
@@ -16,6 +20,17 @@ test.describe("product detail", () => {
     }
     await expect(page).toHaveTitle("Conversion Copywriter — Skill for Claude · termspace");
   });
+
+  for (const width of [375, 735, 768, 1440]) {
+    test(`the acquire panel is within two screens of the top at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/products/conversion-copywriter");
+      const add = page.getByRole("button", { name: "Add to library" });
+      await expect(add).toBeVisible();
+      const top = await add.evaluate((node) => node.getBoundingClientRect().top + window.scrollY);
+      expect(top).toBeLessThan(1800);
+    });
+  }
 
   test("shows where the release comes from and how to fetch it, without signing in", async ({ page }) => {
     await page.goto("/products/conversion-copywriter");

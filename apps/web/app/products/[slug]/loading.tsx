@@ -14,8 +14,9 @@ export default function ProductLoading() {
       <main className="container-page py-8" aria-busy>
         <p role="status" className="sr-only">Loading listing…</p>
         <Skeleton className="h-4 w-56" />
-        <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_21rem]">
-          <div className="min-w-0">
+        {/* Same order as the page: header, acquire panel, then the body. */}
+        <div className="mt-8 grid gap-y-8 lg:grid-cols-[1fr_21rem] lg:gap-x-10 lg:gap-y-0">
+          <div className="min-w-0 pb-1 lg:col-start-1 lg:row-start-1 lg:pb-9">
             <div className="flex gap-2">
               <Skeleton className="h-6 w-20 rounded-full" />
               <Skeleton className="h-6 w-12" />
@@ -32,12 +33,8 @@ export default function ProductLoading() {
               <Skeleton className="h-10 w-56 rounded-xl" />
               <Skeleton className="h-10 w-32 rounded-xl" />
             </div>
-            <div className="mt-9 border-t border-border pt-9">
-              <Skeleton className="h-9 w-48" />
-              <Skeleton className="mt-5 h-24 w-full" />
-            </div>
           </div>
-          <aside>
+          <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
             <div className="space-y-5 rounded-xl border border-border-strong bg-surface-raised p-5 shadow-soft">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-8 w-44" />
@@ -45,6 +42,12 @@ export default function ProductLoading() {
               <Skeleton className="h-10 w-full" />
             </div>
           </aside>
+          <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+            <div className="border-t border-border pt-9">
+              <Skeleton className="h-9 w-48" />
+              <Skeleton className="mt-5 h-24 w-full" />
+            </div>
+          </div>
         </div>
       </main>
     </>

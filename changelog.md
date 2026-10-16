@@ -38,6 +38,17 @@ Project changes completed from `pending.md` should be recorded here with the dat
     Verification: typecheck, 163 unit tests, lint, e2e `dashboard.spec.ts`
     (new case: `/creator`, `/creator/listings/new` and `/fa/creator` redirect,
     and the editor renders without the site footer).
+  - Product page (`app/products/[slug]/page.tsx` and its `loading.tsx`): below
+    `lg` the acquire panel followed every section, about 3,500 px down at 735
+    and 768. The header, the panel and the body are now three grid children, so
+    the panel comes right after the header (y 634 at 768 px). From `lg` the
+    aside spans both rows as before, still sticky. Verification: new e2e case
+    asserts "Add to library" is within 1,800 px of the top at 375, 735, 768 and
+    1440. `e2e/catalog.spec.ts` "renders the listing header" also had a latent
+    flake on a cold server (about 1 run in 4): a streamed page is revealed
+    inside a view transition and React keeps a hidden copy beside the visible
+    one, so strict text locators matched twice. The test now waits for the copy
+    to go; 0 failures in 20 cold starts.
 
 - CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
   typecheck saw an empty Prisma client and failed, and the fail-fast matrix
