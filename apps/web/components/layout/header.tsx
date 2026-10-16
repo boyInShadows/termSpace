@@ -49,7 +49,7 @@ export function Header() {
   const NAV = [
     { href: "/explore", label: t.explore },
     { href: "/dashboard/studio", label: t.shareWork },
-    ...(canModerate ? [{ href: "/moderation", label: t.moderation.nav }] : []),
+    ...(canModerate ? [{ href: "/moderation", label: t.moderationNav }] : []),
     ...(session.email ? [{ href: "/dashboard", label: t.dashboard }] : []),
   ];
   const [isCondensed, setIsCondensed] = useState(false);

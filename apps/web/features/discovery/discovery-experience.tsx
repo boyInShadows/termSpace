@@ -211,6 +211,9 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           </div>
         </aside>
         <section aria-busy={loading}>
+          {/* The cards' titles are h3s; without this the outline went from the
+              page's h1 straight to them. */}
+          <h2 className="sr-only">{d.resultsHeading}</h2>
           {/* Sticky, so the count and the controls stay in reach while
               scrolling a page of results. At the very top: the site header
               scrolls away with the page. */}

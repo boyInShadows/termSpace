@@ -148,6 +148,26 @@ describe("API", () => {
     expect(response.body.data.products[0]).not.toHaveProperty("approvedSnapshotId");
   });
 
+  it("keeps the declared permissions summary, licence and review state on catalogue list items", async () => {
+    // The listing card shows these; they are product columns, so the list query must not narrow them away.
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([{
+      id: "product-1", slug: "example-skill", name: "Example Skill", type: "Skill", itemType: "SKILL",
+      classificationRequired: false, rating: 4.5, priceMinor: 0, currency: "USD", pricingModel: "free",
+      platforms: ["Codex"], models: [], categoryId: "category-1", category: { name: "Developer tools" },
+      creatorId: "creator-1", creator: null, verified: true,
+      permissions: "Reads the current selection · no network access", license: "MIT",
+    }]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(1);
+
+    const response = await request(createApp()).get("/api/marketplace/products");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data[0]).toEqual(expect.objectContaining({
+      verified: true, permissions: "Reads the current selection · no network access", license: "MIT",
+    }));
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenLastCalledWith(expect.not.objectContaining({ select: expect.anything() }));
+  });
+
   it("filters only by canonical item-type keys", async () => {
     prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
     prismaMock.marketplaceProduct.count.mockResolvedValue(0);

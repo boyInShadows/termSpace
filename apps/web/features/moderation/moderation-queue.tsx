@@ -7,6 +7,7 @@ import { getModerationQueue } from "@/lib/api";
 import type { MarketplaceModerationQueueResult } from "@/lib/types";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
+import { useModerationCopy } from "./copy";
 import { localePath } from "@/lib/i18n";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ const PAGE_SIZE = 24;
 
 export function ModerationQueue() {
   const { locale, t } = useLocale();
+  const m = useModerationCopy();
   const session = useMarketplaceSession();
   const [state, setState] = useState("review");
   const [search, setSearch] = useState("");
@@ -47,10 +49,10 @@ export function ModerationQueue() {
     setQuery(search.trim());
   }
 
-  if (session.loading) return <StatusCard message={t.moderation.loading} />;
-  if (!canModerate) return <StatusCard message={t.moderation.accessDenied} error />;
-  if (loading && !result) return <StatusCard message={t.moderation.loading} />;
-  if (error && !result) return <StatusCard message={t.moderation.loadError} error action={<Button variant="secondary" onClick={() => setReload((value) => value + 1)}><RotateCcw className="size-4" />{t.moderation.retry}</Button>} />;
+  if (session.loading) return <StatusCard message={m.loading} />;
+  if (!canModerate) return <StatusCard message={m.accessDenied} error />;
+  if (loading && !result) return <StatusCard message={m.loading} />;
+  if (error && !result) return <StatusCard message={m.loadError} error action={<Button variant="secondary" onClick={() => setReload((value) => value + 1)}><RotateCcw className="size-4" />{m.retry}</Button>} />;
   if (!result) return null;
 
   const number = new Intl.NumberFormat(intlLocale(locale));
@@ -58,52 +60,52 @@ export function ModerationQueue() {
 
   return <section aria-labelledby="moderation-queue-title">
     <header className="max-w-3xl">
-      <p className="eyebrow">{t.moderation.eyebrow}</p>
-      <h1 id="moderation-queue-title" className="editorial mt-2 text-4xl sm:text-5xl">{t.moderation.queueTitle}</h1>
-      <p className="mt-3 text-muted-foreground">{t.moderation.queueIntro}</p>
+      <p className="eyebrow">{m.eyebrow}</p>
+      <h1 id="moderation-queue-title" className="editorial mt-2 text-4xl sm:text-5xl">{m.queueTitle}</h1>
+      <p className="mt-3 text-muted-foreground">{m.queueIntro}</p>
     </header>
 
     <dl className="mt-8 grid gap-3 sm:grid-cols-3">
-      <Summary label={t.moderation.submitted} value={number.format(result.data.summary.submitted)} icon={<Clock3 />} />
-      <Summary label={t.moderation.approved} value={number.format(result.data.summary.approved)} icon={<CheckCircle2 />} />
-      <Summary label={t.moderation.awaitingAction} value={number.format(result.data.summary.awaitingAction)} icon={<ShieldAlert />} />
+      <Summary label={m.submitted} value={number.format(result.data.summary.submitted)} icon={<Clock3 />} />
+      <Summary label={m.approved} value={number.format(result.data.summary.approved)} icon={<CheckCircle2 />} />
+      <Summary label={m.awaitingAction} value={number.format(result.data.summary.awaitingAction)} icon={<ShieldAlert />} />
     </dl>
 
     <form className="mt-8 grid gap-4 rounded-2xl border bg-surface p-5 md:grid-cols-[1fr_220px_auto] md:items-end" onSubmit={applyFilters}>
-      <label className="text-sm font-semibold">{t.moderation.search}<span className="mt-2 flex items-center rounded-md border border-input bg-background px-3 focus-within:ring-2 focus-within:ring-ring/20"><Search className="size-4 text-muted-foreground" aria-hidden="true" /><Input className="border-0 bg-transparent shadow-none focus-visible:ring-0" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t.moderation.searchPlaceholder} /></span></label>
-      <label className="text-sm font-semibold">{t.moderation.filter}<select className="mt-2 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm" value={state} onChange={(event) => { setState(event.target.value); setPage(1); }}>
-        <option value="review">{t.moderation.filterReview}</option><option value="all">{t.moderation.filterAll}</option>
+      <label className="text-sm font-semibold">{m.search}<span className="mt-2 flex items-center rounded-md border border-input bg-background px-3 focus-within:ring-2 focus-within:ring-ring/20"><Search className="size-4 text-muted-foreground" aria-hidden="true" /><Input className="border-0 bg-transparent shadow-none focus-visible:ring-0" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={m.searchPlaceholder} /></span></label>
+      <label className="text-sm font-semibold">{m.filter}<select className="mt-2 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm" value={state} onChange={(event) => { setState(event.target.value); setPage(1); }}>
+        <option value="review">{m.filterReview}</option><option value="all">{m.filterAll}</option>
         {stateOptions(t.creatorHub).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
       </select></label>
-      <Button disabled={loading}>{t.moderation.apply}</Button>
+      <Button disabled={loading}>{m.apply}</Button>
     </form>
 
-    {error && <div className="mt-4 flex items-center justify-between rounded-xl border border-destructive/30 p-4"><p className="text-sm text-destructive" role="alert">{t.moderation.loadError}</p><Button size="sm" variant="secondary" onClick={() => setReload((value) => value + 1)}>{t.moderation.retry}</Button></div>}
+    {error && <div className="mt-4 flex items-center justify-between rounded-xl border border-destructive/30 p-4"><p className="text-sm text-destructive" role="alert">{m.loadError}</p><Button size="sm" variant="secondary" onClick={() => setReload((value) => value + 1)}>{m.retry}</Button></div>}
 
-    {result.data.listings.length === 0 ? <div className="mt-5 rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">{t.moderation.empty}</div> : <div className="mt-5 space-y-4">
+    {result.data.listings.length === 0 ? <div className="mt-5 rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">{m.empty}</div> : <div className="mt-5 space-y-4">
       {result.data.listings.map((listing) => <article key={listing.id} className="rounded-2xl border bg-surface p-5 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold">{listing.name}</h2><span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", statusClass(listing.state))}>{listingStateLabel(listing.state, t.creatorHub)}</span></div>
             <p className="mt-1 text-sm text-muted-foreground">@{listing.creator.handle} · {listing.type} · {date.format(new Date(listing.updatedAt))}</p>
-            {listing.selfOwned && <p className="mt-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300"><ShieldAlert className="size-4" />{t.moderation.selfOwned}</p>}
+            {listing.selfOwned && <p className="mt-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300"><ShieldAlert className="size-4" />{m.selfOwned}</p>}
           </div>
-          <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/moderation/listings/${listing.id}`, locale)}>{t.moderation.review}{locale === "fa" ? <ArrowLeft className="size-4" /> : <ArrowRight className="size-4" />}</Link>
+          <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/moderation/listings/${listing.id}`, locale)}>{m.review}{locale === "fa" ? <ArrowLeft className="size-4" /> : <ArrowRight className="size-4" />}</Link>
         </div>
         <dl className="mt-5 grid gap-3 border-t pt-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Fact label={t.moderation.revision} value={listing.proposedRevision === null ? "—" : number.format(listing.proposedRevision)} />
-          <Fact label={t.moderation.release} value={listing.releaseVersion ?? "—"} />
-          <Fact label={t.moderation.communities} value={number.format(listing.communityRequestCount)} />
-          <Fact label={t.moderation.sourceResolved} value={listing.sourceResolved ? t.moderation.checkPassed : t.moderation.checkPending} good={listing.sourceResolved} />
-          <Fact label={t.moderation.ownershipVerified} value={listing.ownershipVerified ? t.moderation.checkPassed : t.moderation.checkPending} good={listing.ownershipVerified} />
+          <Fact label={m.revision} value={listing.proposedRevision === null ? "—" : number.format(listing.proposedRevision)} />
+          <Fact label={m.release} value={listing.releaseVersion ?? "—"} />
+          <Fact label={m.communities} value={number.format(listing.communityRequestCount)} />
+          <Fact label={m.sourceResolved} value={listing.sourceResolved ? m.checkPassed : m.checkPending} good={listing.sourceResolved} />
+          <Fact label={m.ownershipVerified} value={listing.ownershipVerified ? m.checkPassed : m.checkPending} good={listing.ownershipVerified} />
         </dl>
       </article>)}
     </div>}
 
-    {result.meta.totalPages > 1 && <nav className="mt-6 flex items-center justify-between" aria-label={t.moderation.queueTitle}>
-      <Button variant="secondary" disabled={page <= 1 || loading} onClick={() => setPage((value) => Math.max(1, value - 1))}>{locale === "fa" ? <ArrowRight className="size-4" /> : <ArrowLeft className="size-4" />}{t.moderation.previousPage}</Button>
-      <span className="text-sm text-muted-foreground">{t.moderation.pageStatus.replace("{page}", number.format(page)).replace("{pages}", number.format(result.meta.totalPages))}</span>
-      <Button variant="secondary" disabled={page >= result.meta.totalPages || loading} onClick={() => setPage((value) => value + 1)}>{t.moderation.nextPage}{locale === "fa" ? <ArrowLeft className="size-4" /> : <ArrowRight className="size-4" />}</Button>
+    {result.meta.totalPages > 1 && <nav className="mt-6 flex items-center justify-between" aria-label={m.queueTitle}>
+      <Button variant="secondary" disabled={page <= 1 || loading} onClick={() => setPage((value) => Math.max(1, value - 1))}>{locale === "fa" ? <ArrowRight className="size-4" /> : <ArrowLeft className="size-4" />}{m.previousPage}</Button>
+      <span className="text-sm text-muted-foreground">{m.pageStatus.replace("{page}", number.format(page)).replace("{pages}", number.format(result.meta.totalPages))}</span>
+      <Button variant="secondary" disabled={page >= result.meta.totalPages || loading} onClick={() => setPage((value) => value + 1)}>{m.nextPage}{locale === "fa" ? <ArrowLeft className="size-4" /> : <ArrowRight className="size-4" />}</Button>
     </nav>}
   </section>;
 }

@@ -14,6 +14,7 @@ import {
   CreatorIdentity,
   ProductTypeBadge,
   Rating,
+  TrustStrip,
 } from "./product-parts";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { localePath } from "@/lib/i18n";
@@ -94,6 +95,13 @@ export function ProductCard({
         <p className="ts-bidi mt-2 line-clamp-2 min-h-12 text-sm leading-6 text-muted-foreground">
           {product.outcome}
         </p>
+
+        <TrustStrip
+          verified={product.verified}
+          permissions={product.permissions}
+          license={product.license}
+          labels={card}
+        />
 
         <div className="mt-4">
           <CreatorIdentity creator={product.creator} compact />

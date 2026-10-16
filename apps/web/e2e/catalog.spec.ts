@@ -103,6 +103,22 @@ test.describe("product detail", () => {
 });
 
 test.describe("explore", () => {
+  test("every card states its review state, licence and permissions, and the outline skips no level", async ({ page }) => {
+    await page.goto("/explore");
+    const cards = page.locator("article");
+    await expect(cards).toHaveCount(12);
+    for (const card of await cards.all()) {
+      await expect(card.getByText(/Safety reviewed|Not yet reviewed/)).toHaveCount(1);
+      await expect(card.getByText(/Permissions not declared|·/).first()).toBeVisible();
+    }
+    await expect(cards.first().getByText("Safety reviewed")).toBeVisible();
+    await expect(cards.first().getByText("MIT")).toBeVisible();
+    await expect(cards.first().getByText("Reads the current selection · no network access")).toBeVisible();
+
+    const levels = await page.locator("h1, h2, h3, h4").evaluateAll((nodes) => nodes.map((node) => Number(node.tagName[1])));
+    for (let index = 1; index < levels.length; index++) expect(levels[index] - levels[index - 1]).toBeLessThanOrEqual(1);
+  });
+
   test("the search field has an accessible name, not only a placeholder", async ({ page }) => {
     await page.goto("/explore");
     await expect(page.getByRole("textbox", { name: /Search resources/ })).toBeVisible();

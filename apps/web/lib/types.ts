@@ -108,6 +108,8 @@ export interface Product {
   creator: Creator; pricing: Pricing; compatibility: Compatibility; category: string; rating: number;
   reviewCount: number; usageCount: number; purchaseCount: number; updatedAt: string; version: string;
   featured?: boolean; trending?: boolean; verified: boolean; tags: string[];
+  /** One-line summaries the listing declares; list endpoints carry them, a listing may declare neither. */
+  permissions?: string | null; license?: string | null;
   communities: Array<{ slug: string; nameEn: string; nameFa: string | null; primaryPlatform: string }>;
 }
 export type ReviewEligibility = "eligible" | "not_acquired" | "own_listing";

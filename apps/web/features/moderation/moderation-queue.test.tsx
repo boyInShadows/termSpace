@@ -19,6 +19,7 @@ const creatorHub = {
 vi.mock("@/lib/api", async (importOriginal) => ({ ...await importOriginal<typeof import("@/lib/api")>(), getModerationQueue: getQueue }));
 vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => session }));
 vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: "en", t: { moderation, creatorHub } }) }));
+vi.mock("./copy", () => ({ useModerationCopy: () => moderation }));
 
 const { ModerationQueue } = await import("./moderation-queue");
 

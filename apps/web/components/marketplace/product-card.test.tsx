@@ -64,4 +64,33 @@ describe("ProductCard", () => {
     render(<LocaleProvider locale="fa"><ProductCard product={product} /></LocaleProvider>);
     expect(screen.getByRole("link", { name: "Codex" })).toBeInTheDocument();
   });
+
+  it("states what the listing declares: review state, licence and permissions", () => {
+    render(<ProductCard product={{ ...products[0], verified: true, license: "MIT", permissions: "Reads the current selection · no network access" }} />);
+    expect(screen.getByText("Safety reviewed")).toBeInTheDocument();
+    expect(screen.getByText("MIT")).toHaveAttribute("dir", "ltr");
+    expect(screen.getByText("Reads the current selection · no network access")).toBeInTheDocument();
+  });
+
+  it("says so when a listing is unreviewed or declares nothing, instead of leaving a gap", () => {
+    render(<ProductCard product={{ ...products[0], verified: false, license: null, permissions: null }} />);
+    expect(screen.getByText("Not yet reviewed")).toBeInTheDocument();
+    expect(screen.getByText("Licence not stated")).toBeInTheDocument();
+    expect(screen.getByText("Permissions not declared")).toBeInTheDocument();
+    expect(screen.queryByText("Safety reviewed")).not.toBeInTheDocument();
+  });
+
+  it("marks creator identity differently from safety review", () => {
+    const { container } = render(<ProductCard product={{ ...products[0], verified: true, creator: { ...products[0].creator, verified: true } }} />);
+    const identity = screen.getByLabelText("Verified creator");
+    expect(identity).toHaveClass("text-primary");
+    expect(container.querySelector("svg.text-verified")).not.toBeNull();
+    expect(identity).not.toHaveClass("text-verified");
+  });
+
+  it("labels the strip in Persian", () => {
+    render(<LocaleProvider locale="fa"><ProductCard product={{ ...products[0], verified: true }} /></LocaleProvider>);
+    expect(screen.getByText("ایمنی بررسی شده")).toBeInTheDocument();
+    expect(screen.getByText("مجوزها اعلام نشده")).toBeInTheDocument();
+  });
 });

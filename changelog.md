@@ -4,6 +4,43 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-16
 
+- **Listing cards state what the listing declares (critique-driven `layout`,
+  branch `redesign`).**
+  - `components/marketplace/product-card.tsx` and `product-parts.tsx`: a
+    two-part strip under the outcome on every card (home, explore, related
+    listings): a green shield and "Safety reviewed", or an amber one and "Not
+    yet reviewed", then the licence in mono; below it the declared permissions
+    line, which wraps to two lines before it clips because "no network access"
+    is the part that matters. A listing that declares nothing says so
+    ("Permissions not declared", "Licence not stated") instead of leaving a
+    gap. The strip is data the API already returned (`permissions`, `license`
+    are product columns the list query spreads); `Product` now types them as
+    optional and a new API test pins that the list query keeps them.
+  - The creator-identity tick is no longer the cyan check, which looked like
+    the safety mark and spent Signal on a trust claim DESIGN.md reserves
+    green for: it is a scalloped badge in the brand colour, the shield is
+    green. Two marks, two shapes, two colours, two labels.
+  - `/explore` and community pages: an `sr-only` "Results" `h2` before the
+    cards, so the outline goes h1, h2, h3 instead of skipping a level.
+  - New copy keys in `productCard` and `discovery` (`lib/i18n/catalog.ts`,
+    both locales) and `moderationNav` (`common.ts`); fixtures in
+    `lib/mock-home.ts` carry permissions and licence (one listing is unreviewed
+    with no licence, to exercise the empty states).
+  - **Bundle offset, no gate change.** The additions pushed the product page's
+    first-load JS over its 195 kB ratchet (196.2 KiB). The moderation
+    dictionary (2.6 kB gz, used only on the moderation screens) was shipping to
+    every page inside `copy`. It is now read through
+    `features/moderation/copy.ts` (`useModerationCopy`) by the two moderation
+    screens only, and `lib/i18n/index.ts` no longer spreads it. Product page
+    194.6 KiB (gate 195), home 186.9 (190), dashboard 185.9 (200). The margin on
+    the product page is 0.4 KiB: the next addition there needs another offset.
+  - Verification: typecheck, lint, 169 web unit tests (four new card tests,
+    the queue test now mocks the copy hook), API 177 passed (one new) with
+    `LOCAL_AUTO_VERIFY_EMAIL=false`, full e2e 125 passed (new: every card
+    states its review state, licence and permissions; heading levels never
+    skip). Measured at 390, 768 and 1440 px in English and Persian, dark and
+    light: cards in a row stay level and nothing clips. Not done: the
+    permissions *filter* on `/explore` from the critique (separate item).
 - **Dashboard on a phone (critique-driven `adapt`, branch `redesign`).** From
   the 2026-10-16 critique of `/`, `/dashboard` and `/explore`.
   - `features/dashboard/listings-table.tsx`: at 390 px the listing names
