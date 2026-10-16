@@ -2,7 +2,60 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
-## 2026-10-08
+## 2026-10-16
+
+- Launch readiness (v.2 side), from a walk of the real flows on a throwaway
+  Postgres 17: register, verify, creator profile, draft, submit, moderate,
+  publish, acquire, review, hide/restore.
+- **Fixed: creating any listing draft returned 500.** The shared
+  `marketplaceProductProjectionFromManifest` carries `compatibility.deleteMany`,
+  which Prisma accepts on update but rejects inside a nested create. The create
+  path in `marketplaceDraftController.ts` now passes only `create`. Broken since
+  `7e76115` (2026-09-21); the unit suite mocks Prisma, so nothing failed.
+- New `apps/api/src/marketplaceFlow.integration.test.ts`: the whole journey on a
+  real database. Skipped unless `INTEGRATION_DATABASE_URL` is set; the new CI job
+  `api-integration` runs it against a Postgres 16 service. Fails with the
+  draft bug reintroduced (`expected 500 to be 201`). Source verification is
+  simulated in the test, since it needs a real GitHub repository.
+- Email worker checks `EMAIL_VERIFICATION_SECRET` and the Cloudflare sender
+  before claiming any outbox row. Previously an unconfigured provider marked
+  every queued email `FAILED` (terminal), so fixing the config later delivered
+  nothing. The verification secret also rejects the `.env.example` placeholder,
+  which was long enough to pass the 32-byte check.
+- `docker-compose.yml`: web build and runtime get `NEXT_PUBLIC_SITE_URL` from
+  `WEB_PUBLIC_URL` (canonicals, sitemap and OG cards pointed at localhost);
+  `CORS_ORIGINS` and `EMAIL_VERIFICATION_SECRET` are required instead of
+  defaulting (the CSRF check rejected every write from a real domain); the
+  email worker runs by default and its loop exits on failure, so a misconfigured
+  worker restarts visibly. `docker/Dockerfile.web` accepts the new build arg.
+  **Existing local stacks:** `docker compose up` now refuses to start until
+  `EMAIL_VERIFICATION_SECRET` is set in the root `.env`.
+- Seed: with `NODE_ENV=production` it creates only the administrator and the
+  marketplace platforms and categories (creators cannot draft without
+  categories, which no migration inserts). Demo listings, ratings, reviews and
+  follower counts need `SEED_DEMO=true`. Development is unchanged. The seed
+  refuses the placeholder `ADMIN_PASSWORD`.
+- Product page: "Add to library" is disabled and says "No approved release is
+  available yet" when the listing has no release, instead of failing with a
+  generic retry message after the click. All 12 seeded listings are in this
+  state (legacy v0 snapshots), so none can be acquired or reviewed.
+- Dependencies: `next` and `eslint-config-next` 16.3.6 → 16.3.8 (pinned in both
+  frontends; outside the advisory range 16.0.0–16.3.7, and chosen over the
+  day-old 16.4.2), plus `npm audit fix`: `proxy-addr` 2.0.8, `multer` 2.4.0,
+  `sharp` 0.35.5. `npm audit --omit=dev` reports no advisories.
+- CI no longer triggers on the non-existent `development` branch. e2e and lhci
+  accept `WEB_PORT` (default 3100) so they can run beside a local stack.
+- Lane note for Ramtin: removed "Concept prototype · Local mock data only" from
+  `apps/web/components/layout/footer.tsx` (line 75). Reason: it would ship to
+  production. Nothing else in the footer changed.
+- Verification: root typecheck; `npm run lint -w apps/web`; 351 tests passing,
+  1 skipped (175 API, 15 blog, 161 web) with `LOCAL_AUTO_VERIFY_EMAIL=false` and
+  `NODE_OPTIONS=--no-experimental-webstorage`; the integration test passing on
+  Postgres 17; all builds; production and development seeds against fresh
+  databases; `docker compose config` with `.env.example`. e2e (`WEB_PORT=3200
+  PW_CHANNEL=chrome`, 2 workers) 74 passed, 14 skipped; with default workers two
+  timing tests fail intermittently (see `pending.md`). lhci all assertions
+  passed: home 93, dashboard 90, product 93, accessibility 100.
 
 - `AGENTS.md`: removed the second shared-surfaces list (it still named the old
   `apps/web/lib/i18n.ts`); "Announce shared-surface changes" now points to the

@@ -40,10 +40,14 @@ type VerificationFields = {
   expiresAt: Date;
 };
 
-function verificationSecret(): string {
+export function verificationSecret(): string {
   const secret = process.env.EMAIL_VERIFICATION_SECRET;
   if (!secret || Buffer.byteLength(secret) < 32) {
     throw new Error("EMAIL_VERIFICATION_SECRET must contain at least 32 bytes");
+  }
+  // The .env.example placeholder is long enough to pass, and public.
+  if (secret.startsWith("replace-with")) {
+    throw new Error("EMAIL_VERIFICATION_SECRET is still the .env.example placeholder");
   }
   return secret;
 }

@@ -1532,6 +1532,8 @@ describe("API", () => {
 
     expect(response.status).toBe(201);
     expect(response.body.data).toMatchObject({ id: "product-1", state: "draft", version: 1, published: false, draft: { revision: 1 } });
+    // Prisma rejects `deleteMany` inside a nested create; the mock would not.
+    expect(prismaMock.marketplaceProduct.create.mock.calls[0][0].data.compatibility).toEqual({ create: [{ platformKey: "codex" }] });
     expect(prismaMock.marketplaceCommunityPlacementRequest.createMany).toHaveBeenCalledWith({ data: [expect.objectContaining({ snapshotId: "snapshot-1", communityId: "community-1", productId: "product-1", requestedByUserId: "reader-1" })] });
     expect(prismaMock.marketplaceCommunityPlacement.create).toHaveBeenCalledWith({ data: {
       productId: "product-1", communityId: "community-1", requestedSnapshotId: "snapshot-1", requestedByUserId: "reader-1",

@@ -449,6 +449,28 @@ The better you read code, the faster you understand systems, the more confidentl
   },
 ];
 
+/** Platforms and categories a creator needs before their first draft. Safe in production. */
+async function seedMarketplaceReference() {
+  for (const [position, key] of MARKETPLACE_PLATFORM_KEYS.entries()) {
+    const platform = MARKETPLACE_PLATFORM_REGISTRY[key];
+    await prisma.marketplacePlatform.upsert({
+      where: { key },
+      update: { ...platform, position },
+      create: { key, ...platform, position },
+    });
+  }
+
+  const marketplaceCategoryIds = new Map<string, string>();
+  for (const [position, name] of marketplaceCategoryNames.filter((item) => item !== "All").entries()) {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const record = await prisma.marketplaceCategory.upsert({
+      where: { slug }, update: { name, position }, create: { name, slug, position },
+    });
+    marketplaceCategoryIds.set(name, record.id);
+  }
+  return marketplaceCategoryIds;
+}
+
 async function main() {
   console.log("Seeding database...");
   const resetSeed = process.env.SEED_RESET === "true";
@@ -458,6 +480,9 @@ async function main() {
   if (adminEmail && adminPassword) {
     if (adminPassword.length < 12) {
       throw new Error("ADMIN_PASSWORD must contain at least 12 characters");
+    }
+    if (adminPassword.startsWith("replace-with")) {
+      throw new Error("ADMIN_PASSWORD is still the .env.example placeholder");
     }
     const passwordHash = await hash(adminPassword, 12);
     await prisma.adminUser.upsert({
@@ -470,6 +495,15 @@ async function main() {
     console.log(`Administrator ready: ${adminEmail}`);
   } else {
     console.warn("Skipping administrator seed: set ADMIN_EMAIL and ADMIN_PASSWORD");
+  }
+
+  const marketplaceCategoryIds = await seedMarketplaceReference();
+
+  // Everything below is demo content: fabricated listings, ratings, reviews and
+  // follower counts. It must never reach a production catalogue by accident.
+  if (process.env.NODE_ENV === "production" && process.env.SEED_DEMO !== "true") {
+    console.log("Seeding complete. Production: administrator and marketplace reference data only; set SEED_DEMO=true for demo content.");
+    return;
   }
 
   // Author names are not unique in the schema, so update the first matching
@@ -595,15 +629,6 @@ async function main() {
   }
 
   const marketplaceCreatorIds = new Map<string, string>();
-  for (const [position, key] of MARKETPLACE_PLATFORM_KEYS.entries()) {
-    const platform = MARKETPLACE_PLATFORM_REGISTRY[key];
-    await prisma.marketplacePlatform.upsert({
-      where: { key },
-      update: { ...platform, position },
-      create: { key, ...platform, position },
-    });
-  }
-
   for (const creator of marketplaceCreators) {
     const existing = await prisma.marketplaceCreator.findUnique({ where: { handle: creator.handle }, select: { id: true, ownerUserId: true } });
     if (existing?.ownerUserId) throw new Error(`Seed creator handle is owned by a reader account: ${creator.handle}`);
@@ -611,15 +636,6 @@ async function main() {
       ? await prisma.marketplaceCreator.update({ where: { id: existing.id }, data: { name: creator.name, initials: creator.initials, verified: creator.verified, bio: creator.bio, followers: creator.followers } })
       : await prisma.marketplaceCreator.create({ data: { id: creator.id, name: creator.name, handle: creator.handle, initials: creator.initials, verified: creator.verified, bio: creator.bio, followers: creator.followers } });
     marketplaceCreatorIds.set(creator.handle, record.id);
-  }
-
-  const marketplaceCategoryIds = new Map<string, string>();
-  for (const [position, name] of marketplaceCategoryNames.filter((item) => item !== "All").entries()) {
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const record = await prisma.marketplaceCategory.upsert({
-      where: { slug }, update: { name, position }, create: { name, slug, position },
-    });
-    marketplaceCategoryIds.set(name, record.id);
   }
 
   for (const product of marketplaceProducts) {

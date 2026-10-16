@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { Prisma, type TransactionalEmailStatus } from "@prisma/client";
-import { sendPasswordResetEmail, sendVerificationEmail } from "../lib/cloudflareEmail.js";
-import { createEmailVerificationToken, createPasswordResetCode, verificationUrl } from "../lib/emailVerification.js";
+import { emailConfig, sendPasswordResetEmail, sendVerificationEmail } from "../lib/cloudflareEmail.js";
+import { createEmailVerificationToken, createPasswordResetCode, verificationSecret, verificationUrl } from "../lib/emailVerification.js";
 import { prisma } from "../lib/prisma.js";
 
 const MAX_ATTEMPTS = 5;
@@ -38,6 +38,10 @@ export async function claimTransactionalEmails(limit = 10): Promise<ClaimedEmail
 }
 
 export async function processTransactionalEmailBatch(limit = Number(process.env.EMAIL_WORKER_BATCH_SIZE ?? 10)) {
+  // Check configuration before claiming: a misconfigured worker must fail without
+  // spending attempts or marking mail FAILED, so fixing the config delivers the backlog.
+  verificationSecret();
+  emailConfig();
   const claimed = await claimTransactionalEmails(limit);
   for (const job of claimed) {
     let result: Awaited<ReturnType<typeof sendVerificationEmail>>;

@@ -171,6 +171,8 @@ export async function createOwnedMarketplaceDraft(req: Request, res: Response) {
       const product = await tx.marketplaceProduct.create({
         data: {
           ...projection,
+          // A new product has no compatibility rows; `deleteMany` is only valid on update.
+          compatibility: { create: projection.compatibility.create },
           creatorId: creator.id,
           priceMinor: 0,
           pricingModel: "free",

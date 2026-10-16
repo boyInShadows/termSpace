@@ -39,6 +39,7 @@ export function ProductActions({ product }: { product: ProductDetail }) {
     installUnavailable: "نصب این نسخه اکنون در دسترس نیست.", sourceStatus: "وضعیت منبع", checked: "آخرین بررسی", immutableRef: "مرجع تغییرناپذیر",
     openPackage: "باز کردن بستهٔ تأییدشده", copyUrl: "کپی پیوند", copied: "پیوند کپی شد.", copyFailed: "کپی خودکار انجام نشد. متن را انتخاب کنید و Ctrl+C را بزنید.", excerptCopied: "گزیده کپی شد.", steps: "مراحل نصب", exactVersion: "نسخهٔ دقیق",
     stale: "بررسی ارائه‌دهنده موقتاً قدیمی است؛ آخرین مرجع تأییدشده بدون تغییر باقی مانده است.",
+    noRelease: "هنوز نسخهٔ تأییدشده‌ای برای دریافت وجود ندارد.",
   } : {
     added: "Added to your library.", failed: "Could not add this resource. Please try again.", adding: "Adding…", add: "Add to library",
     preview: "Preview", inside: "Inside", previewDescription: "A read-only preview of the package structure and one example.", close: "Close preview",
@@ -48,6 +49,7 @@ export function ProductActions({ product }: { product: ProductDetail }) {
     installUnavailable: "Installation for this release is currently unavailable.", sourceStatus: "Source status", checked: "Last checked", immutableRef: "Immutable reference",
     openPackage: "Open verified package", copyUrl: "Copy link", copied: "Link copied.", copyFailed: "Couldn’t copy automatically. Select the text and press Ctrl+C.", excerptCopied: "Excerpt copied.", steps: "Installation steps", exactVersion: "Exact version",
     stale: "The provider check is temporarily stale; the last verified reference remains unchanged.",
+    noRelease: "No approved release is available yet.",
   };
   const session = useMarketplaceSession();
   const router = useRouter();
@@ -81,14 +83,20 @@ export function ProductActions({ product }: { product: ProductDetail }) {
       const details = await getProductInstallation(product.slug);
       setInstallation(details); setInstallationBlocked(false); setInstallationOpen(true); setMessage(copy.added); acquisitionKey.current = null;
     }
-    catch (cause) { setMessage(copy.failed); console.error("Resource library add failed", cause); }
+    catch (cause) {
+      // The release can be withdrawn between page render and click.
+      setMessage(cause instanceof ApiError && cause.code === "RELEASE_UNAVAILABLE" ? copy.noRelease : copy.failed);
+      console.error("Resource library add failed", cause);
+    }
     finally { setAdding(false); }
   }
+  // The API refuses to acquire a listing without an approved release; say so before the click.
+  const noRelease = !product.release && !installation;
   return (
     <div className="space-y-3">
-      <Button size="lg" className="w-full" disabled={adding || installationBlocked} onClick={() => void acquire()}>
+      <Button size="lg" className="w-full" disabled={adding || installationBlocked || noRelease} onClick={() => void acquire()}>
         {installation ? <Download size={18} /> : <LibraryBig size={18} />}
-        {adding ? copy.adding : installationBlocked ? copy.installUnavailable : installation ? copy.viewInstall : copy.add}
+        {adding ? copy.adding : installationBlocked ? copy.installUnavailable : noRelease ? copy.noRelease : installation ? copy.viewInstall : copy.add}
       </Button>
       <Dialog.Root open={installationOpen} onOpenChange={setInstallationOpen}>
         <Dialog.Portal>

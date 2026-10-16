@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, development]
+    branches: [main]
   pull_request:
 
 jobs:
@@ -27,3 +27,36 @@ jobs:
       - run: npm test
       - run: npm run lint --if-present
       - run: npm run build
+
+  # The unit suite mocks Prisma; this runs the marketplace journey on a real database.
+  api-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: termspace_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci -d termspace_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/termspace_ci?schema=public
+      INTEGRATION_DATABASE_URL: postgresql://ci:ci@localhost:5432/termspace_ci?schema=public
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+        working-directory: .
+      - run: npm run prisma:generate
+      - run: npm run prisma:deploy
+      - run: npx vitest run src/marketplaceFlow.integration.test.ts

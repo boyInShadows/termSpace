@@ -18,7 +18,7 @@
 //
 // Detail page (added in P4, /products/conversion-copywriter): LCP 3.24 s,
 // performance 93, TBT 17 ms, CLS 0, accessibility 100.
-const BASE = "http://127.0.0.1:3100";
+const BASE = `http://127.0.0.1:${process.env.WEB_PORT ?? "3100"}`;
 
 const GATES = {
   home: {

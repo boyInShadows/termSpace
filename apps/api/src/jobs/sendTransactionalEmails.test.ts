@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const sendVerificationEmail = vi.hoisted(() => vi.fn());
 const sendPasswordResetEmail = vi.hoisted(() => vi.fn());
+const emailConfig = vi.hoisted(() => vi.fn());
 const prismaMock = vi.hoisted(() => ({
   $queryRaw: vi.fn(),
   readerEmailVerification: { findUnique: vi.fn() },
@@ -10,7 +11,7 @@ const prismaMock = vi.hoisted(() => ({
 }));
 
 vi.mock("../lib/prisma.js", () => ({ prisma: prismaMock }));
-vi.mock("../lib/cloudflareEmail.js", () => ({ sendPasswordResetEmail, sendVerificationEmail }));
+vi.mock("../lib/cloudflareEmail.js", () => ({ emailConfig, sendPasswordResetEmail, sendVerificationEmail }));
 
 process.env.EMAIL_VERIFICATION_SECRET = "test-secret-that-is-definitely-longer-than-32-bytes";
 process.env.WEB_PUBLIC_URL = "https://termspace.example";
@@ -33,6 +34,24 @@ describe("transactional email worker", () => {
     expect(prismaMock.transactionalEmailOutbox.update).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: "outbox-1" }, data: expect.objectContaining({ status: "SENT", sentAt: expect.any(Date) }),
     }));
+  });
+
+  it("refuses to claim mail while the provider is not configured", async () => {
+    emailConfig.mockImplementationOnce(() => { throw new Error("Cloudflare Email Service credentials and sender are not configured"); });
+    await expect(processTransactionalEmailBatch()).rejects.toThrow("not configured");
+    expect(prismaMock.$queryRaw).not.toHaveBeenCalled();
+    expect(prismaMock.transactionalEmailOutbox.update).not.toHaveBeenCalled();
+  });
+
+  it("refuses to claim mail without a signing secret", async () => {
+    const secret = process.env.EMAIL_VERIFICATION_SECRET;
+    process.env.EMAIL_VERIFICATION_SECRET = "short";
+    try {
+      await expect(processTransactionalEmailBatch()).rejects.toThrow("EMAIL_VERIFICATION_SECRET");
+      expect(prismaMock.$queryRaw).not.toHaveBeenCalled();
+    } finally {
+      process.env.EMAIL_VERIFICATION_SECRET = secret;
+    }
   });
 
   it("reschedules transient failures with bounded attempts", async () => {

@@ -9,7 +9,9 @@ import { defineConfig, devices } from "@playwright/test";
  * builds first. CI builds once, shares the output with Lighthouse, and sets
  * E2E_SKIP_BUILD=1.
  */
-const WEB_PORT = 3100;
+// WEB_PORT (also read by e2e/serve.mjs and lighthouserc.cjs) moves the suite
+// off 3100 when a local stack already holds it.
+const WEB_PORT = Number(process.env.WEB_PORT ?? 3100);
 const MOCK_API_PORT = 4099;
 const baseURL = `http://127.0.0.1:${WEB_PORT}`;
 const isCI = Boolean(process.env.CI);

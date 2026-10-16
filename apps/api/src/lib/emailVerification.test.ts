@@ -25,6 +25,11 @@ describe("email verification tokens", () => {
     expect(token).not.toContain(process.env.EMAIL_VERIFICATION_SECRET!);
   });
 
+  it("refuses the public .env.example placeholder as a signing secret", () => {
+    process.env.EMAIL_VERIFICATION_SECRET = "replace-with-at-least-32-random-bytes";
+    expect(() => createPasswordResetCode({ id: "reset-1", userId: "reader-1", expiresAt: new Date() })).toThrow(/placeholder/);
+  });
+
   it("places the token in a URL fragment", () => {
     const url = verificationUrl("verification-1.signature");
     expect(url).toBe("https://termspace.example/account/verify-email#token=verification-1.signature");

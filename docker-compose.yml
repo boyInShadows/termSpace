@@ -26,12 +26,13 @@ services:
       PORT: 4001
       DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public
       TRUST_PROXY: ${TRUST_PROXY:-1}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001}
+      # Also the CSRF allow-list: writes from any other Origin are rejected.
+      CORS_ORIGINS: ${CORS_ORIGINS:?Set CORS_ORIGINS to the public web and blog origins in .env}
       ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
       READER_SESSION_DAYS: ${READER_SESSION_DAYS:-30}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET:-}
+      EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET:?Set EMAIL_VERIFICATION_SECRET in .env}
       WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
       LOCAL_AUTO_VERIFY_EMAIL: ${LOCAL_AUTO_VERIFY_EMAIL:-false}
       MARKETPLACE_PROVIDER_TOKEN_KEY: ${MARKETPLACE_PROVIDER_TOKEN_KEY:-}
@@ -63,12 +64,15 @@ services:
       args:
         API_URL: ${WEB_BUILD_API_URL:-http://api:4001}
         NEXT_PUBLIC_BLOG_URL: ${BLOG_SITE_URL:-http://localhost:3001}
+        # Inlined at build time: canonicals, sitemap, robots and social cards.
+        NEXT_PUBLIC_SITE_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
     restart: unless-stopped
     environment:
       NODE_ENV: production
       API_URL: http://api:4001
       NEXT_PUBLIC_API_URL: /backend
       NEXT_PUBLIC_BLOG_URL: ${BLOG_SITE_URL:-http://localhost:3001}
+      NEXT_PUBLIC_SITE_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
     depends_on:
       api:
         condition: service_healthy
@@ -109,8 +113,9 @@ services:
         condition: service_healthy
     command: ["sh", "-c", "while true; do node apps/api/dist/jobs/publishScheduled.js; sleep 60; done"]
 
+  # Runs by default: password accounts cannot verify or reset without it. It exits
+  # (and restarts visibly) while misconfigured instead of failing queued mail.
   email-worker:
-    profiles: ["email"]
     build:
       context: .
       dockerfile: docker/Dockerfile.api
@@ -118,7 +123,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public
-      EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET:-}
+      EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET:?Set EMAIL_VERIFICATION_SECRET in .env}
       WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_EMAIL_API_TOKEN: ${CLOUDFLARE_EMAIL_API_TOKEN:-}
@@ -128,7 +133,7 @@ services:
     depends_on:
       api:
         condition: service_healthy
-    command: ["sh", "-c", "while true; do node apps/api/dist/jobs/sendTransactionalEmails.js; sleep 30; done"]
+    command: ["sh", "-c", "while node apps/api/dist/jobs/sendTransactionalEmails.js; do sleep 30; done"]
 
   marketplace-source-worker:
     build:

@@ -17,7 +17,7 @@ type SendPasswordResetEmailInput = {
 type FetchLike = typeof fetch;
 type CloudflareEmailResponse = { result?: { delivered?: unknown[]; queued?: unknown[]; permanent_bounces?: unknown[] } };
 
-function emailConfig() {
+export function emailConfig() {
   const values = {
     accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
     apiToken: process.env.CLOUDFLARE_EMAIL_API_TOKEN,

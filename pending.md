@@ -25,10 +25,30 @@ This file tracks known improvement work that has not been completed yet. When an
   3.62 s vs 2.0 s), `/dashboard` performance (89 vs 92), `/` first-load JS
   (185 kB vs 170 kB). Expected from plan P2 (motion diet) and P3 (fonts,
   plasma tiers).
-- `.github/workflows/ci.yml` still triggers on a `development` branch, which
-  does not exist on the remote.
 - Preload the display serif used on the hero headline. This needs the fonts
   moved from `@fontsource-variable` to `next/font/local`.
+- `/explore` intermittently has two identical `<link rel="next">` tags in
+  `<head>`, so `e2e/catalog.spec.ts:107` fails in strict mode about 35-55% of
+  runs (both on Next 16.3.6 and 16.3.8, measured 2026-10-16). The tags are
+  hoisted from `app/explore/page.tsx:29-30`. Separately, the landing pause test
+  and the card-morph test fail under default parallelism and pass with 2
+  workers. Make the suite pass with default workers.
+- A missing, suspended or archived product renders the branded not-found page
+  with `noindex` but HTTP 200: `app/products/[slug]/loading.tsx` makes the route
+  stream, so `notFound()` arrives after the status is sent. Unknown routes are
+  real 404s.
+- On a failed catalogue load the homepage falls back to `lib/mock-home.ts`
+  (with a notice), so its cards link to listings that do not exist. Decide
+  whether production should show an error state instead.
+
+## Launch — Owner Decisions
+
+- Privacy policy, terms and content policy pages: none exist. The footer's
+  "About" and "Quality standards" point at `/design-system`, "Support" at
+  `/account`.
+- Seeded listings cannot be acquired (no approved release). Launch empty, with
+  curated real listings, or with the demo seed (`SEED_DEMO=true`) knowing the
+  acquire and review loop is unavailable on those items.
 
 ## Marketplace — P0 Discovery and Community
 

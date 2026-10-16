@@ -72,7 +72,7 @@ export function Footer() {
 
       <div className="border-t border-border/70 py-5">
         <p className="container-page font-mono text-xs text-muted-foreground">
-          © 2026 termspace · Concept prototype · Local mock data only
+          © 2026 termspace
         </p>
       </div>
     </footer>

@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { productDetail } from "@/lib/fixtures";
 import { ApiError } from "@/lib/api";
+import type { MarketplaceInstallation, ProductDetail } from "@/lib/types";
 
 const acquireProduct = vi.hoisted(() => vi.fn());
 const getProductInstallation = vi.hoisted(() => vi.fn());
@@ -24,7 +25,7 @@ vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ fa: false }) }));
 
 const { ProductActions } = await import("./product-actions");
 
-const installation = {
+const installation: MarketplaceInstallation = {
   acquisition: { id: "order-1", status: "completed", acquiredAt: "2026-09-18T10:00:00.000Z" },
   product: { slug: productDetail.slug, name: productDetail.name },
   release: {
@@ -33,6 +34,15 @@ const installation = {
     installation: { method: "manual", url: `https://github.com/example/tool/archive/${"a".repeat(40)}.tar.gz`, instructions: ["Extract the archive", "Copy the resource directory"] },
     requirements: { runtimes: [], accounts: [], operatingSystems: [], dependencies: [] },
     license: "MIT", documentationUrl: null, supportUrl: null,
+  },
+};
+
+const acquirable: ProductDetail = {
+  ...productDetail,
+  release: {
+    version: "1.0.0", source: installation.release.source,
+    installation: { method: "manual", url: installation.release.installation.url },
+    permissions: [], environment: [], license: "MIT", mcp: null,
   },
 };
 
@@ -48,7 +58,7 @@ describe("ProductActions acquisition flow", () => {
 
   it("requires sign-in before acquisition", () => {
     session.email = null;
-    render(<ProductActions product={productDetail} />);
+    render(<ProductActions product={acquirable} />);
     fireEvent.click(screen.getByRole("button", { name: "Add to library" }));
     expect(push).toHaveBeenCalledWith(expect.stringMatching(/^\/account\?next=/));
     expect(acquireProduct).not.toHaveBeenCalled();
@@ -58,7 +68,7 @@ describe("ProductActions acquisition flow", () => {
     getProductInstallation
       .mockRejectedValueOnce(new ApiError(404, "ACQUISITION_NOT_FOUND", "Not acquired"))
       .mockResolvedValueOnce(installation);
-    render(<ProductActions product={productDetail} />);
+    render(<ProductActions product={acquirable} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Add to library" }));
 
@@ -70,9 +80,24 @@ describe("ProductActions acquisition flow", () => {
     await waitFor(() => expect(acquireProduct).toHaveBeenCalledTimes(1));
   });
 
+  it("blocks acquisition up front when the listing has no approved release", () => {
+    render(<ProductActions product={productDetail} />);
+    const button = screen.getByRole("button", { name: "No approved release is available yet." });
+    expect(button).toBeDisabled();
+    fireEvent.click(button);
+    expect(acquireProduct).not.toHaveBeenCalled();
+  });
+
+  it("says why when the release disappears between render and click", async () => {
+    acquireProduct.mockRejectedValue(new ApiError(409, "RELEASE_UNAVAILABLE", "No approved release"));
+    render(<ProductActions product={acquirable} />);
+    fireEvent.click(screen.getByRole("button", { name: "Add to library" }));
+    expect(await screen.findByText("No approved release is available yet.")).toBeInTheDocument();
+  });
+
   it("loads an existing entitlement without creating another acquisition", async () => {
     getProductInstallation.mockResolvedValue(installation);
-    render(<ProductActions product={productDetail} />);
+    render(<ProductActions product={acquirable} />);
     const button = await screen.findByRole("button", { name: "View installation" });
     fireEvent.click(button);
     expect(await screen.findByRole("dialog", { name: "Install acquired release" })).toBeInTheDocument();
