@@ -200,7 +200,7 @@ function statusClass(state: string) {
   return "bg-muted text-muted-foreground";
 }
 
-function isEditable(state: string) {
+export function isEditable(state: string) {
   return state === "draft" || state === "changes_requested" || state === "rejected" || state === "published";
 }
 

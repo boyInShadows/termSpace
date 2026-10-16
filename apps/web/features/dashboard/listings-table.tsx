@@ -1,8 +1,9 @@
 "use client";
+import { Fragment } from "react";
 import Link from "next/link";
 import { Store } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { listingStateLabel } from "@/features/creator/creator-dashboard";
+import { isEditable, listingStateLabel } from "@/features/creator/creator-dashboard";
 import { formatRelative, listingTone, OVERVIEW_LISTING_LIMIT, type ListingTone } from "@/lib/dashboard";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
@@ -68,40 +69,72 @@ function ListingRows({ rows, now }: { rows: CreatorDashboardListing[]; now: numb
             <th scope="col" className={cn(HEAD_CELL, "ps-5 text-start")}>{copy.colName}</th>
             <th scope="col" className={cn(HEAD_CELL, "hidden text-start sm:table-cell")}>{copy.colVersion}</th>
             <th scope="col" className={cn(HEAD_CELL, "px-3 text-start")}>{copy.colStatus}</th>
-            <th scope="col" className={cn(HEAD_CELL, "pe-5 text-end sm:pe-3")}>{copy.colAcquisitions}</th>
+            <th scope="col" className={cn(HEAD_CELL, "pe-5 text-end max-sm:tracking-normal sm:pe-3")}>{copy.colAcquisitions}</th>
             <th scope="col" className={cn(HEAD_CELL, "hidden pe-5 text-end md:table-cell")}>{copy.colUpdated}</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row.id} className="h-12 border-b border-border/60 transition-colors last:border-0 hover:bg-surface-raised/60">
-              <td className="max-w-0 ps-5 sm:max-w-none">
-                <Link
-                  href={localePath(`/dashboard/studio/listings/${row.id}/releases`, locale)}
-                  className="flex min-h-8 min-w-0 items-center gap-2"
-                >
-                  <span className="truncate font-medium">{row.name}</span>
-                  <span className="shrink-0 rounded-md bg-primary-soft px-1.5 py-0.5 font-mono text-[10px] uppercase text-foreground/80">
-                    {row.type}
-                  </span>
-                </Link>
-              </td>
-              <td className="hidden font-mono text-muted-foreground sm:table-cell">
-                <bdi dir="ltr">v{row.currentVersion}</bdi>
-              </td>
-              <td className="px-3">
-                <span className={cn("whitespace-nowrap rounded-full px-2 py-0.5 text-xs", TONE_CLASS[listingTone(row.state)])}>
-                  {listingStateLabel(row.state, t.creatorHub)}
-                </span>
-              </td>
-              <td className="pe-5 text-end font-mono tabular-nums sm:pe-3">{number.format(row.acquisitionCount)}</td>
-              <td className="hidden whitespace-nowrap pe-5 text-end font-mono text-muted-foreground md:table-cell">
-                <time dateTime={row.updatedAt} title={fullDate.format(new Date(row.updatedAt))}>
-                  {formatRelative(row.updatedAt, now, localeTag)}
-                </time>
-              </td>
-            </tr>
-          ))}
+          {rows.map((row) => {
+            // What the reviewer asked for, on the row that needs the creator:
+            // the overview is where they land, and the status pill alone left
+            // "Changes requested" a dead end.
+            const feedback = listingTone(row.state) === "attention" ? row.moderationFeedback?.message : null;
+            return (
+              <Fragment key={row.id}>
+                <tr className={cn("h-12 transition-colors hover:bg-surface-raised/60", !feedback && "border-b border-border/60 last:border-0")}>
+                  {/* `w-full max-w-0` is the table-cell truncation idiom: the name
+                      takes whatever the other columns leave. Without `w-full` the
+                      cell collapsed to nothing on a phone and only the type badge
+                      showed. */}
+                  <td className="w-full max-w-0 ps-5 sm:w-auto sm:max-w-none">
+                    <Link
+                      href={localePath(`/dashboard/studio/listings/${row.id}/releases`, locale)}
+                      className="flex min-h-8 min-w-0 flex-col items-start justify-center gap-1 py-1.5 sm:flex-row sm:items-center sm:gap-2 sm:py-0"
+                    >
+                      <span className="max-w-full truncate font-medium" title={row.name}>{row.name}</span>
+                      <span className="shrink-0 rounded-md bg-primary-soft px-1.5 py-0.5 font-mono text-[11px] uppercase text-foreground/80">
+                        {row.type}
+                      </span>
+                    </Link>
+                  </td>
+                  <td className="hidden font-mono text-muted-foreground sm:table-cell">
+                    <bdi dir="ltr">v{row.currentVersion}</bdi>
+                  </td>
+                  <td className="px-3">
+                    <span className={cn("inline-block max-w-[6.5rem] rounded-full px-2 py-0.5 text-center text-xs leading-4 sm:max-w-none sm:whitespace-nowrap", TONE_CLASS[listingTone(row.state)])}>
+                      {listingStateLabel(row.state, t.creatorHub)}
+                    </span>
+                  </td>
+                  <td className="pe-5 text-end font-mono tabular-nums sm:pe-3">{number.format(row.acquisitionCount)}</td>
+                  <td className="hidden whitespace-nowrap pe-5 text-end font-mono text-muted-foreground md:table-cell">
+                    <time dateTime={row.updatedAt} title={fullDate.format(new Date(row.updatedAt))}>
+                      {formatRelative(row.updatedAt, now, localeTag)}
+                    </time>
+                  </td>
+                </tr>
+                {feedback && (
+                  <tr className="border-b border-border/60 last:border-0">
+                    <td colSpan={5} className="px-5 pb-3">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                        <p className="ts-bidi min-w-0 line-clamp-3 text-xs leading-5 text-muted-foreground" title={feedback}>
+                          <span className="font-semibold text-foreground">{t.creatorHub.moderationFeedback}: </span>
+                          {feedback}
+                        </p>
+                        {isEditable(row.state) && (
+                          <Link
+                            href={localePath(`/dashboard/studio/listings/${row.id}/edit`, locale)}
+                            className="inline-flex min-h-8 shrink-0 items-center text-xs font-semibold text-primary hover:underline"
+                          >
+                            {t.creatorHub.editDraft}
+                          </Link>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
         </tbody>
       </table>
     </div>

@@ -91,34 +91,34 @@ export function DashboardTabBar() {
   const items = useDashboardNav();
 
   return (
-    <>
-      <nav
-        aria-label={t.dashboardHome.tabsLabel}
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
-      >
-        <ul className="grid grid-cols-3">
-          {items.map(({ href, label, icon: Icon, active }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "flex min-h-14 flex-col items-center justify-center gap-1 text-[11px]",
-                  active ? "text-primary" : "text-muted-foreground",
-                )}
-              >
-                <Icon aria-hidden className="size-5" />
-                {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <PublishLink
-        iconOnly
-        className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] end-5 z-40 size-14 rounded-full shadow-[var(--shadow-lift)] lg:hidden"
-      />
-    </>
+    // Publish is the last slot of the bar, not a floating button. The floating
+    // one sat over the right-aligned numbers of whatever row was scrolled
+    // beneath it (the last listing's acquisitions, in the overview table).
+    <nav
+      aria-label={t.dashboardHome.tabsLabel}
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
+    >
+      <ul className="grid grid-cols-4">
+        {items.map(({ href, label, icon: Icon, active }) => (
+          <li key={href}>
+            <Link
+              href={href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex min-h-14 flex-col items-center justify-center gap-1 text-[11px]",
+                active ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <Icon aria-hidden className="size-5" />
+              {label}
+            </Link>
+          </li>
+        ))}
+        <li className="flex items-center justify-center px-2">
+          <PublishLink className="min-h-11 w-full rounded-lg px-2" />
+        </li>
+      </ul>
+    </nav>
   );
 }
 

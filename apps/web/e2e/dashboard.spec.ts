@@ -14,7 +14,7 @@ test.describe("dashboard", () => {
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(page).toHaveURL(/\/dashboard$/);
-    await expect(page.getByRole("table").locator("tbody tr")).toHaveCount(3);
+    await expect(page.getByRole("table").locator("tbody tr td:first-child a span.truncate")).toHaveCount(3);
   });
 
   test("shows the empty state to a creator with no listings", async ({ page, context, baseURL }) => {
@@ -65,4 +65,18 @@ test.describe("dashboard", () => {
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(768);
     });
   }
+
+  test("listing names stay readable on a phone, and a listing needing changes shows why", async ({ page, context, baseURL }, testInfo) => {
+    test.skip(testInfo.project.name.startsWith("desktop"), "Checks a phone-width viewport.");
+    await signInAs(context, baseURL!, "creator");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/dashboard");
+    const names = page.getByRole("table").locator("tbody tr td:first-child a span.truncate");
+    await expect(names).toHaveCount(3);
+    for (const width of await names.evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().width))) {
+      expect(width).toBeGreaterThan(60);
+    }
+    await expect(page.getByRole("table").getByText("State what the skill reads.")).toBeVisible();
+    await expect(page.getByRole("table").getByRole("link", { name: "Edit draft" })).toBeVisible();
+  });
 });

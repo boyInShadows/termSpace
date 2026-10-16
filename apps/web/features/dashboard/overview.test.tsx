@@ -70,6 +70,24 @@ describe("DashboardOverview", () => {
     expect(within(activity).getByText(`· ${copy.en.creatorHub.actionPublished}`)).toBeInTheDocument();
   });
 
+  it("shows the reviewer's reason and an edit action under a listing that needs changes", async () => {
+    const home = creatorHome(2) as Extract<DashboardHome, { kind: "creator" }>;
+    home.dashboard.listings[0].moderationFeedback = {
+      action: "changes_requested", reasonCode: "UNCLEAR_PERMISSIONS", message: "State what the skill reads.", createdAt: "2026-09-21T10:00:00Z",
+    };
+    getHome.mockResolvedValue(home);
+    render(<DashboardOverview />);
+
+    const table = await screen.findByRole("table");
+    expect(within(table).getByText("State what the skill reads.")).toBeInTheDocument();
+    // One reason, for the one listing that has feedback; the other row gets no second line.
+    expect(within(table).getAllByRole("row")).toHaveLength(4); // header + 2 listings + 1 reason
+    expect(within(table).getByRole("link", { name: copy.en.creatorHub.editDraft })).toHaveAttribute(
+      "href",
+      "/dashboard/studio/listings/listing-0/edit",
+    );
+  });
+
   it("caps the table at eight listings", async () => {
     getHome.mockResolvedValue(creatorHome(10));
     render(<DashboardOverview />);

@@ -47,8 +47,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <DashboardTopbar />
       <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
         <DashboardSidebar />
-        {/* Bottom padding clears the fixed tab bar and Publish button below lg. */}
-        <main className="min-w-0 px-4 pb-32 pt-6 sm:px-6 lg:px-10 lg:py-8">
+        {/* Bottom padding clears the fixed tab bar below lg. */}
+        <main className="min-w-0 px-4 pb-24 pt-6 sm:px-6 lg:px-10 lg:py-8">
           <div className="mx-auto max-w-[1200px]">
             {session.loading ? <DashboardOverviewSkeleton /> : children}
           </div>

@@ -4,6 +4,31 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-16
 
+- **Dashboard on a phone (critique-driven `adapt`, branch `redesign`).** From
+  the 2026-10-16 critique of `/`, `/dashboard` and `/explore`.
+  - `features/dashboard/listings-table.tsx`: at 390 px the listing names
+    rendered at 0 px, so each row showed only its type badge (`max-w-0` on the
+    name cell with nothing telling it to take the leftover width, then the badge
+    and a no-wrap status pill taking the rest). The name cell is now
+    `w-full max-w-0` below `sm`, the type badge sits under the name, the status
+    pill may wrap, and the acquisitions header drops its tracking. Names are
+    71 px at 320, 82 to 139 px at 390 (full text, ellipsis only for the longest
+    at 320 and 360), and the page never scrolls sideways.
+  - A listing whose state needs the creator (changes requested, rejected,
+    suspended) gets a second line with the reviewer's message and, where the
+    listing is editable, an "Edit draft" link. Before, the row said "Changes
+    requested" with no reason and linked to releases. `isEditable` is now
+    exported from `features/creator/creator-dashboard.tsx`.
+  - The 10 px type badge and the Ctrl K hint are 11 px (the floor in DESIGN.md).
+  - `features/dashboard/dashboard-nav.tsx`: below `lg` Publish is the last slot
+    of the bottom tab bar instead of a floating button, which sat over the
+    right-aligned acquisitions column of whatever row was scrolled beneath it.
+    Bottom padding of the shell is 24 (was 32) to match.
+  - Verification: typecheck, lint, 165 unit tests (one new: reason and edit link
+    appear for the listing with feedback only), full e2e 123 passed (new phone
+    case: names wider than 60 px, reason and Edit draft visible; the
+    signed-out-then-dashboard case now counts name cells, not table rows).
+    Measured at 320, 390, 768 and 1440 px. Not run: a real phone.
 - **Web audit fixes (branch `redesign`, `apps/web` presentation lane at the
   maintainer's request).** From a Playwright pass at 735, 768 and 1440 px over
   the main routes, signed out and as a creator. One bullet per fixed item.

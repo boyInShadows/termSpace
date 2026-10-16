@@ -66,7 +66,7 @@ export function DashboardTopbar() {
             />
             <kbd
               aria-hidden
-              className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2 rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground"
+              className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2 rounded border border-border px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
             >
               {shortcutHint}
             </kbd>
