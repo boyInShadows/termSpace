@@ -662,6 +662,22 @@ describe("API", () => {
     });
   });
 
+  it("answers an anonymous session check with 200 and authenticated false, not 401", async () => {
+    const withoutCookie = await request(createApp()).get("/api/readers/session");
+    expect(withoutCookie.status).toBe(200);
+    expect(withoutCookie.body).toEqual({ data: { authenticated: false } });
+
+    prismaMock.readerSession.findFirst.mockResolvedValue(null);
+    const expired = await request(createApp())
+      .get("/api/readers/session")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+    expect(expired.status).toBe(200);
+    expect(expired.body.data.authenticated).toBe(false);
+
+    // Protected reader routes still refuse an anonymous caller.
+    expect((await request(createApp()).get("/api/readers/profile")).status).toBe(401);
+  });
+
   it("rejects creator onboarding until the reader email is verified", async () => {
     prismaMock.readerSession.findFirst.mockResolvedValue({
       id: "session-1",

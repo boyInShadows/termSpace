@@ -93,6 +93,26 @@ export const requireReader: RequestHandler = async (req, res, next) => {
   }
 };
 
+/**
+ * Like requireReader, but an anonymous caller carries on instead of getting a
+ * 401: for endpoints whose job is to say whether anyone is signed in. A 401 is
+ * correct for a protected resource, but browsers log every failed request to
+ * the console, so asking "who am I?" on each page view of a signed-out visitor
+ * filled it with errors.
+ */
+export const optionalReader: RequestHandler = async (req, res, next) => {
+  try {
+    const session = await getReaderSession(req);
+    if (session) {
+      res.locals.reader = readerAccess(session.user);
+      res.locals.readerSessionId = session.id;
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const requireVerifiedReader: RequestHandler = (_req, res, next) => {
   if (!res.locals.reader?.emailVerified) {
     res.status(403).json({ error: { code: "EMAIL_VERIFICATION_REQUIRED", message: "Verify your email before creating a creator profile" } });

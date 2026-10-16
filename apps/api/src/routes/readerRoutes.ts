@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { addBookmark, changeReaderPassword, confirmReaderEmailVerification, confirmReaderPasswordReset, getReaderLibrary, getReaderProfile, getReaderSession, loginReader, loginReaderWithGoogle, logoutReader, registerReader, removeBookmark, requestReaderEmailVerification, requestReaderPasswordReset, saveProgress, syncReaderLibrary } from "../controllers/readerController.js";
-import { requireReader } from "../middleware/auth.js";
+import { optionalReader, requireReader } from "../middleware/auth.js";
 import { emailVerificationAttemptRateLimit, emailVerificationRequestRateLimit, loginRateLimit, passwordResetAttemptRateLimit, passwordResetRequestRateLimit } from "../middleware/security.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
 import { emailVerificationConfirmSchema, googleCredentialSchema, readerCredentialsSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, readerPasswordResetConfirmSchema, readerPasswordResetRequestSchema, readerProgressSchema, routeSlugSchema } from "../validation/schemas.js";
@@ -11,7 +11,7 @@ router.post("/login", loginRateLimit, validate(readerCredentialsSchema), loginRe
 router.post("/register", loginRateLimit, validate(readerCredentialsSchema), registerReader);
 router.post("/google", loginRateLimit, validate(googleCredentialSchema), loginReaderWithGoogle);
 router.post("/logout", logoutReader);
-router.get("/session", requireReader, getReaderSession);
+router.get("/session", optionalReader, getReaderSession);
 router.get("/profile", requireReader, getReaderProfile);
 router.post("/email-verification/request", requireReader, emailVerificationRequestRateLimit, requestReaderEmailVerification);
 router.post("/email-verification/confirm", emailVerificationAttemptRateLimit, validate(emailVerificationConfirmSchema), confirmReaderEmailVerification);

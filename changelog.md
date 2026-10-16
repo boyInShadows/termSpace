@@ -95,6 +95,41 @@ Project changes completed from `pending.md` should be recorded here with the dat
     asserts WCAG 2.2 target size on `/`, `/explore`, a product, `/account` and
     `/dashboard`; a native radio or checkbox counts through its wrapping
     label. Verified that it fails when the threshold is raised.
+  - Hero terminal card "empty" at 735 and 768 (item 15): not a bug. At those
+    widths the card sits below the fold (top about 810 px of 900), and the
+    sequence deliberately plays only while at least half of it is on screen;
+    scrolled into view it types normally (`--typed` 0 to 53 in about 2 s). The
+    empty frame in the audit was a full-page screenshot. No change.
+  - Hero LCP and the WebGL console note (item 16): no code change. On desktop
+    the LCP candidate moves from the hero paragraph (about 100 ms) to the
+    manifest card's typed text (about 700 ms) because that text first paints
+    when the sequence starts, 600 ms after load; with reduced motion, where the
+    finished frame paints at once, LCP stays at about 150 ms. It is a metric
+    effect of a deliberate decorative animation, well inside the good range.
+    The mobile Lighthouse LCP (3.2 s simulated, Render Delay 86%, FCP 1.1 s)
+    is a different, known problem and stays in `pending.md`. The "GPU stall due
+    to ReadPixels" message is Chrome's software-GL note from headless runs; the
+    app calls `readPixels` nowhere.
+  - Console noise (item 17): every signed-out page view logged a failed request
+    because `GET /api/readers/session` answered 401 for an anonymous caller.
+    It now answers `200 { data: { authenticated: false } }` through a new
+    `optionalReader` middleware (`apps/api`: `middleware/auth.ts`,
+    `routes/readerRoutes.ts`, `controllers/readerController.ts`); protected
+    routes still 401. The web client (`lib/api.ts`, `marketplace-session.tsx`)
+    handles both shapes. The blog's `getReaderSession` is defined but unused,
+    so nothing there changes. The "unexplained" 404 from the audit was
+    `/favicon.ico`: the app had no icon at all (blank tab icon too). Added
+    `app/icon.svg` (a prompt chevron and caret in the brand colours).
+    Verification: new API test (anonymous 200, expired cookie 200, `/profile`
+    still 401); new `e2e/console.spec.ts` asserts no console error or failed
+    request on six signed-out pages (both projects) and that an icon is
+    declared and served; full web e2e 122 passed, 16 skipped; API 176 passed
+    with `LOCAL_AUTO_VERIFY_EMAIL=false`; root typecheck and build pass.
+    **Deploy note:** a web build that handles `authenticated: false` works
+    against the old API (it still sees 401), and the new API works with the old
+    web build only if it tolerates a 200 without `user`: it does not (it would
+    read `session.data.user.email`), so deploy the web build before or with
+    the API.
 
 - CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
   typecheck saw an empty Prisma client and failed, and the fail-fast matrix

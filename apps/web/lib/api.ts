@@ -84,7 +84,7 @@ export async function getProducts(filters: ProductFilters = {}, signal?: AbortSi
 }
 export async function getProduct(slug: string) { return (await request<{ data: ProductDetail }>(`/api/marketplace/products/${encodeURIComponent(slug)}`, { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
 export type MarketplaceRole = "creator" | "moderator" | "administrator";
-export async function getSession() { return request<{ data: { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } }>("/api/readers/session"); }
+export async function getSession() { return request<{ data: { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } | { authenticated: false } }>("/api/readers/session"); }
 export async function login(email: string, password: string) { return request("/api/readers/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function register(email: string, password: string) { return request("/api/readers/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function requestPasswordReset(email: string) { return request<{ data: { accepted: true } }>("/api/readers/password-reset/request", { method: "POST", body: JSON.stringify({ email }) }); }

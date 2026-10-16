@@ -138,6 +138,8 @@ async function handle(request, response) {
     return send(response, 204, undefined, { "Set-Cookie": `${COOKIE}=; Path=/; Max-Age=0` });
   }
 
+  // Like the real API: asking who is signed in is not an error when nobody is.
+  if (route === "GET /api/readers/session" && !persona) return send(response, 200, { data: { authenticated: false } });
   if (!persona) return send(response, 401, error("UNAUTHENTICATED", "Sign in to continue"));
 
   if (route === "GET /api/readers/session") {

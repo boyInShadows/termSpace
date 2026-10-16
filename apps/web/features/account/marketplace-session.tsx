@@ -25,6 +25,12 @@ export function MarketplaceSessionProvider({ children }: { children: React.React
     setLoading(true); setError(null);
     try {
       const session = await getSession();
+      if (!session.data.authenticated) {
+        // Anonymous: the API answers 200 so a signed-out page view does not
+        // log a failed request. A 401 is still treated the same, below.
+        setEmail(null); setEmailVerified(false); setMarketplaceRoles([]); setFavorites(new Set());
+        return;
+      }
       setEmail(session.data.user.email);
       setEmailVerified(session.data.user.emailVerified);
       setMarketplaceRoles(session.data.user.marketplaceRoles);

@@ -336,6 +336,11 @@ export async function logoutReader(req: Request, res: Response) {
 }
 
 export function getReaderSession(_req: Request, res: Response) {
+  // Answers 200 for an anonymous caller (see optionalReader).
+  if (!res.locals.reader) {
+    res.json({ data: { authenticated: false } });
+    return;
+  }
   res.json({ data: { authenticated: true, user: res.locals.reader } });
 }
 
