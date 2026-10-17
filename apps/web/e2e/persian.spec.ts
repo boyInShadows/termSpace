@@ -38,9 +38,8 @@ test.describe("persian", () => {
   test("every section heading on /fa is in Persian", async ({ page }) => {
     await page.goto("/fa");
     await expect(page.locator("h1").first()).toBeVisible();
-    // The example listing's own name is creator content and stays in its language.
-    const headings = await page.locator("main h2:not(#sheet-title)").allTextContents();
-    expect(headings.length).toBeGreaterThanOrEqual(5);
+    const headings = await page.locator("main h2").allTextContents();
+    expect(headings.length).toBeGreaterThanOrEqual(3);
     expect(headings.filter((text) => !/[؀-ۿ]/.test(text))).toEqual([]);
   });
 
@@ -58,7 +57,7 @@ test.describe("persian", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
   });
 
-  test("display type runs smaller, looser and lighter than the English", async ({ page }) => {
+  test("display type runs looser and heavier than the English", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     const measure = () =>
       page.locator("h1").evaluate((node) => {
@@ -70,18 +69,13 @@ test.describe("persian", () => {
     await page.goto("/fa");
     const persian = await measure();
 
-    expect(persian.size).toBeLessThan(english.size);
+    expect(english.weight).not.toBe("600");
     expect(persian.leading).toBeCloseTo(1.35, 2);
     expect(persian.weight).toBe("600");
   });
 
-  test("prose counts use Persian digits; the sheet's code values keep Latin ones", async ({ page }) => {
+  test("prose counts use Persian digits", async ({ page }) => {
     await page.goto("/fa");
-    const featured = page.locator("article:not([aria-labelledby=sheet-title])").first();
-    await expect(featured).toContainText(PERSIAN_DIGITS);
-    const sheet = page.locator("article[aria-labelledby=sheet-title]");
-    await expect(sheet.getByText("termspace add staff-engineer-review@0123abc")).toHaveAttribute("dir", "ltr");
-    await expect(sheet.getByText("termspace add staff-engineer-review@0123abc")).not.toContainText(PERSIAN_DIGITS);
-    await expect(sheet.getByRole("heading", { name: "حداکثر دسترسی‌های اعلام‌شده" })).toBeVisible();
+    await expect(page.locator("main article").first()).toContainText(PERSIAN_DIGITS);
   });
 });

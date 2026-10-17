@@ -12,11 +12,11 @@ export function Footer() {
   const columns = [
     { heading: labels.marketplace, links: [
       { label: labels.explore, href: localePath("/explore", locale) },
-      { label: labels.collections, href: localePath("/#collections", locale) },
+      { label: labels.collections, href: localePath("/communities", locale) },
       { label: labels.newReleases, href: `${localePath("/explore", locale)}?sort=newest` },
     ] },
     { heading: labels.create, links: [
-      { label: labels.creatorGuide, href: localePath("/#creators", locale) },
+      { label: labels.creatorGuide, href: localePath("/design-system", locale) },
       { label: labels.qualityStandards, href: localePath("/design-system", locale) },
     ] },
     { heading: labels.company, links: [

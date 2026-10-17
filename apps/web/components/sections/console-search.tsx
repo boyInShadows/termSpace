@@ -56,12 +56,9 @@ function parseRecent(raw: string | null): string[] {
 export function ConsoleSearch({
   variant = "band",
   types,
-  label,
   browseLabel,
 }: {
   variant?: "hero" | "band";
-  /** Hero only: a visible label cell at the start of the field. */
-  label?: string;
   /** Hero only: the text before the type shortcuts. */
   browseLabel?: string;
   /**
@@ -171,15 +168,10 @@ export function ConsoleSearch({
           className={cn(
             "relative flex items-center transition-colors",
             isHero
-              ? "overflow-hidden rounded-none border border-foreground/60 bg-background focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/25"
+              ? "rounded-full border border-border-strong bg-background pe-1.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/25"
               : "rounded-xl border border-border-strong bg-surface/90 shadow-soft backdrop-blur focus-within:border-transparent",
           )}
         >
-          {isHero && label && (
-            <span className="hidden self-stretch whitespace-nowrap border-e border-foreground/60 bg-muted px-4 text-[11px] font-semibold uppercase tracking-[0.08em] sm:flex sm:items-center">
-              {label}
-            </span>
-          )}
           <Search
             size={19}
             className="ms-5 shrink-0 text-muted-foreground transition-colors group-focus-within:text-primary"
@@ -205,23 +197,35 @@ export function ConsoleSearch({
             onBlur={() => window.setTimeout(() => setIsFocused(false), 120)}
             className={cn(
               "min-w-0 flex-1 bg-transparent px-4 text-base placeholder:text-muted-foreground focus:outline-none",
-              isHero ? "h-14" : "h-16",
+              isHero ? "h-12" : "h-16",
             )}
           />
-          <button
-            type="submit"
-            className={cn("me-2 hidden h-11 items-center gap-2 bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover sm:flex", isHero ? "rounded-none" : "rounded-lg")}
-          >
-            {t.homePage.searchCta}
-            {!isHero && <CornerDownLeft size={14} aria-hidden />}
-          </button>
-          <button
-            type="submit"
-            aria-label={t.homePage.searchCta}
-            className={cn("me-2 grid size-11 shrink-0 place-items-center bg-primary text-primary-foreground transition hover:bg-primary-hover sm:hidden", isHero ? "rounded-none" : "rounded-lg")}
-          >
-            <Search size={17} aria-hidden />
-          </button>
+          {isHero ? (
+            <button
+              type="submit"
+              aria-label={t.homePage.searchCta}
+              className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition hover:bg-primary-hover"
+            >
+              <CornerDownLeft size={16} aria-hidden />
+            </button>
+          ) : (
+            <>
+              <button
+                type="submit"
+                className="me-2 hidden h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover sm:flex"
+              >
+                {t.homePage.searchCta}
+                <CornerDownLeft size={14} aria-hidden />
+              </button>
+              <button
+                type="submit"
+                aria-label={t.homePage.searchCta}
+                className="me-2 grid size-11 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground transition hover:bg-primary-hover sm:hidden"
+              >
+                <Search size={17} aria-hidden />
+              </button>
+            </>
+          )}
         </div>
 
         {isSuggesting && (
@@ -264,7 +268,7 @@ export function ConsoleSearch({
       <div
         className={cn(
           "flex flex-wrap",
-          isHero ? "mt-3 items-center gap-x-1 gap-y-1 text-sm" : "mt-5 justify-center gap-2",
+          isHero ? "mt-3 items-center justify-center gap-x-1 gap-y-1 text-sm" : "mt-5 justify-center gap-2",
         )}
       >
         {isHero && browseLabel && (

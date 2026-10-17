@@ -4,6 +4,67 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-17
 
+- **Home: hero title matches the other pages' titles (same branch).** The h1
+  drops its own scale (bold sans, clamp up to 3.2rem) for the shared `editorial`
+  title style: `text-4xl sm:text-5xl`, regular-weight serif, the same as the
+  explore, communities and dashboard titles. The `.ts-hero-title` Persian rule
+  is removed (the shared `.editorial` Persian rule covers it); the Persian
+  display-type e2e drops its English-vs-Persian size comparison, which was only
+  true of the old hero title.
+- **Explore: header centered (same branch).** In
+  `features/discovery/discovery-experience.tsx` the eyebrow, title, intro, search
+  field and type tabs are centered (the tab strip is `w-fit max-w-full`, so it
+  centers when it fits and still scrolls from its first tab when it does not).
+  Community pages share this component and are centered too. The catalog e2e's
+  featured-card locator now uses the labelled region, which my hero change had
+  made ambiguous (two nested `section`s matched).
+- **Home: hero intro paragraph removed, minimal search (same branch,
+  follow-up).** The headline stays; the paragraph under it ("Prompts, skills,
+  agents and MCP servers built by...") is gone to free vertical space. The hero
+  search is a plain pill: no "Find a listing" label cell, a hairline border, a
+  round icon-only submit (still labelled "Search" for assistive tech). The
+  `label` prop on `ConsoleSearch` is removed. `heroIntro` and `findLabel`
+  are now unused i18n strings (shared surface, left for a cleanup pass). A
+  headline-removed variant was built and reverted in the same session.
+  Verified: typecheck, lint, 157 web tests, e2e landing + persian + budget.
+- **Home: landing content centered (same branch, follow-up).** Hero headline,
+  intro, search (max-w-3xl), type chips and featured title center; "View all"
+  moves under the cards. Process title, trust section (now stacked: centered
+  copy and quote above three cards) and the newsletter CTA (stacked, centered)
+  follow. Card text and the pinned process steps stay start-aligned.
+  `console-search.tsx` chips row centers in the hero variant. Verified: root
+  typecheck, lint, 157 web tests, e2e landing + persian + budget (27 passed);
+  checked by geometry in the browser at 1440x800 (hero ends at 796).
+- **Home: featured shelf moves into the first screen; datasheet, "Browse the
+  library" and "Featured creators" removed (branch `redesign`, `apps/web`
+  presentation lane).**
+  - `app/page.tsx`, `components/hero/hero.tsx`: the hero is now headline,
+    search, and the three featured listings directly under it (`Hero` takes
+    `children`). Verified at 1440x800: cards end at y=736 (en) / 756 (fa, RTL),
+    so search and shelf share the first screen. The removed sections took their
+    dead code with them: `components/hero/datasheet.tsx` (also the title block
+    beside the headline, which described the example listing), and
+    `components/sections/browse.tsx` with its test.
+  - `components/marketplace/compact-product-card.tsx` (new): a hero-scale
+    card (type, name, promise, safety line, creator, rating). Permissions,
+    compatibility, communities and usage stay on the full card and the detail
+    page. It is its own file because adding a variant to `ProductCard` pushed
+    the product page to 195.1 kB against its 195 kB budget. `TrustStrip` gained
+    an optional `compact` prop; `ProductGridSkeleton` a matching `compact`.
+  - `footer.tsx`: "Collections" and "Creator guide" pointed at the removed
+    `/#collections` and `/#creators` anchors. They now go to `/communities`
+    and `/design-system` (where the old tile's Creator guide button went).
+  - e2e: removed the datasheet test and the datasheet half of the Persian-digits
+    test; added a first-screen test (shelf bottom < 800 at 1440x800); the
+    featured locator is now the labelled region.
+  - Verified: root typecheck, `npm run lint -w apps/web`, 157 web tests, e2e
+    landing + persian + budget (27 passed, 7 skipped; `PW_CHANNEL=chrome`
+    because the Playwright browser is not installed here). `lhci` not run.
+  - Left in place: the now-unused i18n strings (`homePage.browse*`, shelves,
+    `creatorsEyebrow`/`featuredCreators`, datasheet body copy) and
+    `CategoryGridSkeleton`/`CreatorGridSkeleton`, in the shared i18n surface.
+    Worth a cleanup pass.
+
 - **Navbar: account menu, icon-only language switch, centered links (branch
   `redesign`, `apps/web` presentation lane).**
   - `components/layout/account-menu.tsx` (new) and `header.tsx`: a signed-in

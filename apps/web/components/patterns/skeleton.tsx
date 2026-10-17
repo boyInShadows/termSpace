@@ -38,7 +38,21 @@ function SkeletonGroup({
 }
 
 /** Matches `ProductCard`: badge row, title, two-line outcome, creator, footer. */
-export function ProductCardSkeleton() {
+export function ProductCardSkeleton({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <div
+        aria-hidden
+        className="flex h-[12.5rem] flex-col rounded-lg border border-border bg-surface p-4"
+      >
+        <Skeleton className="h-5 w-20 rounded-full" />
+        <Skeleton className="mt-3 h-5 w-3/4" />
+        <Skeleton className="mt-2 h-3.5 w-full" />
+        <Skeleton className="mt-1.5 h-3.5 w-5/6" />
+        <Skeleton className="mt-auto h-7 w-full" />
+      </div>
+    );
+  }
   return (
     <div
       aria-hidden
@@ -68,11 +82,19 @@ export function ProductCardSkeleton() {
   );
 }
 
-export function ProductGridSkeleton({ label, count = 3 }: { label: string; count?: number }) {
+export function ProductGridSkeleton({
+  label,
+  count = 3,
+  compact = false,
+}: {
+  label: string;
+  count?: number;
+  compact?: boolean;
+}) {
   return (
-    <SkeletonGroup label={label} className="grid gap-5 md:grid-cols-3">
+    <SkeletonGroup label={label} className={compact ? "grid gap-4 md:grid-cols-3" : "grid gap-5 md:grid-cols-3"}>
       {Array.from({ length: count }, (_, index) => (
-        <ProductCardSkeleton key={index} />
+        <ProductCardSkeleton key={index} compact={compact} />
       ))}
     </SkeletonGroup>
   );

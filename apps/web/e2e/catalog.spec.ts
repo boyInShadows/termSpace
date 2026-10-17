@@ -91,7 +91,7 @@ test.describe("product detail", () => {
     // parallel local run a cold render can take longer, so warm it first.
     await page.request.get("/products/conversion-copywriter");
     await page.goto("/");
-    const featured = page.locator("section", { has: page.getByRole("heading", { name: "Featured building blocks" }) });
+    const featured = page.getByRole("region", { name: "Featured building blocks" });
     await featured.scrollIntoViewIfNeeded();
     await featured.locator("article h3 a").first().click();
 

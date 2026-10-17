@@ -99,11 +99,13 @@ export function TrustStrip({
   permissions,
   license,
   labels,
+  compact = false,
 }: {
   verified: boolean;
   permissions?: string | null;
   license?: string | null;
   labels: TrustStripLabels;
+  compact?: boolean;
 }) {
   return (
     <div className="mt-3 space-y-0.5 text-xs leading-5">
@@ -124,10 +126,12 @@ export function TrustStrip({
           <span className="truncate text-muted-foreground">{labels.licenceNone}</span>
         )}
       </p>
-      <p className="ts-bidi line-clamp-2 text-muted-foreground" title={permissions ?? undefined}>
-        <span className="sr-only">{labels.permissionsLabel}: </span>
-        {permissions ?? labels.permissionsNone}
-      </p>
+      {!compact && (
+        <p className="ts-bidi line-clamp-2 text-muted-foreground" title={permissions ?? undefined}>
+          <span className="sr-only">{labels.permissionsLabel}: </span>
+          {permissions ?? labels.permissionsNone}
+        </p>
+      )}
     </div>
   );
 }

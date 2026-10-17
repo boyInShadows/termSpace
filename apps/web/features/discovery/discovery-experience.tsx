@@ -156,7 +156,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
   );
   return (
     <main className="container-page py-10">
-      <div className="max-w-2xl">
+      <div className="mx-auto max-w-2xl text-center">
         <p className="eyebrow">{context?.eyebrow ?? d.marketplace}</p>
         <h1 className="editorial mt-2 text-5xl">{context?.title ?? d.title}</h1>
         <p className="mt-3 text-muted-foreground">
@@ -165,7 +165,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
         {context?.rules && <p className="mt-4 rounded-lg border bg-surface p-4 text-sm leading-6"><strong>{fa ? "قوانین:" : "Rules:"}</strong> {context.rules}</p>}
         {context?.archived && <p role="status" className="mt-4 rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm">{fa ? "این جامعه بایگانی شده و فهرست‌های آن در نتایج عمومی نمایش داده نمی‌شوند." : "This community is archived, so its placements are not shown in public discovery."}</p>}
       </div>
-      <div className="relative mt-8 max-w-4xl">
+      <div className="relative mx-auto mt-8 max-w-4xl">
         <Search
           className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground"
           size={20}
@@ -179,7 +179,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
         />
       </div>
       <div
-        className="ts-scroll-fade mt-6 flex gap-2 overflow-x-auto pb-2"
+        className="ts-scroll-fade mx-auto mt-6 flex w-fit max-w-full gap-2 overflow-x-auto pb-2"
         role="tablist"
         aria-label={d.productType}
       >
