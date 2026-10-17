@@ -1,12 +1,23 @@
 "use client";
 
 import type { Locale } from "@/lib/i18n";
+import { ReleaseFacts } from "./release-facts";
 import { ReleaseProvenance } from "./release-provenance";
 import type { ReleaseState } from "./release-selection";
 
 /** What the provenance section shows while a release other than the page's own is selected. */
-export function OtherRelease({ state, selected, latest, slug, locale }: { state: ReleaseState; selected: string; latest: string | undefined; slug: string; locale: Locale }) {
+export function OtherRelease({ view, state, selected, latest, slug, locale }: { view: "facts" | "provenance"; state: ReleaseState; selected: string; latest: string | undefined; slug: string; locale: Locale }) {
   const fa = locale === "fa";
+  if (view === "facts") {
+    if (state.status === "ready") return <ReleaseFacts release={state.release} locale={locale} />;
+    return (
+      <div className="border-t border-border py-3 text-sm">
+        <dd role={state.status === "error" ? "alert" : "status"}>
+          {state.status === "error" ? (fa ? "این نسخه بارگذاری نشد." : "Couldn’t load this release.") : fa ? "در حال بارگذاری…" : "Loading…"}
+        </dd>
+      </div>
+    );
+  }
   if (state.status === "ready") {
     return (
       <div>

@@ -1,18 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, FileText, Lock, ShieldCheck } from "lucide-react";
-import { ReleaseSelectionProvider, SelectedProvenance } from "@/features/product/release-selection";
+import { ReleaseSelectionProvider, SelectedRelease } from "@/features/product/release-selection";
+import { ProductFacts, ProductHeader } from "@/features/product/title-block";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "@/features/product/product-actions";
-import { CompatibilityBadges, CreatorIdentity, ProductTypeBadge, Rating } from "@/components/marketplace/product-parts";
+import { CompatibilityBadges, CreatorIdentity, Rating } from "@/components/marketplace/product-parts";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { ManifestTable, type ManifestRow } from "@/components/catalog/manifest-table";
-import { TrustChip } from "@/components/catalog/trust-chip";
 import { VersionPicker } from "@/components/catalog/version-picker";
-import { listingTransitionName } from "@/lib/listing-transition";
 import { ApiError, getProduct } from "@/lib/api";
 import { copy, localePath, type Locale } from "@/lib/i18n";
 import { ReleaseProvenance, provenanceTitle } from "@/features/product/release-provenance";
@@ -103,9 +101,9 @@ type Labels = ReturnType<typeof labels>;
 
 function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
-    <section id={id} className="border-t border-border py-9">
-      <h2 className="editorial text-3xl font-semibold">{title}</h2>
-      <div className="mt-5 text-[15px] leading-7 text-muted-foreground">{children}</div>
+    <section id={id}>
+      <h2 className="text-xl font-bold tracking-tight">{title}</h2>
+      <div className="mt-4 text-base leading-7 text-muted-foreground">{children}</div>
     </section>
   );
 }
@@ -155,187 +153,144 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <span className="text-foreground">{product.name}</span>
         </nav>
 
-        {/* Below lg the order is header, then the acquire panel, then the
-            page: the call to action used to sit after every section (about
-            3,500 px down at tablet width). From lg the aside is the right
-            rail, spanning both rows so its sticky panel follows the page. */}
+        {/* Below lg the order is header, the add controls, then the facts and
+            sections, so Add sits near the top; from lg the controls are the
+            sticky right rail beside them. */}
         <ReleaseSelectionProvider slug={product.slug} versions={product.versions} release={product.release}>
-        <div className="mt-8 grid gap-y-8 lg:grid-cols-[1fr_21rem] lg:gap-x-10 lg:gap-y-0">
-          <header className="min-w-0 pb-1 lg:col-start-1 lg:row-start-1 lg:pb-9">
-            <div className="flex flex-wrap items-center gap-2">
-              <ProductTypeBadge type={product.type} label={typeLabel} />
-              <span className="font-mono text-xs text-muted-foreground" dir="ltr">v{product.version}</span>
+          <div className="mt-8 grid gap-y-10 lg:grid-cols-[1fr_20rem] lg:gap-x-16">
+            <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+              <ProductHeader product={product} typeLabel={typeLabel} locale={locale} />
             </div>
-            {/* Shares its name with the card title, so the title travels
-                from the card into this header on navigation. */}
-            <h1
-              className="ts-listing-title ts-bidi editorial mt-5 max-w-3xl text-5xl font-medium leading-none sm:text-6xl"
-              style={{ viewTransitionName: listingTransitionName(product.id) }}
-              data-listing-header={product.id}
-            >
-              {product.name}
-            </h1>
-            <p className="ts-bidi mt-5 max-w-2xl text-xl leading-8 text-muted-foreground">{product.outcome}</p>
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
-              <CreatorIdentity creator={product.creator} />
-              <Rating rating={product.rating} count={product.reviewCount} />
-              <span className="text-xs text-muted-foreground">
-                {formatNumber(product.usageCount, locale)} {l.uses}
-              </span>
-            </div>
-            {/* The same three claims, in the same order and style, as the
-                hero card's corner chips. */}
-            <div className="mt-8 flex flex-wrap gap-3" aria-label={l.manifest}>
-              <TrustChip
-                icon={<ShieldCheck size={12} className={product.verified ? "text-verified" : "text-warning"} />}
-                label={product.verified ? l.verified : l.notReviewed}
-                sub={product.verified ? l.safety : l.pending}
-              />
-              <TrustChip className="max-w-xs" icon={<Lock size={12} className="text-accent" />} label={product.permissions ?? l.notDeclared} sub={l.scope} />
-              <TrustChip icon={<FileText size={12} className="text-primary" />} label={product.license ?? l.notStated} sub={l.licence} />
-            </div>
-          </header>
 
-          {/* --- right rail -------------------------------------------------- */}
-          <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-            <div className="space-y-5 rounded-xl border border-border-strong bg-surface-raised p-5 shadow-soft lg:sticky lg:top-24">
-              <div>
-                <p className="text-xs text-muted-foreground">{l.sharing}</p>
-                <p className="mt-1 text-2xl font-semibold">{l.free}</p>
+            <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
+              <div className="space-y-4 lg:sticky lg:top-24">
+                {product.versions.length > 0 && <VersionPicker />}
+                <ProductActions product={product} />
+                <p className="text-xs leading-5 text-muted-foreground">{l.installNote}</p>
               </div>
-              {/* Install instructions are pinned to the release a reader
-                  acquires, so acquiring is the install path. */}
-              <ProductActions product={product} />
-              <p className="text-xs leading-5 text-muted-foreground">{l.installNote}</p>
-              {product.versions.length > 0 && (
-                <div className="border-t pt-5">
-                  <VersionPicker />
-                </div>
-              )}
-            </div>
-          </aside>
-          <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+            </aside>
 
-            <Section title={l.whatItDoes}>
-              <p className="ts-bidi">{product.description}</p>
-              {product.benefits.length > 0 && (
-                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  {product.benefits.map((benefit) => (
-                    <p key={benefit} className="flex gap-3 rounded-md bg-surface p-4 text-sm text-foreground">
-                      <Check className="mt-1 shrink-0 text-success" size={16} />
-                      {benefit}
-                    </p>
-                  ))}
-                </div>
-              )}
-            </Section>
+            <div className="min-w-0 space-y-12 lg:col-start-1 lg:row-start-2">
+              <ProductFacts product={product} locale={locale} />
+                <Section title={l.whatItDoes}>
+                  <p className="ts-bidi">{product.description}</p>
+                  {product.benefits.length > 0 && (
+                    <ul className="mt-5 space-y-2 text-foreground">
+                      {product.benefits.map((benefit) => (
+                        <li key={benefit} className="flex gap-3 text-sm">
+                          <span aria-hidden className="mt-2 size-1.5 shrink-0 border border-foreground/70" />
+                          {benefit}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </Section>
 
-            <Section title={l.manifest} id="manifest">
-              <ManifestTable rows={manifestRows(product, l, locale)} />
-            </Section>
+                <Section title={l.manifest} id="manifest">
+                  <ManifestTable rows={manifestRows(product, l, locale)} />
+                </Section>
 
-            {product.release && (
-              <Section title={provenanceTitle(locale)} id="provenance">
-                <SelectedProvenance slug={product.slug} locale={locale}>
-                  <ReleaseProvenance release={product.release} slug={product.slug} locale={locale} />
-                </SelectedProvenance>
-              </Section>
-            )}
+                {product.release && (
+                  <Section title={provenanceTitle(locale)} id="provenance">
+                    <SelectedRelease view="provenance" slug={product.slug} locale={locale}>
+                      <ReleaseProvenance release={product.release} slug={product.slug} locale={locale} />
+                    </SelectedRelease>
+                  </Section>
+                )}
 
-            {(product.useCases ?? []).length > 0 && (
-              <Section title={l.useCases}>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  {(product.useCases ?? []).map((useCase) => (
-                    <div key={useCase.title} className="border-s-2 border-primary/40 ps-4">
-                      <h3 className="font-semibold text-foreground">{useCase.title}</h3>
-                      <p className="mt-1 text-sm">{useCase.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </Section>
-            )}
-
-            {(product.includedFiles ?? []).length > 0 && (
-              <Section title={l.included}>
-                <div className="overflow-hidden rounded-lg border bg-surface">
-                  {(product.includedFiles ?? []).map((file) => (
-                    <div className="grid gap-1 border-b p-4 last:border-0 sm:grid-cols-[12rem_1fr]" key={file.name}>
-                      <code className="font-mono text-xs text-foreground" dir="ltr">{file.name}</code>
-                      <span className="text-sm">{file.description}</span>
-                    </div>
-                  ))}
-                </div>
-              </Section>
-            )}
-
-            {product.exampleInput && (
-              <Section title={l.example}>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <p className="eyebrow">{l.input}</p>
-                    <pre className="mt-2 whitespace-pre-wrap rounded-lg border bg-surface p-4 font-mono text-xs leading-6">{product.exampleInput}</pre>
-                  </div>
-                  <div>
-                    <p className="eyebrow">{l.output}</p>
-                    <div className="mt-2 rounded-lg bg-foreground p-5 text-background">
-                      <p className="editorial text-2xl">{product.exampleOutputTitle}</p>
-                      <p className="mt-2 text-sm text-background/70">{product.exampleOutputBody}</p>
-                    </div>
-                  </div>
-                </div>
-              </Section>
-            )}
-
-            <Section title={`${l.reviews} · ${product.rating}`} id="reviews">
-              <ReviewComposer slug={product.slug} />
-              {product.reviews.length === 0 ? (
-                <p>{l.noReviews}</p>
-              ) : (
-                <div className="space-y-6">
-                  {product.reviews.map((review) => (
-                    <article key={review.id} className="border-b pb-6">
-                      <div className="flex justify-between gap-3">
-                        <div>
-                          <strong className="text-sm text-foreground">{review.author}</strong>
-                          <p className="mt-1 text-xs">
-                            <Rating rating={review.rating} /> ·{" "}
-                            {new Intl.DateTimeFormat(numbers, { dateStyle: "medium" }).format(new Date(review.createdAt))}
-                          </p>
+                {(product.useCases ?? []).length > 0 && (
+                  <Section title={l.useCases}>
+                    <div className="grid divide-y divide-border border border-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                      {(product.useCases ?? []).map((useCase) => (
+                        <div key={useCase.title} className="p-4">
+                          <h3 className="font-semibold text-foreground">{useCase.title}</h3>
+                          <p className="mt-1 text-sm">{useCase.description}</p>
                         </div>
-                        {review.verifiedPurchase && <Badge variant="success">{l.verifiedUse}</Badge>}
+                      ))}
+                    </div>
+                  </Section>
+                )}
+
+                {(product.includedFiles ?? []).length > 0 && (
+                  <Section title={l.included}>
+                    <div className="divide-y divide-border border border-border">
+                      {(product.includedFiles ?? []).map((file) => (
+                        <div className="grid gap-1 p-4 sm:grid-cols-[12rem_1fr]" key={file.name}>
+                          <code className="font-mono text-xs text-foreground" dir="ltr">{file.name}</code>
+                          <span className="text-sm">{file.description}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </Section>
+                )}
+
+                {product.exampleInput && (
+                  <Section title={l.example}>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <p className="eyebrow">{l.input}</p>
+                        <pre className="mt-2 whitespace-pre-wrap border border-border bg-surface p-4 font-mono text-xs leading-6">{product.exampleInput}</pre>
                       </div>
-                      <p className="mt-3 max-w-2xl">{review.body}</p>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </Section>
+                      <div>
+                        <p className="eyebrow">{l.output}</p>
+                        <div className="mt-2 border border-foreground/60 p-4">
+                          <p className="text-lg font-bold text-foreground">{product.exampleOutputTitle}</p>
+                          <p className="mt-2 text-sm">{product.exampleOutputBody}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </Section>
+                )}
 
-            <Section title={l.worksWith}>
-              <CompatibilityBadges compatibility={product.compatibility} limit={8} />
-              {product.compatibility.models.length > 0 && (
-                <p className="mt-3 text-xs">{l.models}: {product.compatibility.models.join(", ")}</p>
-              )}
-            </Section>
+                <Section title={`${l.reviews} · ${product.rating}`} id="reviews">
+                  <ReviewComposer slug={product.slug} />
+                  {product.reviews.length === 0 ? (
+                    <p>{l.noReviews}</p>
+                  ) : (
+                    <div className="space-y-6">
+                      {product.reviews.map((review) => (
+                        <article key={review.id} className="border-b pb-6">
+                          <div className="flex justify-between gap-3">
+                            <div>
+                              <strong className="text-sm text-foreground">{review.author}</strong>
+                              <p className="mt-1 text-xs">
+                                <Rating rating={review.rating} /> ·{" "}
+                                {new Intl.DateTimeFormat(numbers, { dateStyle: "medium" }).format(new Date(review.createdAt))}
+                              </p>
+                            </div>
+                            {review.verifiedPurchase && <Badge variant="success">{l.verifiedUse}</Badge>}
+                          </div>
+                          <p className="mt-3 max-w-2xl">{review.body}</p>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </Section>
 
-            <Section title={l.creator}>
-              <div className="rounded-lg border bg-surface p-6">
-                <CreatorIdentity creator={product.creator} />
-                <p className="mt-4 max-w-2xl">{product.creator.bio}</p>
-                <p className="mt-4 text-xs font-semibold text-foreground">
-                  {product.creator.products} {l.resources} · {formatNumber(product.creator.followers, locale)} {l.followers}
-                </p>
-              </div>
-            </Section>
+                <Section title={l.worksWith}>
+                  <CompatibilityBadges compatibility={product.compatibility} limit={8} />
+                  {product.compatibility.models.length > 0 && (
+                    <p className="mt-3 text-xs">{l.models}: {product.compatibility.models.join(", ")}</p>
+                  )}
+                </Section>
+
+                <Section title={l.creator}>
+                  <div className="border border-border p-4">
+                    <CreatorIdentity creator={product.creator} />
+                    <p className="mt-4 max-w-2xl">{product.creator.bio}</p>
+                    <p className="mt-4 text-xs font-semibold text-foreground">
+                      {product.creator.products} {l.resources} · {formatNumber(product.creator.followers, locale)} {l.followers}
+                    </p>
+                  </div>
+                </Section>
+            </div>
           </div>
-        </div>
         </ReleaseSelectionProvider>
 
         {product.related.length > 0 && (
-          <section className="mt-12 border-t pt-12">
-            <p className="eyebrow">{l.keepBuilding}</p>
-            <h2 className="editorial mt-2 text-4xl">{l.related}</h2>
-            <div className="mt-7 grid gap-5 md:grid-cols-3">
+          <section className="mt-16 border-t border-border pt-10">
+            <h2 className="text-2xl font-bold tracking-tight">{l.related}</h2>
+            <div className="mt-6 grid gap-5 md:grid-cols-3">
               {product.related.map((related) => (
                 <ProductCard key={related.id} product={related} />
               ))}

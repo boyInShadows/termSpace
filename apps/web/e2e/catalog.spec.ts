@@ -12,7 +12,7 @@ test.describe("product detail", () => {
     // strict text locator counts twice. Wait for the copy to go.
     await expect(page.locator('[id^="S:"][hidden]')).toHaveCount(0);
     for (const claim of ["Verified", "Reads the current selection · no network access", "MIT"]) {
-      await expect(page.locator("header").getByText(claim, { exact: true })).toBeVisible();
+      await expect(page.getByRole("region", { name: "Key facts" }).getByText(claim, { exact: true })).toBeVisible();
     }
     const manifest = page.locator("#manifest dl");
     for (const label of ["type", "platforms", "permissions", "requirements", "license", "reviewed", "version"]) {

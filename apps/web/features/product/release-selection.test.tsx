@@ -19,7 +19,7 @@ vi.mock("@/lib/api", async (importOriginal) => ({
 vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => session }));
 vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ fa: false, locale: "en" }) }));
 
-const { ReleaseSelectionProvider, SelectedProvenance } = await import("./release-selection");
+const { ReleaseSelectionProvider, SelectedRelease } = await import("./release-selection");
 const { ProductActions } = await import("./product-actions");
 const { VersionPicker } = await import("@/components/catalog/version-picker");
 
@@ -46,7 +46,7 @@ function renderPage() {
     <ReleaseSelectionProvider slug={product.slug} versions={versions} release={latest}>
       <VersionPicker />
       <ProductActions product={product} />
-      <SelectedProvenance slug={product.slug} locale="en"><p>current provenance</p></SelectedProvenance>
+      <SelectedRelease view="provenance" slug={product.slug} locale="en"><p>current provenance</p></SelectedRelease>
     </ReleaseSelectionProvider>,
   );
 }

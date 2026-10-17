@@ -65,16 +65,17 @@ export function ReleaseSelectionProvider({ slug, versions, release, children }: 
 }
 
 /**
- * The provenance section for the selected version. The server-rendered
- * section for the current release is passed in as children; the view for any
- * other release only loads when someone picks one.
+ * Part of the page that describes a release: the title-block facts or the
+ * provenance section. The server-rendered version for the current release is
+ * passed in as children; the view for any other release only loads when
+ * someone picks one.
  */
-export function SelectedProvenance({ slug, locale, children }: { slug: string; locale: Locale; children: ReactNode }) {
+export function SelectedRelease({ view, slug, locale, children }: { view: "facts" | "provenance"; slug: string; locale: Locale; children: ReactNode }) {
   const selection = useReleaseSelection();
   if (!selection || selection.isCurrent || !selection.selected) return <>{children}</>;
   return (
     <Suspense fallback={null}>
-      <OtherRelease state={selection.state} selected={selection.selected.version} latest={selection.versions[0]?.version} slug={slug} locale={locale} />
+      <OtherRelease view={view} state={selection.state} selected={selection.selected.version} latest={selection.versions[0]?.version} slug={slug} locale={locale} />
     </Suspense>
   );
 }

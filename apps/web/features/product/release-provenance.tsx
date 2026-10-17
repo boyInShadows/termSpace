@@ -48,6 +48,7 @@ const text = {
 };
 
 export const provenanceTitle = (locale: Locale) => text[locale].title;
+export const capabilityLabel = (locale: Locale, capability: string) => text[locale].caps[capability] ?? capability;
 
 function Fact({ label, children, mono = false }: { label: string; children: React.ReactNode; mono?: boolean }) {
   return (
