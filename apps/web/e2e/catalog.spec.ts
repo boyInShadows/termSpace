@@ -131,7 +131,7 @@ test.describe("explore", () => {
     const count = page.locator("section p[role=status]");
     await expect(count).toHaveText("15 resources");
 
-    await page.getByRole("tab", { name: "Agents" }).click();
+    await page.getByRole("button", { name: "Agents", exact: true }).click();
     await expect(page).toHaveURL(/\/explore\?type=agent$/);
     await expect(count).toHaveText("3 resources");
     await expect(page.locator("article h3")).toHaveCount(3);
@@ -139,7 +139,7 @@ test.describe("explore", () => {
     // The URL is the state: reloading keeps the view.
     await page.reload();
     await expect(count).toHaveText("3 resources");
-    await expect(page.getByRole("tab", { name: "Agents" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("button", { name: "Agents", exact: true })).toHaveAttribute("aria-pressed", "true");
   });
 
   test("pages are real links, announced to crawlers", async ({ page }) => {

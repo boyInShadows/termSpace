@@ -193,13 +193,13 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
       </div>
       <div
         className="ts-scroll-fade mx-auto mt-3 flex w-fit max-w-full gap-2 overflow-x-auto pb-2 sm:mt-6"
-        role="tablist"
+        role="group"
         aria-label={d.productType}
       >
         {typeOptions.map((option) => (
           <button
-            role="tab"
-            aria-selected={type === option.value}
+            type="button"
+            aria-pressed={type === option.value}
             key={option.value}
             onClick={() => update({ type: option.value })}
             className={cn(
@@ -231,10 +231,10 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
               scrolling a page of results. At the very top: the site header
               scrolls away with the page. */}
           <div className="sticky top-0 z-20 -mx-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border bg-background/90 px-2 py-3 backdrop-blur">
-            <p className="font-mono text-sm" role="status">
-              <strong>{meta.total}</strong> {meta.total === 1 ? d.product : d.products}
+            <p className="shrink-0 font-mono text-sm" role="status">
+              <strong>{meta.total.toLocaleString(fa ? "fa-IR" : "en")}</strong> {meta.total === 1 ? d.product : d.products}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:flex-none">
               {/* Platform is the facet a developer starts from, so below lg it
                   sits in the bar rather than behind Filters; lg shows it in the
                   sidebar. */}
@@ -242,14 +242,14 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
                 aria-label={d.compatibility}
                 value={platform}
                 onChange={(event) => change("platform")(event.target.value)}
-                className="min-h-11 w-[8.5rem] rounded-md border bg-surface px-3 text-sm lg:hidden"
+                className="min-h-11 min-w-0 max-w-[8.5rem] flex-1 rounded-md border bg-surface px-3 text-sm sm:w-[8.5rem] sm:flex-none lg:hidden"
               >
                 <option value="All">{d.compatibility}</option>
                 {platforms.map((item) => <option key={item.key} value={item.key}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
               </select>
               <Dialog.Root>
                 <Dialog.Trigger asChild>
-                  <Button variant="secondary" size="sm" className="min-h-11 sm:min-h-9 lg:hidden">
+                  <Button variant="secondary" size="sm" className="min-h-11 shrink-0 sm:min-h-9 lg:hidden">
                     <Filter size={15} /> {d.filters}{" "}
                     {drawerActive > 0 && `(${drawerActive})`}
                   </Button>
@@ -328,7 +328,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
               </div>
             </div>
           </div>
-          {active.length > 0 && (
+          {active.length > 0 && (result.length > 0 || loading || error) && (
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {active.map((chip) => (
                 <button
