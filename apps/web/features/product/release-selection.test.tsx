@@ -46,6 +46,7 @@ function renderPage() {
     <ReleaseSelectionProvider slug={product.slug} versions={versions} release={latest}>
       <VersionPicker />
       <ProductActions product={product} />
+      <dl><SelectedRelease view="facts" slug={product.slug} locale="en"><p>current facts</p></SelectedRelease></dl>
       <SelectedRelease view="provenance" slug={product.slug} locale="en"><p>current provenance</p></SelectedRelease>
     </ReleaseSelectionProvider>,
   );
@@ -91,7 +92,7 @@ describe("release selection", () => {
     renderPage();
 
     fireEvent.change(screen.getByLabelText("Version"), { target: { value: "v2" } });
-    expect(await screen.findByRole("alert")).toHaveTextContent("Couldn’t load this release");
+    expect((await screen.findAllByRole("alert"))[0]).toHaveTextContent("Couldn’t load this release");
     expect(screen.getByRole("button", { name: "Couldn’t load this release." })).toBeDisabled();
 
     fireEvent.change(screen.getByLabelText("Version"), { target: { value: "v3" } });

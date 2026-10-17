@@ -19,7 +19,6 @@ describe("ReleaseProvenance", () => {
     render(<ReleaseProvenance release={release} slug="acme-tool" locale="en" />);
 
     expect(screen.getByText(/npm package/)).toBeInTheDocument();
-    expect(screen.getByText("sha512-abc")).toBeInTheDocument();
     expect(screen.getByText(/Network access/)).toBeInTheDocument();
     expect(screen.getByText("api.acme.test")).toBeInTheDocument();
     expect(screen.getByText("ACME_TOKEN")).toBeInTheDocument();
@@ -36,11 +35,10 @@ describe("ReleaseProvenance", () => {
     expect(screen.queryByText("MCP client config")).not.toBeInTheDocument();
   });
 
-  it("flags an overdue source check and says when there is no digest", () => {
+  it("flags an overdue source check", () => {
     render(<ReleaseProvenance release={{ ...release, source: { ...release.source, status: "stale", integrityDigest: null } }} slug="acme-tool" locale="en" />);
 
     expect(screen.getByText(/last source check is overdue/)).toBeInTheDocument();
-    expect(screen.getByText("The source did not provide one")).toBeInTheDocument();
   });
 
   it("renders in Persian without English chrome", () => {

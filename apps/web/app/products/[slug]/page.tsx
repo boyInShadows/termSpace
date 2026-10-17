@@ -7,12 +7,12 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "@/features/product/product-actions";
-import { CompatibilityBadges, CreatorIdentity, Rating } from "@/components/marketplace/product-parts";
+import { CreatorIdentity, Rating } from "@/components/marketplace/product-parts";
 import { ProductCard } from "@/components/marketplace/product-card";
-import { ManifestTable, type ManifestRow } from "@/components/catalog/manifest-table";
 import { VersionPicker } from "@/components/catalog/version-picker";
 import { ApiError, getProduct } from "@/lib/api";
 import { copy, localePath, type Locale } from "@/lib/i18n";
+import { Fact } from "@/features/product/release-facts";
 import { ReleaseProvenance, provenanceTitle } from "@/features/product/release-provenance";
 import { ReviewComposer } from "@/features/product/review-composer";
 import { pageAlternates } from "@/lib/alternates";
@@ -74,24 +74,22 @@ function structuredData(product: ProductDetail) {
 function labels(fa: boolean) {
   return fa
     ? {
-        explore: "کاوش", verified: "تأییدشده", notReviewed: "هنوز بررسی نشده", safety: "بررسی ایمنی", pending: "در انتظار بررسی",
+        explore: "کاوش", details: "جزئیات", requirements: "پیش‌نیازها", updated: "به‌روزرسانی", package: "بسته", updatesPolicy: "سیاست به‌روزرسانی", verified: "تأییدشده", notReviewed: "هنوز بررسی نشده", safety: "بررسی ایمنی", pending: "در انتظار بررسی",
         notDeclared: "اعلام نشده", scope: "دامنهٔ دسترسی", notStated: "ذکر نشده", licence: "مجوز", uses: "استفاده",
         free: "رایگان برای همه", sharing: "اشتراک‌گذاری جامعه", whatItDoes: "چه می‌کند", manifest: "مانیفست",
         useCases: "کاربردهای مناسب", included: "محتویات", example: "نمونهٔ ورودی و خروجی", input: "ورودی", output: "بخشی از خروجی",
         reviews: "نقدها", noReviews: "هنوز نقدی ثبت نشده است.", verifiedUse: "استفادهٔ تأییدشده", worksWith: "سازگار با", models: "مدل‌ها",
         creator: "دربارهٔ سازنده", resources: "منبع", resource: "منبع", followers: "دنبال‌کننده", related: "منابع مرتبط", keepBuilding: "ادامه دهید",
-        manifestLabels: { type: "نوع", platforms: "پلتفرم‌ها", models: "مدل‌ها", permissions: "دسترسی‌ها", requirements: "پیش‌نیازها", license: "مجوز", reviewed: "بررسی", version: "نسخه", updated: "به‌روزرسانی", package: "بسته", updates: "سیاست به‌روزرسانی" },
         passed: "بررسی بسته انجام شد", notYet: "هنوز توسط تیم بررسی نشده", files: "فایل",
         installNote: "مراحل دقیق نصب به نسخه‌ای که به کتابخانهٔ خود اضافه می‌کنید متصل است.",
       }
     : {
-        explore: "Explore", verified: "Verified", notReviewed: "Not yet reviewed", safety: "safety reviewed", pending: "review pending",
+        explore: "Explore", details: "Details", requirements: "Requirements", updated: "Updated", package: "Package", updatesPolicy: "Updates", verified: "Verified", notReviewed: "Not yet reviewed", safety: "safety reviewed", pending: "review pending",
         notDeclared: "Not declared", scope: "permission scope", notStated: "Not stated", licence: "licence", uses: "uses",
         free: "Free for everyone", sharing: "Community sharing", whatItDoes: "What it does", manifest: "Manifest",
         useCases: "Ideal use cases", included: "What’s included", example: "Example input and output", input: "Input", output: "Output excerpt",
         reviews: "Reviews", noReviews: "No reviews yet.", verifiedUse: "Verified use", worksWith: "Works with", models: "Models",
         creator: "About the creator", resources: "resources", resource: "resource", followers: "followers", related: "Related listings", keepBuilding: "Keep building",
-        manifestLabels: { type: "type", platforms: "platforms", models: "models", permissions: "permissions", requirements: "requirements", license: "license", reviewed: "reviewed", version: "version", updated: "updated", package: "package", updates: "updates" },
         passed: "Package scan passed", notYet: "Not yet reviewed by the team", files: "files",
         installNote: "Exact installation steps are tied to the release you add to your library.",
       };
@@ -108,24 +106,17 @@ function Section({ title, children, id }: { title: string; children: React.React
   );
 }
 
-function manifestRows(product: ProductDetail, l: Labels, locale: Locale): ManifestRow[] {
-  const m = l.manifestLabels;
+/** What the key-facts list does not already say. */
+function detailRows(product: ProductDetail, l: Labels, locale: Locale) {
   const date = new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" }).format(new Date(product.updatedAt));
-  const rows: ManifestRow[] = [
-    { key: "type", label: m.type, value: copy[locale].productCard.types[product.type] ?? product.type },
-    { key: "platforms", label: m.platforms, value: product.compatibility.platforms.join(" · ") || l.notStated },
-    { key: "permissions", label: m.permissions, value: product.permissions ?? l.notDeclared, tone: product.permissions ? undefined : "attention" },
-    { key: "requirements", label: m.requirements, value: product.requirements ?? l.notStated },
-    { key: "license", label: m.license, value: product.license ?? l.notStated },
-    { key: "reviewed", label: m.reviewed, value: product.verified ? l.passed : l.notYet, tone: product.verified ? "verified" : "attention" },
-    { key: "version", label: m.version, value: <span className="font-mono" dir="ltr">v{product.version}</span> },
-    { key: "updated", label: m.updated, value: date },
+  const rows: Array<{ key: string; label: string; value: string }> = [
+    { key: "requirements", label: l.requirements, value: product.requirements ?? l.notStated },
+    { key: "updated", label: l.updated, value: date },
   ];
-  if (product.compatibility.models.length > 0) rows.splice(2, 0, { key: "models", label: m.models, value: product.compatibility.models.join(" · ") });
   if (product.packageFileCount && product.packageSizeBytes) {
-    rows.push({ key: "package", label: m.package, value: `${product.packageFileCount} ${l.files} · ${Math.round(product.packageSizeBytes / 1024)} KB` });
+    rows.push({ key: "package", label: l.package, value: `${product.packageFileCount} ${l.files} · ${Math.round(product.packageSizeBytes / 1024)} KB` });
   }
-  if (product.updatesPolicy) rows.push({ key: "updates", label: m.updates, value: product.updatesPolicy });
+  if (product.updatesPolicy) rows.push({ key: "updates", label: l.updatesPolicy, value: product.updatesPolicy });
   return rows;
 }
 
@@ -173,7 +164,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <div className="min-w-0 space-y-12 lg:col-start-1 lg:row-start-2">
               <ProductFacts product={product} locale={locale} />
                 <Section title={l.whatItDoes}>
-                  <p className="ts-bidi">{product.description}</p>
+                  <p className="ts-bidi max-w-2xl">{product.description}</p>
                   {product.benefits.length > 0 && (
                     <ul className="mt-5 space-y-2 text-foreground">
                       {product.benefits.map((benefit) => (
@@ -186,8 +177,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   )}
                 </Section>
 
-                <Section title={l.manifest} id="manifest">
-                  <ManifestTable rows={manifestRows(product, l, locale)} />
+                <Section title={l.details} id="details">
+                  <dl className="border-b border-border">
+                    {detailRows(product, l, locale).map((row) => <Fact key={row.key} label={row.label}>{row.value}</Fact>)}
+                  </dl>
                 </Section>
 
                 {product.release && (
@@ -267,15 +260,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   )}
                 </Section>
 
-                <Section title={l.worksWith}>
-                  <CompatibilityBadges compatibility={product.compatibility} limit={8} />
-                  {product.compatibility.models.length > 0 && (
-                    <p className="mt-3 text-xs">{l.models}: {product.compatibility.models.join(", ")}</p>
-                  )}
-                </Section>
-
                 <Section title={l.creator}>
-                  <div className="border border-border p-4">
+                  <div>
                     <CreatorIdentity creator={product.creator} />
                     <p className="mt-4 max-w-2xl">{product.creator.bio}</p>
                     <p className="mt-4 text-xs font-semibold text-foreground">

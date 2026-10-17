@@ -31,7 +31,7 @@ export function ProductHeader({ product, typeLabel, locale }: { product: Product
         {product.name}
       </h1>
       <p className="ts-bidi mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{product.outcome}</p>
-      <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+      <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm tabular-nums text-muted-foreground">
         <span>{typeLabel}</span>
         <CreatorIdentity creator={product.creator} />
         <Rating rating={product.rating} count={product.reviewCount} />

@@ -14,9 +14,9 @@ test.describe("product detail", () => {
     for (const claim of ["Safety reviewed", "Reads the current selection · no network access", "MIT"]) {
       await expect(page.getByRole("region", { name: "Key facts" }).getByText(claim, { exact: true })).toBeVisible();
     }
-    const manifest = page.locator("#manifest dl");
-    for (const label of ["type", "platforms", "permissions", "requirements", "license", "reviewed", "version"]) {
-      await expect(manifest.getByText(label, { exact: true })).toBeVisible();
+    const details = page.locator("#details dl");
+    for (const label of ["Requirements", "Updated", "Package", "Updates"]) {
+      await expect(details.getByText(label, { exact: true })).toBeVisible();
     }
     await expect(page).toHaveTitle("Conversion Copywriter — Skill for Claude · termspace");
   });
@@ -65,15 +65,17 @@ test.describe("product detail", () => {
     await context.addCookies([{ name: "e2e_persona", value: "creator", url: baseURL! }]);
     await page.goto("/products/conversion-copywriter");
     const provenance = page.locator("#provenance");
-    await expect(provenance.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toBeVisible();
+    const facts = page.getByRole("region", { name: "Key facts" });
+    await expect(facts.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toBeVisible();
 
     await page.getByLabel("Version").selectOption({ label: "v2.3.0" });
 
-    await expect(provenance.getByText("89abcdef0123456789abcdef0123456789abcdef", { exact: true })).toBeVisible();
-    await expect(provenance.getByText("sha512-fixtureolderrelease==")).toBeVisible();
-    await expect(provenance.getByText("Network access")).toBeVisible();
+    await expect(facts.getByText("89abcdef0123456789abcdef0123456789abcdef", { exact: true })).toBeVisible();
+    await expect(facts.getByText("sha512-fixtureolderrelease==")).toBeVisible();
+    await expect(facts.getByText(/Network access/)).toBeVisible();
     await expect(provenance.getByText(/release, not the latest/)).toBeVisible();
-    await expect(provenance.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toHaveCount(0);
+    await expect(provenance.getByText("Network access")).toBeVisible();
+    await expect(facts.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toHaveCount(0);
 
     let sent: unknown;
     await page.route("**/products/conversion-copywriter/acquire", async (route) => {
@@ -84,7 +86,7 @@ test.describe("product detail", () => {
     await expect.poll(() => sent).toEqual({ version: "2.3.0" });
 
     await page.getByLabel("Version").selectOption({ label: "v2.4.0 · latest" });
-    await expect(provenance.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toBeVisible();
+    await expect(facts.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add v2.4.0 to library" })).toBeEnabled();
   });
 
