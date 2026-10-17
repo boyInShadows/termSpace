@@ -105,7 +105,18 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
     verified && "Verified",
     minRating > 0 && `${minRating}+ ${d.rating}`,
   ].filter(Boolean) as string[];
-  const filters = (
+  // The drawer holds category, community, rating and verified; type is the tab
+  // strip and platform is its own select, so neither counts toward its badge.
+  const drawerActive = [category !== "All", community !== "All", verified, minRating > 0].filter(Boolean).length;
+  const sortOptions = (
+    <>
+      {urlQuery.trim() && <option value="relevance">{d.bestMatch}</option>}
+      <option value="featured">{d.featured}</option>
+      <option value="rating">{d.topRated}</option>
+      <option value="newest">{d.recentlyUpdated}</option>
+    </>
+  );
+  const renderFilters = (inDrawer: boolean) => (
     <div className="space-y-7">
       <label className="block text-sm font-semibold">
         {d.category}
@@ -126,13 +137,13 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
         </select>
         <Link href={localePath("/communities", locale)} className="mt-0.5 inline-flex min-h-8 items-center text-xs font-semibold text-primary hover:underline">{fa ? "مشاهدهٔ همهٔ جامعه‌ها" : "Browse all communities"}</Link>
       </label>}
-      <label className="block text-sm font-semibold">
+      {!inDrawer && <label className="block text-sm font-semibold">
         {d.compatibility}
         <select value={platform} onChange={(event) => change("platform")(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
           <option value="All">{d.all}</option>
           {platforms.map((item) => <option key={item.key} value={item.key}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
         </select>
-      </label>
+      </label>}
       <FilterGroup
         label={d.rating}
         options={["Any", "4.5+", "4.8+"]}
@@ -147,7 +158,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           id="verified"
           checked={verified}
           onCheckedChange={(value) => update({ verified: value })}
-          className="h-6 w-11 rounded-full bg-border-strong p-0.5 data-[state=checked]:bg-primary"
+          className="relative h-6 w-11 rounded-full bg-border-strong p-0.5 after:absolute after:-inset-x-1 after:-inset-y-2.5 data-[state=checked]:bg-primary"
         >
           <Switch.Thumb className="block size-5 rounded-full bg-background shadow transition-transform data-[state=checked]:translate-x-5" />
         </Switch.Root>
@@ -155,17 +166,17 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
     </div>
   );
   return (
-    <main className="container-page py-10">
+    <main className="container-page py-6 sm:py-10">
       <div className="mx-auto max-w-2xl text-center">
         <p className="eyebrow">{context?.eyebrow ?? d.marketplace}</p>
-        <h1 className="editorial mt-2 text-5xl">{context?.title ?? d.title}</h1>
-        <p className="mt-3 text-muted-foreground">
+        <h1 className="editorial mt-2 text-4xl sm:text-5xl">{context?.title ?? d.title}</h1>
+        <p className={cn("mt-3 text-muted-foreground", !context && "hidden sm:block")}>
           {context?.intro ?? d.intro}
         </p>
         {context?.rules && <p className="mt-4 rounded-lg border bg-surface p-4 text-sm leading-6"><strong>{fa ? "قوانین:" : "Rules:"}</strong> {context.rules}</p>}
         {context?.archived && <p role="status" className="mt-4 rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm">{fa ? "این جامعه بایگانی شده و فهرست‌های آن در نتایج عمومی نمایش داده نمی‌شوند." : "This community is archived, so its placements are not shown in public discovery."}</p>}
       </div>
-      <div className="relative mx-auto mt-8 max-w-4xl">
+      <div className="relative mx-auto mt-5 max-w-4xl sm:mt-8">
         <Search
           className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground"
           size={20}
@@ -175,11 +186,11 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           onChange={(e) => setQuery(e.target.value)}
           placeholder={d.search}
           aria-label={d.search}
-          className="h-14 ps-12 text-base"
+          className="h-12 ps-12 text-base sm:h-14"
         />
       </div>
       <div
-        className="ts-scroll-fade mx-auto mt-6 flex w-fit max-w-full gap-2 overflow-x-auto pb-2"
+        className="ts-scroll-fade mx-auto mt-3 flex w-fit max-w-full gap-2 overflow-x-auto pb-2 sm:mt-6"
         role="tablist"
         aria-label={d.productType}
       >
@@ -190,7 +201,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
             key={option.value}
             onClick={() => update({ type: option.value })}
             className={cn(
-              "min-h-10 shrink-0 border-b-2 px-3 text-sm font-medium",
+              "min-h-11 min-w-11 shrink-0 border-b-2 px-3 text-sm font-medium sm:min-h-10 sm:min-w-0",
               type === option.value
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground",
@@ -200,14 +211,14 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           </button>
         ))}
       </div>
-      <div className="mt-8 grid gap-8 lg:grid-cols-[14rem_1fr]">
+      <div className="mt-4 grid gap-8 sm:mt-8 lg:grid-cols-[14rem_1fr]">
         <aside className="hidden lg:block">
           <div className="flex items-center gap-2 border-b pb-4 font-semibold">
             <SlidersHorizontal size={17} />
             {d.filters}
           </div>
           <div className="mt-6">
-            {filters}
+            {renderFilters(false)}
           </div>
         </aside>
         <section aria-busy={loading}>
@@ -217,16 +228,28 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           {/* Sticky, so the count and the controls stay in reach while
               scrolling a page of results. At the very top: the site header
               scrolls away with the page. */}
-          <div className="sticky top-0 z-20 -mx-2 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background/90 px-2 py-3 backdrop-blur">
-            <div className="flex items-center gap-3">
-              <p className="font-mono text-sm" role="status">
-                <strong>{meta.total}</strong> {d.products}
-              </p>
+          <div className="sticky top-0 z-20 -mx-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border bg-background/90 px-2 py-3 backdrop-blur">
+            <p className="font-mono text-sm" role="status">
+              <strong>{meta.total}</strong> {d.products}
+            </p>
+            <div className="flex items-center gap-2">
+              {/* Platform is the facet a developer starts from, so below lg it
+                  sits in the bar rather than behind Filters; lg shows it in the
+                  sidebar. */}
+              <select
+                aria-label={d.compatibility}
+                value={platform}
+                onChange={(event) => change("platform")(event.target.value)}
+                className="min-h-11 w-[8.5rem] rounded-md border bg-surface px-3 text-sm lg:hidden"
+              >
+                <option value="All">{d.compatibility}</option>
+                {platforms.map((item) => <option key={item.key} value={item.key}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
+              </select>
               <Dialog.Root>
                 <Dialog.Trigger asChild>
-                  <Button variant="secondary" size="sm" className="lg:hidden">
+                  <Button variant="secondary" size="sm" className="min-h-11 sm:min-h-9 lg:hidden">
                     <Filter size={15} /> {d.filters}{" "}
-                    {active.length > 0 && `(${active.length})`}
+                    {drawerActive > 0 && `(${drawerActive})`}
                   </Button>
                 </Dialog.Trigger>
                 <Dialog.Portal>
@@ -246,8 +269,19 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                         </Button>
                       </Dialog.Close>
                     </div>
-                    <div className="mt-7">
-                      {filters}
+                    <div className="mt-7 space-y-7">
+                      {/* The bar has room for sort from sm up. */}
+                      <label className="block text-sm font-semibold sm:hidden">
+                        {d.sort}
+                        <select
+                          value={sort}
+                          onChange={(event) => update({ sort: event.target.value })}
+                          className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                          {sortOptions}
+                        </select>
+                      </label>
+                      {renderFilters(true)}
                     </div>
                     <Dialog.Close asChild>
                       <Button className="mt-8 w-full">
@@ -257,20 +291,16 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                   </Dialog.Content>
                 </Dialog.Portal>
               </Dialog.Root>
-            </div>
-            <div className="flex gap-2">
               <select
                 aria-label={d.sort}
                 value={sort}
                 onChange={(e) => update({ sort: e.target.value })}
-                className="min-h-10 rounded-md border bg-surface px-3 text-sm"
+                className="hidden min-h-10 rounded-md border bg-surface px-3 text-sm sm:block"
               >
-                {urlQuery.trim() && <option value="relevance">{d.bestMatch}</option>}
-                <option value="featured">{d.featured}</option>
-                <option value="rating">{d.topRated}</option>
-                <option value="newest">{d.recentlyUpdated}</option>
+                {sortOptions}
               </select>
-              <div className="flex rounded-md border bg-surface p-0.5">
+              {/* Below sm both views are one stacked column, so the toggle would do nothing. */}
+              <div className="hidden rounded-md border bg-surface p-0.5 sm:flex">
                 <button
                   aria-label={d.gridView}
                   aria-pressed={view === "grid"}
@@ -313,7 +343,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           )}
           <div
             className={cn(
-              "mt-6 grid gap-5",
+              "mt-4 grid gap-5 sm:mt-6",
               view === "grid" ? "sm:grid-cols-2 xl:grid-cols-3" : "grid-cols-1",
             )}
           >
@@ -378,7 +408,7 @@ function FilterGroup({
         {options.map((o) => (
           <label
             key={o}
-            className="flex min-h-8 cursor-pointer items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+            className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground hover:text-foreground lg:min-h-8"
           >
             <input
               type="radio"

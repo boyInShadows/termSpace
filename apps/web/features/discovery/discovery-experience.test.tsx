@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DiscoveryExperience } from "./discovery-experience";
 
@@ -55,5 +55,28 @@ describe("DiscoveryExperience states", () => {
 
     expect(screen.getByText("No resources found")).toBeInTheDocument();
     expect(screen.getByText(/missing tool/)).toBeInTheDocument();
+  });
+
+  it("keeps platform in the results bar, and sort in the drawer, so phones need no drawer to filter by platform", () => {
+    render(
+      <DiscoveryExperience
+        initial={emptyResult}
+        categories={[]}
+        platforms={[{ key: "cursor", nameEn: "Cursor", nameFa: null }]}
+        communities={[]}
+        itemTypes={[]}
+        initialFilters={{ platform: "cursor" }}
+      />,
+    );
+
+    const bar = screen.getAllByRole("combobox", { name: "Compatibility" }).find((element) => element.hasAttribute("aria-label"));
+    expect(bar).toHaveValue("cursor");
+    expect(within(bar as HTMLElement).getByRole("option", { name: "Compatibility" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Filters/ })[0]);
+    const drawer = screen.getByRole("dialog");
+    expect(within(drawer).queryByText("Compatibility")).not.toBeInTheDocument();
+    expect(within(drawer).getByText("Sort resources")).toBeInTheDocument();
+    expect(within(drawer).getByText("Category")).toBeInTheDocument();
   });
 });

@@ -84,7 +84,7 @@ export function ProductCard({
           <ListingLink
             href={href}
             listingId={product.id}
-            className="-my-1 inline-block rounded-sm py-1 group-hover:text-primary focus-visible:outline-none focus-visible:underline"
+            className="-my-2 inline-block rounded-sm py-2 group-hover:text-primary focus-visible:outline-none focus-visible:underline sm:-my-1 sm:py-1"
           >
             {product.name}
           </ListingLink>
@@ -143,7 +143,7 @@ export function ProductCard({
             aria-label={`${t.viewDetails}: ${product.name}`}
             className={cn(
               buttonVariants({ variant: "secondary", size: "sm" }),
-              "gap-1.5 group-hover:border-primary group-hover:text-primary",
+              "min-h-11 gap-1.5 group-hover:border-primary group-hover:text-primary sm:min-h-9",
             )}
           >
             {t.viewDetails}
