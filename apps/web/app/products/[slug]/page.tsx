@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Check, FileText, Lock, ShieldCheck } from "lucide-react";
+import { ReleaseSelectionProvider, SelectedProvenance } from "@/features/product/release-selection";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Badge } from "@/components/ui/badge";
@@ -158,6 +159,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             page: the call to action used to sit after every section (about
             3,500 px down at tablet width). From lg the aside is the right
             rail, spanning both rows so its sticky panel follows the page. */}
+        <ReleaseSelectionProvider slug={product.slug} versions={product.versions} release={product.release}>
         <div className="mt-8 grid gap-y-8 lg:grid-cols-[1fr_21rem] lg:gap-x-10 lg:gap-y-0">
           <header className="min-w-0 pb-1 lg:col-start-1 lg:row-start-1 lg:pb-9">
             <div className="flex flex-wrap items-center gap-2">
@@ -207,7 +209,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <p className="text-xs leading-5 text-muted-foreground">{l.installNote}</p>
               {product.versions.length > 0 && (
                 <div className="border-t pt-5">
-                  <VersionPicker versions={product.versions} />
+                  <VersionPicker />
                 </div>
               )}
             </div>
@@ -234,7 +236,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             {product.release && (
               <Section title={provenanceTitle(locale)} id="provenance">
-                <ReleaseProvenance release={product.release} slug={product.slug} locale={locale} />
+                <SelectedProvenance slug={product.slug} locale={locale}>
+                  <ReleaseProvenance release={product.release} slug={product.slug} locale={locale} />
+                </SelectedProvenance>
               </Section>
             )}
 
@@ -325,6 +329,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </Section>
           </div>
         </div>
+        </ReleaseSelectionProvider>
 
         {product.related.length > 0 && (
           <section className="mt-12 border-t pt-12">

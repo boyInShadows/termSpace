@@ -1,4 +1,4 @@
-import type { MyReviewState, OwnReview, ReviewInput, CreatorDashboardResult, CreatorReleaseHistory, MarketplaceCommunity, MarketplaceCommunityPageResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceInstallation, MarketplaceItemType, MarketplaceLibraryEntry, MarketplaceModerationPreview, MarketplaceModerationQueueResult, MarketplaceProviderConnection, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
+import type { MyReviewState, OwnReview, ReviewInput, CreatorDashboardResult, CreatorReleaseHistory, MarketplaceCommunity, MarketplaceCommunityPageResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceInstallation, ProductRelease, MarketplaceItemType, MarketplaceLibraryEntry, MarketplaceModerationPreview, MarketplaceModerationQueueResult, MarketplaceProviderConnection, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult } from "./types";
 
 type ApiErrorDetail = { path: string; code?: string; message: string };
 type ErrorBody = { error?: { code?: string; message?: string; details?: ApiErrorDetail[]; correlationId?: string } };
@@ -83,6 +83,7 @@ export async function getProducts(filters: ProductFilters = {}, signal?: AbortSi
   return request<ProductPageResult>(`/api/marketplace/products?${params}`, { signal, revalidate: publicRevalidate(filters) });
 }
 export async function getProduct(slug: string) { return (await request<{ data: ProductDetail }>(`/api/marketplace/products/${encodeURIComponent(slug)}`, { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
+export async function getProductRelease(slug: string, version: string, signal?: AbortSignal) { return (await request<{ data: ProductRelease }>(`/api/marketplace/products/${encodeURIComponent(slug)}/releases/${encodeURIComponent(version)}`, { signal })).data; }
 export type MarketplaceRole = "creator" | "moderator" | "administrator";
 export async function getSession() { return request<{ data: { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } | { authenticated: false } }>("/api/readers/session"); }
 export async function login(email: string, password: string) { return request("/api/readers/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
@@ -117,7 +118,7 @@ export async function moderateListing(id: string, input: { action: string; expec
 export async function getFavorites() { return (await request<{ data: string[] }>("/api/marketplace/favorites")).data; }
 export async function getMarketplaceLibrary(page = 1, limit = 24, signal?: AbortSignal) { return request<{ data: MarketplaceLibraryEntry[]; meta: { page: number; limit: number; total: number; totalPages: number } }>(`/api/marketplace/library?page=${page}&limit=${limit}`, { signal }); }
 export async function setFavorite(slug: string, saved: boolean) { return request(`/api/marketplace/products/${encodeURIComponent(slug)}/favorite`, { method: saved ? "PUT" : "DELETE" }); }
-export async function acquireProduct(slug: string, idempotencyKey: string) { return request<{ data: { id: string; status: string; releaseManifestId: string | null; acquiredAt: string } }>(`/api/marketplace/products/${encodeURIComponent(slug)}/acquire`, { method: "POST", headers: { "Idempotency-Key": idempotencyKey } }); }
+export async function acquireProduct(slug: string, idempotencyKey: string, version?: string) { return request<{ data: { id: string; status: string; releaseManifestId: string | null; acquiredAt: string } }>(`/api/marketplace/products/${encodeURIComponent(slug)}/acquire`, { method: "POST", headers: { "Idempotency-Key": idempotencyKey }, ...(version ? { body: JSON.stringify({ version }) } : {}) }); }
 export async function getProductInstallation(slug: string, signal?: AbortSignal) { return (await request<{ data: MarketplaceInstallation }>(`/api/marketplace/products/${encodeURIComponent(slug)}/installation`, { signal })).data; }
 const reviewsPath = (slug: string) => `/api/marketplace/products/${encodeURIComponent(slug)}/reviews`;
 export async function getMyReview(slug: string, signal?: AbortSignal) { return (await request<{ data: MyReviewState }>(`${reviewsPath(slug)}/mine`, { signal })).data; }

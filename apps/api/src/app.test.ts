@@ -1174,6 +1174,159 @@ describe("API", () => {
     expect(response.body.data).not.toHaveProperty("idempotencyKey");
   });
 
+  describe("adding the release the reader inspected", () => {
+    const signedIn = () => prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    const product = {
+      id: "product-1", slug: "owned-skill", priceMinor: 0, currency: "USD", pricingModel: "free",
+      approvedSnapshot: { releaseManifest: { id: "release-2", publishedAt: new Date("2026-09-16T00:00:00.000Z"), sourceCheckStatus: "VERIFIED" } },
+    };
+    const older = {
+      id: "release-1", publishedAt: new Date("2026-08-01T00:00:00.000Z"), sourceCheckStatus: "VERIFIED",
+      sourceKind: "NPM", resolvedInstallationUrl: "https://registry.npmjs.org/@acme/tool/-/tool-1.0.0.tgz",
+    };
+    const acquire = (body?: object, key = "acquire-owned-skill-0002") => {
+      const call = request(createApp())
+        .post("/api/marketplace/products/owned-skill/acquire")
+        .set("Origin", "http://localhost:3000")
+        .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+        .set("Idempotency-Key", key);
+      return body ? call.send(body) : call;
+    };
+    const order = { id: "order-1", status: "completed", releaseManifestId: "release-1", createdAt: new Date("2026-09-18T10:00:00.000Z"), userId: "reader-1", productId: "product-1" };
+
+    it("pins the named release instead of the approved one", async () => {
+      signedIn();
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(product);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(older);
+      prismaMock.marketplaceOrder.findUnique.mockResolvedValue(null);
+      prismaMock.marketplaceOrder.create.mockResolvedValue(order);
+      prismaMock.marketplaceProduct.update.mockResolvedValue({});
+      prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+      const response = await acquire({ version: "1.0.0" });
+
+      expect(response.status).toBe(201);
+      expect(prismaMock.marketplaceReleaseManifest.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({ productVersion: { productId: "product-1", version: "1.0.0" }, publishedAt: { not: null } }),
+      }));
+      expect(prismaMock.marketplaceOrder.create).toHaveBeenCalledWith({ data: expect.objectContaining({ releaseManifestId: "release-1" }) });
+    });
+
+    it("refuses a version that is not a published, verified release", async () => {
+      signedIn();
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(product);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(null);
+      prismaMock.marketplaceOrder.findUnique.mockResolvedValue(null);
+
+      const response = await acquire({ version: "9.9.9" });
+
+      expect(response.status).toBe(409);
+      expect(response.body.error.code).toBe("RELEASE_UNAVAILABLE");
+      expect(prismaMock.marketplaceOrder.create).not.toHaveBeenCalled();
+    });
+
+    it("refuses a named release whose source is not a trusted host", async () => {
+      signedIn();
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(product);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue({ ...older, resolvedInstallationUrl: "https://evil.example/tool.tgz" });
+      prismaMock.marketplaceOrder.findUnique.mockResolvedValue(null);
+
+      const response = await acquire({ version: "1.0.0" });
+
+      expect(response.status).toBe(409);
+      expect(response.body.error.code).toBe("RELEASE_UNAVAILABLE");
+      expect(prismaMock.marketplaceOrder.create).not.toHaveBeenCalled();
+    });
+
+    it("does not hand back a different release the reader already holds", async () => {
+      signedIn();
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(product);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(older);
+      prismaMock.marketplaceOrder.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ ...order, releaseManifestId: "release-2" });
+
+      const response = await acquire({ version: "1.0.0" });
+
+      expect(response.status).toBe(409);
+      expect(response.body.error.code).toBe("ALREADY_IN_LIBRARY");
+      expect(prismaMock.marketplaceOrder.create).not.toHaveBeenCalled();
+    });
+
+    it("returns the held release when the same one is named again", async () => {
+      signedIn();
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(product);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(older);
+      prismaMock.marketplaceOrder.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(order);
+
+      const response = await acquire({ version: "1.0.0" });
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toMatchObject({ releaseManifestId: "release-1" });
+    });
+
+    it("rejects a replayed key that named another release", async () => {
+      signedIn();
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(product);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(older);
+      prismaMock.marketplaceOrder.findUnique.mockResolvedValueOnce({ ...order, releaseManifestId: "release-2" });
+
+      const response = await acquire({ version: "1.0.0" });
+
+      expect(response.status).toBe(409);
+      expect(response.body.error.code).toBe("IDEMPOTENCY_CONFLICT");
+    });
+
+    it.each([[{ version: "" }], [{ version: "x".repeat(65) }], [{ version: "1.0.0", extra: true }], [{ version: 3 }]])("rejects a malformed body %j", async (body) => {
+      signedIn();
+
+      const response = await acquire(body);
+
+      expect(response.status).toBe(400);
+      expect(prismaMock.marketplaceOrder.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("one published release", () => {
+    const releaseRow = {
+      sourceKind: "NPM", sourceUrl: "https://registry.npmjs.org/@acme/tool", sourceRef: "1.0.0", sourcePath: null,
+      providerIntegrityDigest: null, artifactSizeBytes: null, sourceCheckStatus: "VERIFIED", sourceCheckedAt: new Date("2026-10-01T00:00:00Z"),
+      resolvedInstallationUrl: "https://registry.npmjs.org/@acme/tool/-/tool-1.0.0.tgz", installationMethod: "NPM",
+      licenseIdentifier: "MIT", customLicenseUrl: null, installationInstructions: ["private installation step"],
+      productVersion: { version: "1.0.0" }, permissions: [], environmentVariables: [], mcpServerDetails: null,
+    };
+
+    it("shows an older release's own facts and says it is not the current one", async () => {
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue({ id: "product-1" });
+      prismaMock.marketplaceReleaseManifest.findFirst
+        .mockResolvedValueOnce(releaseRow)
+        .mockResolvedValueOnce({ ...releaseRow, sourceRef: "2.0.0", productVersion: { version: "2.0.0" } });
+
+      const response = await request(createApp()).get("/api/marketplace/products/published-skill/releases/1.0.0");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toMatchObject({ version: "1.0.0", current: false, source: { ref: "1.0.0", integrityDigest: null }, license: "MIT" });
+      expect(prismaMock.marketplaceReleaseManifest.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({ productVersion: { productId: "product-1", version: "1.0.0" } }),
+      }));
+      expect(JSON.stringify(response.body)).not.toContain("private installation step");
+    });
+
+    it("is a 404 for an unpublished listing or a version that was never published", async () => {
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(null);
+      expect((await request(createApp()).get("/api/marketplace/products/private-skill/releases/1.0.0")).status).toBe(404);
+
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue({ id: "product-1" });
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(null);
+      const response = await request(createApp()).get("/api/marketplace/products/published-skill/releases/9.9.9");
+      expect(response.status).toBe(404);
+      expect(response.body.error.code).toBe("RELEASE_NOT_FOUND");
+    });
+  });
+
   it("returns installation details for the exact release acquired by the reader", async () => {
     prismaMock.readerSession.findFirst.mockResolvedValue({
       id: "session-1",

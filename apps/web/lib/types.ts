@@ -122,6 +122,8 @@ export interface MyReviewState { eligibility: ReviewEligibility; review: OwnRevi
 export interface ReviewInput { rating: number; displayName: string; body: string }
 export interface ProductRelease {
   version: string;
+  /** False for an earlier release shown from the version picker. */
+  current: boolean;
   source: MarketplaceInstallation["release"]["source"];
   installation: { method: string; url: string };
   permissions: Array<{ capability: string; required: boolean; scope: string | null; destinations: string[]; purpose: string }>;

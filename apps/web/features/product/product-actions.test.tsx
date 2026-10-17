@@ -40,7 +40,7 @@ const installation: MarketplaceInstallation = {
 const acquirable: ProductDetail = {
   ...productDetail,
   release: {
-    version: "1.0.0", source: installation.release.source,
+    version: "1.0.0", current: true, source: installation.release.source,
     installation: { method: "manual", url: installation.release.installation.url },
     permissions: [], environment: [], license: "MIT", mcp: null,
   },
@@ -59,7 +59,7 @@ describe("ProductActions acquisition flow", () => {
   it("requires sign-in before acquisition", () => {
     session.email = null;
     render(<ProductActions product={acquirable} />);
-    fireEvent.click(screen.getByRole("button", { name: "Add to library" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add v1.0.0 to library" }));
     expect(push).toHaveBeenCalledWith(expect.stringMatching(/^\/account\?next=/));
     expect(acquireProduct).not.toHaveBeenCalled();
   });
@@ -70,7 +70,7 @@ describe("ProductActions acquisition flow", () => {
       .mockResolvedValueOnce(installation);
     render(<ProductActions product={acquirable} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Add to library" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add v1.0.0 to library" }));
 
     expect(await screen.findByRole("dialog", { name: "Install acquired release" })).toBeInTheDocument();
     expect(screen.getByText("v1.0.0")).toBeInTheDocument();
@@ -91,7 +91,7 @@ describe("ProductActions acquisition flow", () => {
   it("says why when the release disappears between render and click", async () => {
     acquireProduct.mockRejectedValue(new ApiError(409, "RELEASE_UNAVAILABLE", "No approved release"));
     render(<ProductActions product={acquirable} />);
-    fireEvent.click(screen.getByRole("button", { name: "Add to library" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add v1.0.0 to library" }));
     expect(await screen.findByText("No approved release is available yet.")).toBeInTheDocument();
   });
 

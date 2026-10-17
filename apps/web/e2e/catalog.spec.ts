@@ -25,7 +25,7 @@ test.describe("product detail", () => {
     test(`the acquire panel is within two screens of the top at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/products/conversion-copywriter");
-      const add = page.getByRole("button", { name: "Add to library" });
+      const add = page.getByRole("button", { name: "Add v2.4.0 to library" });
       await expect(add).toBeVisible();
       const top = await add.evaluate((node) => node.getBoundingClientRect().top + window.scrollY);
       expect(top).toBeLessThan(1800);
@@ -59,6 +59,33 @@ test.describe("product detail", () => {
 
     await page.getByLabel("Version").selectOption({ label: "v2.3.0" });
     await expect(page.getByText("Tighter summaries; drops the network permission.")).toBeVisible();
+  });
+
+  test("inspecting an older version swaps its own facts in, and adding sends that version", async ({ page, context, baseURL }) => {
+    await context.addCookies([{ name: "e2e_persona", value: "creator", url: baseURL! }]);
+    await page.goto("/products/conversion-copywriter");
+    const provenance = page.locator("#provenance");
+    await expect(provenance.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toBeVisible();
+
+    await page.getByLabel("Version").selectOption({ label: "v2.3.0" });
+
+    await expect(provenance.getByText("89abcdef0123456789abcdef0123456789abcdef", { exact: true })).toBeVisible();
+    await expect(provenance.getByText("sha512-fixtureolderrelease==")).toBeVisible();
+    await expect(provenance.getByText("Network access")).toBeVisible();
+    await expect(provenance.getByText(/release, not the latest/)).toBeVisible();
+    await expect(provenance.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toHaveCount(0);
+
+    let sent: unknown;
+    await page.route("**/products/conversion-copywriter/acquire", async (route) => {
+      sent = route.request().postDataJSON();
+      await route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: { code: "RELEASE_UNAVAILABLE", message: "stub" } }) });
+    });
+    await page.getByRole("button", { name: "Add v2.3.0 to library" }).click();
+    await expect.poll(() => sent).toEqual({ version: "2.3.0" });
+
+    await page.getByLabel("Version").selectOption({ label: "v2.4.0 · latest" });
+    await expect(provenance.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add v2.4.0 to library" })).toBeEnabled();
   });
 
   test("an unknown listing is marked noindex", async ({ page }) => {

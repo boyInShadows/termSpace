@@ -1,20 +1,20 @@
 "use client";
 
-import { useId, useState } from "react";
-import type { ProductVersion } from "@/lib/types";
+import { useId } from "react";
 import { useLocale } from "@/lib/locale-context";
 import { intlLocale } from "@/lib/format";
+import { useReleaseSelection } from "@/features/product/release-selection";
 
 /**
- * Pick a release and read what changed in it. Newest first; the first entry
- * is the current version.
+ * Pick the release to inspect and add. Newest first; the first entry is the
+ * current version.
  */
-export function VersionPicker({ versions }: { versions: ProductVersion[] }) {
+export function VersionPicker() {
   const { fa, locale } = useLocale();
   const id = useId();
-  const [selectedId, setSelectedId] = useState(versions[0]?.id);
-  const selected = versions.find((version) => version.id === selectedId) ?? versions[0];
-  if (!selected) return null;
+  const selection = useReleaseSelection();
+  const selected = selection?.selected;
+  if (!selection || !selected) return null;
 
   const date = new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" }).format(new Date(selected.releasedAt));
   return (
@@ -23,11 +23,11 @@ export function VersionPicker({ versions }: { versions: ProductVersion[] }) {
       <select
         id={id}
         value={selected.id}
-        onChange={(event) => setSelectedId(event.target.value)}
+        onChange={(event) => selection.select(event.target.value)}
         className="mt-2 min-h-10 w-full rounded-md border border-input bg-background px-3 font-mono text-sm"
         dir="ltr"
       >
-        {versions.map((version, index) => (
+        {selection.versions.map((version, index) => (
           <option key={version.id} value={version.id}>
             v{version.version}
             {index === 0 ? (fa ? " · جدیدترین" : " · latest") : ""}
