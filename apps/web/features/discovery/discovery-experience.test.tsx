@@ -71,13 +71,13 @@ describe("DiscoveryExperience states", () => {
       />,
     );
 
-    const bar = screen.getAllByRole("combobox", { name: "Compatibility" }).find((element) => element.hasAttribute("aria-label"));
+    const bar = screen.getAllByRole("combobox", { name: "Platform" }).find((element) => element.hasAttribute("aria-label"));
     expect(bar).toHaveValue("cursor");
-    expect(within(bar as HTMLElement).getByRole("option", { name: "Compatibility" })).toBeInTheDocument();
+    expect(within(bar as HTMLElement).getByRole("option", { name: "Platform" })).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole("button", { name: /Filters/ })[0]);
     const drawer = screen.getByRole("dialog");
-    expect(within(drawer).queryByText("Compatibility")).not.toBeInTheDocument();
+    expect(within(drawer).queryByText("Platform")).not.toBeInTheDocument();
     expect(within(drawer).getByText("Sort resources")).toBeInTheDocument();
     expect(within(drawer).getByText("Category")).toBeInTheDocument();
   });
@@ -95,7 +95,7 @@ describe("DiscoveryExperience states", () => {
       <DiscoveryExperience initial={emptyResult} categories={[]} platforms={[]} communities={[]} itemTypes={[{ key: "skill", en: "Skills", fa: "مهارت‌ها", definition: "" }]} initialFilters={{ type: "skill", verified: true, minRating: 4.5 }} />,
     );
 
-    const chips = screen.getAllByRole("button", { name: "Remove filter: Verified only" });
+    const chips = screen.getAllByRole("button", { name: "Remove filter: Safety reviewed only" });
     expect(chips.length).toBeGreaterThan(0);
     fireEvent.click(chips[0]);
     expect(replace).toHaveBeenCalledWith("/explore", { scroll: false });
@@ -112,5 +112,11 @@ describe("DiscoveryExperience states", () => {
     const shown = screen.getByText(/No published resources match/);
     expect(shown).toHaveTextContent("“$& and $1”");
     expect(within(shown).getByText("$& and $1").tagName).toBe("BDI");
+  });
+
+  it("counts one result in the singular", () => {
+    render(<DiscoveryExperience initial={{ data: [], meta: { page: 1, limit: 12, total: 1, totalPages: 1 } }} categories={[]} platforms={[]} communities={[]} itemTypes={[]} initialFilters={{}} />);
+
+    expect(screen.getByRole("status")).toHaveTextContent(/^1 resource$/);
   });
 });

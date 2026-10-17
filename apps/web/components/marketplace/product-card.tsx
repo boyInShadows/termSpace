@@ -132,8 +132,8 @@ export function ProductCard({
             <Clock3 size={12} />
             {formatNumber(product.usageCount, locale, { compact: true })} {card.uses}
           </span>
-          <span dir="ltr">
-            {new Intl.DateTimeFormat(intlLocale(locale), { month: "short", day: "numeric" }).format(new Date(product.updatedAt))}
+          <span>
+            {card.updated} <bdi dir="ltr">{new Intl.DateTimeFormat(intlLocale(locale), { month: "short", day: "numeric" }).format(new Date(product.updatedAt))}</bdi>
           </span>
         </div>
 

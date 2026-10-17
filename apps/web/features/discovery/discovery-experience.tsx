@@ -232,7 +232,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
               scrolls away with the page. */}
           <div className="sticky top-0 z-20 -mx-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border bg-background/90 px-2 py-3 backdrop-blur">
             <p className="font-mono text-sm" role="status">
-              <strong>{meta.total}</strong> {d.products}
+              <strong>{meta.total}</strong> {meta.total === 1 ? d.product : d.products}
             </p>
             <div className="flex items-center gap-2">
               {/* Platform is the facet a developer starts from, so below lg it
