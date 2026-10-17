@@ -4,6 +4,48 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-17
 
+- **Authentication and email verification review (`ramtin`, API and account UI).**
+  - Fetched the remote references: local `ramtin` contains `origin/main` and
+    `origin/v.2` (22 and 31 commits ahead respectively); no additional merge needed.
+  - Existing Cloudflare verification/reset delivery retained. Fixed the Windows
+    email-worker entry point, verification resend after the 60-second cooldown,
+    password loss when a verified password account links Google, off-site login
+    return URLs, and favorites failures incorrectly clearing a successful session.
+  - Returning unverified readers can open verification from their account;
+    the dashboard shows verification before mounting creator pages. Removed the
+    corresponding pending dashboard item. Reused existing copy/components.
+  - Added database-backed reader lifecycle tests to the existing CI integration
+    job, browser signup/verification/reset tests, and regressions for Google,
+    worker startup, delivery errors/retry exhaustion, return URLs and session state.
+    Isolated the API tests' login rate-limit keys between cases.
+  - Verification: root typecheck; 376 unit tests; 5 real PostgreSQL integration
+    tests; web lint; root production build; web e2e 122 passed / 16 conditional
+    skips with 2 workers, including JS budgets. Default-worker e2e reproduced
+    the already-recorded duplicate catalogue `rel=next` failure; the new browser
+    fixture's missing favorites response was fixed before the passing rerun.
+    Lighthouse attempted but failed before assertions with the existing Windows
+    Chrome temporary-profile EPERM. No performance budgets changed.
+  - Synced installed dependencies to the pulled lockfile and regenerated Prisma;
+    no dependency or lockfile change shipped. Restarted the local API/web servers.
+  - Local `blog_db` had an unresolved failed `202609240001` migration and two
+    pending migrations. Backed it up to
+    `D:\coding\Projects\TermSpace\backups\termspace-before-auth-20261017.dump`,
+    restored to a fresh disposable database, preserved the single legacy creator
+    owner in `ownerUserId`, cleared the redundant `userId`, marked the failed
+    migration rolled back and deployed all three migrations. Verified account
+    credentials/verification state, creator owners and content/order/review/role
+    counts against the original before repeating on the local database. No email
+    verification state or role grants changed. The legacy owner must verify their
+    email before an operator grants their creator role; do not bypass that gate.
+    The one-off assert-guarded script is in ignored
+    `maintenance/auth-database-recovery.mjs`; backup restoration is the down path.
+  - Remaining setup: Cloudflare account/token and Google client ID are absent;
+    real inbox delivery and live Google OAuth are unverified. Use a real signing
+    secret shared by API and worker in Windows user env; see the updated email
+    guide. No email provider credentials or secrets were written by this change.
+  - Shared surfaces: `changelog.md`, `pending.md` (authorized auth follow-up from
+    the other lane). Reviewed the final diff manually; no usage meter available.
+
 - **Navbar: account menu, icon-only language switch, centered links (branch
   `redesign`, `apps/web` presentation lane).**
   - `components/layout/account-menu.tsx` (new) and `header.tsx`: a signed-in

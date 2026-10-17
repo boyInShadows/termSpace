@@ -18,6 +18,12 @@ export function EmailVerification() {
   const started = useRef(false);
 
   useEffect(() => {
+    if (!resent) return;
+    const timer = window.setTimeout(() => setResent(false), 60_000);
+    return () => window.clearTimeout(timer);
+  }, [resent]);
+
+  useEffect(() => {
     if (started.current) return;
     started.current = true;
     const hash = new URLSearchParams(window.location.hash.slice(1));

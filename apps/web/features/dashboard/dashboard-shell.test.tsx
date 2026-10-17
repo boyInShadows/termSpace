@@ -5,7 +5,7 @@ import { copy } from "@/lib/i18n";
 const replace = vi.hoisted(() => vi.fn());
 const nav = vi.hoisted(() => ({ pathname: "/dashboard" }));
 const session = vi.hoisted(() => ({
-  current: { loading: false, email: null as string | null, marketplaceRoles: [] as string[] },
+  current: { loading: false, email: null as string | null, emailVerified: true, marketplaceRoles: [] as string[] },
 }));
 
 vi.mock("next/navigation", () => ({
@@ -25,7 +25,7 @@ describe("DashboardShell", () => {
   });
 
   it("sends a signed-out visitor to sign in and back here afterwards", () => {
-    session.current = { loading: false, email: null, marketplaceRoles: [] };
+    session.current = { loading: false, email: null, emailVerified: false, marketplaceRoles: [] };
     nav.pathname = "/dashboard/settings";
     render(<DashboardShell><p>secret</p></DashboardShell>);
 
@@ -34,7 +34,7 @@ describe("DashboardShell", () => {
   });
 
   it("holds the skeleton while the session is still loading", () => {
-    session.current = { loading: true, email: null, marketplaceRoles: [] };
+    session.current = { loading: true, email: null, emailVerified: false, marketplaceRoles: [] };
     render(<DashboardShell><p>secret</p></DashboardShell>);
 
     expect(replace).not.toHaveBeenCalled();
@@ -43,7 +43,7 @@ describe("DashboardShell", () => {
   });
 
   it("frames the page with a top bar, sidebar and tab bar that mark the current route", () => {
-    session.current = { loading: false, email: "kasra@example.com", marketplaceRoles: ["creator"] };
+    session.current = { loading: false, email: "kasra@example.com", emailVerified: true, marketplaceRoles: ["creator"] };
     nav.pathname = "/dashboard/studio";
     render(<DashboardShell><p>content</p></DashboardShell>);
 
@@ -64,11 +64,19 @@ describe("DashboardShell", () => {
   });
 
   it("sends a reader who is not yet a creator to onboarding when they publish", () => {
-    session.current = { loading: false, email: "reader@example.com", marketplaceRoles: [] };
+    session.current = { loading: false, email: "reader@example.com", emailVerified: true, marketplaceRoles: [] };
     render(<DashboardShell><p>content</p></DashboardShell>);
 
     for (const link of screen.getAllByRole("link", { name: copy.en.dashboardHome.publish })) {
       expect(link).toHaveAttribute("href", "/dashboard/studio");
     }
+  });
+
+  it("asks an unverified reader to verify instead of showing creator onboarding", () => {
+    session.current = { loading: false, email: "reader@example.com", emailVerified: false, marketplaceRoles: [] };
+    render(<DashboardShell><p>creator onboarding</p></DashboardShell>);
+    expect(screen.getByRole("heading", { name: copy.en.verifyEmail })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: copy.en.resendVerification })).toBeInTheDocument();
+    expect(screen.queryByText("creator onboarding")).not.toBeInTheDocument();
   });
 });

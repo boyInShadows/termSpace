@@ -1,5 +1,6 @@
 import { hash } from "bcryptjs";
 import request from "supertest";
+import { ipKeyGenerator } from "express-rate-limit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const verifyGoogleIdToken = vi.hoisted(() => vi.fn());
@@ -48,6 +49,7 @@ process.env.NODE_ENV = "test";
 process.env.GOOGLE_CLIENT_ID = "test-google-client-id";
 process.env.EMAIL_VERIFICATION_SECRET = "test-secret-that-is-definitely-longer-than-32-bytes";
 const { createApp } = await import("./app.js");
+const { loginRateLimit } = await import("./middleware/security.js");
 const { createEmailVerificationToken, createPasswordResetCode } = await import("./lib/emailVerification.js");
 
 function marketplaceManifestFixture() {
@@ -81,6 +83,8 @@ function marketplaceManifestFixture() {
 describe("API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    loginRateLimit.resetKey(ipKeyGenerator("::ffff:127.0.0.1"));
+    loginRateLimit.resetKey(ipKeyGenerator("127.0.0.1"));
     prismaMock.$transaction.mockResolvedValue([]);
     prismaMock.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     prismaMock.article.updateMany.mockResolvedValue({ count: 0 });
@@ -1934,6 +1938,52 @@ describe("API", () => {
       select: expect.any(Object),
     });
     expect(prismaMock.readerSession.deleteMany).toHaveBeenCalledWith({ where: { userId: "reader-1" } });
+  });
+
+  it("refuses Google sign-in when it has not been configured", async () => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    delete process.env.GOOGLE_CLIENT_ID;
+    try {
+      const response = await request(createApp()).post("/api/readers/google").send({ credential: "v".repeat(120) });
+      expect(response.status).toBe(503);
+      expect(response.body.error.code).toBe("GOOGLE_NOT_CONFIGURED");
+      expect(verifyGoogleIdToken).not.toHaveBeenCalled();
+    } finally { process.env.GOOGLE_CLIENT_ID = clientId; }
+  });
+
+  it("rejects an unverified Google identity before accessing accounts", async () => {
+    verifyGoogleIdToken.mockResolvedValue({ getPayload: () => ({ sub: "google-1", email: "reader@example.com", email_verified: false }) });
+    const response = await request(createApp()).post("/api/readers/google").send({ credential: "v".repeat(120) });
+    expect(response.status).toBe(401);
+    expect(prismaMock.readerUser.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.readerSession.create).not.toHaveBeenCalled();
+  });
+
+  it("creates a verified account from a valid Google identity", async () => {
+    verifyGoogleIdToken.mockResolvedValue({ getPayload: () => ({ sub: "google-new", email: "reader@example.com", email_verified: true }) });
+    prismaMock.readerUser.findFirst.mockResolvedValue(null);
+    prismaMock.readerUser.create.mockResolvedValue({ id: "reader-new", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] });
+    const response = await request(createApp()).post("/api/readers/google").send({ credential: "v".repeat(120) });
+    expect(response.status).toBe(200);
+    expect(response.body.data.user.emailVerified).toBe(true);
+    expect(prismaMock.readerUser.create).toHaveBeenCalledWith(expect.objectContaining({ data: { email: "reader@example.com", googleSubject: "google-new", emailVerifiedAt: expect.any(Date) } }));
+  });
+
+  it("preserves password sign-in when a verified account connects Google", async () => {
+    verifyGoogleIdToken.mockResolvedValue({
+      getPayload: () => ({ sub: "google-subject-1", email: "reader@example.com", email_verified: true }),
+    });
+    const user = { id: "reader-1", email: "reader@example.com", googleSubject: null, emailVerifiedAt: new Date(), marketplaceRoleGrants: [] };
+    prismaMock.readerUser.findFirst.mockResolvedValue(user);
+    prismaMock.readerUser.update.mockResolvedValue({ ...user, googleSubject: "google-subject-1" });
+    prismaMock.$transaction.mockResolvedValueOnce([{ ...user, googleSubject: "google-subject-1" }]).mockResolvedValueOnce([]);
+
+    const response = await request(createApp()).post("/api/readers/google").send({ credential: "v".repeat(120) });
+
+    expect(response.status).toBe(200);
+    const data = prismaMock.readerUser.update.mock.calls[0][0].data;
+    expect(data.googleSubject).toBe("google-subject-1");
+    expect(data.passwordHash).toBeUndefined();
   });
 
   it("returns a safe reader profile without authentication secrets", async () => {

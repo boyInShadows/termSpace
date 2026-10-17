@@ -62,4 +62,4 @@ jobs:
         working-directory: .
       - run: npm run prisma:generate
       - run: npm run prisma:deploy
-      - run: npx vitest run src/marketplaceFlow.integration.test.ts
+      - run: npx vitest run src/marketplaceFlow.integration.test.ts src/readerFlow.integration.test.ts

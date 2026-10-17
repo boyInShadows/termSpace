@@ -1,5 +1,5 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const confirmEmailVerification = vi.hoisted(() => vi.fn());
 const requestEmailVerification = vi.hoisted(() => vi.fn());
@@ -27,6 +27,7 @@ vi.mock("@/lib/locale-context", () => ({
 const { EmailVerification } = await import("./email-verification");
 
 describe("EmailVerification", () => {
+  afterEach(() => { cleanup(); vi.useRealTimers(); });
   beforeEach(() => {
     vi.clearAllMocks();
     window.history.replaceState({}, "", "/account/verify-email#token=verification.signature");
@@ -40,5 +41,17 @@ describe("EmailVerification", () => {
     expect(window.location.hash).toBe("");
     expect(await screen.findByText("Your email is verified.")).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
+  });
+
+  it("allows another resend after the server cooldown", async () => {
+    vi.useFakeTimers();
+    window.history.replaceState({}, "", "/account/verify-email");
+    requestEmailVerification.mockResolvedValue({ data: { accepted: true } });
+    render(<EmailVerification />);
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Resend verification" })); });
+    expect(screen.getByText("Message queued")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Resend verification" })).toBeDisabled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+    expect(screen.getByRole("button", { name: "Resend verification" })).toBeEnabled();
   });
 });

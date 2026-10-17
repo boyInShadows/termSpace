@@ -13,12 +13,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Web — Homepage Follow-ups
 
-- `/dashboard` tells an unverified creator "your creator workspace isn't set
-  up yet" and offers "Create creator profile". The creator API answers
-  `403 EMAIL_VERIFICATION_REQUIRED` (and `403 MARKETPLACE_ROLE_REQUIRED` for a
-  profile owner without the role), but `lib/dashboard.ts` treats every 403 as
-  "no creator workspace". Distinguish the error codes and show "verify your
-  email" instead. Found in the 2026-09-24 P0 browser pass.
 - Meet the plan's performance budgets, then tighten the ratchet gates in
   `lighthouserc.cjs` and `apps/web/e2e/budget.spec.ts` to them. Still
   missing as of 2026-10-16: mobile LCP (`/` 3.2 s simulated vs 2.2 s,

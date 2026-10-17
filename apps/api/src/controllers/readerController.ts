@@ -297,7 +297,8 @@ export async function loginReaderWithGoogle(req: Request, res: Response) {
         const [linkedUser] = await prisma.$transaction([
           prisma.readerUser.update({
             where: { id: user.id },
-            data: { googleSubject: payload.sub, emailVerifiedAt: new Date(), passwordHash: null },
+            // Discard an unverified signup's password when its real email owner claims it.
+            data: { googleSubject: payload.sub, emailVerifiedAt: new Date(), ...(!user.emailVerifiedAt ? { passwordHash: null } : {}) },
             select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
           }),
           prisma.readerSession.deleteMany({ where: { userId: user.id } }),

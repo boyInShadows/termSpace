@@ -126,7 +126,7 @@ services wait for the API health check, so a migration failure prevents a
 partially working stack from coming online.
 
 After configuring Cloudflare Email Service, start the transactional email worker
-with `docker compose --profile email up --build -d`.
+with `docker compose up --build -d email-worker` (the worker also starts with the full stack).
 
 With the example host ports, the loopback-only services are available at:
 

@@ -34,7 +34,12 @@ export function MarketplaceSessionProvider({ children }: { children: React.React
       setEmail(session.data.user.email);
       setEmailVerified(session.data.user.emailVerified);
       setMarketplaceRoles(session.data.user.marketplaceRoles);
-      setFavorites(new Set(await getFavorites()));
+      try { setFavorites(new Set(await getFavorites())); }
+      catch (cause) {
+        if (cause instanceof ApiError && cause.status === 401) throw cause;
+        setFavorites(new Set());
+        setError("Could not load your saved products.");
+      }
     } catch (cause) {
       // A 401 means "not signed in"; an unreachable or timed-out API means
       // "we cannot tell who you are". Both leave the visitor anonymous, and

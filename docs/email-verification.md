@@ -25,6 +25,40 @@ all remaining links atomically.
    `EMAIL_FROM_NAME`.
 6. Deploy the migration, API, and `email-worker` service together.
 
+No additional Node email package is needed: `cloudflareEmail.ts` sends through
+Cloudflare's REST API using built-in `fetch`. An SMTP package such as Nodemailer
+would still require an SMTP provider, credentials, and a configured sender.
+
+For local development, run the API and worker with the same real signing secret
+and provider configuration. On Windows, keep secrets in user environment
+variables and open a new terminal after configuring them. `dotenv` loads
+`apps/api/.env` for workspace scripts; the root Compose `.env` is not loaded by
+`npm run dev:api` or the standalone worker.
+
+```sh
+npm run dev:api
+# In another terminal with the same environment:
+npm run email:worker -w apps/api
+```
+
+The standalone command processes one batch and exits; keep invoking it in the
+local runner while testing. Docker Compose runs the worker every 30 seconds by
+default. Missing provider credentials or an invalid signing secret must make the
+worker exit with an error before it claims queued messages.
+
+To check the whole account lifecycle against a disposable, migrated PostgreSQL,
+set `INTEGRATION_DATABASE_URL` in the process environment and run:
+
+```sh
+npm test -w apps/api -- src/readerFlow.integration.test.ts
+```
+
+This covers registration, duplicate accounts, login/logout, the outbox and
+provider request, one-use verification, resend cooldowns, reset codes, attempt
+limits, and session revocation. Provider responses are simulated: a real inbox
+delivery check still requires working Cloudflare credentials and a verified
+sender. Do not point integration tests at a production database.
+
 The sender includes text and HTML bodies, a 10-second timeout, and a correlation
 ID. It retries only network failures, timeouts, HTTP 429, and HTTP 5xx responses,
 with bounded exponential backoff and at most five attempts. HTTP 4xx responses

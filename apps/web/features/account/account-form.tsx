@@ -46,7 +46,8 @@ export function AccountForm() {
       await (mode === "login" ? login(email, password) : register(email, password));
       await session.refresh();
       const next = params.get("next");
-      router.replace(mode === "register" ? localePath("/account/verify-email", locale) : next?.startsWith("/") && !next.startsWith("//") ? next : localePath("/", locale));
+      const destination = next?.startsWith("/") && URL.canParse(next, window.location.origin) ? new URL(next, window.location.origin) : null;
+      router.replace(mode === "register" ? localePath("/account/verify-email", locale) : destination?.origin === window.location.origin ? `${destination.pathname}${destination.search}${destination.hash}` : localePath("/", locale));
       router.refresh();
     } catch (cause) {
       if (!(cause instanceof ApiError)) setError(t.serviceError);
@@ -99,6 +100,7 @@ function SignedInAccount({ email }: { email: string }) {
   }, [page]);
   return <div className="mx-auto max-w-4xl space-y-6">
     <header className="rounded-xl border bg-surface p-7 sm:flex sm:items-end sm:justify-between sm:gap-6"><div><p className="eyebrow">{fa ? "حساب خواننده" : "Reader account"}</p><h1 className="editorial mt-2 text-4xl">{t.account}</h1><p className="mt-3 text-muted-foreground">{t.signedInAs} {email}</p></div><Button className="mt-6 sm:mt-0" variant="secondary" onClick={async () => { await logout(); await session.refresh(); router.replace(localePath("/", locale)); router.refresh(); }}>{t.signOut}</Button></header>
+    {!session.emailVerified && <section className="rounded-xl border bg-surface p-7"><p className="text-muted-foreground">{t.verificationInstructions}</p><Link className={`${buttonVariants()} mt-4`} href={localePath("/account/verify-email", locale)}>{t.verifyEmail}</Link></section>}
     <section className="rounded-xl border bg-surface p-7" aria-labelledby="account-library-title">
       <h2 id="account-library-title" className="editorial text-3xl">{fa ? "کتابخانهٔ شما" : "Your library"}</h2>
       <p className="mt-2 text-sm text-muted-foreground">{fa ? "منابع رایگانی که دریافت کرده‌اید و نسخهٔ دقیق متصل به هر دریافت." : "Free resources you acquired and the exact release pinned to each acquisition."}</p>
