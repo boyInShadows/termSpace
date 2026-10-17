@@ -2,8 +2,10 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DiscoveryExperience } from "./discovery-experience";
 
+const replace = vi.hoisted(() => vi.fn());
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({ replace, refresh: vi.fn() }),
   usePathname: () => "/explore",
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -78,5 +80,37 @@ describe("DiscoveryExperience states", () => {
     expect(within(drawer).queryByText("Compatibility")).not.toBeInTheDocument();
     expect(within(drawer).getByText("Sort resources")).toBeInTheDocument();
     expect(within(drawer).getByText("Category")).toBeInTheDocument();
+  });
+
+  it("names a rate limit as one, not as a connection failure", () => {
+    render(<DiscoveryExperience initial={emptyResult} initialError rateLimited categories={[]} platforms={[]} communities={[]} itemTypes={[]} initialFilters={{}} />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("rate-limited");
+    expect(screen.getByRole("button", { name: "Retry" })).toBeEnabled();
+  });
+
+  it("shows each active filter as a chip that removes only itself", () => {
+    replace.mockClear();
+    render(
+      <DiscoveryExperience initial={emptyResult} categories={[]} platforms={[]} communities={[]} itemTypes={[{ key: "skill", en: "Skills", fa: "مهارت‌ها", definition: "" }]} initialFilters={{ type: "skill", verified: true, minRating: 4.5 }} />,
+    );
+
+    const chips = screen.getAllByRole("button", { name: "Remove filter: Verified only" });
+    expect(chips.length).toBeGreaterThan(0);
+    fireEvent.click(chips[0]);
+    expect(replace).toHaveBeenCalledWith("/explore", { scroll: false });
+  });
+
+  it("offers Clear all only when there is something to clear", () => {
+    renderDiscovery({});
+    expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
+  });
+
+  it("prints a search with replacement patterns literally, in its own direction", () => {
+    renderDiscovery({ query: "$& and $1" });
+
+    const shown = screen.getByText(/No published resources match/);
+    expect(shown).toHaveTextContent("“$& and $1”");
+    expect(within(shown).getByText("$& and $1").tagName).toBe("BDI");
   });
 });

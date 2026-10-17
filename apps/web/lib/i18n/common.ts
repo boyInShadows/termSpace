@@ -56,8 +56,6 @@ export const common = {
     heroStop: "Stop prompting",
     heroScratch: "from scratch.",
     heroStart: "Start from what works.",
-    heroIntro:
-      "Prompts, skills, agents and MCP servers built by people who already got the model to behave — each one listed with its permissions, compatibility and safety review in plain sight.",
     exploreMarketplace: "Explore community resources",
     shareWork: "Share your work",
     moderationNav: "Moderation",
@@ -180,8 +178,6 @@ export const common = {
     heroStop: "از درخواست‌های تکراری",
     heroScratch: "از صفر دست بکشید.",
     heroStart: "از چیزی که کار می‌کند شروع کنید.",
-    heroIntro:
-      "پرامپت‌ها، مهارت‌ها، عامل‌ها و سرورهای MCP را افرادی ساخته‌اند که مدل را به کار گرفته‌اند؛ هر مورد با مجوزها، سازگاری و بررسی ایمنی شفاف معرفی می‌شود.",
     exploreMarketplace: "کاوش منابع جامعه",
     shareWork: "اشتراک‌گذاری کار شما",
     moderationNav: "نظارت",

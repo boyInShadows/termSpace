@@ -18,11 +18,11 @@ import { ProductCardSkeleton } from "@/components/patterns/skeleton";
 import { EmptyState } from "@/components/patterns/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
 import { discoveryHref } from "@/lib/discovery-url";
 import { localePath } from "@/lib/i18n";
+import { useStoredString } from "@/lib/hooks/use-stored-string";
 
 /** Typing settles for this long before the URL, and so the results, change. */
 const QUERY_DEBOUNCE_MS = 300;
@@ -33,9 +33,10 @@ const QUERY_DEBOUNCE_MS = 300;
  * component renders what it is given. So a view survives a reload, can be
  * linked, and has a real page 2.
  */
-export function DiscoveryExperience({ initial, initialError = false, categories, platforms, communities, itemTypes, initialFilters, context }: {
+export function DiscoveryExperience({ initial, initialError = false, rateLimited = false, categories, platforms, communities, itemTypes, initialFilters, context }: {
   initial: ProductPageResult;
   initialError?: boolean;
+  rateLimited?: boolean;
   categories: MarketplaceCategory[];
   platforms: MarketplacePlatform[];
   communities: MarketplaceCommunity[];
@@ -65,10 +66,11 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
   const verified = initialFilters.verified ?? false;
   const minRating = initialFilters.minRating ?? 0;
   const sort = initialFilters.sort === "relevance" && !urlQuery.trim() ? "featured" : initialFilters.sort ?? "featured";
-  const [view, setView] = useState<"grid" | "list">("grid");
+  const [storedView, setView] = useStoredString("termspace:explore-view");
+  const view = storedView === "list" ? "list" : "grid";
   const result = initial.data;
   const meta = initial.meta;
-  const error = initialError ? d.connectionError : null;
+  const error = initialError ? (rateLimited ? d.rateLimited : d.connectionError) : null;
   const loading = pending;
   const typeOptions = [{ value: "All", label: d.all }, ...itemTypes.map((item) => ({ value: item.key, label: fa ? item.fa : item.en }))];
   const selectedTypeLabel = typeOptions.find((option) => option.value === type)?.label ?? type;
@@ -98,13 +100,13 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
   const retry = () => startTransition(() => router.refresh());
   const pageHref = (page: number) => discoveryHref(pathname, searchParams?.toString() ?? "", { page });
   const active = [
-    type !== "All" && selectedTypeLabel,
-    category !== "All" && selectedCategoryLabel,
-    community !== "All" && selectedCommunityLabel,
-    platform !== "All" && selectedPlatformLabel,
-    verified && "Verified",
-    minRating > 0 && `${minRating}+ ${d.rating}`,
-  ].filter(Boolean) as string[];
+    type !== "All" && { key: "type", label: selectedTypeLabel, clear: () => update({ type: undefined }) },
+    category !== "All" && { key: "category", label: selectedCategoryLabel, clear: () => update({ category: undefined }) },
+    community !== "All" && { key: "community", label: selectedCommunityLabel, clear: () => update({ community: undefined }) },
+    platform !== "All" && { key: "platform", label: selectedPlatformLabel, clear: () => update({ platform: undefined }) },
+    verified && { key: "verified", label: d.verifiedOnly, clear: () => update({ verified: undefined }) },
+    minRating > 0 && { key: "minRating", label: `${minRating}+ ${d.rating}`, clear: () => update({ minRating: undefined }) },
+  ].filter(Boolean) as { key: string; label: string; clear: () => void }[];
   // The drawer holds category, community, rating and verified; type is the tab
   // strip and platform is its own select, so neither counts toward its badge.
   const drawerActive = [category !== "All", community !== "All", verified, minRating > 0].filter(Boolean).length;
@@ -328,10 +330,17 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           </div>
           {active.length > 0 && (
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              {active.map((x) => (
-                <Badge key={x} variant="outline">
-                  {x}
-                </Badge>
+              {active.map((chip) => (
+                <button
+                  key={chip.key}
+                  type="button"
+                  onClick={chip.clear}
+                  aria-label={`${d.removeFilter}: ${chip.label}`}
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-2.5 text-[11px] font-semibold text-muted-foreground hover:border-border-strong hover:text-foreground sm:min-h-8"
+                >
+                  {chip.label}
+                  <X size={12} aria-hidden />
+                </button>
               ))}
               <button
                 onClick={reset}
@@ -350,7 +359,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
             {error && (
               <div role="alert" className="col-span-full flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/40 p-4 text-sm text-destructive">
                 <p>{error}</p>
-                <Button variant="secondary" size="sm" onClick={retry}>{d.retry}</Button>
+                <Button variant="secondary" size="sm" onClick={retry} disabled={loading}>{d.retry}</Button>
               </div>
             )}
             {loading ? (
@@ -364,7 +373,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                 />
               ))
             ) : !error ? (
-              <EmptyState onReset={reset} query={query.trim() || undefined} filtered={active.length > 0} />
+              <EmptyState onReset={active.length > 0 || query.trim() ? reset : undefined} query={query.trim() || undefined} filtered={active.length > 0} filters={active} />
             ) : null}
           </div>
           {meta.totalPages > 1 && (

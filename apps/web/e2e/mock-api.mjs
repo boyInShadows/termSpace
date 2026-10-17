@@ -118,7 +118,11 @@ async function handle(request, response) {
   if (route === "GET /api/marketplace/home") return send(response, 200, { data: { ...mockHome, platforms: PLATFORMS } });
   if (route === "GET /api/marketplace/item-types") return send(response, 200, { data: ITEM_TYPES });
   if (route === "GET /api/marketplace/communities") return send(response, 200, { data: [] });
-  if (route === "GET /api/marketplace/products") return send(response, 200, listProducts(searchParams));
+  if (route === "GET /api/marketplace/products") {
+    const type = searchParams.get("type");
+    if (type && !ITEM_TYPES.some((item) => item.key === type)) return send(response, 400, error("VALIDATION_ERROR", "Invalid request"));
+    return send(response, 200, listProducts(searchParams));
+  }
   const detail = /^GET \/api\/marketplace\/products\/([^/]+)$/.exec(route);
   if (detail) {
     // A listing whose API call fails, for the error boundary.

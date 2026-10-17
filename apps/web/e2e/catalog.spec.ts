@@ -153,6 +153,34 @@ test.describe("explore", () => {
     await expect(page.locator('head link[rel="prev"]')).toHaveAttribute("href", "/explore");
   });
 
+  test("a link with a filter the API rejects keeps the search and drops the rest", async ({ page }) => {
+    await page.goto("/explore?q=review&type=not-a-type");
+    await expect(page).toHaveURL(/\/explore\?q=review$/);
+    await expect(page.getByText("Could not reach the community library")).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: /Search resources/ })).toHaveValue("review");
+  });
+
+  test("a page past the end lands on the last page", async ({ page }) => {
+    await page.goto("/explore?page=99");
+    await expect(page).toHaveURL(/\/explore\?page=2$/);
+    await expect(page.getByText("Page 2 of 2")).toBeVisible();
+  });
+
+  test("an active filter chip removes only that filter", async ({ page }) => {
+    await page.goto("/explore?type=skill&verified=true");
+    await page.getByRole("button", { name: "Remove filter: Verified only" }).click();
+    await expect(page).toHaveURL(/\/explore\?type=skill$/);
+    await expect(page.getByRole("button", { name: /^Remove filter: Verified/ })).toHaveCount(0);
+  });
+
+  test("an empty result offers to drop each filter on its own", async ({ page }) => {
+    await page.goto("/explore?type=agent&minRating=5");
+    await expect(page.getByText("No resources found")).toBeVisible();
+    await page.getByRole("button", { name: "Remove filter: 5+ Rating" }).last().click();
+    await expect(page).toHaveURL(/\/explore\?type=agent$/);
+    await expect(page.locator("article h3")).toHaveCount(3);
+  });
+
   test("no results offers to clear the filters", async ({ page }) => {
     await page.goto("/explore?q=nothing-matches-this");
     await expect(page.getByText("No resources found")).toBeVisible();
