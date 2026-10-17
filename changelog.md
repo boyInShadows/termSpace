@@ -2,6 +2,44 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-17
+
+- **Navbar: account menu, icon-only language switch, centered links (branch
+  `redesign`, `apps/web` presentation lane).**
+  - `components/layout/account-menu.tsx` (new) and `header.tsx`: a signed-in
+    reader no longer sees their email as the profile button. It is a round user
+    icon beside the theme and language buttons; it opens a panel with the email
+    as a muted label, then Profile (`/account`), Dashboard (`/dashboard`) and
+    Sign out. Dashboard is gone from the nav links. A signed-out visitor still
+    sees "Sign in". The panel is a disclosure (button with `aria-expanded`),
+    closed by Escape, an outside click or focus leaving it; Escape returns focus
+    to the button. The mobile menu lists the same three items.
+  - The language switch is icon-only; the language name is its accessible name
+    and `title`. The mobile menu keeps the text label.
+  - Explore, Share your work and Moderation are centered in the bar with a
+    three-column grid, so they stay centered whatever the logo and actions
+    measure.
+  - New i18n key `profile` in `lib/i18n/common.ts` (en, fa). **The Persian
+    "پروفایل" was written by the assistant and awaits review.**
+  - A Radix dropdown-menu was tried first and removed: it added about 25 kB gz
+    to every page and broke the first-load JS budget (`/` 209.6 kB against 184,
+    product page 211.7 against 195). The disclosure costs 0.2 kB or less.
+  - Tests: `header.test.tsx` covers the visitor and signed-in states, no
+    Dashboard in the nav, the three menu items, sign out, Escape with focus
+    return, outside click, and the icon-only language link. `e2e/dashboard.spec.ts`
+    now expects 2 nav links for a signed-in creator, not 3.
+  - Verified: root `typecheck`, `npm test -w apps/web` (160), `npm run lint -w
+    apps/web`, root `build`, `npm run e2e -w apps/web` (118 passed, 16
+    skipped, including the first-load JS budgets), and by eye in the browser in
+    English, Persian (RTL) and at 375px. **Not verified:** `npm run lhci -w
+    apps/web` could not complete on this Windows machine (Lighthouse fails with
+    EPERM deleting its temporary Chrome profile, before any assertion runs; same
+    result with the temp directory moved). Run it in CI.
+  - Follow-ups: under load, e2e catalog tests that click before hydration
+    (`a filter changes the URL`, `clicking a featured card morphs`, `pages are
+    real links`) failed intermittently with other dev servers running; they pass
+    on a quiet run.
+
 ## 2026-10-16
 
 - **Landing hero rebuilt as a component datasheet (branch `redesign`,

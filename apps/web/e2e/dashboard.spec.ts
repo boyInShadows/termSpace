@@ -58,7 +58,7 @@ test.describe("dashboard", () => {
       await page.setViewportSize({ width: 768, height: 900 });
       await page.goto(path);
       const links = page.locator("header nav").first().getByRole("link");
-      await expect(links).toHaveCount(3);
+      await expect(links).toHaveCount(2);
       for (const height of await links.evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height))) {
         expect(height).toBeLessThan(40);
       }

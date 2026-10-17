@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Menu, X, ArrowRight, Globe } from "lucide-react";
+import { AccountMenu, useSignOut } from "./account-menu";
 import { Logo } from "./logo";
 import { ThemeToggle } from "../ui/theme-toggle";
 import { Button, buttonVariants } from "../ui/button";
@@ -43,6 +44,7 @@ export function Header() {
   const query = searchParams.toString();
   const switchHref = `${locale === "fa" ? currentPath : localePath(currentPath, "fa")}${query ? `?${query}` : ""}`;
   const session = useMarketplaceSession();
+  const signOut = useSignOut();
   const canModerate =
     session.marketplaceRoles.includes("moderator") ||
     session.marketplaceRoles.includes("administrator");
@@ -50,7 +52,6 @@ export function Header() {
     { href: "/explore", label: t.explore },
     { href: "/dashboard/studio", label: t.shareWork },
     ...(canModerate ? [{ href: "/moderation", label: t.moderationNav }] : []),
-    ...(session.email ? [{ href: "/dashboard", label: t.dashboard }] : []),
   ];
   const [isCondensed, setIsCondensed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -158,14 +159,16 @@ export function Header() {
       <div className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl">
         <div
           className={cn(
-            "container-page flex items-center justify-between transition-[height] duration-500",
+            "container-page grid grid-cols-[1fr_auto] items-center transition-[height] duration-500 md:grid-cols-[1fr_auto_1fr]",
             isCondensed ? "h-14" : "h-16",
           )}
         >
-          <Logo />
+          <div className="justify-self-start">
+            <Logo />
+          </div>
 
           <nav
-            className="hidden items-center gap-5 whitespace-nowrap text-sm md:flex lg:gap-8"
+            className="hidden items-center justify-self-center gap-5 whitespace-nowrap text-sm md:flex lg:gap-8"
             aria-label={t.primary}
           >
             {NAV.map((item) => {
@@ -195,11 +198,10 @@ export function Header() {
             })}
           </nav>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 justify-self-end">
             <ThemeToggle />
-            {/* A real button, not 11px of low-contrast text pushed against the
-                window edge. Same padding as Sign in, and a globe so it reads
-                as a language switch before you can read the script. */}
+            {/* Icon-only, like the theme toggle beside it. The language name
+                lives in the accessible name and `title`, not on screen. */}
             {/* A plain anchor on purpose: the two locales are two root
                 layouts' worth of `lang`/`dir` (proxy.ts rewrites /fa onto the
                 same routes), and a client-side <Link> keeps the old root
@@ -208,26 +210,25 @@ export function Header() {
             <a
               href={switchHref}
               lang={locale === "fa" ? "en" : "fa"}
+              aria-label={t.language}
+              title={t.language}
               className={cn(
-                buttonVariants({ variant: "ghost" }),
-                "hidden gap-1.5 sm:inline-flex",
+                buttonVariants({ variant: "ghost", size: "icon" }),
+                "hidden sm:inline-flex",
               )}
             >
-              <Globe size={15} aria-hidden />
-              {t.language}
+              <Globe size={18} aria-hidden />
             </a>
-            <Link
-              href={localePath("/account", locale)}
-              title={session.email ?? undefined}
-              className={cn(
-                buttonVariants({ variant: "ghost" }),
-                "hidden max-w-40 sm:inline-flex lg:max-w-64",
-              )}
-            >
-              {/* A real address can be long; it truncates rather than pushing
-                  the nav onto a second line. */}
-              <span className="truncate" dir="auto">{session.email ?? t.signIn}</span>
-            </Link>
+            {session.email ? (
+              <AccountMenu email={session.email} />
+            ) : (
+              <Link
+                href={localePath("/account", locale)}
+                className={cn(buttonVariants({ variant: "ghost" }), "hidden sm:inline-flex")}
+              >
+                {t.signIn}
+              </Link>
+            )}
             <Button
               ref={menuButtonRef}
               variant="ghost"
@@ -269,16 +270,51 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            {/* Sign in and the language switch are hidden below `sm` in the
-                bar itself, so without these two the mobile menu is the only
-                place they exist — and they were missing from it. */}
-            <Link
-              href={localePath("/account", locale)}
-              onClick={() => setIsMenuOpen(false)}
-              className="border-t border-border/60 py-3 text-sm font-semibold"
-            >
-              {session.email ?? t.signIn}
-            </Link>
+            {/* The account control and the language switch are hidden below
+                `sm` in the bar itself, so the mobile menu is the only place
+                they exist. */}
+            {session.email ? (
+              <>
+                <p
+                  dir="auto"
+                  className="truncate border-t border-border/60 py-3 text-xs text-muted-foreground"
+                >
+                  {session.email}
+                </p>
+                <Link
+                  href={localePath("/account", locale)}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="border-t border-border/60 py-3 text-sm"
+                >
+                  {t.profile}
+                </Link>
+                <Link
+                  href={localePath("/dashboard", locale)}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="border-t border-border/60 py-3 text-sm"
+                >
+                  {t.dashboard}
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    void signOut();
+                  }}
+                  className="border-t border-border/60 py-3 text-start text-sm"
+                >
+                  {t.signOut}
+                </button>
+              </>
+            ) : (
+              <Link
+                href={localePath("/account", locale)}
+                onClick={() => setIsMenuOpen(false)}
+                className="border-t border-border/60 py-3 text-sm font-semibold"
+              >
+                {t.signIn}
+              </Link>
+            )}
             <a
               href={switchHref}
               lang={locale === "fa" ? "en" : "fa"}
