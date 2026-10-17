@@ -79,7 +79,7 @@ function labels(fa: boolean) {
         free: "رایگان برای همه", sharing: "اشتراک‌گذاری جامعه", whatItDoes: "چه می‌کند", manifest: "مانیفست",
         useCases: "کاربردهای مناسب", included: "محتویات", example: "نمونهٔ ورودی و خروجی", input: "ورودی", output: "بخشی از خروجی",
         reviews: "نقدها", noReviews: "هنوز نقدی ثبت نشده است.", verifiedUse: "استفادهٔ تأییدشده", worksWith: "سازگار با", models: "مدل‌ها",
-        creator: "دربارهٔ سازنده", resources: "منبع", followers: "دنبال‌کننده", related: "منابع مرتبط", keepBuilding: "ادامه دهید",
+        creator: "دربارهٔ سازنده", resources: "منبع", resource: "منبع", followers: "دنبال‌کننده", related: "منابع مرتبط", keepBuilding: "ادامه دهید",
         manifestLabels: { type: "نوع", platforms: "پلتفرم‌ها", models: "مدل‌ها", permissions: "دسترسی‌ها", requirements: "پیش‌نیازها", license: "مجوز", reviewed: "بررسی", version: "نسخه", updated: "به‌روزرسانی", package: "بسته", updates: "سیاست به‌روزرسانی" },
         passed: "بررسی بسته انجام شد", notYet: "هنوز توسط تیم بررسی نشده", files: "فایل",
         installNote: "مراحل دقیق نصب به نسخه‌ای که به کتابخانهٔ خود اضافه می‌کنید متصل است.",
@@ -90,7 +90,7 @@ function labels(fa: boolean) {
         free: "Free for everyone", sharing: "Community sharing", whatItDoes: "What it does", manifest: "Manifest",
         useCases: "Ideal use cases", included: "What’s included", example: "Example input and output", input: "Input", output: "Output excerpt",
         reviews: "Reviews", noReviews: "No reviews yet.", verifiedUse: "Verified use", worksWith: "Works with", models: "Models",
-        creator: "About the creator", resources: "resources", followers: "followers", related: "Related listings", keepBuilding: "Keep building",
+        creator: "About the creator", resources: "resources", resource: "resource", followers: "followers", related: "Related listings", keepBuilding: "Keep building",
         manifestLabels: { type: "type", platforms: "platforms", models: "models", permissions: "permissions", requirements: "requirements", license: "license", reviewed: "reviewed", version: "version", updated: "updated", package: "package", updates: "updates" },
         passed: "Package scan passed", notYet: "Not yet reviewed by the team", files: "files",
         installNote: "Exact installation steps are tied to the release you add to your library.",
@@ -242,7 +242,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   </Section>
                 )}
 
-                <Section title={`${l.reviews} · ${product.rating}`} id="reviews">
+                <Section title={`${l.reviews} (${formatNumber(product.reviewCount, locale)})`} id="reviews">
                   <ReviewComposer slug={product.slug} />
                   {product.reviews.length === 0 ? (
                     <p>{l.noReviews}</p>
@@ -279,7 +279,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     <CreatorIdentity creator={product.creator} />
                     <p className="mt-4 max-w-2xl">{product.creator.bio}</p>
                     <p className="mt-4 text-xs font-semibold text-foreground">
-                      {product.creator.products} {l.resources} · {formatNumber(product.creator.followers, locale)} {l.followers}
+                      {product.creator.products} {product.creator.products === 1 ? l.resource : l.resources} · {formatNumber(product.creator.followers, locale)} {l.followers}
                     </p>
                   </div>
                 </Section>

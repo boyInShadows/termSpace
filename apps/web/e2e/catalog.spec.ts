@@ -11,7 +11,7 @@ test.describe("product detail", () => {
     // React keeps a hidden copy of the content beside the visible one, which a
     // strict text locator counts twice. Wait for the copy to go.
     await expect(page.locator('[id^="S:"][hidden]')).toHaveCount(0);
-    for (const claim of ["Verified", "Reads the current selection · no network access", "MIT"]) {
+    for (const claim of ["Safety reviewed", "Reads the current selection · no network access", "MIT"]) {
       await expect(page.getByRole("region", { name: "Key facts" }).getByText(claim, { exact: true })).toBeVisible();
     }
     const manifest = page.locator("#manifest dl");

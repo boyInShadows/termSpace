@@ -17,22 +17,24 @@ const InstallDialogContent = lazy(() => import("./install-dialog").then((module)
 export function ProductActions({ product }: { product: ProductDetail }) {
   const { fa, locale } = useLocale();
   const copy = fa ? {
-    added: "به کتابخانهٔ شما افزوده شد.", failed: "افزودن منبع انجام نشد. دوباره تلاش کنید.", adding: "در حال افزودن…", add: "افزودن به کتابخانه",
+    added: "به کتابخانهٔ شما افزوده شد.", failed: "افزودن منبع انجام نشد. اتصال خود را بررسی کنید و دوباره تلاش کنید.", adding: "در حال افزودن…", add: "افزودن به کتابخانه",
     preview: "پیش‌نمایش",
     saved: "ذخیره‌شده", save: "ذخیره",
-    free: "منبع رایگان جامعه", license: "جزئیات مجوز در بالا",
     viewInstall: "مشاهدهٔ نصب",
     installUnavailable: "نصب این نسخه اکنون در دسترس نیست.",
-    noRelease: "هنوز نسخهٔ تأییدشده‌ای برای دریافت وجود ندارد.",
+    noReleaseTitle: "هنوز نسخه‌ای برای افزودن نیست", noReleaseBody: "سازنده هنوز نسخهٔ تأییدشده‌ای منتشر نکرده است. همچنان می‌توانید پیش‌نمایش را ببینید و آن را ذخیره کنید.",
+    gone: "این نسخه دیگر برای افزودن در دسترس نیست.", held: "این منبع از قبل در کتابخانهٔ شما هست.", signInAgain: "نشست شما پایان یافته است. برای افزودن دوباره وارد شوید.",
+    busy: "درخواست‌ها بیش از حد است. کمی صبر کنید و دوباره تلاش کنید.", signedOut: "برای افزودن یا ذخیره، وارد حساب خود شوید.",
     addVersion: "افزودن نسخهٔ {version} به کتابخانه", loadingRelease: "در حال بارگذاری نسخه…", releaseFailed: "این نسخه بارگذاری نشد.",
   } : {
-    added: "Added to your library.", failed: "Could not add this resource. Please try again.", adding: "Adding…", add: "Add to library",
+    added: "Added to your library.", failed: "Could not add this resource. Check your connection and try again.", adding: "Adding…", add: "Add to library",
     preview: "Preview",
     saved: "Saved", save: "Save",
-    free: "Free community resource", license: "License details above",
     viewInstall: "View installation",
     installUnavailable: "Installation for this release is currently unavailable.",
-    noRelease: "No approved release is available yet.",
+    noReleaseTitle: "No release to add yet", noReleaseBody: "The creator hasn’t published an approved release. You can still preview this listing and save it.",
+    gone: "This release is no longer available to add.", held: "This resource is already in your library.", signInAgain: "Your session has ended. Sign in again to add this.",
+    busy: "Too many requests. Wait a minute and try again.", signedOut: "Sign in to add or save this listing.",
     addVersion: "Add v{version} to library", loadingRelease: "Loading release…", releaseFailed: "Couldn’t load this release.",
   };
   const session = useMarketplaceSession();
@@ -69,8 +71,10 @@ export function ProductActions({ product }: { product: ProductDetail }) {
       setInstallation(details); setInstallationBlocked(false); setInstallationOpen(true); setMessage(copy.added); acquisitionKey.current = null;
     }
     catch (cause) {
+      const known = cause instanceof ApiError ? cause : null;
+      if (known?.code === "ALREADY_IN_LIBRARY") void getProductInstallation(product.slug).then(setInstallation).catch(() => undefined);
       // The release can be withdrawn between page render and click.
-      setMessage(cause instanceof ApiError && cause.code === "RELEASE_UNAVAILABLE" ? copy.noRelease : copy.failed);
+      setMessage(known?.code === "RELEASE_UNAVAILABLE" ? copy.gone : known?.code === "ALREADY_IN_LIBRARY" ? copy.held : known?.status === 401 ? copy.signInAgain : known?.status === 429 ? copy.busy : copy.failed);
       console.error("Resource library add failed", cause);
     }
     finally { setAdding(false); }
@@ -81,10 +85,17 @@ export function ProductActions({ product }: { product: ProductDetail }) {
   const loadingRelease = (status === "loading" || status === "error") && !installation;
   return (
     <div className="space-y-3">
-      <Button size="lg" className="w-full" disabled={adding || installationBlocked || noRelease || loadingRelease} onClick={() => void acquire()}>
-        {installation ? <Download size={18} /> : <LibraryBig size={18} />}
-        {adding ? copy.adding : installationBlocked ? copy.installUnavailable : noRelease ? copy.noRelease : loadingRelease ? (status === "error" ? copy.releaseFailed : copy.loadingRelease) : installation ? copy.viewInstall : version ? copy.addVersion.replace("{version}", version) : copy.add}
-      </Button>
+      {noRelease ? (
+        <div role="status" className="text-sm">
+          <p className="font-semibold text-foreground">{copy.noReleaseTitle}</p>
+          <p className="mt-1 leading-6 text-muted-foreground">{copy.noReleaseBody}</p>
+        </div>
+      ) : (
+        <Button size="lg" className="w-full" disabled={adding || installationBlocked || loadingRelease} onClick={() => void acquire()}>
+          {installation ? <Download size={18} /> : <LibraryBig size={18} />}
+          {adding ? copy.adding : installationBlocked ? copy.installUnavailable : loadingRelease ? (status === "error" ? copy.releaseFailed : copy.loadingRelease) : installation ? copy.viewInstall : version ? copy.addVersion.replace("{version}", version) : copy.add}
+        </Button>
+      )}
       <Dialog.Root open={installationOpen} onOpenChange={setInstallationOpen}>
         {installationOpen && installation && <Suspense fallback={null}><InstallDialogContent installation={installation} /></Suspense>}
       </Dialog.Root>
@@ -110,10 +121,8 @@ export function ProductActions({ product }: { product: ProductDetail }) {
           {saved ? copy.saved : copy.save}
         </Button>
       </div>
-      <p className="text-center text-xs text-muted-foreground">
-        {copy.free} · {product.license ?? copy.license}
-      </p>
-      {message && <p role="status" className="text-center text-xs text-muted-foreground">{message}</p>}
+      {!session.loading && !session.email && <p className="text-xs text-muted-foreground">{copy.signedOut}</p>}
+      {message && <p role="status" className="text-xs text-muted-foreground">{message}</p>}
     </div>
   );
 }

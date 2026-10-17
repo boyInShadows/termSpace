@@ -14,11 +14,11 @@ export function PreviewDialogContent({ product }: { product: ProductDetail }) {
   const [status, setStatus] = useState<"copied" | "failed" | null>(null);
   const copy = fa ? {
     inside: "محتوای", description: "پیش‌نمایش فقط‌خواندنی ساختار بسته و یک نمونه.", close: "بستن پیش‌نمایش",
-    excerpt: "بخشی از SKILL.md", unavailable: "برای این منبع پیش‌نمایشی وجود ندارد.", copyExcerpt: "کپی بخش نمونه",
+    excerpt: "بخشی از محتوا", unavailable: "برای این منبع پیش‌نمایشی وجود ندارد.", copyExcerpt: "کپی بخش نمونه",
     copied: "گزیده کپی شد.", failed: "کپی خودکار انجام نشد. متن را انتخاب کنید و Ctrl+C را بزنید.",
   } : {
     inside: "Inside", description: "A read-only preview of the package structure and one example.", close: "Close preview",
-    excerpt: "Excerpt · SKILL.md", unavailable: "No preview is available for this resource.", copyExcerpt: "Copy excerpt",
+    excerpt: "Excerpt", unavailable: "No preview is available for this resource.", copyExcerpt: "Copy excerpt",
     copied: "Excerpt copied.", failed: "Couldn’t copy automatically. Select the text and press Ctrl+C.",
   };
   return (

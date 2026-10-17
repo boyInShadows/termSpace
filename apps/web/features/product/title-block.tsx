@@ -8,11 +8,11 @@ import { SelectedRelease } from "./release-selection";
 
 const text = {
   en: {
-    uses: "uses", platforms: "Platforms", models: "Models", review: "Safety review", reviewed: "Verified", reviewedNote: "safety reviewed",
+    uses: "uses", platforms: "Platforms", models: "Models", review: "Review", reviewed: "Safety reviewed",
     notReviewed: "Not yet reviewed", notStated: "Not stated", noRelease: "No approved release", release: "Release", keyFacts: "Key facts",
   },
   fa: {
-    uses: "استفاده", platforms: "پلتفرم‌ها", models: "مدل‌ها", review: "بررسی ایمنی", reviewed: "تأییدشده", reviewedNote: "بررسی ایمنی شده",
+    uses: "استفاده", platforms: "پلتفرم‌ها", models: "مدل‌ها", review: "بررسی", reviewed: "ایمنی بررسی‌شده",
     notReviewed: "هنوز بررسی نشده", notStated: "ذکر نشده", noRelease: "نسخهٔ تأییدشده‌ای نیست", release: "نسخه", keyFacts: "اطلاعات کلیدی",
   },
 };
@@ -57,7 +57,7 @@ export function ProductFacts({ product, locale }: { product: ProductDetail; loca
         </Fact>
         <Fact label={t.review}>
           {product.verified
-            ? <><span className="font-semibold text-verified">{t.reviewed}</span> <span className="text-muted-foreground">· {t.reviewedNote}</span></>
+            ? <span className="font-semibold text-verified">{t.reviewed}</span>
             : <Absent>{t.notReviewed}</Absent>}
         </Fact>
         <SelectedRelease view="facts" slug={product.slug} locale={locale}>
