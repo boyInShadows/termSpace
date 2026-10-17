@@ -4,6 +4,43 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-17
 
+- **Google sign-in wiring and final auth verification (`ramtin`, requested by owner).**
+  - The main site's account page previously had no Google client despite the
+    shared API supporting it. Added the official GIS button, credential POST,
+    the existing session refresh and safe local return path, and visible SDK/API
+    failures. Google signup uses the verified Google identity directly.
+  - Both Next.js builds accept the API's `GOOGLE_CLIENT_ID` and expose only that
+    public ID to the browser. Kept the existing `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
+    frontend fallback. Passed the public ID into the web Docker build, matching
+    the existing blog setup. Added no dependency or secret to tracked files.
+  - Blog Google initialization now uses Next Script `onReady`, which runs again
+    on remount with a cached SDK; added SDK failure feedback, localized button
+    rendering and a width bounded by the account form. Its new Persian error
+    text was written by the assistant and awaits maintainer review.
+  - Added main account/API/SDK and blog handoff regression tests. Verified root
+    typecheck, 384 unit tests, web lint, root production build, Docker Compose
+    config, web e2e 122 passed / 16 conditional skips with 2 workers and budgets.
+    No API/database logic changed in this phase; the previous 5 real PostgreSQL
+    journeys remain the database evidence.
+  - The Windows Lighthouse cleanup issue is avoided by first launching a
+    dedicated headless Chrome with a disposable profile under ignored
+    `maintenance/lhci-chrome` and loopback debugging port 9223, then running
+    `npm run lhci -w apps/web -- --collect.settings.port=9223`. This reuses the
+    already-running test browser instead of Chrome Launcher's failing temporary
+    profile cleanup. All 9 runs and the existing assertions passed, and passed
+    again against the final rebuilt app; no budgets or security settings were
+    weakened. The owner explicitly requested pushing all accumulated `ramtin`
+    changes while the account setup requirements were being checked.
+  - Live provider verification remains blocked: no process/user/machine
+    Cloudflare credentials, usable sender configuration, or Google client ID;
+    no connected browser session for account setup; no authorized test mailbox
+    supplied. Asked the owner for the sending domain, Google project and mailbox.
+    Do not treat the mocked SDK/provider tests as real inbox or Google sign-in
+    proof. The email guide documents the exact configuration and live checks.
+  - Shared surface: `apps/web/lib/api.ts`, `changelog.md`. Cross-lane blog auth
+    files changed because the owner's request explicitly covers Google login.
+    Reviewed the final diff manually; no usage meter available.
+
 - **Authentication and email verification review (`ramtin`, API and account UI).**
   - Fetched the remote references: local `ramtin` contains `origin/main` and
     `origin/v.2` (22 and 31 commits ahead respectively); no additional merge needed.

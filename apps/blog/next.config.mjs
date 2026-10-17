@@ -10,6 +10,7 @@ const imageHosts = (process.env.NEXT_PUBLIC_IMAGE_HOSTS ?? "images.unsplash.com"
 
 const nextConfig = {
   reactStrictMode: true,
+  env: { NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "" },
   experimental: { useTypeScriptCli: false },
   async headers() {
     return [{ source: "/:path*", headers: [

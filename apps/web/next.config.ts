@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  env: { NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "" },
   experimental: { useTypeScriptCli: false },
   // The creator workspace used to live at /creator, beside the dashboard's own
   // studio. There is one place now: /dashboard/studio.

@@ -6,6 +6,7 @@ const requestPasswordReset = vi.hoisted(() => vi.fn());
 const confirmPasswordReset = vi.hoisted(() => vi.fn());
 const login = vi.hoisted(() => vi.fn());
 const register = vi.hoisted(() => vi.fn());
+const loginWithGoogle = vi.hoisted(() => vi.fn());
 const session = vi.hoisted(() => ({ email: "reader@example.com" as string | undefined, emailVerified: true, refresh: vi.fn() }));
 const replace = vi.hoisted(() => vi.fn());
 const params = vi.hoisted(() => ({ next: "" }));
@@ -18,7 +19,9 @@ vi.mock("@/lib/api", async (importOriginal) => ({
   confirmPasswordReset,
   login,
   register,
+  loginWithGoogle,
 }));
+vi.mock("./google-sign-in", () => ({ GoogleSignIn: ({ onCredential, disabled }: { onCredential: (credential: string) => Promise<void>; disabled: boolean }) => <button disabled={disabled} onClick={() => void onCredential("test-google-credential")}>Continue with Google</button> }));
 vi.mock("./marketplace-session", () => ({ useMarketplaceSession: () => session }));
 vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: "en", t: {
   account: "Your account", signedInAs: "Signed in as", signOut: "Sign out", signIn: "Sign in", createAccount: "Create account",
@@ -73,6 +76,7 @@ describe("password sign-in and signup", () => {
     params.next = "";
     login.mockResolvedValue({});
     register.mockResolvedValue({});
+    loginWithGoogle.mockResolvedValue({});
   });
 
   function credentials() {
@@ -120,6 +124,25 @@ describe("password sign-in and signup", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Invalid credentials");
     expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("signs in through Google and preserves the requested destination", async () => {
+    params.next = "/dashboard";
+    render(<AccountForm />);
+    fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard"));
+    expect(loginWithGoogle).toHaveBeenCalledWith("test-google-credential");
+    expect(session.refresh).toHaveBeenCalled();
+  });
+
+  it("shows a Google credential rejection and keeps sign-in available", async () => {
+    const { ApiError } = await import("@/lib/api");
+    loginWithGoogle.mockRejectedValueOnce(new ApiError(401, "INVALID_GOOGLE_CREDENTIAL", "Google sign-in could not be verified"));
+    render(<AccountForm />);
+    fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Google sign-in could not be verified");
+    expect(screen.getByRole("button", { name: "Continue with Google" })).toBeEnabled();
     expect(replace).not.toHaveBeenCalled();
   });
 });

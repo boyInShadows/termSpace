@@ -1,11 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, getFavorites, getMarketplaceItemTypes, getProduct, getProducts, subscribe } from "./api";
+import { ApiError, getFavorites, getMarketplaceItemTypes, getProduct, getProducts, loginWithGoogle, subscribe } from "./api";
 
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
 describe("marketplace API client reliability", () => {
+  it("submits Google credentials once to the shared reader endpoint", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: { authenticated: true } }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await loginWithGoogle("signed-google-token");
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("/api/readers/google"), expect.objectContaining({ method: "POST", credentials: "include", body: JSON.stringify({ credential: "signed-google-token" }) }));
+  });
   it("retries one transient GET failure", async () => {
     const transientResponse = new Response(JSON.stringify({ error: { code: "UNAVAILABLE" } }), { status: 503, headers: { "Content-Type": "application/json" } });
     const cancel = vi.spyOn(transientResponse.body!, "cancel");

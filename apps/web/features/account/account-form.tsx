@@ -2,7 +2,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ApiError, confirmPasswordReset, getMarketplaceLibrary, login, logout, register, requestPasswordReset } from "@/lib/api";
+import { ApiError, confirmPasswordReset, getMarketplaceLibrary, login, loginWithGoogle, logout, register, requestPasswordReset } from "@/lib/api";
 import type { MarketplaceLibraryEntry } from "@/lib/types";
 import { useMarketplaceSession } from "./marketplace-session";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
 import { intlLocale } from "@/lib/format";
+import { GoogleSignIn } from "./google-sign-in";
 
 export function AccountForm() {
   const { locale, t } = useLocale();
@@ -20,6 +21,22 @@ export function AccountForm() {
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter(); const params = useSearchParams(); const session = useMarketplaceSession();
   if (session.email) return <SignedInAccount email={session.email} />;
+
+  async function finishSignIn(verificationRequired = false) {
+    await session.refresh();
+    const next = params.get("next");
+    const destination = next?.startsWith("/") && URL.canParse(next, window.location.origin) ? new URL(next, window.location.origin) : null;
+    router.replace(verificationRequired ? localePath("/account/verify-email", locale) : destination?.origin === window.location.origin ? `${destination.pathname}${destination.search}${destination.hash}` : localePath("/", locale));
+    router.refresh();
+  }
+
+  async function signInWithGoogle(credential: string) {
+    setSubmitting(true); setError(null); setStatus(null);
+    try { await loginWithGoogle(credential); await finishSignIn(); }
+    catch (cause) { setError(cause instanceof ApiError ? cause.message : t.serviceError); }
+    finally { setSubmitting(false); }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSubmitting(true); setError(null); setStatus(null);
     const data = new FormData(event.currentTarget);
@@ -44,11 +61,7 @@ export function AccountForm() {
         return;
       }
       await (mode === "login" ? login(email, password) : register(email, password));
-      await session.refresh();
-      const next = params.get("next");
-      const destination = next?.startsWith("/") && URL.canParse(next, window.location.origin) ? new URL(next, window.location.origin) : null;
-      router.replace(mode === "register" ? localePath("/account/verify-email", locale) : destination?.origin === window.location.origin ? `${destination.pathname}${destination.search}${destination.hash}` : localePath("/", locale));
-      router.refresh();
+      await finishSignIn(mode === "register");
     } catch (cause) {
       if (!(cause instanceof ApiError)) setError(t.serviceError);
       else if (cause.code === "INVALID_CREDENTIALS") setError(t.invalidCredentials);
@@ -62,6 +75,7 @@ export function AccountForm() {
   return <div className="mx-auto max-w-md rounded-xl border bg-surface p-7">
     <h1 className="editorial text-4xl">{mode === "login" ? t.signIn : mode === "register" ? t.createAccount : mode === "forgot" ? t.forgotPassword : t.enterResetCode}</h1>
     <p className="mt-2 text-sm text-muted-foreground">{mode === "forgot" ? t.forgotPasswordIntro : mode === "reset" ? t.resetCodeIntro : t.accountIntro}</p>
+    {(mode === "login" || mode === "register") && <GoogleSignIn locale={locale} disabled={submitting} onCredential={signInWithGoogle} onUnavailable={() => setError(t.serviceError)} />}
     <form className="mt-7 space-y-4" onSubmit={submit}>
       <label className="block text-sm font-medium">{t.email}<Input name="email" type="email" required autoComplete="email" defaultValue={mode === "reset" ? resetEmail : ""} className="mt-2" /></label>
       {mode === "reset" && <label className="block text-sm font-medium">{t.resetCode}<Input name="code" type="text" inputMode="numeric" pattern="[0-9]{6}" minLength={6} maxLength={6} required autoComplete="one-time-code" className="mt-2" /></label>}

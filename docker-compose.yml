@@ -66,6 +66,7 @@ services:
         NEXT_PUBLIC_BLOG_URL: ${BLOG_SITE_URL:-http://localhost:3001}
         # Inlined at build time: canonicals, sitemap, robots and social cards.
         NEXT_PUBLIC_SITE_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     restart: unless-stopped
     environment:
       NODE_ENV: production

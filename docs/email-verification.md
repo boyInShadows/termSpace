@@ -66,6 +66,38 @@ and permanent bounces fail terminally. Logs include outcome, provider status,
 latency, and correlation ID but never recipient addresses, tokens, credentials,
 or provider response bodies.
 
+## Google sign-in configuration
+
+Both the main site's account page and the blog use Google Identity Services and
+the shared `/api/readers/google` endpoint. Create a **Web application** OAuth
+client in the project's Google Auth Platform console and configure its branding
+and audience. Use only the default authentication scopes (email, profile,
+openid); the application does not need a Google client secret for this flow.
+
+Add the exact frontend origins to **Authorized JavaScript origins**, including
+`http://localhost`, `http://localhost:3000`, and `http://localhost:3001` for local
+development, plus each actual HTTPS production origin. Add development test users
+if the OAuth audience is still in testing. The JavaScript popup flow posts the
+credential to the API; it does not use a redirect callback URL.
+
+Set `GOOGLE_CLIENT_ID` in the API and frontend build environment. The two Next.js
+configs expose that public identifier as `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, with
+the existing `NEXT_PUBLIC_GOOGLE_CLIENT_ID` supported as a frontend fallback.
+Docker Compose passes the same ID into both frontend builds. Rebuild the
+frontends whenever it changes; changing runtime environment alone cannot replace
+an identifier already inlined into browser JavaScript.
+
+Reference: [Google's setup guide](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)
+and [JavaScript button API](https://developers.google.com/identity/gsi/web/reference/js-reference).
+
+To verify the real integration, complete Google sign-in with an authorized test
+user on each frontend, confirm the shared session response reports
+`emailVerified: true`, and confirm sign-out clears that frontend's host-only
+cookie. For email, register a new password account with an authorized test
+mailbox, run the worker, open the received verification link, and confirm the
+account's verified state; then request and use the emailed password-reset code.
+Mocked credentials and accepted provider responses do not prove these live checks.
+
 ## Operations and recovery
 
 - Inspect `TransactionalEmailOutbox` by status and correlation ID. Do not copy
