@@ -5,6 +5,9 @@ export type Platform = "API" | "ChatGPT" | "Claude" | "Claude Code" | "Codex" | 
 export type AIModel = "GPT-5" | "Claude 4" | "Gemini 2.5" | "Model agnostic";
 export interface Creator { id: string; name: string; handle: string; initials: string; verified: boolean; bio: string; products: number; followers: number; }
 export interface OwnedCreatorProfile extends Creator { createdAt: string; updatedAt: string; accessActive: boolean; }
+export interface ReaderProfile {
+  email: string; createdAt: string; hasPassword: boolean; connectedGoogle: boolean; emailVerified: boolean;
+}
 export interface CreatorDashboardEvent {
   id: string; action: string; state: string; message: string | null; createdAt: string;
 }

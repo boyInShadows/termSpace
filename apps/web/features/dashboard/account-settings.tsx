@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
+import { AccountSecurity } from "./account-security";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -70,6 +71,8 @@ export function AccountSettings() {
           )}
         </Row>
       </section>
+
+      <AccountSecurity />
 
       <Button
         variant="secondary"

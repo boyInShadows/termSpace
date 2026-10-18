@@ -27,6 +27,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const isSignedOut = !session.loading && !session.email;
 
   useEffect(() => {
+    // Smooth page scrolling can leave keyboard focus behind the fixed tab bar.
+    const root = document.documentElement;
+    const previous = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    return () => { root.style.scrollBehavior = previous; };
+  }, []);
+
+  useEffect(() => {
     if (isSignedOut) router.replace(signInHref);
   }, [isSignedOut, router, signInHref]);
 

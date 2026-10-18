@@ -4,6 +4,46 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-18
 
+- **Dashboard capability audit and Settings account security (owner-requested).**
+  Compared marketplace/reader routes with dashboard, creator, account and
+  moderation callers. Recorded seven confirmed dashboard gaps in the ignored
+  `ramtin-pending.md`: security, withdrawal, archive/restore, library access,
+  saved listings, staff moderation access and account-wide provider controls.
+  The existing `/account` library and creator/release features were explicitly
+  distinguished from missing functionality. Completed DC01 and removed that
+  task; the other six remain, with backend evidence and acceptance criteria.
+  - Settings now reads the authenticated reader profile and supports the
+    existing current-password change endpoint. It shows membership date and
+    sign-in method, validates confirmation, bounds inputs, disables duplicate
+    submissions, handles failure/retry and clears fields after success.
+    Google-only/no-password accounts keep their backend reauthentication
+    restriction; no password-setup or email-verification bypass was added.
+  - Added the reader-profile type and API helpers in shared `lib/types.ts` and
+    `lib/api.ts` for this owner-assigned backend-to-dashboard connection.
+    Security copy is local to Settings, keeping it out of public-page chunks.
+    Backend auth, roles, schemas, providers and database records are unchanged.
+  - Production hit tests caught the fixed tab bar covering a keyboard-focused
+    password action. New controls reserve scroll margin, and the dashboard
+    temporarily uses immediate focus scrolling, restoring the prior document
+    scroll preference on exit. Native-keyboard regressions cover EN/FA at the
+    tablet breakpoint; the cleanup behavior has its own unit check.
+  - Verification: root typecheck, 449 unit tests (5 database-dependent skips),
+    web lint, regular production build and all nine Lighthouse runs passed
+    existing gates. Full Chrome suite: 195 passed / 29 conditional skips with
+    4 local workers and no retries. A default 10-worker attempt exhausted
+    browser/server memory; concurrency was reduced only for this invocation,
+    with configuration, assertions and budgets unchanged. An earlier inherited
+    pagination timeout passed ten focused repetitions and the final full run.
+  - Eight before captures and 20 final EN/FA, light/dark, phone/tablet/desktop
+    captures were reviewed/sampled. Final checks included 12 keyboard/button
+    hit-test journeys, four profile Retry journeys, no document overflow or
+    page errors, and no mechanical design-detector findings. Real anonymous
+    GET/PUT calls through the web proxy to the new UI's endpoints returned
+    401; authenticated password flows used fixtures and no real credentials
+    changed. Physical devices, real account changes and CI execution remain
+    unverified. Local email pause is preserved. No push. Evidence and logs:
+    `maintenance/dashboard-capabilities-20261018/`.
+
 - **Homepage catalogue failures show Retry, without sample listings.**
   Completed the next owner-assigned shared/local pending item after reconciling
   both redesign pulls. `apps/web/app/page.tsx` now represents an unavailable

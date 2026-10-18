@@ -24,6 +24,18 @@ describe("DashboardShell", () => {
     nav.pathname = "/dashboard";
   });
 
+  it("keeps focus scrolling immediate in the workbench and restores the page preference on exit", () => {
+    session.current = { loading: true, email: null, emailVerified: false, marketplaceRoles: [] };
+    const root = document.documentElement;
+    const previous = root.style.scrollBehavior;
+    root.style.scrollBehavior = "smooth";
+    const { unmount } = render(<DashboardShell><p>content</p></DashboardShell>);
+    expect(root.style.scrollBehavior).toBe("auto");
+    unmount();
+    expect(root.style.scrollBehavior).toBe("smooth");
+    root.style.scrollBehavior = previous;
+  });
+
   it("sends a signed-out visitor to sign in and back here afterwards", () => {
     session.current = { loading: false, email: null, emailVerified: false, marketplaceRoles: [] };
     nav.pathname = "/dashboard/settings";
