@@ -35,7 +35,7 @@ describe("ReleaseFacts", () => {
   it("lets creator-written values keep their own direction in a right-to-left page", () => {
     render(<dl><ReleaseFacts release={release} locale="fa" summary={{ permissions: "1 user · commercial use", license: null }} /></dl>);
 
-    expect(screen.getByText("1 user · commercial use").closest("dd")).toHaveClass("ts-bidi");
+    expect(screen.getByText("1 user · commercial use").tagName).toBe("BDI");
   });
 
   it("prints what is not declared instead of hiding the row", () => {

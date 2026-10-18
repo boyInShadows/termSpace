@@ -51,10 +51,8 @@ export function ProductFacts({ product, locale }: { product: ProductDetail; loca
   return (
     <section aria-label={t.keyFacts}>
       <dl className="border-b border-border">
-        <Fact label={t.platforms}>
-          {product.compatibility.platforms.join(" · ") || t.notStated}
-          {product.compatibility.models.length > 0 && <span className="block text-muted-foreground">{t.models}: {product.compatibility.models.join(" · ")}</span>}
-        </Fact>
+        <Fact label={t.platforms}>{product.compatibility.platforms.join(" · ") || t.notStated}</Fact>
+        {product.compatibility.models.length > 0 && <Fact label={t.models}>{product.compatibility.models.join(" · ")}</Fact>}
         <Fact label={t.review}>
           {product.verified
             ? <span className="font-semibold text-verified">{t.reviewed}</span>
