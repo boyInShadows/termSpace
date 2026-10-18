@@ -112,7 +112,7 @@ export function Process({ copy }: { copy: Pick<HomeSections, "processEyebrow" | 
   return (
     <section className="border-y border-border bg-surface/40">
       <div className="container-page section-y">
-        <div className="max-w-2xl">
+        <div className="mx-auto max-w-2xl text-center">
           <p className="eyebrow">{copy.processEyebrow}</p>
           <h2 className="editorial mt-3 text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]">
             {copy.processTitle}

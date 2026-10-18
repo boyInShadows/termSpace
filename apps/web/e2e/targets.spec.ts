@@ -24,6 +24,8 @@ for (const { path, persona } of PAGES) {
       for (const el of document.querySelectorAll<HTMLElement>("a[href], button, input, select, textarea, [role=tab], [role=switch]")) {
         const style = getComputedStyle(el);
         if (style.visibility === "hidden" || style.display === "none") continue;
+        // A skip link is visually hidden until focused, when it grows to a full-size target.
+        if (el.classList.contains("sr-only")) continue;
         let box = el.getBoundingClientRect();
         if (box.width === 0 || box.height === 0) continue;
         if (el instanceof HTMLInputElement && (el.type === "radio" || el.type === "checkbox")) {

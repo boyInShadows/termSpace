@@ -15,13 +15,14 @@ test.describe("performance wiring", () => {
     expect(html).toMatch(/<link[^>]+rel="preload"[^>]+href="\/fonts\/estedad-arabic-wght-v5\.3\.0\.woff2"/);
   });
 
-  test("the hero draws no canvas and starts no animation on any device", async ({ page }) => {
+  test("the hero heading stays static and draws no canvas on any device", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await page.waitForTimeout(1_500);
     await expect(page.locator("canvas")).toHaveCount(0);
     await expect(page.locator("[data-plasma-tier]")).toHaveCount(0);
-    const running = await page.locator("main section").first().evaluate((node) =>
+    // The featured shelf now lives inside the hero and has its own status animation.
+    const running = await page.getByRole("heading", { level: 1 }).evaluate((node) =>
       node.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running").length,
     );
     expect(running).toBe(0);
@@ -31,9 +32,8 @@ test.describe("performance wiring", () => {
 test.describe("scroll reveals", () => {
   test("are complete once a section has scrolled fully into view", async ({ page }) => {
     await page.goto("/");
-    const heading = page.getByRole("heading", { name: "Featured building blocks" });
-    await heading.evaluate((node) => node.scrollIntoView({ block: "center", behavior: "instant" }));
-    const reveal = page.locator(".ts-reveal", { has: heading });
+    const reveal = page.getByRole("region", { name: "Featured building blocks" }).locator(".ts-reveal").last();
+    await reveal.evaluate((node) => node.scrollIntoView({ block: "center", behavior: "instant" }));
     await expect.poll(() => reveal.evaluate((node) => getComputedStyle(node).opacity)).toBe("1");
   });
 

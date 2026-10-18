@@ -47,7 +47,7 @@ export function CopyBlock({ label, text, copyLabel, copiedLabel, failedLabel }: 
       <p className="eyebrow">{label}</p>
       <div className="mt-2 flex items-start gap-3 rounded-lg border bg-surface p-3">
         <pre dir="ltr" className="min-w-0 flex-1 overflow-x-auto text-start font-mono text-xs leading-6 text-foreground"><code ref={code}>{text}</code></pre>
-        <Button type="button" size="sm" variant="secondary" onClick={() => void copy()}>
+        <Button type="button" size="sm" variant="secondary" className="min-h-11 sm:min-h-9" onClick={() => void copy()}>
           {status === "copied" ? <Check size={15} /> : <Copy size={15} />}
           {status === "copied" ? copiedLabel : copyLabel}
         </Button>

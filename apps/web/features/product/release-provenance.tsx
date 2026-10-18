@@ -8,9 +8,9 @@ const text = {
   en: {
     title: "Source & provenance",
     sources: { npm: "npm package", github_repository: "GitHub repository", github_release: "GitHub release" } as Record<string, string>,
-    source: "Source", pinned: "Pinned to", digest: "Integrity digest", noDigest: "The source did not provide one",
-    checked: "Last source check", never: "Not yet checked", version: "Release", license: "Licence", notStated: "Not stated",
-    verified: "Verified", stale: "Check overdue",
+    source: "Source",
+    checked: "Last source check", never: "Not yet checked",
+    verified: "Check passed", stale: "Check overdue",
     staleNote: "The last source check is overdue. The pinned release may have changed or been removed upstream.",
     permissions: "Declared permissions", none: "No permissions declared", required: "Required", optional: "Optional",
     environment: "Environment variables", secret: "secret",
@@ -28,9 +28,9 @@ const text = {
   fa: {
     title: "منبع و اصالت",
     sources: { npm: "بستهٔ npm", github_repository: "مخزن گیت‌هاب", github_release: "انتشار گیت‌هاب" } as Record<string, string>,
-    source: "منبع", pinned: "قفل‌شده روی", digest: "چکیدهٔ یکپارچگی", noDigest: "منبع چکیده‌ای ارائه نکرده است",
-    checked: "آخرین بررسی منبع", never: "هنوز بررسی نشده", version: "نسخه", license: "مجوز", notStated: "ذکر نشده",
-    verified: "تأییدشده", stale: "بررسی عقب‌افتاده",
+    source: "منبع",
+    checked: "آخرین بررسی منبع", never: "هنوز بررسی نشده",
+    verified: "بررسی موفق", stale: "بررسی عقب‌افتاده",
     staleNote: "بررسی منبع عقب افتاده است. ممکن است نسخهٔ قفل‌شده در مبدأ تغییر کرده یا حذف شده باشد.",
     permissions: "مجوزهای اعلام‌شده", none: "مجوزی اعلام نشده", required: "الزامی", optional: "اختیاری",
     environment: "متغیرهای محیطی", secret: "محرمانه",
@@ -48,12 +48,13 @@ const text = {
 };
 
 export const provenanceTitle = (locale: Locale) => text[locale].title;
+export const capabilityLabel = (locale: Locale, capability: string) => text[locale].caps[capability] ?? capability;
 
-function Fact({ label, children, mono = false }: { label: string; children: React.ReactNode; mono?: boolean }) {
+function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="min-w-0">
       <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</dt>
-      <dd className={mono ? "mt-1 break-all font-mono text-xs text-foreground" : "mt-1 text-sm font-medium text-foreground"} dir={mono ? "ltr" : undefined}>{children}</dd>
+      <dd className="mt-1 text-sm font-medium text-foreground">{children}</dd>
     </div>
   );
 }
@@ -69,27 +70,23 @@ export function ReleaseProvenance({ release, slug, locale }: { release: ProductR
 
   return (
     <div className="space-y-6">
-      <dl className="grid gap-4 rounded-xl border bg-surface p-4 sm:grid-cols-2">
+      <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
         <Fact label={t.source}>
           {t.sources[source.kind] ?? source.kind}
           {page && <> · <a href={page} target="_blank" rel="noopener noreferrer" className="break-all font-mono text-xs text-primary hover:underline" dir="ltr">{page.replace("https://", "")}</a></>}
         </Fact>
-        <Fact label={t.version}>v{release.version}</Fact>
-        <Fact label={t.pinned} mono>{source.ref}</Fact>
-        <Fact label={t.digest} mono={Boolean(source.integrityDigest)}>{source.integrityDigest ?? t.noDigest}</Fact>
         <Fact label={t.checked}>
           {source.checkedAt ? date.format(new Date(source.checkedAt)) : t.never} · {source.status === "stale" ? t.stale : t.verified}
         </Fact>
-        <Fact label={t.license}>{release.license ?? t.notStated}</Fact>
       </dl>
       {source.status === "stale" && <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-800 dark:text-amber-300">{t.staleNote}</p>}
 
       <div>
         <h3 className="font-semibold text-foreground">{t.permissions}</h3>
         {release.permissions.length === 0 ? <p className="mt-2 text-sm">{t.none}</p> : (
-          <ul className="mt-3 space-y-3">
+          <ul className="mt-3">
             {release.permissions.map((permission) => (
-              <li key={permission.capability} className="rounded-lg bg-surface p-3 text-sm">
+              <li key={permission.capability} className="border-t border-border py-3 text-sm">
                 <p className="font-medium text-foreground">
                   {t.caps[permission.capability] ?? permission.capability} · <span className="text-muted-foreground">{permission.required ? t.required : t.optional}</span>
                 </p>

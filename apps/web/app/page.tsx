@@ -6,28 +6,19 @@ import {
   ShieldCheck,
   FileCheck2,
   RefreshCw,
-  Store,
   Quote,
   ScrollText,
   PackageOpen,
-  Users,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Hero } from "@/components/hero/hero";
 import { Process } from "@/components/sections/process";
-import { Browse, type BrowseCollection } from "@/components/sections/browse";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ProductCard } from "@/components/marketplace/product-card";
-import { CreatorIdentity } from "@/components/marketplace/product-parts";
+import { CompactProductCard } from "@/components/marketplace/compact-product-card";
 import { SectionNotice } from "@/components/patterns/section-notice";
 import { SectionEmpty } from "@/components/patterns/section-empty";
-import {
-  CategoryGridSkeleton,
-  CreatorGridSkeleton,
-  ProductGridSkeleton,
-} from "@/components/patterns/skeleton";
+import { ProductGridSkeleton } from "@/components/patterns/skeleton";
 import { getMarketplaceHome } from "@/lib/api";
 import { mockHome } from "@/lib/mock-home";
 import type { MarketplaceHome } from "@/lib/types";
@@ -65,16 +56,6 @@ const loadHome = cache(
     }
   },
 );
-
-/**
- * Editorial shelves, each backed by exactly one real category.
- *
- * The counts used to be hardcoded (84 / 212 / 67) beside a Featured section
- * that could simultaneously report zero listings. Reading them from the same
- * response as everything else makes that disagreement impossible, and a
- * missing category yields no count rather than a confident zero.
- */
-const COLLECTION_CATEGORIES = ["Research", "Engineering", "Marketing"] as const;
 
 const TRUST_ICONS = [FileCheck2, RefreshCw, ScrollText] as const;
 
@@ -138,115 +119,17 @@ async function FeaturedGrid({ locale }: { locale: Locale }) {
           }}
         />
       ) : (
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3">
           {featured.slice(0, 3).map((product) => (
             <div key={product.id} className="ts-reveal">
               <div className="ts-lift h-full rounded-lg">
-                <ProductCard product={product} />
+                <CompactProductCard product={product} />
               </div>
             </div>
           ))}
         </div>
       )}
     </>
-  );
-}
-
-/* --- browse (collections + practice) ------------------------------------- */
-
-async function BrowsePanels({ locale }: { locale: Locale }) {
-  const { home } = await loadHome();
-
-  const collections: BrowseCollection[] = homeSections[locale].shelves.map(
-    (shelf, index) => ({
-      ...shelf,
-      category: COLLECTION_CATEGORIES[index],
-      count:
-        home.categories.find(
-          (category) => category.name === COLLECTION_CATEGORIES[index],
-        )?.products ?? null,
-    }),
-  );
-
-  return (
-    <Browse
-      collections={collections}
-      categories={home.categories}
-      exploreHref={localePath("/explore", locale)}
-    />
-  );
-}
-
-/* --- creators ------------------------------------------------------------ */
-
-async function CreatorGrid({ locale }: { locale: Locale }) {
-  const t = copy[locale];
-  const { home } = await loadHome();
-
-  if (home.creators.length === 0) {
-    return (
-      <SectionEmpty
-        icon={Users}
-        title={t.homePage.emptyCreatorsTitle}
-        body={t.homePage.emptyCreatorsBody}
-        action={{
-          label: t.homePage.emptyCreatorsCta,
-          href: localePath("/dashboard/studio", locale),
-        }}
-      />
-    );
-  }
-
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {home.creators.slice(0, 3).map((creator) => (
-        <div key={creator.id} className="ts-reveal">
-          <div className="ts-lift h-full rounded-xl border border-border bg-background/70 p-6">
-            <CreatorIdentity creator={creator} />
-            <p className="ts-bidi mt-4 text-sm leading-6 text-muted-foreground">
-              {creator.bio}
-            </p>
-            <p className="mt-5 font-mono text-xs text-muted-foreground">
-              {t.homePage.creatorStats
-                .replace("{products}", formatNumber(creator.products, locale))
-                .replace("{followers}", formatNumber(creator.followers, locale))}
-            </p>
-          </div>
-        </div>
-      ))}
-
-      {/* The creator pitch as the row's last tile rather than its own section.
-          It is the same invitation the three profiles beside it already make,
-          so it belongs in the same breath. */}
-      <div className="ts-reveal">
-        <div className="flex h-full flex-col rounded-xl border border-primary/40 bg-primary-soft/40 p-6 backdrop-blur">
-          <Store size={22} className="text-primary" />
-          <h3 className="editorial mt-4 text-xl leading-tight">
-            {t.homePage.creatorCtaTitle}
-          </h3>
-          <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">
-            {t.homePage.creatorCtaBody}
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Link
-              href={localePath("/dashboard", locale)}
-              className={cn(
-                buttonVariants({ variant: "primary", size: "sm" }),
-                "shadow-plasma",
-              )}
-            >
-              {t.homePage.creatorCtaPrimary}
-            </Link>
-            <Link
-              href={localePath("/design-system", locale)}
-              className={buttonVariants({ variant: "secondary", size: "sm" })}
-            >
-              {t.homePage.creatorCtaSecondary}
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -268,28 +151,33 @@ export default async function Home() {
         {/* A promise, not awaited: the hero is the page shell and must not
             wait on the catalogue. The chips render at once and their counts
             stream in behind their own boundary. */}
-        <Hero locale={locale} types={loadHome().then((result) => result.home.types)} />
-
-        {/* --- featured ------------------------------------------------------ */}
-        <section className="container-page section-y">
-          <div className="ts-reveal flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="eyebrow">{t.featuredEyebrow}</p>
-              <h2 className={SECTION_HEADING}>{t.featuredTitle}</h2>
-            </div>
-            <Suspense fallback={null}>
-              <FeaturedLink locale={locale} />
-            </Suspense>
-          </div>
-
-          <div className="mt-10">
-            <Suspense
-              fallback={<ProductGridSkeleton label={t.homePage.loadingFeatured} />}
+        <Hero locale={locale} types={loadHome().then((result) => result.home.types)}>
+          {/* The featured shelf lives in the hero, directly under the search,
+              so the first screen shows both how to look and what to find. */}
+          <section aria-labelledby="featured-heading">
+            <h2
+              id="featured-heading"
+              className="editorial text-center text-[clamp(1.35rem,1.1rem+0.8vw,1.75rem)] leading-tight"
             >
-              <FeaturedGrid locale={locale} />
-            </Suspense>
-          </div>
-        </section>
+              {t.featuredTitle}
+            </h2>
+
+            <div className="mt-4">
+              <Suspense
+                fallback={
+                  <ProductGridSkeleton label={t.homePage.loadingFeatured} compact />
+                }
+              >
+                <FeaturedGrid locale={locale} />
+              </Suspense>
+            </div>
+            <div className="mt-2 flex justify-center">
+              <Suspense fallback={null}>
+                <FeaturedLink locale={locale} />
+              </Suspense>
+            </div>
+          </section>
+        </Hero>
 
         {/* --- how it works (pinned narrative) ------------------------------- */}
         <Process copy={sections} />
@@ -310,18 +198,18 @@ export default async function Home() {
             }}
           />
           <div className="container-page section-y">
-            <div className="grid gap-12 lg:grid-cols-[.9fr_1.1fr] lg:gap-16">
-              <div className="ts-reveal">
+            <div className="grid gap-12">
+              <div className="ts-reveal mx-auto flex max-w-2xl flex-col items-center text-center">
                 <span className="inline-flex items-center gap-2 rounded-full border border-verified/30 bg-verified/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-verified">
                   <ShieldCheck size={13} />
                   {sections.trustBadge}
                 </span>
                 <h2 className={SECTION_HEADING}>{t.trustEyebrow}</h2>
-                <p className="mt-5 max-w-md leading-8 text-muted-foreground">
+                <p className="mt-5 max-w-xl leading-8 text-muted-foreground">
                   {sections.trustBody}
                 </p>
-                <blockquote className="editorial mt-8 border-s-2 border-primary/50 ps-5 text-xl leading-8">
-                  <Quote size={20} className="mb-3 text-primary" />
+                <blockquote className="editorial mt-8 text-xl leading-8">
+                  <Quote size={20} className="mx-auto mb-3 text-primary" />
                   {sections.trustQuote}
                   <footer className="mt-4 font-sans text-sm not-italic text-muted-foreground">
                     <Link
@@ -334,13 +222,13 @@ export default async function Home() {
                 </blockquote>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+              <div className="grid gap-4 md:grid-cols-3">
                 {sections.trustFacts.map((fact, index) => {
                   const Icon = TRUST_ICONS[index];
                   return (
                     <div key={fact.title} className="ts-reveal">
                       <div className="ts-lift h-full rounded-xl border border-border bg-surface/70 p-6 backdrop-blur">
-                        <div className="flex items-start gap-4">
+                        <div className="flex flex-col items-center gap-4 text-center">
                           <span
                             className={cn(
                               "grid size-10 shrink-0 place-items-center rounded-lg",
@@ -365,52 +253,6 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* --- browse: collections + by practice, one section ----------------- */}
-        <section id="collections" className="container-page section-y">
-          <div className="ts-reveal">
-            <p className="eyebrow">{t.homePage.browseEyebrow}</p>
-            <h2 className={`${SECTION_HEADING} max-w-2xl`}>
-              {t.homePage.browseTitle}
-            </h2>
-            <p className="mt-4 max-w-xl leading-7 text-muted-foreground">
-              {t.homePage.browseIntro}
-            </p>
-          </div>
-
-          <Suspense
-            fallback={
-              <div className="mt-10">
-                <CategoryGridSkeleton label={t.homePage.loadingPractice} />
-              </div>
-            }
-          >
-            <BrowsePanels locale={locale} />
-          </Suspense>
-        </section>
-
-        {/* --- creators + the creator invitation ------------------------------ */}
-        <section
-          id="creators"
-          className="border-y border-border bg-surface/40"
-        >
-          <div className="container-page section-y">
-            <div className="ts-reveal">
-              <p className="eyebrow">{t.creatorsEyebrow}</p>
-              <h2 className={SECTION_HEADING}>{t.featuredCreators}</h2>
-            </div>
-
-            <div className="mt-10">
-              <Suspense
-                fallback={
-                  <CreatorGridSkeleton label={t.homePage.loadingCreators} />
-                }
-              >
-                <CreatorGrid locale={locale} />
-              </Suspense>
-            </div>
-          </div>
-        </section>
-
         {/* --- closing CTA --------------------------------------------------- */}
         <section className="container-page section-y">
           <div className="ts-reveal">
@@ -423,17 +265,19 @@ export default async function Home() {
                     "linear-gradient(115deg, color-mix(in oklab, var(--primary) 22%, transparent), color-mix(in oklab, var(--spark) 16%, transparent) 48%, color-mix(in oklab, var(--accent) 14%, transparent))",
                 }}
               />
-              <div className="grid items-center gap-8 md:grid-cols-2">
+              <div className="mx-auto flex max-w-xl flex-col items-center gap-8 text-center">
                 <div>
                   <p className="eyebrow">{t.inboxEyebrow}</p>
                   <h2 className="editorial mt-3 text-[clamp(1.9rem,1.2rem+2vw,2.9rem)] leading-[1.05]">
                     {t.inboxTitle}
                   </h2>
-                  <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
+                  <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
                     {sections.inboxBody}
                   </p>
                 </div>
-                <NewsletterForm />
+                <div className="w-full text-start">
+                  <NewsletterForm />
+                </div>
               </div>
             </div>
           </div>

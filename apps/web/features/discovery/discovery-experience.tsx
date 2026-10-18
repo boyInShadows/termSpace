@@ -18,12 +18,12 @@ import { ProductCardSkeleton } from "@/components/patterns/skeleton";
 import { EmptyState } from "@/components/patterns/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
 import { discoveryHref } from "@/lib/discovery-url";
 import { localePath } from "@/lib/i18n";
 import { permissionOptions } from "./permission-options";
+import { useStoredString } from "@/lib/hooks/use-stored-string";
 
 /** Typing settles for this long before the URL, and so the results, change. */
 const QUERY_DEBOUNCE_MS = 300;
@@ -34,9 +34,10 @@ const QUERY_DEBOUNCE_MS = 300;
  * component renders what it is given. So a view survives a reload, can be
  * linked, and has a real page 2.
  */
-export function DiscoveryExperience({ initial, initialError = false, categories, platforms, communities, itemTypes, initialFilters, context }: {
+export function DiscoveryExperience({ initial, initialError = false, rateLimited = false, categories, platforms, communities, itemTypes, initialFilters, context }: {
   initial: ProductPageResult;
   initialError?: boolean;
+  rateLimited?: boolean;
   categories: MarketplaceCategory[];
   platforms: MarketplacePlatform[];
   communities: MarketplaceCommunity[];
@@ -69,10 +70,11 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
   const verified = initialFilters.verified ?? false;
   const minRating = initialFilters.minRating ?? 0;
   const sort = initialFilters.sort === "relevance" && !urlQuery.trim() ? "featured" : initialFilters.sort ?? "featured";
-  const [view, setView] = useState<"grid" | "list">("grid");
+  const [storedView, setView] = useStoredString("termspace:explore-view");
+  const view = storedView === "list" ? "list" : "grid";
   const result = initial.data;
   const meta = initial.meta;
-  const error = initialError ? d.connectionError : null;
+  const error = initialError ? (rateLimited ? d.rateLimited : d.connectionError) : null;
   const loading = pending;
   const typeOptions = [{ value: "All", label: d.all }, ...itemTypes.map((item) => ({ value: item.key, label: fa ? item.fa : item.en }))];
   const selectedTypeLabel = typeOptions.find((option) => option.value === type)?.label ?? type;
@@ -102,15 +104,26 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
   const retry = () => startTransition(() => router.refresh());
   const pageHref = (page: number) => discoveryHref(pathname, searchParams?.toString() ?? "", { page });
   const active = [
-    type !== "All" && selectedTypeLabel,
-    category !== "All" && selectedCategoryLabel,
-    community !== "All" && selectedCommunityLabel,
-    platform !== "All" && selectedPlatformLabel,
-    permission !== "All" && selectedPermissionLabel,
-    verified && "Verified",
-    minRating > 0 && `${minRating}+ ${d.rating}`,
-  ].filter(Boolean) as string[];
-  const filters = (
+    type !== "All" && { key: "type", label: selectedTypeLabel, clear: () => update({ type: undefined }) },
+    category !== "All" && { key: "category", label: selectedCategoryLabel, clear: () => update({ category: undefined }) },
+    community !== "All" && { key: "community", label: selectedCommunityLabel, clear: () => update({ community: undefined }) },
+    platform !== "All" && { key: "platform", label: selectedPlatformLabel, clear: () => update({ platform: undefined }) },
+    permission !== "All" && { key: "permission", label: selectedPermissionLabel, clear: () => update({ permission: undefined }) },
+    verified && { key: "verified", label: d.verifiedOnly, clear: () => update({ verified: undefined }) },
+    minRating > 0 && { key: "minRating", label: `${minRating}+ ${d.rating}`, clear: () => update({ minRating: undefined }) },
+  ].filter(Boolean) as { key: string; label: string; clear: () => void }[];
+  // The drawer holds category, community, access, rating and verified; type is the tab
+  // strip and platform is its own select, so neither counts toward its badge.
+  const drawerActive = [category !== "All", community !== "All", permission !== "All", verified, minRating > 0].filter(Boolean).length;
+  const sortOptions = (
+    <>
+      {urlQuery.trim() && <option value="relevance">{d.bestMatch}</option>}
+      <option value="featured">{d.featured}</option>
+      <option value="rating">{d.topRated}</option>
+      <option value="newest">{d.recentlyUpdated}</option>
+    </>
+  );
+  const renderFilters = (inDrawer: boolean) => (
     <div className="space-y-7">
       <label className="block text-sm font-semibold">
         {d.category}
@@ -131,13 +144,13 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
         </select>
         <Link href={localePath("/communities", locale)} className="mt-0.5 inline-flex min-h-8 items-center text-xs font-semibold text-primary hover:underline">{fa ? "مشاهدهٔ همهٔ جامعه‌ها" : "Browse all communities"}</Link>
       </label>}
-      <label className="block text-sm font-semibold">
+      {!inDrawer && <label className="block text-sm font-semibold">
         {d.compatibility}
         <select value={platform} onChange={(event) => change("platform")(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
           <option value="All">{d.all}</option>
           {platforms.map((item) => <option key={item.key} value={item.key}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
         </select>
-      </label>
+      </label>}
       <FilterGroup
         label={d.rating}
         options={["Any", "4.5+", "4.8+"]}
@@ -162,7 +175,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           id="verified"
           checked={verified}
           onCheckedChange={(value) => update({ verified: value })}
-          className="h-6 w-11 rounded-full bg-border-strong p-0.5 data-[state=checked]:bg-primary"
+          className="relative h-6 w-11 rounded-full bg-border-strong p-0.5 after:absolute after:-inset-x-1 after:-inset-y-2.5 data-[state=checked]:bg-primary"
         >
           <Switch.Thumb className="block size-5 rounded-full bg-background shadow transition-transform data-[state=checked]:translate-x-5" />
         </Switch.Root>
@@ -170,17 +183,17 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
     </div>
   );
   return (
-    <main className="container-page py-10">
-      <div className="max-w-2xl">
+    <main className="container-page py-6 sm:py-10">
+      <div className="mx-auto max-w-2xl text-center">
         <p className="eyebrow">{context?.eyebrow ?? d.marketplace}</p>
-        <h1 className="editorial mt-2 text-5xl">{context?.title ?? d.title}</h1>
-        <p className="mt-3 text-muted-foreground">
+        <h1 className="editorial mt-2 text-4xl sm:text-5xl">{context?.title ?? d.title}</h1>
+        <p className={cn("mt-3 text-muted-foreground", !context && "hidden sm:block")}>
           {context?.intro ?? d.intro}
         </p>
         {context?.rules && <p className="mt-4 rounded-lg border bg-surface p-4 text-sm leading-6"><strong>{fa ? "قوانین:" : "Rules:"}</strong> {context.rules}</p>}
         {context?.archived && <p role="status" className="mt-4 rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm">{fa ? "این جامعه بایگانی شده و فهرست‌های آن در نتایج عمومی نمایش داده نمی‌شوند." : "This community is archived, so its placements are not shown in public discovery."}</p>}
       </div>
-      <div className="relative mt-8 max-w-4xl">
+      <div className="relative mx-auto mt-5 max-w-4xl sm:mt-8">
         <Search
           className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground"
           size={20}
@@ -190,22 +203,22 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           onChange={(e) => setQuery(e.target.value)}
           placeholder={d.search}
           aria-label={d.search}
-          className="h-14 ps-12 text-base"
+          className="h-12 ps-12 text-base sm:h-14"
         />
       </div>
       <div
-        className="ts-scroll-fade mt-6 flex gap-2 overflow-x-auto pb-2"
-        role="tablist"
+        className="ts-scroll-fade mx-auto mt-3 flex w-fit max-w-full gap-2 overflow-x-auto pb-2 sm:mt-6"
+        role="group"
         aria-label={d.productType}
       >
         {typeOptions.map((option) => (
           <button
-            role="tab"
-            aria-selected={type === option.value}
+            type="button"
+            aria-pressed={type === option.value}
             key={option.value}
             onClick={() => update({ type: option.value })}
             className={cn(
-              "min-h-10 shrink-0 border-b-2 px-3 text-sm font-medium",
+              "min-h-11 min-w-11 shrink-0 border-b-2 px-3 text-sm font-medium sm:min-h-10 sm:min-w-0",
               type === option.value
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground",
@@ -215,14 +228,14 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           </button>
         ))}
       </div>
-      <div className="mt-8 grid gap-8 lg:grid-cols-[14rem_1fr]">
+      <div className="mt-4 grid gap-8 sm:mt-8 lg:grid-cols-[14rem_1fr]">
         <aside className="hidden lg:block">
           <div className="flex items-center gap-2 border-b pb-4 font-semibold">
             <SlidersHorizontal size={17} />
             {d.filters}
           </div>
           <div className="mt-6">
-            {filters}
+            {renderFilters(false)}
           </div>
         </aside>
         <section aria-busy={loading}>
@@ -232,16 +245,28 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           {/* Sticky, so the count and the controls stay in reach while
               scrolling a page of results. At the very top: the site header
               scrolls away with the page. */}
-          <div className="sticky top-0 z-20 -mx-2 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background/90 px-2 py-3 backdrop-blur">
-            <div className="flex items-center gap-3">
-              <p className="font-mono text-sm" role="status">
-                <strong>{meta.total}</strong> {d.products}
-              </p>
+          <div className="sticky top-0 z-20 -mx-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border bg-background/90 px-2 py-3 backdrop-blur">
+            <p className="shrink-0 font-mono text-sm" role="status">
+              <strong>{meta.total.toLocaleString(fa ? "fa-IR" : "en")}</strong> {meta.total === 1 ? d.product : d.products}
+            </p>
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:flex-none">
+              {/* Platform is the facet a developer starts from, so below lg it
+                  sits in the bar rather than behind Filters; lg shows it in the
+                  sidebar. */}
+              <select
+                aria-label={d.compatibility}
+                value={platform}
+                onChange={(event) => change("platform")(event.target.value)}
+                className="min-h-11 min-w-0 max-w-[8.5rem] flex-1 rounded-md border bg-surface px-3 text-sm sm:w-[8.5rem] sm:flex-none lg:hidden"
+              >
+                <option value="All">{d.compatibility}</option>
+                {platforms.map((item) => <option key={item.key} value={item.key}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
+              </select>
               <Dialog.Root>
                 <Dialog.Trigger asChild>
-                  <Button variant="secondary" size="sm" className="lg:hidden">
+                  <Button variant="secondary" size="sm" className="min-h-11 shrink-0 sm:min-h-9 lg:hidden">
                     <Filter size={15} /> {d.filters}{" "}
-                    {active.length > 0 && `(${active.length})`}
+                    {drawerActive > 0 && `(${drawerActive})`}
                   </Button>
                 </Dialog.Trigger>
                 <Dialog.Portal>
@@ -261,8 +286,19 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                         </Button>
                       </Dialog.Close>
                     </div>
-                    <div className="mt-7">
-                      {filters}
+                    <div className="mt-7 space-y-7">
+                      {/* The bar has room for sort from sm up. */}
+                      <label className="block text-sm font-semibold sm:hidden">
+                        {d.sort}
+                        <select
+                          value={sort}
+                          onChange={(event) => update({ sort: event.target.value })}
+                          className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                          {sortOptions}
+                        </select>
+                      </label>
+                      {renderFilters(true)}
                     </div>
                     <Dialog.Close asChild>
                       <Button className="mt-8 w-full">
@@ -272,20 +308,16 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                   </Dialog.Content>
                 </Dialog.Portal>
               </Dialog.Root>
-            </div>
-            <div className="flex gap-2">
               <select
                 aria-label={d.sort}
                 value={sort}
                 onChange={(e) => update({ sort: e.target.value })}
-                className="min-h-10 rounded-md border bg-surface px-3 text-sm"
+                className="hidden min-h-10 rounded-md border bg-surface px-3 text-sm sm:block"
               >
-                {urlQuery.trim() && <option value="relevance">{d.bestMatch}</option>}
-                <option value="featured">{d.featured}</option>
-                <option value="rating">{d.topRated}</option>
-                <option value="newest">{d.recentlyUpdated}</option>
+                {sortOptions}
               </select>
-              <div className="flex rounded-md border bg-surface p-0.5">
+              {/* Below sm both views are one stacked column, so the toggle would do nothing. */}
+              <div className="hidden rounded-md border bg-surface p-0.5 sm:flex">
                 <button
                   aria-label={d.gridView}
                   aria-pressed={view === "grid"}
@@ -311,12 +343,19 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
               </div>
             </div>
           </div>
-          {active.length > 0 && (
+          {active.length > 0 && (result.length > 0 || loading || error) && (
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              {active.map((x) => (
-                <Badge key={x} variant="outline">
-                  {x}
-                </Badge>
+              {active.map((chip) => (
+                <button
+                  key={chip.key}
+                  type="button"
+                  onClick={chip.clear}
+                  aria-label={`${d.removeFilter}: ${chip.label}`}
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-2.5 text-[11px] font-semibold text-muted-foreground hover:border-border-strong hover:text-foreground sm:min-h-8"
+                >
+                  {chip.label}
+                  <X size={12} aria-hidden />
+                </button>
               ))}
               <button
                 onClick={reset}
@@ -328,14 +367,14 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
           )}
           <div
             className={cn(
-              "mt-6 grid gap-5",
+              "mt-4 grid gap-5 sm:mt-6",
               view === "grid" ? "sm:grid-cols-2 xl:grid-cols-3" : "grid-cols-1",
             )}
           >
             {error && (
               <div role="alert" className="col-span-full flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/40 p-4 text-sm text-destructive">
                 <p>{error}</p>
-                <Button variant="secondary" size="sm" onClick={retry}>{d.retry}</Button>
+                <Button variant="secondary" size="sm" onClick={retry} disabled={loading}>{d.retry}</Button>
               </div>
             )}
             {loading ? (
@@ -349,7 +388,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
                 />
               ))
             ) : !error ? (
-              <EmptyState onReset={reset} query={query.trim() || undefined} filtered={active.length > 0} />
+              <EmptyState onReset={active.length > 0 || query.trim() ? reset : undefined} query={query.trim() || undefined} filtered={active.length > 0} filters={active} />
             ) : null}
           </div>
           {meta.totalPages > 1 && (
@@ -393,7 +432,7 @@ function FilterGroup({
         {options.map((o) => (
           <label
             key={o}
-            className="flex min-h-8 cursor-pointer items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+            className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground hover:text-foreground lg:min-h-8"
           >
             <input
               type="radio"

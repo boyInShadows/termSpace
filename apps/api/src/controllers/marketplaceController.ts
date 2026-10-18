@@ -166,9 +166,9 @@ function serializeReleaseSource(release: {
  * what it declares, how to fetch the exact pinned artifact. Creator-written
  * installation steps stay behind the library entitlement.
  */
-async function findPublicRelease(productId: string) {
+async function findPublicRelease(productId: string, version?: string) {
   const release = await prisma.marketplaceReleaseManifest.findFirst({
-    where: { productVersion: { productId }, publishedAt: { not: null }, sourceCheckStatus: { in: ["VERIFIED", "STALE"] } },
+    where: { productVersion: version === undefined ? { productId } : { productId, version }, publishedAt: { not: null }, sourceCheckStatus: { in: ["VERIFIED", "STALE"] } },
     orderBy: { publishedAt: "desc" },
     select: {
       sourceKind: true, sourceUrl: true, sourceRef: true, sourcePath: true,
@@ -346,7 +346,16 @@ export async function getMarketplaceProduct(req: Request, res: Response) {
     }),
     findPublicRelease(product.id),
   ]);
-  res.json({ data: { ...serializeProduct(product), versions: product.versions, reviews: product.reviews, related: related.map(serializeProduct), release } });
+  res.json({ data: { ...serializeProduct(product), versions: product.versions, reviews: product.reviews, related: related.map(serializeProduct), release: release && { ...release, current: true } } });
+}
+
+/** The public facts of one published release, so a reader can inspect the version they are about to add. */
+export async function getMarketplaceRelease(req: Request, res: Response) {
+  const product = await prisma.marketplaceProduct.findFirst({ where: { slug: String(req.params.slug), published: true }, select: { id: true } });
+  if (!product) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Product not found" } }); return; }
+  const [release, newest] = await Promise.all([findPublicRelease(product.id, String(req.params.version)), findPublicRelease(product.id)]);
+  if (!release) { res.status(404).json({ error: { code: "RELEASE_NOT_FOUND", message: "No published release has this version" } }); return; }
+  res.json({ data: { ...release, current: newest?.version === release.version } });
 }
 
 export async function listMarketplaceFavorites(_req: Request, res: Response) {
@@ -389,6 +398,16 @@ export async function listMarketplaceLibrary(req: Request, res: Response) {
       && order.releaseManifest
       && ["VERIFIED", "STALE"].includes(order.releaseManifest.sourceCheckStatus)),
   })), meta: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+}
+
+/** The release a reader named, only if it passes the same gates as the approved one. */
+async function findAcquirableRelease(productId: string, version: string) {
+  const release = await prisma.marketplaceReleaseManifest.findFirst({
+    where: { productVersion: { productId, version }, publishedAt: { not: null }, sourceCheckStatus: { in: ["VERIFIED", "STALE"] } },
+    orderBy: { publishedAt: "desc" },
+    select: { id: true, publishedAt: true, sourceCheckStatus: true, sourceKind: true, resolvedInstallationUrl: true },
+  });
+  return release && trustedInstallationUrl(release.sourceKind, release.resolvedInstallationUrl) ? release : null;
 }
 
 async function findPublishedProduct(slug: string) {
@@ -508,9 +527,11 @@ export async function acquireMarketplaceProduct(req: Request, res: Response) {
   }
   const product = await findPublishedProduct(String(req.params.slug));
   if (!product) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Product not found" } }); return; }
+  const requested = (req.body as { version?: string } | undefined)?.version;
+  const named = requested === undefined ? undefined : await findAcquirableRelease(product.id, requested);
   const existing = await prisma.marketplaceOrder.findUnique({ where: { idempotencyKey: key } });
   if (existing) {
-    if (existing.userId !== res.locals.reader.id || existing.productId !== product.id) {
+    if (existing.userId !== res.locals.reader.id || existing.productId !== product.id || (requested !== undefined && existing.releaseManifestId !== named?.id)) {
       res.status(409).json({ error: { code: "IDEMPOTENCY_CONFLICT", message: "Idempotency key was already used for another acquisition" } });
       return;
     }
@@ -521,6 +542,10 @@ export async function acquireMarketplaceProduct(req: Request, res: Response) {
     where: { userId_productId: { userId: res.locals.reader.id, productId: product.id } },
   });
   if (existingEntitlement) {
+    if (requested !== undefined && existingEntitlement.releaseManifestId !== named?.id) {
+      res.status(409).json({ error: { code: "ALREADY_IN_LIBRARY", message: "This resource is already in your library at a different release" } });
+      return;
+    }
     res.json({ data: serializeAcquisition(existingEntitlement) });
     return;
   }
@@ -528,7 +553,7 @@ export async function acquireMarketplaceProduct(req: Request, res: Response) {
     res.status(409).json({ error: { code: "RESOURCE_NOT_FREE", message: "This resource is not available for community installation" } });
     return;
   }
-  const releaseManifest = product.approvedSnapshot?.releaseManifest;
+  const releaseManifest = requested === undefined ? product.approvedSnapshot?.releaseManifest : named;
   if (!releaseManifest?.publishedAt || !["VERIFIED", "STALE"].includes(releaseManifest.sourceCheckStatus)) {
     res.status(409).json({ error: { code: "RELEASE_UNAVAILABLE", message: "This resource does not have an approved release available for acquisition" } });
     return;

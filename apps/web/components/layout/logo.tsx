@@ -7,7 +7,7 @@ export function Logo({
   return (
     <Link
       href="/"
-      className="inline-flex items-center gap-2 text-xl font-semibold tracking-[-.04em]"
+      className="inline-flex min-h-11 items-center gap-2 text-xl font-semibold tracking-[-.04em]"
       aria-label="termspace home"
     >
       {concept === "block" && (

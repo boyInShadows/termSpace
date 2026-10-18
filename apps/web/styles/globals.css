@@ -139,11 +139,6 @@ html[lang="fa"] .editorial {
   font-weight: 600;
   line-height: 1.35;
 }
-html[lang="fa"] .ts-hero-title {
-  font-size: clamp(1.9rem, 1rem + 2.8vw, 2.9rem);
-  font-weight: 600;
-  line-height: 1.35;
-}
 /* No tracking and no capitals on Persian text, anywhere: tracking pulls a
    joined script apart. Eyebrows are told apart by colour and size alone.
    Latin data islands (dir="ltr": commands, versions) keep their styling. */

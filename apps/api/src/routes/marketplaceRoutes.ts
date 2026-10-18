@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceCommunity, getMarketplaceHome, getMarketplaceInstallation, getMarketplaceProduct, listMarketplaceCommunities, listMarketplaceFavorites, listMarketplaceItemTypes, listMarketplaceLibrary, listMarketplaceProducts, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
+import { acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceCommunity, getMarketplaceHome, getMarketplaceInstallation, getMarketplaceProduct, getMarketplaceRelease, listMarketplaceCommunities, listMarketplaceFavorites, listMarketplaceItemTypes, listMarketplaceLibrary, listMarketplaceProducts, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
 import { createOwnedCreatorProfile, getCreatorDashboard, getOwnedCreatorProfile, listOwnedMarketplaceReleases, updateOwnedCreatorProfile } from "../controllers/marketplaceCreatorController.js";
 import { transitionModeratedMarketplaceListing, transitionOwnedMarketplaceListing } from "../controllers/marketplaceLifecycleController.js";
 import { createOwnedMarketplaceDraft, getOwnedMarketplaceDraft, listMarketplaceDraftOptions, updateOwnedMarketplaceDraft } from "../controllers/marketplaceDraftController.js";
@@ -9,11 +9,12 @@ import { deleteReview, getMyReview, listProductReviewsForModeration, saveReview,
 import { requireMarketplaceRole, requireReader, requireVerifiedReader } from "../middleware/auth.js";
 import { reviewWriteRateLimit } from "../middleware/security.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
-import { communityPlacementDecisionSchema, reviewVisibilitySchema, reviewWriteSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
+import { communityPlacementDecisionSchema, marketplaceAcquireSchema, releaseVersionSchema, reviewVisibilitySchema, reviewWriteSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
 
 const router = Router();
 router.param("id", validateRouteParam("id", routeIdSchema));
 router.param("slug", validateRouteParam("slug", routeSlugSchema));
+router.param("version", validateRouteParam("version", releaseVersionSchema));
 router.param("provider", validateRouteParam("provider", marketplaceProviderSchema));
 router.param("communitySlug", validateRouteParam("communitySlug", routeSlugSchema));
 router.get("/home", getMarketplaceHome);
@@ -23,6 +24,7 @@ router.get("/communities/:slug", validate(marketplaceProductQuerySchema, "query"
 router.get("/draft-options", listMarketplaceDraftOptions);
 router.get("/products", validate(marketplaceProductQuerySchema, "query"), listMarketplaceProducts);
 router.get("/products/:slug", getMarketplaceProduct);
+router.get("/products/:slug/releases/:version", getMarketplaceRelease);
 router.get("/creator/profile", requireReader, getOwnedCreatorProfile);
 router.post("/creator/profile", requireReader, requireVerifiedReader, validate(creatorOnboardingSchema), createOwnedCreatorProfile);
 router.patch("/creator/profile", requireMarketplaceRole("creator"), validate(creatorProfileUpdateSchema), updateOwnedCreatorProfile);
@@ -46,7 +48,7 @@ router.get("/library", requireReader, validate(marketplaceLibraryQuerySchema, "q
 router.put("/products/:slug/favorite", requireReader, addMarketplaceFavorite);
 router.delete("/products/:slug/favorite", requireReader, removeMarketplaceFavorite);
 router.get("/products/:slug/installation", requireReader, getMarketplaceInstallation);
-router.post("/products/:slug/acquire", requireReader, acquireMarketplaceProduct);
+router.post("/products/:slug/acquire", requireReader, validate(marketplaceAcquireSchema), acquireMarketplaceProduct);
 router.get("/products/:slug/reviews/mine", requireReader, getMyReview);
 router.put("/products/:slug/reviews", requireReader, reviewWriteRateLimit, validate(reviewWriteSchema), saveReview);
 router.delete("/products/:slug/reviews", requireReader, reviewWriteRateLimit, deleteReview);

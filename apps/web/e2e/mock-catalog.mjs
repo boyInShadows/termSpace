@@ -122,17 +122,40 @@ export function productDetail(slug) {
       { id: `${product.id}-r1`, author: "Priya S.", rating: 5, createdAt: released(3), body: "Caught a migration mistake in its first week.", verifiedPurchase: true },
     ],
     related: CATALOG.filter((candidate) => candidate.slug !== slug).slice(0, 3).map(withPlatformKeys),
-    release: {
-      version: product.version,
-      source: {
-        kind: "github_repository", url: `https://github.com/termspace-fixtures/${product.slug}`, ref: "0123456789abcdef0123456789abcdef01234567",
-        path: null, integrityDigest: null, artifactSizeBytes: null, status: "verified", checkedAt: released(1),
-      },
-      installation: { method: "git", url: `https://github.com/termspace-fixtures/${product.slug}/archive/0123456789abcdef0123456789abcdef01234567.tar.gz` },
-      permissions: [{ capability: "filesystem_read", required: true, scope: "The current selection", destinations: [], purpose: "Reads the diff it reviews." }],
-      environment: [],
-      license: "MIT",
-      mcp: null,
+    release: releaseOf(product.slug, product.version),
+  };
+}
+
+const OLDER_RELEASES = {
+  "2.3.0": {
+    ref: "89abcdef0123456789abcdef0123456789abcdef", digest: "sha512-fixtureolderrelease==",
+    permissions: [
+      { capability: "filesystem_read", required: true, scope: "The current selection", destinations: [], purpose: "Reads the diff it reviews." },
+      { capability: "network_access", required: false, scope: null, destinations: ["api.fixtures.test"], purpose: "Fetches style guides." },
+    ],
+  },
+  "2.0.0": { ref: "fedcba9876543210fedcba9876543210fedcba98", digest: null, permissions: [] },
+};
+
+/** The current release of a listing, or one of the earlier ones its version list names. */
+export function releaseOf(slug, version) {
+  const product = CATALOG.find((candidate) => candidate.slug === slug);
+  if (!product) return null;
+  const current = version === product.version;
+  const older = OLDER_RELEASES[version];
+  if (!current && !older) return null;
+  const ref = current ? "0123456789abcdef0123456789abcdef01234567" : older.ref;
+  return {
+    version,
+    current,
+    source: {
+      kind: "github_repository", url: `https://github.com/termspace-fixtures/${product.slug}`, ref,
+      path: null, integrityDigest: current ? null : older.digest, artifactSizeBytes: null, status: "verified", checkedAt: product.updatedAt,
     },
+    installation: { method: "git", url: `https://github.com/termspace-fixtures/${product.slug}/archive/${ref}.tar.gz` },
+    permissions: current ? [{ capability: "filesystem_read", required: true, scope: "The current selection", destinations: [], purpose: "Reads the diff it reviews." }] : older.permissions,
+    environment: [],
+    license: "MIT",
+    mcp: null,
   };
 }

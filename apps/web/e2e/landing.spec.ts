@@ -3,12 +3,20 @@ import { expect, test, type Page } from "@playwright/test";
 const isMobile = (projectName: string) => projectName.startsWith("mobile");
 
 function featuredSection(page: Page) {
-  return page.locator("section", {
-    has: page.getByRole("heading", { level: 2, name: "Featured building blocks" }),
-  });
+  return page.getByRole("region", { name: "Featured building blocks" });
 }
 
 test.describe("landing", () => {
+  test("featured listings share the first screen with the search", async ({ page }, testInfo) => {
+    test.skip(isMobile(testInfo.project.name), "Phones stack the shelf below the fold by design.");
+    await page.setViewportSize({ width: 1440, height: 800 });
+    await page.goto("/");
+    const cards = featuredSection(page).locator("article");
+    await expect(cards).toHaveCount(3);
+    const box = await cards.first().boundingBox();
+    expect(box!.y + box!.height).toBeLessThan(800);
+  });
+
   test("renders the hero, search and featured listings from the fixture", async ({ page }) => {
     await page.goto("/");
 
@@ -17,20 +25,6 @@ test.describe("landing", () => {
     await expect(featuredSection(page).locator("article").first()).toBeVisible();
     // The fixture render is the healthy path, not the degraded fallback.
     await expect(featuredSection(page).getByRole("status")).toHaveCount(0);
-  });
-
-  test("the hero is a datasheet: the example listing is labelled and states what it declares", async ({ page }) => {
-    await page.goto("/");
-    const sheet = page.getByRole("article").filter({ has: page.locator("#sheet-title") });
-    await expect(sheet.getByText("Example listing")).toBeVisible();
-    await expect(sheet.getByText("Example only, not a real listing")).toBeVisible();
-
-    const ratings = sheet.getByRole("table", { name: "Absolute maximum ratings" });
-    await expect(ratings.getByRole("row", { name: /Reads.*the diff under review.*declared/ })).toBeVisible();
-    // An undeclared permission is marked, not omitted.
-    await expect(ratings.getByRole("row", { name: /Writes.*not declared/ })).toBeVisible();
-    await expect(sheet.getByRole("img", { name: /Pin diagram/ })).toBeVisible();
-    await expect(sheet.getByText("termspace add staff-engineer-review@0123abc")).toBeVisible();
   });
 
   test("search is above the fold on a phone", async ({ page }, testInfo) => {

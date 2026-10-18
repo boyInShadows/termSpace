@@ -59,7 +59,6 @@ export const homeSections = {
     inboxBody:
       "What shipped, what got reviewed, and what is worth your attention. No launch announcements.",
     datasheet: {
-      findLabel: "Find a listing",
       browseLabel: "Browse by type",
       titleBlock: {
         heading: "Title block · example", page: "1/1",
@@ -153,7 +152,6 @@ export const homeSections = {
     inboxBody:
       "چه چیزی منتشر شد، چه چیزی بازبینی شد و چه چیزی ارزش توجه شما را دارد. بدون اعلان‌های تبلیغاتی.",
     datasheet: {
-      findLabel: "یافتن منبع",
       browseLabel: "مرور بر پایهٔ نوع",
       titleBlock: {
         heading: "برگهٔ مشخصات · نمونه", page: "۱/۱",

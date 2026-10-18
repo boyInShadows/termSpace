@@ -12,12 +12,12 @@ test.describe("product detail", () => {
     // React keeps a hidden copy of the content beside the visible one, which a
     // strict text locator counts twice. Wait for the copy to go.
     await expect(page.locator('[id^="S:"][hidden]')).toHaveCount(0);
-    for (const claim of ["Verified", "Reads the current selection · no network access", "MIT"]) {
-      await expect(page.locator("header").getByText(claim, { exact: true })).toBeVisible();
+    for (const claim of ["Safety reviewed", "Reads the current selection · no network access", "MIT"]) {
+      await expect(page.getByRole("region", { name: "Key facts" }).getByText(claim, { exact: true })).toBeVisible();
     }
-    const manifest = page.locator("#manifest dl");
-    for (const label of ["type", "platforms", "permissions", "requirements", "license", "reviewed", "version"]) {
-      await expect(manifest.getByText(label, { exact: true })).toBeVisible();
+    const details = page.locator("#details dl");
+    for (const label of ["Requirements", "Updated", "Package", "Updates"]) {
+      await expect(details.getByText(label, { exact: true })).toBeVisible();
     }
     await expect(page).toHaveTitle("Conversion Copywriter — Skill for Claude · termspace");
   });
@@ -26,7 +26,7 @@ test.describe("product detail", () => {
     test(`the acquire panel is within two screens of the top at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/products/conversion-copywriter");
-      const add = page.getByRole("button", { name: "Add to library" });
+      const add = page.getByRole("button", { name: "Add v2.4.0 to library" });
       await expect(add).toBeVisible();
       const top = await add.evaluate((node) => node.getBoundingClientRect().top + window.scrollY);
       expect(top).toBeLessThan(1800);
@@ -62,6 +62,60 @@ test.describe("product detail", () => {
     await expect(page.getByText("Tighter summaries; drops the network permission.")).toBeVisible();
   });
 
+  test("inspecting an older version swaps its own facts in, and adding sends that version", async ({ page, context, baseURL }) => {
+    await context.addCookies([{ name: "e2e_persona", value: "creator", url: baseURL! }]);
+    await page.goto("/products/conversion-copywriter");
+    const provenance = page.locator("#provenance");
+    const facts = page.getByRole("region", { name: "Key facts" });
+    await expect(facts.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toBeVisible();
+
+    await page.getByLabel("Version").selectOption({ label: "v2.3.0" });
+
+    await expect(facts.getByText("89abcdef0123456789abcdef0123456789abcdef", { exact: true })).toBeVisible();
+    await expect(facts.getByText("sha512-fixtureolderrelease==")).toBeVisible();
+    await expect(facts.getByText(/Network access/)).toBeVisible();
+    await expect(provenance.getByText(/release, not the latest/)).toBeVisible();
+    await expect(provenance.getByText("Network access")).toBeVisible();
+    await expect(facts.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toHaveCount(0);
+
+    let sent: unknown;
+    await page.route("**/products/conversion-copywriter/acquire", async (route) => {
+      sent = route.request().postDataJSON();
+      await route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: { code: "RELEASE_UNAVAILABLE", message: "stub" } }) });
+    });
+    await page.getByRole("button", { name: "Add v2.3.0 to library" }).click();
+    await expect.poll(() => sent).toEqual({ version: "2.3.0" });
+
+    await page.getByLabel("Version").selectOption({ label: "v2.4.0 · latest" });
+    await expect(facts.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add v2.4.0 to library" })).toBeEnabled();
+  });
+
+  test("a skip link is the first stop and lands on the content", async ({ page }) => {
+    await page.goto("/products/conversion-copywriter");
+    await page.keyboard.press("Tab");
+    const skip = page.getByRole("link", { name: "Skip to content" });
+    await expect(skip).toBeFocused();
+    await expect(skip).toBeVisible();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/#content$/);
+  });
+
+  test("the controls a phone user taps are at least 44px tall", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/products/conversion-copywriter");
+    const controls = [
+      page.getByLabel("Version"),
+      page.getByRole("button", { name: "Add v2.4.0 to library" }),
+      page.locator("#provenance").getByRole("button", { name: "Copy" }).first(),
+      page.getByRole("link", { name: "termspace home" }).first(),
+    ];
+    for (const control of controls) {
+      const box = await control.boundingBox();
+      expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    }
+  });
+
   test("an unknown listing returns 404 and is marked noindex", async ({ page }) => {
     const response = await page.goto("/products/no-such-listing");
     expect(response?.status()).toBe(404);
@@ -89,7 +143,7 @@ test.describe("product detail", () => {
     // parallel local run a cold render can take longer, so warm it first.
     await page.request.get("/products/conversion-copywriter");
     await page.goto("/");
-    const featured = page.locator("section", { has: page.getByRole("heading", { name: "Featured building blocks" }) });
+    const featured = page.getByRole("region", { name: "Featured building blocks" });
     await featured.scrollIntoViewIfNeeded();
     await featured.locator("article h3 a").first().click();
 
@@ -106,7 +160,7 @@ test.describe("explore", () => {
     if (isMobile(testInfo.project.name)) await page.getByRole("button", { name: /^Filters/ }).click();
     await page.getByRole("combobox", { name: "Declared access" }).selectOption("telemetry");
     await expect(page).toHaveURL(/permission=telemetry/);
-    if (isMobile(testInfo.project.name)) await page.getByRole("button", { name: /^Show \d+ results/ }).click();
+    if (isMobile(testInfo.project.name)) await page.getByRole("button", { name: /^Show results \(\d+\)/ }).click();
     await expect(page.getByText("No resources found")).toBeVisible();
     await page.reload();
     await expect(page.getByText("No resources found")).toBeVisible();
@@ -144,7 +198,7 @@ test.describe("explore", () => {
     const count = page.locator("section p[role=status]");
     await expect(count).toHaveText("15 resources");
 
-    await page.getByRole("tab", { name: "Agents" }).click();
+    await page.getByRole("button", { name: "Agents", exact: true }).click();
     await expect(page).toHaveURL(/\/explore\?type=agent$/);
     await expect(count).toHaveText("3 resources");
     await expect(page.locator("article h3")).toHaveCount(3);
@@ -152,7 +206,7 @@ test.describe("explore", () => {
     // The URL is the state: reloading keeps the view.
     await page.reload();
     await expect(count).toHaveText("3 resources");
-    await expect(page.getByRole("tab", { name: "Agents" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("button", { name: "Agents", exact: true })).toHaveAttribute("aria-pressed", "true");
   });
 
   test("pages are real links, announced to crawlers", async ({ page }) => {
@@ -188,6 +242,34 @@ test.describe("explore", () => {
       }, html);
       expect(links).toEqual([{ rel, href: path.startsWith("/fa") ? "/fa/explore?permission=filesystem_read&page=2" : rel === "prev" ? "/explore" : "/explore?page=2" }]);
     }
+  });
+
+  test("a link with a filter the API rejects keeps the search and drops the rest", async ({ page }) => {
+    await page.goto("/explore?q=review&type=not-a-type");
+    await expect(page).toHaveURL(/\/explore\?q=review$/);
+    await expect(page.getByText("Could not reach the community library")).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: /Search resources/ })).toHaveValue("review");
+  });
+
+  test("a page past the end lands on the last page", async ({ page }) => {
+    await page.goto("/explore?page=99");
+    await expect(page).toHaveURL(/\/explore\?page=2$/);
+    await expect(page.getByText("Page 2 of 2")).toBeVisible();
+  });
+
+  test("an active filter chip removes only that filter", async ({ page }) => {
+    await page.goto("/explore?type=skill&verified=true");
+    await page.getByRole("button", { name: "Remove filter: Safety reviewed only" }).click();
+    await expect(page).toHaveURL(/\/explore\?type=skill$/);
+    await expect(page.getByRole("button", { name: /^Remove filter: Verified/ })).toHaveCount(0);
+  });
+
+  test("an empty result offers to drop each filter on its own", async ({ page }) => {
+    await page.goto("/explore?type=agent&minRating=5");
+    await expect(page.getByText("No resources found")).toBeVisible();
+    await page.getByRole("button", { name: "Remove filter: 5+ Rating" }).last().click();
+    await expect(page).toHaveURL(/\/explore\?type=agent$/);
+    await expect(page.locator("article h3")).toHaveCount(3);
   });
 
   test("no results offers to clear the filters", async ({ page }) => {

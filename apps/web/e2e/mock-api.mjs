@@ -12,7 +12,7 @@
 // No cookie means signed out.
 import { createServer } from "node:http";
 import { mockHome } from "../lib/mock-home.ts";
-import { ITEM_TYPES, PLATFORMS, listProducts, productDetail } from "./mock-catalog.mjs";
+import { ITEM_TYPES, PLATFORMS, listProducts, productDetail, releaseOf } from "./mock-catalog.mjs";
 
 const PORT = Number(process.env.MOCK_API_PORT ?? 4099);
 const COOKIE = "e2e_persona";
@@ -118,7 +118,16 @@ async function handle(request, response) {
   if (route === "GET /api/marketplace/home") return send(response, 200, { data: { ...mockHome, platforms: PLATFORMS } });
   if (route === "GET /api/marketplace/item-types") return send(response, 200, { data: ITEM_TYPES });
   if (route === "GET /api/marketplace/communities") return send(response, 200, { data: [] });
-  if (route === "GET /api/marketplace/products") return send(response, 200, listProducts(searchParams));
+  if (route === "GET /api/marketplace/products") {
+    const type = searchParams.get("type");
+    if (type && !ITEM_TYPES.some((item) => item.key === type)) return send(response, 400, error("VALIDATION_ERROR", "Invalid request"));
+    return send(response, 200, listProducts(searchParams));
+  }
+  const releaseRoute = /^GET \/api\/marketplace\/products\/([^/]+)\/releases\/([^/]+)$/.exec(route);
+  if (releaseRoute) {
+    const found = releaseOf(decodeURIComponent(releaseRoute[1]), decodeURIComponent(releaseRoute[2]));
+    return found ? send(response, 200, { data: found }) : send(response, 404, error("RELEASE_NOT_FOUND", "No published release has this version"));
+  }
   const detail = /^GET \/api\/marketplace\/products\/([^/]+)$/.exec(route);
   if (detail) {
     // A listing whose API call fails, for the error boundary.

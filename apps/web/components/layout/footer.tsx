@@ -12,11 +12,11 @@ export function Footer() {
   const columns = [
     { heading: labels.marketplace, links: [
       { label: labels.explore, href: localePath("/explore", locale) },
-      { label: labels.collections, href: localePath("/#collections", locale) },
+      { label: labels.collections, href: localePath("/communities", locale) },
       { label: labels.newReleases, href: `${localePath("/explore", locale)}?sort=newest` },
     ] },
     { heading: labels.create, links: [
-      { label: labels.creatorGuide, href: localePath("/#creators", locale) },
+      { label: labels.creatorGuide, href: localePath("/design-system", locale) },
       { label: labels.qualityStandards, href: localePath("/design-system", locale) },
     ] },
     { heading: labels.company, links: [
@@ -54,12 +54,12 @@ export function Footer() {
         {columns.map((column) => (
           <div key={column.heading}>
             <h3 className="eyebrow">{column.heading}</h3>
-            <ul className="mt-4 space-y-2.5 text-sm">
+            <ul className="mt-2 text-sm md:mt-4 md:space-y-2.5">
               {column.links.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-muted-foreground transition-colors hover:text-primary"
+                    className="inline-block py-3 text-muted-foreground transition-colors hover:text-primary md:inline md:py-0"
                   >
                     {link.label}
                   </Link>
