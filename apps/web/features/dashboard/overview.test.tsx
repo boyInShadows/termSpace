@@ -54,11 +54,12 @@ describe("DashboardOverview", () => {
     const acquisitions = screen.getByText(copy.en.dashboardHome.statAcquisitions7d).parentElement!;
     expect(within(acquisitions).getByText("5")).toBeInTheDocument();
     // Down 3 on the previous week: arrow for sighted readers, a sentence for everyone else.
-    expect(within(acquisitions).getByText("▼ 3").parentElement).toHaveClass("text-destructive");
-    expect(within(acquisitions).getByText("3 fewer than the previous 7 days")).toHaveClass("sr-only");
+    expect(within(acquisitions).getByText("3 fewer than the previous 7 days").parentElement).toHaveClass("text-destructive");
+    expect(within(acquisitions).getByText("3 fewer than the previous 7 days")).not.toHaveClass("sr-only");
 
     const rating = screen.getByText(copy.en.dashboardHome.statRating).parentElement!;
     expect(within(rating).getByText("4.6")).toBeInTheDocument();
+    expect(within(rating).getByText("Across 30 published reviews")).toBeVisible();
 
     const table = screen.getByRole("table");
     const row = within(table).getByRole("link", { name: /Conversion Copywriter 0/ });
@@ -120,16 +121,16 @@ describe("DashboardOverview", () => {
     expect(within(rating).getByText("—")).toBeInTheDocument();
   });
 
-  it("shows an inline error in each data card and recovers on retry", async () => {
+  it("shows one shared error and recovers both data panels on retry", async () => {
     getHome.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(creatorHome());
     vi.spyOn(console, "error").mockImplementation(() => {});
     render(<DashboardOverview />);
 
     const alerts = await screen.findAllByRole("alert");
-    expect(alerts).toHaveLength(2);
+    expect(alerts).toHaveLength(1);
     expect(screen.getByText(copy.en.dashboardHome.summaryError)).toBeInTheDocument();
     // Quick actions do not depend on the fetch and stay usable.
-    expect(screen.getByRole("link", { name: /Publish a new listing/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Create a new listing/ })).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole("button", { name: copy.en.dashboardHome.retry })[0]);
 

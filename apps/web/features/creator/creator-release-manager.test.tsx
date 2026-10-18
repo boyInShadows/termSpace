@@ -1,9 +1,13 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { copy as translations } from "@/lib/i18n";
+import { creatorWorkspace } from "./workspace-copy";
 
 const getReleases = vi.hoisted(() => vi.fn());
 const getConnections = vi.hoisted(() => vi.fn());
 const copy = {
+  ...translations.en.creatorReleases,
+  ...creatorWorkspace.en.creatorReleases,
   back: "Back to dashboard", eyebrow: "Release management", title: "Release history", intro: "Published versions stay immutable.",
   loading: "Loading release history", loadError: "Could not load", retry: "Try again", prepare: "Prepare new release",
   empty: "No releases", current: "Current public release", published: "Published", proposed: "Proposed",
@@ -48,7 +52,26 @@ describe("CreatorReleaseManager", () => {
     expect(await screen.findByRole("heading", { name: "Owned Skill" })).toBeInTheDocument();
     expect(screen.getByText("Current public release")).toBeInTheDocument();
     expect(screen.getByText(/Acquisitions pinned here: 3/)).toBeInTheDocument();
-    expect(screen.getByText(/github_repository/)).toBeInTheDocument();
+    expect(screen.getByText("GitHub repository")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Prepare new release/ })).toHaveAttribute("href", "/dashboard/studio/listings/product-1/edit");
+  });
+
+  it("puts provider permissions and revocation guidance beside the token controls", async () => {
+    render(<CreatorReleaseManager productId="product-1" />);
+    await screen.findByRole("heading", { name: "Owned Skill" });
+    expect(screen.getByText(copy.githubTokenHelp)).toBeInTheDocument();
+    expect(screen.getByText(copy.npmTokenHelp)).toBeInTheDocument();
+    expect(screen.getByText(copy.tokenRevocation)).toBeInTheDocument();
+    expect(screen.getAllByLabelText("Access token")[0]).toHaveAttribute("aria-describedby", "github-token-help");
+  });
+
+  it("explains a missing source reference and links to its editable draft", async () => {
+    const history = await getReleases();
+    history.releases[0].sourceCheckStatus = "failed";
+    history.releases[0].lastSourceErrorCode = "SOURCE_REF_NOT_FOUND";
+    getReleases.mockResolvedValue(history);
+    render(<CreatorReleaseManager productId="product-1" />);
+    expect(await screen.findByRole("alert")).toHaveTextContent(copy.sourceRefHelp);
+    expect(screen.getByRole("alert").querySelector("a")).toHaveAttribute("href", "/dashboard/studio/listings/product-1/edit");
   });
 });

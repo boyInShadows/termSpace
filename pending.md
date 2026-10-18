@@ -22,28 +22,11 @@ This file tracks known improvement work that has not been completed yet. When an
   not move the simulated LCP: Lighthouse reports the hero paragraph with about
   2.8 s of render delay against a 1.1 s FCP, so look at what the simulation
   charges before the paint (hydration JS and font requests), not at the hero.
-- The "How it works" panel (`components/sections/process.tsx`, the terminal
-  card under each step below `lg`) is 23 px wider than the viewport at 320 px
-  (page scroll width 343). It is below the hero and predates it; the landing
-  e2e only checks 375 px. Found 2026-10-16.
-- The root layout still preloads the Newsreader face, which no longer sets any
-  text above the fold (the hero headline is Geist now). Dropping the preload
-  needs `e2e/performance.spec.ts` ("exactly two fonts") updated with it.
-- `/explore` intermittently has two identical `<link rel="next">` tags in
-  `<head>`, so `e2e/catalog.spec.ts:107` fails in strict mode about 35-55% of
-  runs (both on Next 16.3.6 and 16.3.8, measured 2026-10-16). The tags are
-  hoisted from `app/explore/page.tsx:29-30`. Separately, the landing pause test
-  and the card-morph test fail under default parallelism and pass with 2
-  workers. Make the suite pass with default workers.
 - The `lhci` job in "Web e2e and performance" has failed on every push to
   `main` since at least 2026-10-05: `total-blocking-time` (budget 150 ms) and
   `max-potential-fid` (130 ms) exceed on GitHub's runners while the same
   budgets pass locally. Decide between a CI-specific throttling profile and
   real TBT work; the ratchet rule forbids just raising the budgets.
-- A missing, suspended or archived product renders the branded not-found page
-  with `noindex` but HTTP 200: `app/products/[slug]/loading.tsx` makes the route
-  stream, so `notFound()` arrives after the status is sent. Unknown routes are
-  real 404s.
 - On a failed catalogue load the homepage falls back to `lib/mock-home.ts`
   (with a notice), so its cards link to listings that do not exist. Decide
   whether production should show an error state instead.
@@ -86,9 +69,6 @@ restore. Still open, per ADR 0004:
 
 ## Marketplace — Search
 
-- Escape `%` and `_` in catalogue search terms. Prisma's `contains` does not,
-  so a search for `_` matches every listing. It only widens results, but it is
-  wrong. Found while benchmarking search on 2026-10-08.
 - If a deployment sits behind a CDN, add `Cache-Control: public, s-maxage=30`
   to the public catalogue routes. The API already sends ETags and answers
   conditional requests with 304; nothing is added without knowing the CDN.

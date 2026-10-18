@@ -15,15 +15,32 @@ test.describe("not found and errors", () => {
   });
 
   test("an unknown listing gets the listing not-found page", async ({ page }) => {
-    await page.goto("/products/no-such-listing");
+    const response = await page.goto("/products/no-such-listing");
+    expect(response?.status()).toBe(404);
     await expect(page.getByRole("heading", { level: 1, name: "This listing isn’t here." })).toBeVisible();
   });
 
   test("a failing page shows the error boundary with a retry", async ({ page }) => {
-    await page.goto("/products/fixture-error");
+    const response = await page.goto("/products/fixture-error");
+    expect(response?.status()).toBe(500);
     await expect(page.getByRole("heading", { level: 1, name: "Something went wrong here." })).toBeVisible();
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
   });
+
+  for (const prefix of ["", "/fa"]) for (const slug of ["no-such-listing", "fixture-suspended", "fixture-archived"]) {
+    test(`unavailable listing ${prefix}/products/${slug} sends a real 404`, async ({ request, page }) => {
+      const api = await request.get(`/backend/api/marketplace/products/${slug}`);
+      expect(api.status()).toBe(404);
+      const response = await page.goto(`${prefix}/products/${slug}`);
+      expect(response?.status()).toBe(404);
+      await expect(page.getByRole("heading", { level: 1, name: prefix ? "این فهرست اینجا نیست." : "This listing isn’t here." })).toBeVisible();
+      await expect(page.locator('meta[name="robots"][content*="noindex"]').first()).toBeAttached();
+      await expect(page.locator("html")).toHaveAttribute("lang", prefix ? "fa" : "en");
+      await expect(page.locator("html")).toHaveAttribute("dir", prefix ? "rtl" : "ltr");
+      expect(await page.content()).not.toContain("Private suspended fixture");
+      expect(await page.content()).not.toContain("Private archived fixture");
+    });
+  }
 });
 
 test.describe("search engines and sharing", () => {

@@ -75,7 +75,7 @@ describe("password sign-in and signup", () => {
     session.refresh.mockResolvedValue(undefined);
     params.next = "";
     login.mockResolvedValue({});
-    register.mockResolvedValue({});
+    register.mockResolvedValue({ data: { user: { emailVerified: false } } });
     loginWithGoogle.mockResolvedValue({});
   });
 
@@ -125,6 +125,17 @@ describe("password sign-in and signup", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Invalid credentials");
     expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
     expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("skips the verification page when local signup is already accepted", async () => {
+    register.mockResolvedValue({ data: { user: { emailVerified: true } } });
+    params.next = "/dashboard";
+    render(<AccountForm />);
+    fireEvent.click(screen.getByRole("button", { name: "Register" }));
+    credentials();
+    fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "correct-password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard"));
   });
 
   it("signs in through Google and preserves the requested destination", async () => {

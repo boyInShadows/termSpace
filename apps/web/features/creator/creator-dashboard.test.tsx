@@ -1,7 +1,9 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { creatorWorkspace } from "./workspace-copy";
 
 const getDashboard = vi.hoisted(() => vi.fn());
+const transitionListing = vi.hoisted(() => vi.fn());
 const localeState = vi.hoisted(() => ({ locale: "en" as "en" | "fa" }));
 
 const copy = {
@@ -13,9 +15,11 @@ const copy = {
   moderationFeedback: "Latest moderation feedback", recentUpdates: "Recent updates", noRecentUpdates: "No updates", updated: "Updated",
   viewPublic: "View public page", paginationLabel: "Creator listings pages", previousPage: "Previous", nextPage: "Next", pageStatus: "Page {page} of {pages}",
   newListing: "New listing", editDraft: "Edit draft", manageReleases: "Manage releases",
+  reviewSubmission: "Review submission", cancelSubmission: "Keep editing", submissionHelp: "Review details before sending to moderators.", submissionSourceRequired: "Verify source", submissionError: "Submission failed; your draft is still available.",
+  loadError: "Creator services unavailable.",
   statusDraft: "Draft", statusSubmitted: "Submitted", statusChangesRequested: "Changes requested", statusApproved: "Approved",
   statusPublished: "Published", statusRejected: "Rejected", statusSuspended: "Suspended", statusArchived: "Archived",
-  actionDraftSaved: "Draft saved", actionSubmitted: "Submitted for review", actionWithdrawn: "Withdrawn", actionChangesRequested: "Changes requested",
+  actionDraftSaved: "Draft saved", actionSubmitted: "Submit for review", actionWithdrawn: "Withdrawn", actionChangesRequested: "Changes requested",
   actionApproved: "Approved", actionPublished: "Published", actionRejected: "Rejected", actionSuspended: "Suspended",
   actionReinstated: "Reinstated", actionArchived: "Archived", actionRestored: "Restored",
 };
@@ -24,9 +28,15 @@ vi.mock("@/lib/api", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/lib/api")>();
   return { ...original, getCreatorDashboard: getDashboard };
 });
-vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: localeState.locale, t: { creatorHub: copy } }) }));
+vi.mock("./creator-api", () => ({ transitionCreatorListing: transitionListing }));
+vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: localeState.locale, t: {
+  creatorHub: copy,
+  creatorDraft: { versionConflict: "Reload before submitting." },
+  creatorReleases: { verifySource: "Verify source" },
+} }) }));
 
 const { CreatorDashboard } = await import("./creator-dashboard");
+const { ApiError } = await import("@/lib/api");
 
 function dashboardResult(page = 1) {
   return {
@@ -52,6 +62,7 @@ describe("CreatorDashboard", () => {
     vi.clearAllMocks();
     localeState.locale = "en";
     getDashboard.mockResolvedValue(dashboardResult());
+    transitionListing.mockResolvedValue({ state: "submitted", version: 4, published: true });
   });
 
   it("shows owner listing status, feedback, releases, ratings, and completed acquisitions", async () => {
@@ -75,6 +86,36 @@ describe("CreatorDashboard", () => {
     fireEvent.click(screen.getByRole("button", { name: /Next/ }));
     await waitFor(() => expect(getDashboard).toHaveBeenLastCalledWith(2, 12, expect.any(AbortSignal)));
     expect(screen.getByText("Page 2 of 2")).toBeInTheDocument();
+  });
+
+  it("confirms and submits an editable draft with optimistic concurrency", async () => {
+    render(<CreatorDashboard />);
+    await screen.findByRole("heading", { name: "Owned Skill" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Review submission" }));
+    expect(transitionListing).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Submit for review" }));
+
+    await waitFor(() => expect(transitionListing).toHaveBeenCalledWith("product-1", 3));
+    expect(await screen.findByText("Submitted", { selector: "span" })).toBeInTheDocument();
+    await waitFor(() => expect(getDashboard).toHaveBeenCalledTimes(2));
+  });
+
+  it("keeps the draft editable and links to releases when source verification is required", async () => {
+    transitionListing.mockRejectedValue(new ApiError(409, "SOURCE_VERIFICATION_REQUIRED", "Source verification required"));
+    render(<CreatorDashboard />);
+    await screen.findByRole("heading", { name: "Owned Skill" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Review submission" }));
+    fireEvent.click(screen.getByRole("button", { name: "Submit for review" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(within(alert).getByText(creatorWorkspace.en.creatorHub.submissionSourceRequired)).toBeInTheDocument();
+    expect(within(alert).getByRole("link", { name: "Manage releases" })).toHaveAttribute(
+      "href",
+      "/dashboard/studio/listings/product-1/releases",
+    );
+    expect(screen.getByRole("link", { name: /Edit draft/ })).toBeInTheDocument();
   });
 
   it("formats dashboard metrics with Persian digits in the Persian locale", async () => {

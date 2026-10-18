@@ -1,6 +1,31 @@
 @import "tailwindcss";
 @import "./tokens.css";
 
+.dashboard-operate :is(button, input, select, textarea, a) {
+  border-radius: 0;
+}
+
+.dashboard-operate :is(input, select, textarea) {
+  font-size: 1rem;
+}
+
+.dashboard-operate :is(button, a).bg-primary {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.dashboard-operate :is(button, a).bg-primary:not(:focus-visible) {
+  box-shadow: none;
+}
+
+.dashboard-operate :is(button, a).bg-primary:hover {
+  opacity: 0.85;
+}
+
+.dashboard-operate :is(button, a):hover {
+  translate: none;
+}
+
 @theme {
   --font-sans: var(--font-geist), ui-sans-serif, sans-serif;
   --font-serif: var(--font-newsreader), Georgia, serif;

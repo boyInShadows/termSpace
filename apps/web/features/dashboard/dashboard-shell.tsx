@@ -44,7 +44,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh bg-background text-foreground">
+    <div className="dashboard-operate min-h-dvh bg-background text-foreground">
       <DashboardTopbar />
       <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
         <DashboardSidebar />

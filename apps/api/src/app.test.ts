@@ -46,6 +46,7 @@ vi.mock("google-auth-library", () => ({
 }));
 
 process.env.NODE_ENV = "test";
+process.env.LOCAL_AUTO_VERIFY_EMAIL = "false";
 process.env.GOOGLE_CLIENT_ID = "test-google-client-id";
 process.env.EMAIL_VERIFICATION_SECRET = "test-secret-that-is-definitely-longer-than-32-bytes";
 const { createApp } = await import("./app.js");
@@ -222,6 +223,30 @@ describe("API", () => {
       { compatibility: { some: { OR: expect.any(Array) } } },
       { communityPlacements: { some: expect.objectContaining({ state: "APPROVED", community: expect.objectContaining({ state: "ACTIVE" }) }) } },
     ]));
+  });
+
+  it("filters declared access on the approved public release rather than drafts or old versions", async () => {
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+    const response = await request(createApp()).get("/api/marketplace/products?permission=network_access");
+    expect(response.status).toBe(200);
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        published: true,
+        approvedSnapshot: { releaseManifest: { permissions: { some: { capability: "NETWORK_ACCESS" } } } },
+      }),
+    }));
+    expect((await request(createApp()).get("/api/marketplace/products?permission=unknown")).status).toBe(400);
+  });
+
+  it("treats SQL wildcard and escape characters as literal search text", async () => {
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+    await request(createApp()).get("/api/marketplace/products").query({ q: "a_%\\b" });
+    const branches = prismaMock.marketplaceProduct.findMany.mock.calls.at(-1)?.[0].where.AND[0].OR;
+    expect(branches).toContainEqual({ name: { contains: "a\\_\\%\\\\b", mode: "insensitive" } });
+    expect(branches).toContainEqual({ models: { has: "a_%\\b" } });
+    expect(branches).toContainEqual({ creator: { OR: expect.arrayContaining([{ handle: { contains: "a\\_\\%\\\\b", mode: "insensitive" } }]) } });
   });
 
   it.each([

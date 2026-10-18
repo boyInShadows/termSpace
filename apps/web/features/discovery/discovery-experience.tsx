@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
 import { discoveryHref } from "@/lib/discovery-url";
 import { localePath } from "@/lib/i18n";
+import { permissionOptions } from "./permission-options";
 
 /** Typing settles for this long before the URL, and so the results, change. */
 const QUERY_DEBOUNCE_MS = 300;
@@ -62,6 +63,9 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
   const category = initialFilters.category ?? "All";
   const community = initialFilters.community ?? "All";
   const platform = initialFilters.platform ?? "All";
+  const permission = initialFilters.permission ?? "All";
+  const selectedPermission = permissionOptions.find((item) => item.value === permission);
+  const selectedPermissionLabel = selectedPermission ? selectedPermission[fa ? "fa" : "en"] : permission;
   const verified = initialFilters.verified ?? false;
   const minRating = initialFilters.minRating ?? 0;
   const sort = initialFilters.sort === "relevance" && !urlQuery.trim() ? "featured" : initialFilters.sort ?? "featured";
@@ -93,7 +97,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
   const reset = () => {
     setQuery("");
     // A community page's community is its route, not a filter.
-    update({ q: undefined, type: undefined, category: undefined, community: context ? undefined : "All", platform: undefined, verified: undefined, minRating: undefined });
+    update({ q: undefined, type: undefined, category: undefined, community: context ? undefined : "All", platform: undefined, permission: undefined, verified: undefined, minRating: undefined });
   };
   const retry = () => startTransition(() => router.refresh());
   const pageHref = (page: number) => discoveryHref(pathname, searchParams?.toString() ?? "", { page });
@@ -102,6 +106,7 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
     category !== "All" && selectedCategoryLabel,
     community !== "All" && selectedCommunityLabel,
     platform !== "All" && selectedPlatformLabel,
+    permission !== "All" && selectedPermissionLabel,
     verified && "Verified",
     minRating > 0 && `${minRating}+ ${d.rating}`,
   ].filter(Boolean) as string[];
@@ -139,6 +144,16 @@ export function DiscoveryExperience({ initial, initialError = false, categories,
         value={minRating === 0 ? "Any" : `${minRating}+`}
         setValue={(v) => update({ minRating: v === "Any" ? 0 : parseFloat(v) })}
       />
+      <div>
+        <label className="block text-sm font-semibold">
+          {fa ? "دسترسی اعلام‌شده" : "Declared access"}
+          <select value={permission} onChange={(event) => change("permission")(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+            <option value="All">{d.all}</option>
+            {permissionOptions.map((item) => <option key={item.value} value={item.value}>{item[fa ? "fa" : "en"]}</option>)}
+          </select>
+        </label>
+        <p className="mt-2 text-xs text-muted-foreground">{fa ? "شامل دسترسی‌های الزامی یا اختیاریِ اعلام‌شده در نسخه عمومی تأییدشده." : "Includes required or optional access declared in the approved public release."}</p>
+      </div>
       <div className="flex items-center justify-between">
         <label htmlFor="verified" className="text-sm font-medium">
           {d.verifiedOnly}

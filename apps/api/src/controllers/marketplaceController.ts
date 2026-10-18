@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { Prisma } from "@prisma/client";
+import { Prisma, type MarketplacePermissionCapability } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import {
   MARKETPLACE_DATABASE_ITEM_TYPES,
@@ -63,36 +63,37 @@ function serializeProduct(product: any) {
 const searchTerms = (q: unknown): string[] => (q ? String(q).split(/\s+/).filter(Boolean).slice(0, 8) : []);
 
 function marketplaceProductWhere(filters: any, communitySlug?: string): Prisma.MarketplaceProductWhereInput {
-  const { q, type, category, community, platform, verified, minRating } = filters;
+  const { q, type, category, community, platform, permission, verified, minRating } = filters;
   const selectedCommunity = communitySlug ?? community;
   const terms = searchTerms(q);
   return {
     published: true,
     ...(terms.length ? { AND: terms.map((term) => {
+      const pattern = term.replace(/[\\%_]/g, "\\$&");
       const tag = term.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
       return { OR: [
-        { slug: { contains: term, mode: "insensitive" as const } },
-        { name: { contains: term, mode: "insensitive" as const } },
-        { outcome: { contains: term, mode: "insensitive" as const } },
-        { description: { contains: term, mode: "insensitive" as const } },
-        { type: { contains: term, mode: "insensitive" as const } },
-        { version: { contains: term, mode: "insensitive" as const } },
+        { slug: { contains: pattern, mode: "insensitive" as const } },
+        { name: { contains: pattern, mode: "insensitive" as const } },
+        { outcome: { contains: pattern, mode: "insensitive" as const } },
+        { description: { contains: pattern, mode: "insensitive" as const } },
+        { type: { contains: pattern, mode: "insensitive" as const } },
+        { version: { contains: pattern, mode: "insensitive" as const } },
         ...(tag ? [{ tags: { has: tag } }] : []),
         { models: { has: term } },
         { creator: { OR: [
-          { name: { contains: term, mode: "insensitive" as const } },
-          { handle: { contains: term, mode: "insensitive" as const } },
-          { bio: { contains: term, mode: "insensitive" as const } },
+          { name: { contains: pattern, mode: "insensitive" as const } },
+          { handle: { contains: pattern, mode: "insensitive" as const } },
+          { bio: { contains: pattern, mode: "insensitive" as const } },
         ] } },
         { category: { OR: [
-          { name: { contains: term, mode: "insensitive" as const } },
-          { slug: { contains: term, mode: "insensitive" as const } },
+          { name: { contains: pattern, mode: "insensitive" as const } },
+          { slug: { contains: pattern, mode: "insensitive" as const } },
         ] } },
         { compatibility: { some: { OR: [
-          { platformKey: { contains: term, mode: "insensitive" as const } },
+          { platformKey: { contains: pattern, mode: "insensitive" as const } },
           { platform: { OR: [
-            { nameEn: { contains: term, mode: "insensitive" as const } },
-            { nameFa: { contains: term, mode: "insensitive" as const } },
+            { nameEn: { contains: pattern, mode: "insensitive" as const } },
+            { nameFa: { contains: pattern, mode: "insensitive" as const } },
           ] } },
         ] } } },
         { communityPlacements: { some: {
@@ -100,11 +101,11 @@ function marketplaceProductWhere(filters: any, communitySlug?: string): Prisma.M
           community: {
             state: "ACTIVE" as const,
             OR: [
-              { slug: { contains: term, mode: "insensitive" as const } },
-              { nameEn: { contains: term, mode: "insensitive" as const } },
-              { nameFa: { contains: term, mode: "insensitive" as const } },
-              { descriptionEn: { contains: term, mode: "insensitive" as const } },
-              { descriptionFa: { contains: term, mode: "insensitive" as const } },
+              { slug: { contains: pattern, mode: "insensitive" as const } },
+              { nameEn: { contains: pattern, mode: "insensitive" as const } },
+              { nameFa: { contains: pattern, mode: "insensitive" as const } },
+              { descriptionEn: { contains: pattern, mode: "insensitive" as const } },
+              { descriptionFa: { contains: pattern, mode: "insensitive" as const } },
             ],
           },
         } } },
@@ -114,6 +115,7 @@ function marketplaceProductWhere(filters: any, communitySlug?: string): Prisma.M
     ...(category ? { category: { slug: category } } : {}),
     ...(selectedCommunity ? { communityPlacements: { some: { state: "APPROVED", community: { slug: selectedCommunity, state: "ACTIVE" } } } } : {}),
     ...(platform ? { compatibility: { some: { platformKey: platform } } } : {}),
+    ...(permission ? { approvedSnapshot: { releaseManifest: { permissions: { some: { capability: permission.toUpperCase() as MarketplacePermissionCapability } } } } } : {}),
     ...(verified ? { verified: true } : {}),
     ...(minRating ? { rating: { gte: minRating } } : {}),
   };

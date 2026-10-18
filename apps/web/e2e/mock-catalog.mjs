@@ -25,6 +25,14 @@ const generated = Array.from({ length: GENERATED }, (_, index) => {
 
 export const CATALOG = [...mockHome.products, ...generated];
 
+const hiddenProducts = ["suspended", "archived"].map((state) => ({
+  ...mockHome.products[0],
+  slug: `fixture-${state}`,
+  name: `Private ${state} fixture`,
+  published: false,
+  lifecycleState: state,
+}));
+
 export const PLATFORMS = [...new Set(CATALOG.flatMap((product) => product.compatibility.platforms))].map((name) => ({
   key: platformKey(name),
   nameEn: name,
@@ -56,6 +64,7 @@ export function listProducts(params) {
   const q = (params.get("q") ?? "").trim().toLowerCase();
   const type = params.get("type");
   const platform = params.get("platform");
+  const permission = params.get("permission");
   const category = params.get("category");
   const verified = params.get("verified") === "true";
   const minRating = Number(params.get("minRating") ?? 0);
@@ -67,6 +76,7 @@ export function listProducts(params) {
     (!q || `${product.name} ${product.outcome}`.toLowerCase().includes(q)) &&
     (!type || product.typeKey === type) &&
     (!platform || product.compatibility.platforms.some((name) => platformKey(name) === platform)) &&
+    (!permission || permission === "filesystem_read") &&
     (!category || product.category.toLowerCase() === category.toLowerCase()) &&
     (!verified || product.verified) &&
     product.rating >= minRating,
@@ -80,8 +90,8 @@ export function listProducts(params) {
 }
 
 export function productDetail(slug) {
-  const product = CATALOG.find((candidate) => candidate.slug === slug);
-  if (!product) return null;
+  const product = [...CATALOG, ...hiddenProducts].find((candidate) => candidate.slug === slug);
+  if (!product || product.published === false) return null;
   const released = (daysAgo) => new Date(Date.parse(product.updatedAt) - daysAgo * DAY).toISOString();
   return {
     ...withPlatformKeys(product),

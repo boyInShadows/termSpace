@@ -3,6 +3,7 @@ import type { MarketplaceRole } from "@prisma/client";
 import type { Request, RequestHandler } from "express";
 import { prisma } from "../lib/prisma.js";
 import { toPublicMarketplaceRole, type PublicMarketplaceRole } from "../lib/marketplaceRoles.js";
+import { localEmailVerificationBypassEnabled } from "../lib/emailVerification.js";
 
 export const ADMIN_SESSION_COOKIE = "term_academy_session";
 export const READER_SESSION_COOKIE = "term_academy_reader";
@@ -73,7 +74,8 @@ function readerAccess(user: {
   return {
     id: user.id,
     email: user.email,
-    emailVerified: Boolean(user.emailVerifiedAt),
+    // shortcut: skip email delivery on localhost until a sending domain is ready.
+    emailVerified: Boolean(user.emailVerifiedAt) || localEmailVerificationBypassEnabled(),
     marketplaceRoles: user.marketplaceRoleGrants.map(({ role }) => toPublicMarketplaceRole(role)),
   };
 }

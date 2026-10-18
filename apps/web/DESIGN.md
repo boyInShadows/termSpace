@@ -1,6 +1,6 @@
 ---
 name: TermSpace
-description: A marketplace for agentic coding tools, set as a component datasheet. Only the landing hero is built in this direction so far.
+description: A marketplace for agentic coding tools, set as a component datasheet. The landing hero and creator dashboard use this direction.
 colors:
   ground: "oklch(14.5% 0.022 286)"
   ink: "oklch(96% 0.01 286)"
@@ -87,7 +87,7 @@ components:
 
 A listing is a part, and the page shows it the way a component manufacturer would: a title block with a revision table, thin and double rules, numbered sections, tabular values, one header cell in solid ink. The system is typographic and linear. Structure comes from rules and aligned columns, never from fills, shadows or effects. Voice is dry and exact; the hero's example shows what a listing declares (reads, writes, network, compatibility) and prints what it does not.
 
-**Transition (read this first).** Only the landing hero is built in this direction. It owns: the headline, the title block, the search field, the example part (tag cell, name row, features, ratings table, pin diagram, ordering row, footer). Everything else still ships the earlier "Signal & Void" system from `styles/tokens.css` and `styles/globals.css`: the violet "Plasma" primary used as a large-area brand colour, the Newsreader serif `.editorial` headings, the plasma-text gradient tokens, the nebula, `--shadow-soft`/`--shadow-lift`/`--glow-*`, 0.9rem card radius, rounded pill chips, the 160 to 640ms motion tokens, and the header, footer, sections below the hero, dashboard, explore and product pages. Those are slated to be replaced, not extended. Do not add new surfaces in Signal & Void, and do not invent site-wide datasheet tokens: the datasheet uses the existing theme tokens only (ink, ground, hairline, one accent).
+**Transition (read this first).** The landing hero and creator dashboard use this direction. The hero owns the headline, title block, search and example part. The dashboard adapts it for Operate mode: ruled sections, square controls, sans headings, aligned values, visible lifecycle labels and ink-filled actions. Its surface contract is `.impeccable/surfaces/app-dashboard.md`. The marketing header/footer, sections below the hero, explore and product pages still retain the earlier "Signal & Void" system from `styles/tokens.css` and `styles/globals.css`, including large violet actions, Newsreader headings, shadows, rounded cards and long motion tokens. Those are slated to be replaced, not extended. Do not add new surfaces in Signal & Void, and do not invent site-wide datasheet tokens: the datasheet uses the existing theme tokens only (ink, ground, hairline, one accent).
 
 **Key Characteristics:**
 - Ink on ground, one accent, one red, one green; no gradients, glow, shadows, photography or texture.
@@ -207,5 +207,5 @@ Heading cell on `--muted` with accent label type and a mono numeral, a "Pinned" 
 - **Don't** round the corners of the sheet or the hero search.
 - **Don't** use accent as a panel, card or background fill, or red for anything but absence.
 - **Don't** hide undeclared rows, or ship an unlabelled example.
-- **Don't** extend Signal & Void for new surfaces: the Plasma large-area primary, Newsreader `.editorial` headings, pill chips, `--shadow-*`/`--glow-*` and the long motion tokens remain on the header, footer, lower sections, dashboard, explore and product pages and are slated to be replaced. Reuse of them is a migration debt, not a precedent.
+- **Don't** extend Signal & Void for new surfaces: the Plasma large-area primary, Newsreader `.editorial` headings, pill chips, `--shadow-*`/`--glow-*` and the long motion tokens remain on the header, footer, lower sections, explore and product pages and are slated to be replaced. Reuse of them is a migration debt, not a precedent.
 - **Don't** treat the hero search's carried remnants (suggestions dropdown shape and shadow, placeholder typing, lucide glyphs) as part of the datasheet system.

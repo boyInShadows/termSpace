@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { englishDisplayName, marketplaceManifestV1Schema } from "../lib/marketplaceManifest.js";
+import { englishDisplayName, marketplaceManifestV1Schema, permissionCapabilities } from "../lib/marketplaceManifest.js";
 import { MARKETPLACE_PLATFORM_KEYS } from "../lib/marketplacePlatforms.js";
 import { MARKETPLACE_ITEM_TYPES } from "../lib/marketplaceManifest.js";
 
@@ -151,6 +151,7 @@ export const marketplaceProductQuerySchema = z.object({
   category: z.string().trim().regex(slugPattern).max(160).optional(),
   community: z.string().trim().regex(slugPattern).max(100).optional(),
   platform: z.enum(MARKETPLACE_PLATFORM_KEYS).optional(),
+  permission: z.enum(permissionCapabilities).optional(),
   verified: z.enum(["true", "false"]).optional().transform((value) => value === "true" ? true : undefined),
   minRating: z.coerce.number().min(0).max(5).optional().default(0),
   sort: z.enum(["featured", "rating", "newest", "relevance"]).optional().default("featured"),

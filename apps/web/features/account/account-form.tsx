@@ -60,8 +60,14 @@ export function AccountForm() {
         setError(t.passwordMismatch);
         return;
       }
-      await (mode === "login" ? login(email, password) : register(email, password));
-      await finishSignIn(mode === "register");
+      let verificationRequired = false;
+      if (mode === "register") {
+        const result = await register(email, password);
+        verificationRequired = !result.data.user.emailVerified;
+      } else {
+        await login(email, password);
+      }
+      await finishSignIn(verificationRequired);
     } catch (cause) {
       if (!(cause instanceof ApiError)) setError(t.serviceError);
       else if (cause.code === "INVALID_CREDENTIALS") setError(t.invalidCredentials);

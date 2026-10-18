@@ -21,7 +21,7 @@ export function QuickActions() {
           <li key={item.href}>
             <Link
               href={localePath(item.href, locale)}
-              className="flex min-h-10 items-center justify-between gap-3 rounded-lg border border-border px-3 text-sm transition-colors hover:border-border-strong hover:bg-surface-raised"
+              className="flex min-h-10 items-center justify-between gap-3 rounded-none border border-border px-3 text-sm transition-colors hover:border-border-strong hover:bg-surface-raised"
             >
               {item.label}
               <span aria-hidden className="font-mono text-muted-foreground rtl:-scale-x-100">↗</span>

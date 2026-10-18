@@ -42,6 +42,15 @@ export function listingTone(state: string): ListingTone {
   return "draft";
 }
 
+export function listingStatusClass(state: string): string {
+  return {
+    live: "bg-success/15 text-success",
+    review: "bg-warning/15 text-warning",
+    attention: "bg-destructive/15 text-destructive",
+    draft: "bg-muted text-muted-foreground",
+  }[listingTone(state)];
+}
+
 export type ActivityTone = "positive" | "attention" | "progress" | "neutral";
 
 export function activityTone(action: string): ActivityTone {

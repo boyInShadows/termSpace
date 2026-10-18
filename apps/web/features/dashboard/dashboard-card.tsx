@@ -22,7 +22,7 @@ export function DashboardCard({
 }) {
   return (
     <section
-      className={cn("rounded-[var(--radius-card)] border border-border bg-surface", className)}
+      className={cn("border-y border-border bg-surface", className)}
       aria-label={title}
     >
       {title && (

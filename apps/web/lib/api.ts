@@ -29,7 +29,7 @@ function apiBase() { return typeof window === "undefined" ? process.env.API_URL 
  */
 const PUBLIC_REVALIDATE_SECONDS = 30;
 
-async function request<T>(path: string, init?: RequestInit & { revalidate?: number }): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit & { revalidate?: number }): Promise<T> {
   const { revalidate, ...fetchInit } = init ?? {};
   const cacheable = revalidate !== undefined && typeof window === "undefined";
   const method = (init?.method ?? "GET").toUpperCase();
@@ -87,7 +87,7 @@ export type MarketplaceRole = "creator" | "moderator" | "administrator";
 export async function getSession() { return request<{ data: { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } | { authenticated: false } }>("/api/readers/session"); }
 export async function login(email: string, password: string) { return request("/api/readers/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function loginWithGoogle(credential: string) { return request("/api/readers/google", { method: "POST", body: JSON.stringify({ credential }) }); }
-export async function register(email: string, password: string) { return request("/api/readers/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
+export async function register(email: string, password: string) { return request<{ data: { user: { emailVerified: boolean } } }>("/api/readers/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function requestPasswordReset(email: string) { return request<{ data: { accepted: true } }>("/api/readers/password-reset/request", { method: "POST", body: JSON.stringify({ email }) }); }
 export async function confirmPasswordReset(email: string, code: string, newPassword: string) { return request<{ data: { reset: true } }>("/api/readers/password-reset/confirm", { method: "POST", body: JSON.stringify({ email, code, newPassword }) }); }
 export async function logout() { return request("/api/readers/logout", { method: "POST" }); }

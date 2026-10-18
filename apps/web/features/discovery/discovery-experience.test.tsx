@@ -1,9 +1,12 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DiscoveryExperience } from "./discovery-experience";
+import { LocaleProvider } from "@/lib/locale-context";
+
+const replace = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({ replace, refresh: vi.fn() }),
   usePathname: () => "/explore",
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -55,5 +58,15 @@ describe("DiscoveryExperience states", () => {
 
     expect(screen.getByText("No resources found")).toBeInTheDocument();
     expect(screen.getByText(/missing tool/)).toBeInTheDocument();
+  });
+
+  it.each(["en", "fa"] as const)("labels declared access and updates the URL in %s", (locale) => {
+    render(<LocaleProvider locale={locale}><DiscoveryExperience initial={emptyResult} categories={[]} platforms={[]} communities={[]} itemTypes={[]} initialFilters={{ permission: "network_access" }} /></LocaleProvider>);
+    const select = screen.getByRole("combobox", { name: locale === "fa" ? "دسترسی اعلام‌شده" : "Declared access" });
+    expect(select).toHaveValue("network_access");
+    fireEvent.change(select, { target: { value: "filesystem_read" } });
+    expect(replace).toHaveBeenCalledWith("/explore?permission=filesystem_read", { scroll: false });
+    fireEvent.click(screen.getAllByRole("button", { name: locale === "fa" ? "پاک‌کردن همه" : "Clear all" })[0]);
+    expect(replace).toHaveBeenLastCalledWith("/explore", { scroll: false });
   });
 });

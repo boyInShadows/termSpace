@@ -14,7 +14,7 @@ test.describe("dashboard", () => {
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(page).toHaveURL(/\/dashboard$/);
-    await expect(page.getByRole("table").locator("tbody tr td:first-child a span.truncate")).toHaveCount(3);
+    await expect(page.getByRole("table").locator("tbody tr td:first-child a span.font-medium")).toHaveCount(3);
   });
 
   test("shows the empty state to a creator with no listings", async ({ page, context, baseURL }) => {
@@ -22,12 +22,11 @@ test.describe("dashboard", () => {
     await page.goto("/dashboard");
 
     await expect(page.getByText("Nothing published yet.", { exact: true })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Publish your first listing" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Create your first listing" })).toBeVisible();
     await expect(page.getByRole("table")).toHaveCount(0);
   });
 
-  test("Ctrl+K moves focus to the dashboard search", async ({ page, context, baseURL }, testInfo) => {
-    test.skip(testInfo.project.name.startsWith("mobile"), "The top-bar search is hidden below md.");
+  test("Ctrl+K moves focus to the dashboard search", async ({ page, context, baseURL }) => {
     await signInAs(context, baseURL!, "creator");
     await page.goto("/dashboard");
     await expect(page.getByRole("table")).toBeVisible();
@@ -71,7 +70,7 @@ test.describe("dashboard", () => {
     await signInAs(context, baseURL!, "creator");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/dashboard");
-    const names = page.getByRole("table").locator("tbody tr td:first-child a span.truncate");
+    const names = page.getByRole("table").locator("tbody tr td:first-child a span.font-medium");
     await expect(names).toHaveCount(3);
     for (const width of await names.evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().width))) {
       expect(width).toBeGreaterThan(60);

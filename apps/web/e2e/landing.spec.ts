@@ -76,15 +76,15 @@ test.describe("landing", () => {
       .toBe(0);
   });
 
-  test("never scrolls sideways at 375px", async ({ page }, testInfo) => {
+  for (const width of [320, 375]) test(`never scrolls sideways at ${width}px`, async ({ page }, testInfo) => {
     test.skip(!isMobile(testInfo.project.name), "Phone layout only.");
-    await page.setViewportSize({ width: 375, height: 812 });
+    await page.setViewportSize({ width, height: 812 });
 
     for (const path of ["/", "/fa"]) {
       await page.goto(path);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-      expect(scrollWidth, `${path} scroll width`).toBeLessThanOrEqual(375);
+      expect(scrollWidth, `${path} scroll width`).toBeLessThanOrEqual(width);
     }
   });
 });

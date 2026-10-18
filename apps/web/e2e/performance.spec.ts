@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("performance wiring", () => {
-  test("preloads exactly the two fonts the English first paint needs", async ({ request }) => {
+  test("preloads only Geist for the English first paint", async ({ request }) => {
     const html = await (await request.get("/")).text();
     const preloads = [...html.matchAll(/<link[^>]+rel="preload"[^>]+as="font"[^>]*>/g)].map((match) => match[0]);
-    expect(preloads).toHaveLength(2);
+    expect(preloads).toHaveLength(1);
+    expect(preloads[0]).toContain("geist-latin");
+    expect(preloads[0]).not.toContain("newsreader");
     expect(html).not.toContain("estedad");
   });
 

@@ -30,6 +30,11 @@ export function DashboardTopbar() {
   const currentPath = locale === "fa" ? pathname.slice(3) || "/" : pathname;
   const query = searchParams.toString();
   const switchHref = `${locale === "fa" ? currentPath : localePath(currentPath, "fa")}${query ? `?${query}` : ""}`;
+  const breadcrumb = currentPath.endsWith("/releases") ? t.creatorReleases.title
+    : currentPath.endsWith("/edit") ? t.creatorDraft.editTitle
+      : currentPath.endsWith("/new") ? t.creatorDraft.createTitle
+        : currentPath.endsWith("/settings") ? t.navSettings
+          : currentPath.startsWith("/dashboard/studio") ? t.navStudio : t.navOverview;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -44,13 +49,13 @@ export function DashboardTopbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background">
-      <div className="flex h-14 items-center gap-3 px-4 sm:px-5 lg:px-6">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 sm:px-5 lg:px-6">
         <Logo />
-        <span dir="ltr" className="hidden font-mono text-xs text-muted-foreground sm:inline">
-          ~{currentPath}
+        <span className="hidden max-w-40 truncate text-xs text-muted-foreground xl:inline" title={breadcrumb}>
+          {breadcrumb}
         </span>
 
-        <form role="search" action={localePath("/explore", locale)} className="mx-auto hidden w-full max-w-md md:block">
+        <form role="search" action={localePath("/explore", locale)} className="order-last w-full md:order-none md:mx-auto md:min-w-40 md:max-w-md md:flex-1">
           <label htmlFor="dashboard-search" className="sr-only">
             {t.dashboardHome.searchLabel}
           </label>
@@ -62,7 +67,7 @@ export function DashboardTopbar() {
               name="q"
               type="search"
               placeholder={t.dashboardHome.searchPlaceholder}
-              className="h-9 w-full rounded-lg border border-border bg-surface pe-16 ps-9 text-sm placeholder:text-muted-foreground"
+              className="h-11 w-full rounded-none border border-border bg-surface pe-16 ps-9 text-base placeholder:text-muted-foreground"
             />
             <kbd
               aria-hidden
@@ -87,9 +92,9 @@ export function DashboardTopbar() {
           <Link
             href={localePath("/dashboard/settings", locale)}
             aria-label={t.dashboardHome.toAccount}
-            className="ms-1 grid size-8 place-items-center rounded-full bg-primary-soft text-sm font-semibold ring-1 ring-border"
+            className="ms-1 grid size-11 shrink-0 place-items-center rounded-none text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            <span aria-hidden>{session.email?.charAt(0).toUpperCase()}</span>
+            <span aria-hidden className="grid size-8 place-items-center rounded-none bg-primary-soft ring-1 ring-border">{session.email?.charAt(0).toUpperCase()}</span>
           </Link>
         </div>
       </div>

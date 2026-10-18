@@ -21,7 +21,7 @@ const ITEMS_WHILE_LOADING = 4;
  * 20px marker, minus half the 1px border, measured from the item's start edge.
  * Logical `start`, so the rail moves to the right in Persian.
  */
-const MARKER = "absolute -start-[34.5px] top-0.5 grid size-5 place-items-center rounded-full border border-border bg-surface";
+const MARKER = "absolute -start-[34.5px] top-0.5 grid size-5 place-items-center rounded-none border border-border bg-surface";
 
 export function ActivityFeed({ state, now, onRetry }: { state: OverviewState; now: number; onRetry: () => void }) {
   const { locale, t } = useLocale();

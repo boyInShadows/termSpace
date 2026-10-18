@@ -23,6 +23,12 @@ describe("filtersFromParams", () => {
     expect(filtersFromParams({ page: "two" }).page).toBe(1);
     expect(filtersFromParams({ page: "1.5" }).page).toBe(1);
   });
+
+  it("restores declared-access filters from shared URLs", () => {
+    expect(filtersFromParams({ permission: ["network_access", "telemetry"] }).permission).toBe("network_access");
+    expect(discoveryHref("/explore", "permission=network_access&page=3", { permission: "All" })).toBe("/explore");
+    expect(discoveryHref("/explore", "permission=network_access", { page: 2 })).toBe("/explore?permission=network_access&page=2");
+  });
 });
 
 describe("discoveryHref", () => {

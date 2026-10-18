@@ -30,6 +30,7 @@ export function filtersFromParams(raw: RawSearchParams): ProductFilters {
     category: first(raw.category),
     community: first(raw.community),
     platform: first(raw.platform),
+    permission: first(raw.permission),
     verified: first(raw.verified) === "true" || undefined,
     minRating: Number.isFinite(minRating) && minRating > 0 ? minRating : undefined,
     sort: first(raw.sort) ?? defaultSort(first(raw.q)),

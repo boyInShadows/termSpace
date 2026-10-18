@@ -127,6 +127,9 @@ LOCAL_AUTO_VERIFY_EMAIL=true
 New password accounts are then stored as verified immediately and no verification
 record or email outbox job is created. An older unverified local account is also
 marked verified on its next successful password login.
+Existing signed-in local sessions skip the verification gate while the flag is
+enabled, without changing their stored verification timestamp. Signup follows
+the API result and skips the verification page when the account is accepted.
 
 The bypass refuses to activate unless `WEB_PUBLIC_URL` uses the exact loopback
 hostname `localhost`, `127.0.0.1`, or `[::1]`. Keep the flag unset or `false` in

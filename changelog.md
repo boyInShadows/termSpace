@@ -2,7 +2,175 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-18
+
+- **Product HTTP status correction (owner-assigned next local checklist step).**
+  - Removed `apps/web/app/products/[slug]/loading.tsx`, whose early response
+    committed HTTP 200 before the product lookup could report an unavailable
+    listing. The page now resolves that lookup before response streaming; the
+    existing localized branded not-found UI and noindex metadata still render.
+    This follows [Next.js status behavior](https://nextjs.org/docs/app/api-reference/file-conventions/not-found).
+    Product navigation retains the prior page while the lookup is pending.
+  - Added suspended/archived unpublished entries to the isolated browser fixture
+    catalogue and asserted public API exclusion, real HTML 404 status, branded
+    heading, noindex, EN/FA language/direction, and absence of private fixture
+    content. Successful product responses stay 200; upstream failures return
+    500 with the existing Retry UI. Backend visibility and auth were not changed.
+  - Verification: reproduced the prior 200 status in desktop/mobile;
+    20 targeted browser checks passed; full suite at the default 10 workers
+    passed 166 / 28 conditional skips, including product morph, layout and JS
+    budgets. Root typecheck, 404 unit tests / 5 database-dependent skips and
+    web lint and the regular production build passed. All nine Lighthouse runs
+    passed existing gates. Actual localhost responses were 404/noindex in EN/FA
+    and 200 for a published product; API health was 200. Eight visual captures
+    across EN/FA, light/dark and 320/1280px had no overflow or page errors.
+    Reviewed the final diff manually; no budget changes or new dependencies.
+  - Removed the completed HTTP-status task from both pending files.
+  - Shared `pending.md` and this log are in scope because the owner requested
+    continuation of the mirrored local task. Earlier uncommitted work and the
+    temporary localhost email pause are preserved. No commit/push. Local
+    evidence: `maintenance/product-status-20261018/`.
+
+- **Default-worker browser stability (owner-assigned next local checklist step).**
+  - Removed redundant hoisted pagination head hints from
+    `apps/web/app/explore/page.tsx`, which duplicated during hydration. The
+    existing server-rendered Previous/Next anchors retain their `href` and
+    `rel` attributes, locale, filters and client navigation. This follows
+    [Google's pagination guidance](https://developers.google.com/search/docs/specialty/ecommerce/pagination-and-incremental-page-loading):
+    discovery uses real anchor URLs and Google no longer uses head next/prev hints.
+  - Browser regressions check first/last/back navigation, absence of stale head
+    hints, and actual crawler HTML with Persian paths and permission filters.
+    Current hero motion and card morphing passed ten repetitions at default
+    concurrency; no production animation code or worker/retry settings changed.
+  - `apps/web/e2e/dashboard-repairs.spec.ts` waits for intercepted route handlers
+    before teardown; the reproduced background refresh no longer throws
+    `route.fetch: Test ended`. Web ESLint ignores only generated Playwright and
+    Lighthouse output directories, preventing a reproduced artifact-deletion race
+    during simultaneous lint/browser runs; source rules remain enforced.
+  - Removed the completed entry from both `ramtin-pending.md` and `pending.md`.
+    These shared checklist/log edits are authorized by the owner's continuation
+    request. Preserved the prior uncommitted work and temporary local email pause.
+  - Verification: focused stress run 90 passed / 10 conditional skips across ten
+    repetitions; complete suite twice, 308 passed / 56 conditional skips with
+    the default 10 workers and zero retries. Root typecheck, 404 unit tests
+    passed / 5 database-dependent skips, web lint and the root production build
+    passed. Actual localhost Explore navigation passed with zero pagination head
+    hints; API health returned 200. Only the regular API/web processes remain.
+    Lighthouse was not rerun: production changes are confined to Explore
+    metadata, with no home/dashboard/product render or style changes.
+    No usage meter available;
+    manual second-pass review. No commit/push while the inherited dirty work
+    remains uncommitted. Evidence: `maintenance/browser-stability-20261018/`.
+
+- **Owner follow-up: pause local email verification and continue the pending repairs.**
+  - Enabled the existing loopback-only `LOCAL_AUTO_VERIFY_EMAIL` switch in the
+    ignored API configuration until a sending domain is ready. Existing sessions
+    skip the gate without changing their stored verification timestamps; new
+    local signup keeps the existing auto-verification behavior. Password/session
+    authentication and creator/moderator role checks still apply. Restore the
+    flag to false and restart the API before real-email acceptance.
+  - Signup redirects from the API verification result. Accepted sessions visiting
+    the verification page go to the dashboard without displaying the inbox box.
+    Token verification and resend behavior remain covered when the switch is off.
+  - Added the deferred Explore declared-access filter for all 12 manifest
+    capabilities, with EN/FA labels, URL persistence, pagination/reset handling
+    and mobile controls. The API validates canonical keys and matches only the
+    approved listing snapshot's release permissions, including optional access.
+    Legacy listings without declarations are excluded from capability matches.
+  - Fixed the process step list's minimum width (343px document at a 320px
+    viewport before the fix); added 320px EN/FA browser coverage. English first
+    paint now preloads Geist only; the Newsreader face remains available in CSS.
+    Catalogue text matching escapes SQL wildcard and escape characters across
+    public metadata while relevance ranking retains the literal search terms.
+  - Removed each verified task from `ramtin-pending.md`; reconciled the three
+    shared bug entries in `pending.md`. These API/search edits and shared
+    `apps/web/lib/api.ts`, `apps/web/lib/types.ts`, `pending.md`, and this log
+    are explicitly assigned by the owner's request to continue the local list.
+  - Verification: root typecheck, 404 unit tests passed / 5 database-dependent
+    skips, web lint, root production build, and Chrome e2e 152 passed / 28
+    conditional skips with 2 workers, including unchanged JS budgets. Real
+    PostgreSQL checks confirmed literal %, underscore and backslash matching
+    for browse/relevance, exclusion of undeclared legacy releases, and local
+    session/signup behavior without email delivery. Synthetic fixtures were
+    removed; snapshot audit protection was checked enabled after cleanup.
+    All nine Lighthouse runs passed existing gates (home/dashboard/detail
+    performance 93/91/92, accessibility 100 throughout; dashboard CLS 0.0206).
+    Eight Explore theme/locale/viewport captures and four 320px homepage captures
+    have no document overflow or uncaught page errors; visual inspection passed.
+    Rebuilt the regular bundle with the real API, restarted the API and web dev
+    server, and verified an actual unverified local browser session leaves the
+    inbox page for the dashboard without changing its stored timestamp. Home,
+    API health and all 19 referenced JS assets return 200. Fixture/Chrome
+    processes were stopped; only the regular local stack remains.
+  - Existing uncommitted work is preserved. No commit or push; real email,
+    Google, physical devices, maintainer wording review and other open backlog
+    items remain pending. Local evidence: `maintenance/email-pause-20261018/`.
+
+- **Dashboard repair phase (D00?D23, `ramtin`, owner-assigned local checklist).**
+  - Continued the existing creator submission edits: review checkpoint, current
+    lifecycle version, source/conflict recovery and in-review feedback; creators
+    only submit for moderation. New-listing copy no longer promises publication.
+  - Editor actions clear mobile tabs and safe areas. Internal links and Cancel
+    prompt before discarding dirty input; full-page exits retain the unload guard.
+    Load failures have context, Retry and Back. Labelled declaration rows replace
+    pipe syntax, retain literal punctuation and serialize the existing manifest.
+    Section links, required-field hints and a declarations preview aid review.
+  - Settings separates loading, absent profile and failure, offers retry and a
+    profile-editor link that waits for listing layout to settle. Latin identity
+    and rating fractions are isolated in Persian. Verification identifies the
+    account and offers sign-out; authentication requirements remain intact.
+  - Mobile search, shorter breadcrumbs, larger account targets, compact studio
+    metrics, readable listing names, shared lifecycle styles, KPI context and
+    content-sized overview panels address the remaining dashboard review items.
+    Provider token help links official GitHub/npm docs; source failures give
+    correction/retry instructions with diagnostic codes kept secondary.
+  - Recorded the dashboard Operate brief before migrating its surfaces to the
+    existing Datasheet language. Kept workspace-only translation payloads out of
+    public catalog bundles; all original creator keys are retained in EN/FA.
+    No dependencies, database schema, provider credentials or auth bypass added.
+  - Verification: root typecheck; 396 unit tests passed / 5 database-dependent
+    skips; web lint; root production build and final fixture web build; full
+    Chrome e2e 147 passed / 27 conditional skips with 2 workers, including JS
+    budgets. Thirty fresh EN/FA, theme and viewport captures have no document
+    overflow or uncaught page errors. Editor hit tests also cover 375x350 and
+    landscape, and browser tests exercise all nine listing-type field groups.
+    Final dashboard/budget checks passed 38 / 18 skips. All nine Lighthouse
+    runs passed existing gates; dashboard CLS 0.0206, performance 90 and
+    accessibility 100. The first run exposed metric-placeholder height drift
+    (CLS 0.072); reserved matching label/context space and verified the repair.
+    No budgets were raised. Detector findings are confined to
+    existing global font/token rules; the pinned fonts were retained.
+  - Shared surfaces: `apps/web/lib/i18n/creator.ts`,
+    `apps/web/lib/i18n/dashboard.ts`, `changelog.md`; retained the pre-existing
+    `apps/web/lib/api.ts` request export used by the submission helper. Other
+    initial dirty/untracked files were preserved. Manual second-pass diff review;
+    no usage meter available. Changes remain uncommitted because the initial
+    submission/helper edits were already uncommitted and their ownership has not
+    been confirmed; no other agent's changes were staged or pushed.
+  - Removed completed local checklist entries as verified. Commented out the
+    owner's deferred signup/login verification-code and live-email phase until
+    an email service is available. Real providers/devices, browser 200% zoom,
+    assistive technology and maintainer review of Persian copy remain open.
+    Rebuilt the regular local web bundle after fixture testing; main page and
+    all 19 referenced JS assets returned 200, as did `/api/health` and the type
+    registry. Temporary fixture servers and the disposable Chrome were stopped.
+    Local evidence: `maintenance/dashboard-repairs-20261018/` (ignored).
+
 ## 2026-10-17
+
+- Recorded a dashboard visual/usability review in the ignored local
+  `ramtin-pending.md`, with prioritized tasks, reproduction steps and local
+  screenshots. Covered English/Persian, light/dark and desktop/tablet/mobile
+  layouts using the existing Chrome/Playwright fixture setup. Deferred live
+  email/Google verification until the owner resumes after acquiring a domain.
+  No application code changed; local checklist/evidence were not committed
+  or pushed.
+
+- Created the owner's local-only `ramtin-pending.md` checklist, with live email
+  and Google verification first, current session follow-ups, and a complete
+  snapshot of the open shared backlog. Added its root path to `.gitignore`;
+  verified it is ignored and untracked. No runtime code changed or tests needed.
+  These checklist/ignore changes were not committed or pushed, at owner request.
 
 - **Google sign-in wiring and final auth verification (`ramtin`, requested by owner).**
   - The main site's account page previously had no Google client despite the

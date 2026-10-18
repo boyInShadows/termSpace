@@ -121,7 +121,7 @@ export function Process({ copy }: { copy: Pick<HomeSections, "processEyebrow" | 
 
         <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
           {/* --- scrolling steps ------------------------------------------ */}
-          <ol className="relative">
+          <ol className="relative min-w-0">
             {/* The rail the active marker travels down. */}
             <span
               aria-hidden

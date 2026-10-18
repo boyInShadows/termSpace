@@ -76,7 +76,7 @@ const environmentVariable = z.object({
   sensitive: z.boolean(),
 }).strict();
 
-const permissionCapabilities = [
+export const permissionCapabilities = [
   "filesystem_read", "filesystem_write", "process_execution", "network_access", "environment_access", "secret_access",
   "browser_automation", "external_account_access", "persistent_storage", "background_execution", "code_modification", "telemetry",
 ] as const;

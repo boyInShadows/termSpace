@@ -46,3 +46,24 @@ test("password recovery returns to sign-in after submitting the emailed code", a
   await page.getByRole("button", { name: "Reset password", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 });
+
+test("local signup skips the inbox box and accepted sessions leave the verification page", async ({ page }) => {
+  let authenticated = false;
+  await page.route("**/backend/api/marketplace/favorites", (route) => route.fulfill({ json: { data: [] } }));
+  await page.route("**/backend/api/readers/**", async (route) => {
+    if (route.request().url().endsWith("/register")) authenticated = true;
+    await route.fulfill({ json: { data: authenticated
+      ? { authenticated: true, user: { id: "local-reader", email: "local@e2e.test", emailVerified: true, marketplaceRoles: [] } }
+      : { authenticated: false } } });
+  });
+  await page.goto("/account");
+  await page.getByRole("button", { name: "Need an account? Register" }).click();
+  await page.getByLabel("Email", { exact: true }).fill("local@e2e.test");
+  await page.getByLabel("Password", { exact: true }).fill("correct-password");
+  await page.getByLabel("Confirm password").fill("correct-password");
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/account/verify-email");
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByRole("heading", { name: "Verify your email" })).toHaveCount(0);
+});
