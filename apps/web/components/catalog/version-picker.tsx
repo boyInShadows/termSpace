@@ -38,7 +38,7 @@ export function VersionPicker() {
         <p className="text-xs font-semibold">
           {fa ? "تغییرات" : "What changed"} <span className="font-normal text-muted-foreground">· {date}</span>
         </p>
-        <p className="mt-1 text-sm leading-6 text-muted-foreground">{selected.notes}</p>
+        <p className="ts-bidi mt-1 text-sm leading-6 text-muted-foreground">{selected.notes}</p>
       </div>
     </div>
   );

@@ -21,7 +21,7 @@ export function Fact({ label, children }: { label: string; children: ReactNode }
   return (
     <div className="grid grid-cols-[6.5rem_1fr] gap-x-4 border-t border-border py-3 text-sm sm:grid-cols-[9rem_1fr]">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="ts-bidi min-w-0 break-words text-foreground">{children}</dd>
+      <dd className="min-w-0 break-words text-foreground"><bdi>{children}</bdi></dd>
     </div>
   );
 }
