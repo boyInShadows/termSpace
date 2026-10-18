@@ -2,6 +2,13 @@
 export const creatorWorkspace = {
   en: {
     creatorHub: {
+      withdrawReview: "Withdraw from review",
+      confirmWithdrawal: "Withdraw to draft",
+      keepInReview: "Keep in review",
+      withdrawalHelp: "Remove this submission from the review queue and return it to Draft. Your saved details and release stay available to edit and resubmit. Any already published version stays public.",
+      withdrawalSuccess: "Withdrawn from review. Your saved draft is ready to edit and resubmit. Any already published version stays public.",
+      withdrawalError: "Withdrawal failed. No changes were confirmed. Retry, or refresh the listing to check its current status.",
+      withdrawalConflict: "This listing changed. Refresh it before trying again; withdrawal is available only while it is submitted.",
       reviewSubmission: "Review submission",
       submissionSourceRequired: "Verify the saved release's source in Manage releases, then submit again. Your draft has been kept.",
       submissionError: "Submission failed. Your saved draft is still available. Retry or return to Edit draft.",
@@ -90,6 +97,13 @@ export const creatorWorkspace = {
   },
   fa: {
     creatorHub: {
+      withdrawReview: "پس‌گرفتن از بررسی",
+      confirmWithdrawal: "بازگرداندن به پیش‌نویس",
+      keepInReview: "ادامهٔ بررسی",
+      withdrawalHelp: "این ارسال از صف بررسی خارج و به پیش‌نویس برگردانده می‌شود. جزئیات و انتشار ذخیره‌شده برای ویرایش و ارسال دوباره حفظ می‌شوند. هر نسخه‌ای که قبلاً منتشر شده، عمومی می‌ماند.",
+      withdrawalSuccess: "ارسال از بررسی پس گرفته شد. پیش‌نویس ذخیره‌شده برای ویرایش و ارسال دوباره آماده است. هر نسخه‌ای که قبلاً منتشر شده، عمومی می‌ماند.",
+      withdrawalError: "پس‌گرفتن انجام نشد و هیچ تغییری تأیید نشده است. دوباره تلاش کنید یا فهرست را تازه‌سازی کنید تا وضعیت فعلی مشخص شود.",
+      withdrawalConflict: "وضعیت این مورد تغییر کرده است. پیش از تلاش دوباره، آن را تازه‌سازی کنید؛ پس‌گرفتن فقط در وضعیت ارسال‌شده امکان‌پذیر است.",
       reviewSubmission: "بازبینی پیش از ارسال",
       submissionSourceRequired: "منبع انتشار ذخیره‌شده را در مدیریت انتشارها تأیید و دوباره ارسال کنید. پیش‌نویس شما حفظ شده است.",
       submissionError: "ارسال انجام نشد. پیش‌نویس ذخیره‌شده در دسترس است. دوباره تلاش کنید یا به ویرایش پیش‌نویس برگردید.",

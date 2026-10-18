@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Download, ExternalLink, Layers3, Package, Pencil, Plus, RotateCcw, Star } from "lucide-react";
 import { ApiError, getCreatorDashboard } from "@/lib/api";
@@ -15,7 +15,7 @@ import { creatorWorkspace } from "./workspace-copy";
 import { listingStatusClass } from "@/lib/dashboard";
 
 const PAGE_SIZE = 12;
-type SubmissionFeedback = { id: string; message: string; sourceRequired?: boolean; success?: boolean } | null;
+type SubmissionFeedback = { id: string; message: string; sourceRequired?: boolean; refreshRequired?: boolean; success?: boolean } | null;
 
 export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
   const { locale, t } = useLocale();
@@ -28,6 +28,7 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [submissionFeedback, setSubmissionFeedback] = useState<SubmissionFeedback>(null);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const mutationPending = useRef(false);
 
   useEffect(() => { if (!loading) onReady?.(); }, [loading, onReady]);
 
@@ -37,6 +38,7 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
       .then((value) => {
         setResult(value);
         setError(false);
+        setSubmissionFeedback((feedback) => feedback?.refreshRequired ? null : feedback);
       })
       .catch(() => {
         if (!controller.signal.aborted) setError(true);
@@ -59,25 +61,29 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
     setPage(nextPage);
   }
 
-  async function submitForReview(listing: CreatorDashboardListing) {
+  async function transitionListing(listing: CreatorDashboardListing, action: "SUBMIT" | "WITHDRAW") {
+    if (mutationPending.current) return;
+    mutationPending.current = true;
     setSubmittingId(listing.id);
     setSubmissionFeedback(null);
     try {
-      const transition = await transitionCreatorListing(listing.id, listing.lifecycleVersion);
+      const transition = await transitionCreatorListing(listing.id, listing.lifecycleVersion, action);
       setResult((current) => current ? { ...current, data: { ...current.data, listings: current.data.listings.map((item) => item.id === listing.id ? { ...item, state: transition.state.toLowerCase(), lifecycleVersion: transition.version } : item) } } : current);
-      setSubmissionFeedback({ id: listing.id, message: hub.statusSubmitted, success: true });
+      setSubmissionFeedback({ id: listing.id, message: action === "WITHDRAW" ? hub.withdrawalSuccess : hub.statusSubmitted, success: true });
       setReviewingId(null);
       setLoading(true);
       setReload((value) => value + 1);
     } catch (cause) {
       const code = cause instanceof ApiError ? cause.code : "";
-      const message = code === "SOURCE_VERIFICATION_REQUIRED"
-        ? hub.submissionSourceRequired
-        : code === "LISTING_VERSION_CONFLICT"
-          ? t.creatorDraft.versionConflict
-          : hub.submissionError;
-      setSubmissionFeedback({ id: listing.id, message, sourceRequired: code === "SOURCE_VERIFICATION_REQUIRED" });
+      const refreshRequired = code === "LISTING_VERSION_CONFLICT" || code === "INVALID_LISTING_TRANSITION";
+      const message = refreshRequired
+        ? action === "WITHDRAW" ? hub.withdrawalConflict : t.creatorDraft.versionConflict
+        : code === "SOURCE_VERIFICATION_REQUIRED"
+          ? hub.submissionSourceRequired
+          : action === "WITHDRAW" ? hub.withdrawalError : hub.submissionError;
+      setSubmissionFeedback({ id: listing.id, message, sourceRequired: code === "SOURCE_VERIFICATION_REQUIRED", refreshRequired });
     } finally {
+      mutationPending.current = false;
       setSubmittingId(null);
     }
   }
@@ -142,20 +148,21 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
         submitting={submittingId !== null || loading}
         feedback={submissionFeedback?.id === listing.id ? submissionFeedback : null}
         reviewing={reviewingId === listing.id}
-        onReview={() => { setReviewingId(listing.id); setSubmissionFeedback(null); }}
+        onReview={() => { setReviewingId(listing.id); setSubmissionFeedback((feedback) => feedback?.id === listing.id && feedback.refreshRequired ? feedback : null); }}
         onCancel={() => setReviewingId(null)}
         onRefresh={retry}
-        onSubmit={submitForReview}
+        onSubmit={(item) => transitionListing(item, "SUBMIT")}
+        onWithdraw={(item) => transitionListing(item, "WITHDRAW")}
       />)}
     </div>}
 
     {result.meta.totalPages > 1 && <nav className="mt-6 flex items-center justify-between" aria-label={hub.paginationLabel}>
-      <Button variant="secondary" disabled={page <= 1 || loading} onClick={() => changePage(Math.max(1, page - 1))}>
+      <Button variant="secondary" disabled={page <= 1 || loading || submittingId !== null} onClick={() => changePage(Math.max(1, page - 1))}>
         {locale === "fa" ? <ArrowRight aria-hidden="true" className="size-4" /> : <ArrowLeft aria-hidden="true" className="size-4" />}
         {hub.previousPage}
       </Button>
       <span className="text-sm text-muted-foreground">{hub.pageStatus.replace("{page}", number.format(page)).replace("{pages}", number.format(result.meta.totalPages))}</span>
-      <Button variant="secondary" disabled={page >= result.meta.totalPages || loading} onClick={() => changePage(page + 1)}>
+      <Button variant="secondary" disabled={page >= result.meta.totalPages || loading || submittingId !== null} onClick={() => changePage(page + 1)}>
         {hub.nextPage}
         {locale === "fa" ? <ArrowLeft aria-hidden="true" className="size-4" /> : <ArrowRight aria-hidden="true" className="size-4" />}
       </Button>
@@ -172,7 +179,7 @@ function SummaryCard({ label, value, icon }: { label: string; value: string; ico
   </div>;
 }
 
-function ListingCard({ listing, submitting, feedback, reviewing, onReview, onCancel, onRefresh, onSubmit }: {
+function ListingCard({ listing, submitting, feedback, reviewing, onReview, onCancel, onRefresh, onSubmit, onWithdraw }: {
   listing: CreatorDashboardListing;
   submitting: boolean;
   feedback: SubmissionFeedback;
@@ -181,14 +188,16 @@ function ListingCard({ listing, submitting, feedback, reviewing, onReview, onCan
   onCancel: () => void;
   onRefresh: () => void;
   onSubmit: (listing: CreatorDashboardListing) => void;
+  onWithdraw: (listing: CreatorDashboardListing) => void;
 }) {
   const { locale, t } = useLocale();
   const hub = { ...t.creatorHub, ...creatorWorkspace[locale].creatorHub };
   const number = new Intl.NumberFormat(intlLocale(locale));
   const date = new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" });
   const stateLabel = listingStateLabel(listing.state, hub);
+  const withdrawable = listing.state === "submitted";
 
-  return <article className="rounded-none border bg-surface p-5 sm:p-6">
+  return <article className="rounded-none border bg-surface p-5 sm:p-6 [&_button]:scroll-mt-32 [&_button]:scroll-mb-[calc(6rem+env(safe-area-inset-bottom))]">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
@@ -207,22 +216,23 @@ function ListingCard({ listing, submitting, feedback, reviewing, onReview, onCan
         {isEditable(listing.state) && listing.state !== "published" && !reviewing && <Button size="sm" disabled={submitting} onClick={onReview}>
           {hub.reviewSubmission}
         </Button>}
+        {withdrawable && <Button size="sm" variant="secondary" disabled={submitting} aria-expanded={reviewing} aria-controls={`listing-review-${listing.id}`} onClick={reviewing ? onCancel : onReview}>{hub.withdrawReview}</Button>}
         {listing.published && <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/products/${listing.slug}`, locale)}>
           {hub.viewPublic}<ExternalLink aria-hidden="true" className="size-4" />
         </Link>}
       </div>
     </div>
 
-    {reviewing && <section className="mt-4 space-y-3 border-y py-4" aria-label={hub.reviewSubmission}>
-      <h4 className="font-semibold">{hub.reviewSubmission}: <bdi>{listing.name}</bdi></h4>
-      <p className="text-sm text-muted-foreground">{hub.submissionHelp}</p>
-      <div className="flex flex-wrap gap-3"><Button disabled={submitting} onClick={() => onSubmit(listing)}>{submitting ? hub.dashboardLoading : hub.actionSubmitted}</Button><Button variant="secondary" disabled={submitting} onClick={onCancel}>{hub.cancelSubmission}</Button></div>
+    {reviewing && (withdrawable || (isEditable(listing.state) && listing.state !== "published")) && <section id={`listing-review-${listing.id}`} className="mt-4 space-y-3 border-y py-4" aria-label={withdrawable ? hub.withdrawReview : hub.reviewSubmission}>
+      <h4 className="font-semibold">{withdrawable ? hub.withdrawReview : hub.reviewSubmission}: <bdi>{listing.name}</bdi></h4>
+      <p className="max-w-prose text-sm text-muted-foreground">{withdrawable ? hub.withdrawalHelp : hub.submissionHelp}</p>
+      <div className="flex flex-wrap gap-3"><Button disabled={submitting || feedback?.refreshRequired} onClick={() => withdrawable ? onWithdraw(listing) : onSubmit(listing)}>{submitting ? hub.dashboardLoading : withdrawable ? hub.confirmWithdrawal : hub.actionSubmitted}</Button><Button variant="secondary" disabled={submitting} onClick={onCancel}>{withdrawable ? hub.keepInReview : hub.cancelSubmission}</Button></div>
     </section>}
 
     {feedback && <div className={cn("mt-4 text-sm", feedback.success ? "text-emerald-700 dark:text-emerald-300" : "text-destructive")} role={feedback.success ? "status" : "alert"}>
       <span>{feedback.message}</span>
       {feedback.sourceRequired && <Link className="ms-2 font-semibold underline underline-offset-4" href={localePath(`/dashboard/studio/listings/${listing.id}/releases`, locale)}>{hub.manageReleases}</Link>}
-      {!feedback.success && <Button className="ms-2" size="sm" variant="secondary" onClick={onRefresh}>{hub.retry}</Button>}
+      {!feedback.success && <Button className="ms-2" size="sm" variant="secondary" disabled={submitting} onClick={onRefresh}>{hub.retry}</Button>}
     </div>}
 
     <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 border-y py-4 sm:grid-cols-4">

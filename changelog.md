@@ -4,6 +4,35 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-18
 
+- **Studio withdrawal from review (DC02, owner-requested).**
+  Connected the existing creator `WITHDRAW` lifecycle action to submitted
+  listing controls. Inline EN/FA confirmation explains the return to Draft,
+  preservation of saved work and continued visibility of any existing public
+  version. Cancellation sends no request. Success uses the returned lifecycle
+  version and refreshes listing/summary data; errors keep the saved listing,
+  while stale-version/invalid-transition responses require a successful refresh.
+  Duplicate actions and pagination during mutation are disabled. The disclosure
+  keeps its keyboard-focused trigger, and controls clear fixed navigation.
+  - Reused the Studio lifecycle transport and review checkpoint. Copy stays in
+    workspace-only `workspace-copy.ts`; no new dependency or API runtime change.
+    Added an API lifecycle regression test for snapshot/publication preservation
+    and invalid source states; ownership, moderation, source checks and the
+    localhost email-verification pause remain intact.
+  - Shared surface: `changelog.md` records this owner-assigned web capability;
+    the API test is touched only to pin the existing withdrawal contract.
+    Removed DC02 from the ignored local `ramtin-pending.md`; five capability
+    tasks remain. That local file and verification artifacts are not committed.
+  - Verification: root typecheck, 464 unit tests (5 database-dependent skips),
+    web lint, regular production build, 199 Chrome browser tests (29 conditional
+    skips; 4 local workers) and all nine Lighthouse runs passed existing gates.
+    Both locales/themes at 320/768/1280px passed 32 visual captures, 12 keyboard
+    hit-test/cancellation journeys and four failure/conflict/refresh recoveries,
+    with no overflow or page errors. The design detector returned no findings.
+    Manual connected-source/diff review found no unresolved issue. Artifacts:
+    `maintenance/dashboard-withdraw-20261018/` (ignored). Physical devices,
+    live database mutations, CI and native Persian copy review were not tested;
+    no real listing changed. Existing tighter performance targets remain open.
+
 - **Dashboard capability audit and Settings account security (owner-requested).**
   Compared marketplace/reader routes with dashboard, creator, account and
   moderation callers. Recorded seven confirmed dashboard gaps in the ignored

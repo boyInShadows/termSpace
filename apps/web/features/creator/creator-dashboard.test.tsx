@@ -96,7 +96,7 @@ describe("CreatorDashboard", () => {
     expect(transitionListing).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Submit for review" }));
 
-    await waitFor(() => expect(transitionListing).toHaveBeenCalledWith("product-1", 3));
+    await waitFor(() => expect(transitionListing).toHaveBeenCalledWith("product-1", 3, "SUBMIT"));
     expect(await screen.findByText("Submitted", { selector: "span" })).toBeInTheDocument();
     await waitFor(() => expect(getDashboard).toHaveBeenCalledTimes(2));
   });
@@ -123,5 +123,93 @@ describe("CreatorDashboard", () => {
     render(<CreatorDashboard />);
     await screen.findByRole("heading", { name: "Owned Skill" });
     expect(screen.getByText("۲۷")).toBeInTheDocument();
+  });
+
+  it.each(["draft", "changes_requested", "rejected", "approved", "published", "suspended", "archived"])("does not offer withdrawal for %s", async (state) => {
+    const result = dashboardResult();
+    result.data.listings[0].state = state;
+    getDashboard.mockResolvedValue(result);
+    render(<CreatorDashboard />);
+    await screen.findByRole("heading", { name: "Owned Skill" });
+    expect(screen.queryByRole("button", { name: creatorWorkspace.en.creatorHub.withdrawReview })).not.toBeInTheDocument();
+  });
+
+  it.each(["en", "fa"] as const)("confirms, cancels and withdraws without hiding an existing publication (%s)", async (locale) => {
+    localeState.locale = locale;
+    const hub = creatorWorkspace[locale].creatorHub;
+    const before = dashboardResult();
+    before.data.listings[0].state = "submitted";
+    const after = dashboardResult();
+    after.data.listings[0].state = "draft";
+    after.data.listings[0].lifecycleVersion = 4;
+    after.data.summary.inReviewListings = 1;
+    getDashboard.mockResolvedValueOnce(before).mockResolvedValue(after);
+    let complete!: (value: { state: string; version: number }) => void;
+    transitionListing.mockReturnValue(new Promise((resolve) => { complete = resolve; }));
+    render(<CreatorDashboard />);
+    await screen.findByRole("heading", { name: "Owned Skill" });
+    fireEvent.click(screen.getByRole("button", { name: hub.withdrawReview }));
+    expect(screen.getByText(hub.withdrawalHelp)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: hub.keepInReview }));
+    expect(transitionListing).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: hub.withdrawReview }));
+    const confirm = screen.getByRole("button", { name: hub.confirmWithdrawal });
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+    expect(confirm).toBeDisabled();
+    expect(screen.getByRole("button", { name: hub.keepInReview })).toBeDisabled();
+    expect(transitionListing).toHaveBeenCalledExactlyOnceWith("product-1", 3, "WITHDRAW");
+    complete({ state: "draft", version: 4 });
+    await screen.findByText(hub.withdrawalSuccess);
+    await waitFor(() => expect(getDashboard).toHaveBeenCalledTimes(2));
+    expect(screen.getByText("Draft", { selector: "span" })).toBeInTheDocument();
+    const count = screen.getByText("In review").closest("div")!;
+    expect(within(count).getByText(locale === "fa" ? "۱" : "1")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Edit draft/ })).toHaveAttribute("href", `${locale === "fa" ? "/fa" : ""}/dashboard/studio/listings/product-1/edit`);
+    expect(screen.getByRole("link", { name: /View public page/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: hub.withdrawReview })).not.toBeInTheDocument();
+  });
+
+  it.each(["LISTING_VERSION_CONFLICT", "INVALID_LISTING_TRANSITION"])("requires a successful refresh after %s", async (code) => {
+    const hub = creatorWorkspace.en.creatorHub;
+    const before = dashboardResult();
+    before.data.listings[0].state = "submitted";
+    const after = dashboardResult();
+    after.data.listings[0].state = "approved";
+    getDashboard.mockResolvedValueOnce(before).mockRejectedValueOnce(new Error("Offline")).mockResolvedValue(after);
+    transitionListing.mockRejectedValue(new ApiError(409, code, "Changed"));
+    render(<CreatorDashboard />);
+    await screen.findByRole("heading", { name: "Owned Skill" });
+    fireEvent.click(screen.getByRole("button", { name: hub.withdrawReview }));
+    fireEvent.click(screen.getByRole("button", { name: hub.confirmWithdrawal }));
+    await screen.findByText(hub.withdrawalConflict);
+    expect(screen.getByRole("button", { name: hub.confirmWithdrawal })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: hub.keepInReview }));
+    fireEvent.click(screen.getByRole("button", { name: hub.withdrawReview }));
+    expect(screen.getByRole("button", { name: hub.confirmWithdrawal })).toBeDisabled();
+    fireEvent.click(within(screen.getByRole("alert")).getByRole("button", { name: "Try again" }));
+    await screen.findByText("Dashboard failed");
+    expect(screen.getByRole("button", { name: hub.confirmWithdrawal })).toBeDisabled();
+    fireEvent.click(within(screen.getByText("Dashboard failed").parentElement!).getByRole("button", { name: "Try again" }));
+    await screen.findByText("Approved", { selector: "span" });
+    expect(screen.queryByRole("button", { name: hub.confirmWithdrawal })).not.toBeInTheDocument();
+    expect(transitionListing).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the submitted listing and permits retry after an unconfirmed failure", async () => {
+    const hub = creatorWorkspace.en.creatorHub;
+    const result = dashboardResult();
+    result.data.listings[0].state = "submitted";
+    getDashboard.mockResolvedValue(result);
+    transitionListing.mockRejectedValueOnce(new Error("Offline")).mockResolvedValueOnce({ state: "draft", version: 4 });
+    render(<CreatorDashboard />);
+    await screen.findByRole("heading", { name: "Owned Skill" });
+    fireEvent.click(screen.getByRole("button", { name: hub.withdrawReview }));
+    fireEvent.click(screen.getByRole("button", { name: hub.confirmWithdrawal }));
+    await screen.findByText(hub.withdrawalError);
+    expect(screen.getByText("Submitted", { selector: "span" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: hub.confirmWithdrawal }));
+    await screen.findByText(hub.withdrawalSuccess);
+    expect(transitionListing).toHaveBeenCalledTimes(2);
   });
 });
