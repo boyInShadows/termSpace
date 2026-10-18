@@ -44,7 +44,7 @@ function dashboardResult(page = 1) {
       summary: { totalListings: 13, publishedListings: 4, inReviewListings: 2, totalAcquisitions: 27 },
       listings: [{
         id: `product-${page}`, slug: "owned-skill", name: "Owned Skill", type: "Skill", typeKey: "skill",
-        state: "changes_requested", lifecycleVersion: 3, published: true, rating: 4.5, reviewCount: 2,
+        state: "changes_requested", lifecycleVersion: 3, published: true, restoreTarget: null as { state: string; published: boolean } | null, rating: 4.5, reviewCount: 2,
         acquisitionCount: 7, currentVersion: "1.1.0", releaseCount: 2,
         latestRelease: { version: "1.1.0", releasedAt: "2026-09-15T10:00:00.000Z" },
         moderationFeedback: { action: "changes_requested", reasonCode: "PERMISSIONS_UNCLEAR", message: "Clarify network access.", createdAt: "2026-09-16T09:00:00.000Z" },
@@ -144,7 +144,7 @@ describe("CreatorDashboard", () => {
     after.data.listings[0].lifecycleVersion = 4;
     after.data.summary.inReviewListings = 1;
     getDashboard.mockResolvedValueOnce(before).mockResolvedValue(after);
-    let complete!: (value: { state: string; version: number }) => void;
+    let complete!: (value: { state: string; version: number; published: boolean }) => void;
     transitionListing.mockReturnValue(new Promise((resolve) => { complete = resolve; }));
     render(<CreatorDashboard />);
     await screen.findByRole("heading", { name: "Owned Skill" });
@@ -159,7 +159,7 @@ describe("CreatorDashboard", () => {
     expect(confirm).toBeDisabled();
     expect(screen.getByRole("button", { name: hub.keepInReview })).toBeDisabled();
     expect(transitionListing).toHaveBeenCalledExactlyOnceWith("product-1", 3, "WITHDRAW");
-    complete({ state: "draft", version: 4 });
+    complete({ state: "draft", version: 4, published: true });
     await screen.findByText(hub.withdrawalSuccess);
     await waitFor(() => expect(getDashboard).toHaveBeenCalledTimes(2));
     expect(screen.getByText("Draft", { selector: "span" })).toBeInTheDocument();
@@ -196,12 +196,111 @@ describe("CreatorDashboard", () => {
     expect(transitionListing).toHaveBeenCalledTimes(1);
   });
 
+  it.each(["draft", "submitted", "changes_requested", "approved", "published", "rejected"])("offers cancellable archive only for an allowed state: %s", async (state) => {
+    const hub = creatorWorkspace.en.creatorHub;
+    const result = dashboardResult();
+    result.data.listings[0].state = state;
+    getDashboard.mockResolvedValue(result);
+    render(<CreatorDashboard />);
+    const button = await screen.findByRole("button", { name: hub.archiveListing });
+    fireEvent.click(button);
+    expect(screen.getByText(hub.archiveHelp)).toBeInTheDocument();
+    const cancel = screen.getByRole("button", { name: hub.cancelArchive });
+    cancel.focus();
+    fireEvent.click(cancel);
+    expect(button).toHaveFocus();
+    expect(screen.queryByRole("button", { name: hub.confirmArchive })).not.toBeInTheDocument();
+    expect(transitionListing).not.toHaveBeenCalled();
+  });
+
+  it.each(["suspended", "archived"])("does not allow archive/restore for %s without a server restore target", async (state) => {
+    const hub = creatorWorkspace.en.creatorHub;
+    const result = dashboardResult();
+    result.data.listings[0].state = state;
+    getDashboard.mockResolvedValue(result);
+    render(<CreatorDashboard />);
+    await screen.findByRole("heading", { name: "Owned Skill" });
+    expect(screen.queryByRole("button", { name: hub.archiveListing })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: hub.restoreListing })).not.toBeInTheDocument();
+    if (state === "archived") expect(screen.getByText(hub.restoreUnavailable)).toBeInTheDocument();
+  });
+
+  it.each([true, false])("archives and restores the server's previous state with published=%s", async (published) => {
+    const hub = creatorWorkspace.en.creatorHub;
+    const state = published ? "published" : "submitted";
+    const before = dashboardResult();
+    Object.assign(before.data.listings[0], { state, published });
+    const archived = dashboardResult();
+    Object.assign(archived.data.listings[0], { state: "archived", lifecycleVersion: 4, published: false, restoreTarget: { state, published } });
+    archived.data.summary.publishedListings = 0;
+    archived.data.summary.inReviewListings = 0;
+    const restored = dashboardResult();
+    Object.assign(restored.data.listings[0], { state, published, lifecycleVersion: 5 });
+    getDashboard.mockResolvedValueOnce(before).mockResolvedValueOnce(archived).mockResolvedValueOnce(restored);
+    transitionListing.mockResolvedValueOnce({ state: "archived", version: 4, published: false }).mockResolvedValueOnce({ state, version: 5, published });
+    render(<CreatorDashboard />);
+    fireEvent.click(await screen.findByRole("button", { name: hub.archiveListing }));
+    fireEvent.click(screen.getByRole("button", { name: hub.confirmArchive }));
+    await screen.findByText(hub.archiveSuccess);
+    const restore = await screen.findByRole("button", { name: hub.restoreListing });
+    expect(screen.queryByRole("link", { name: /View public page/ })).not.toBeInTheDocument();
+    fireEvent.click(restore);
+    expect(screen.getByText(published ? hub.restorePublicHelp : hub.restorePrivateHelp, { exact: false })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: hub.cancelRestore }));
+    expect(transitionListing).toHaveBeenCalledTimes(1);
+    fireEvent.click(restore);
+    fireEvent.click(screen.getByRole("button", { name: hub.confirmRestore }));
+    await screen.findByText(hub.restoreSuccess);
+    await waitFor(() => expect(getDashboard).toHaveBeenCalledTimes(3));
+    expect(transitionListing.mock.calls).toEqual([["product-1", 3, "ARCHIVE"], ["product-1", 4, "RESTORE"]]);
+    expect(screen.queryByRole("link", { name: /View public page/ }) !== null).toBe(published);
+    expect(screen.getByText(published ? "Published" : "Submitted", { selector: "span" })).toBeInTheDocument();
+  });
+
+  it("keeps an archived listing and explains approved-source blockers before retrying restore", async () => {
+    const hub = creatorWorkspace.en.creatorHub;
+    const result = dashboardResult();
+    Object.assign(result.data.listings[0], { state: "archived", published: false, restoreTarget: { state: "published", published: true } });
+    getDashboard.mockResolvedValue(result);
+    transitionListing.mockRejectedValueOnce(new ApiError(409, "SOURCE_VERIFICATION_REQUIRED", "Source required"))
+      .mockRejectedValueOnce(new Error("Offline"));
+    render(<CreatorDashboard />);
+    fireEvent.click(await screen.findByRole("button", { name: hub.restoreListing }));
+    fireEvent.click(screen.getByRole("button", { name: hub.confirmRestore }));
+    expect(await screen.findByText(hub.restoreSourceRequired)).toBeInTheDocument();
+    expect(within(screen.getByRole("alert")).getByRole("link", { name: "Manage releases" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /View public page/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: hub.confirmRestore }));
+    expect(await screen.findByText(hub.archiveError)).toBeInTheDocument();
+    expect(screen.getByText("Archived", { selector: "span" })).toBeInTheDocument();
+  });
+
+  it("refreshes a stale restore and removes the action when staff archived it", async () => {
+    const hub = creatorWorkspace.en.creatorHub;
+    const before = dashboardResult();
+    Object.assign(before.data.listings[0], { state: "archived", published: false, restoreTarget: { state: "draft", published: false } });
+    const after = dashboardResult();
+    Object.assign(after.data.listings[0], { state: "archived", published: false, lifecycleVersion: 4 });
+    getDashboard.mockResolvedValueOnce(before).mockResolvedValueOnce(after);
+    transitionListing.mockRejectedValue(new ApiError(409, "INVALID_LISTING_TRANSITION", "Staff archive"));
+    render(<CreatorDashboard />);
+    fireEvent.click(await screen.findByRole("button", { name: hub.restoreListing }));
+    fireEvent.click(screen.getByRole("button", { name: hub.confirmRestore }));
+    await screen.findByText(hub.archiveConflict);
+    expect(screen.getByRole("button", { name: hub.confirmRestore })).toBeDisabled();
+    fireEvent.click(within(screen.getByRole("alert")).getByRole("button", { name: "Try again" }));
+    await screen.findByText(hub.restoreUnavailable);
+    expect(screen.queryByRole("button", { name: hub.restoreListing })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: hub.confirmRestore })).not.toBeInTheDocument();
+    expect(transitionListing).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps the submitted listing and permits retry after an unconfirmed failure", async () => {
     const hub = creatorWorkspace.en.creatorHub;
     const result = dashboardResult();
     result.data.listings[0].state = "submitted";
     getDashboard.mockResolvedValue(result);
-    transitionListing.mockRejectedValueOnce(new Error("Offline")).mockResolvedValueOnce({ state: "draft", version: 4 });
+    transitionListing.mockRejectedValueOnce(new Error("Offline")).mockResolvedValueOnce({ state: "draft", version: 4, published: true });
     render(<CreatorDashboard />);
     await screen.findByRole("heading", { name: "Owned Skill" });
     fireEvent.click(screen.getByRole("button", { name: hub.withdrawReview }));

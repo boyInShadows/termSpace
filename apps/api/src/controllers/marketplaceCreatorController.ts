@@ -25,6 +25,8 @@ const creatorDashboardListingSelect = {
   type: true,
   lifecycleState: true,
   lifecycleVersion: true,
+  lifecycleResumeState: true,
+  lifecycleResumePublished: true,
   published: true,
   rating: true,
   reviewCount: true,
@@ -54,6 +56,7 @@ type CreatorDashboardListingRecord = Prisma.MarketplaceProductGetPayload<{ selec
 function serializeDashboardListing(
   product: CreatorDashboardListingRecord,
   feedback: { action: string; reasonCode: string; publicReason: string | null; createdAt: Date } | undefined,
+  archivedBy: string | undefined,
 ) {
   return {
     id: product.id,
@@ -64,6 +67,9 @@ function serializeDashboardListing(
     state: product.lifecycleState.toLowerCase(),
     lifecycleVersion: product.lifecycleVersion,
     published: product.published,
+    restoreTarget: product.lifecycleState === "ARCHIVED" && archivedBy === "CREATOR"
+      && product.lifecycleResumeState && product.lifecycleResumePublished !== null
+      ? { state: product.lifecycleResumeState.toLowerCase(), published: product.lifecycleResumePublished } : null,
     rating: Number(product.rating),
     reviewCount: product.reviewCount,
     acquisitionCount: product._count.orders,
@@ -241,6 +247,14 @@ export async function getCreatorDashboard(req: Request, res: Response) {
     select: { productId: true, action: true, reasonCode: true, publicReason: true, createdAt: true },
   }) : [];
   const feedbackByProduct = new Map(feedbackEvents.map((event) => [event.productId, event]));
+  const archivedIds = listings.filter((listing) => listing.lifecycleState === "ARCHIVED").map((listing) => listing.id);
+  const archiveEvents = archivedIds.length ? await prisma.marketplaceListingLifecycleEvent.findMany({
+    where: { productId: { in: archivedIds }, product: ownerWhere, action: "ARCHIVED" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    distinct: ["productId"],
+    select: { productId: true, actorType: true },
+  }) : [];
+  const archivedByProduct = new Map(archiveEvents.map((event) => [event.productId, event.actorType]));
 
   res.json({
     data: {
@@ -249,7 +263,7 @@ export async function getCreatorDashboard(req: Request, res: Response) {
         acquisitionsLast7Days, acquisitionsPrevious7Days,
         ...reviewWeightedRating(ratedListings),
       },
-      listings: listings.map((listing) => serializeDashboardListing(listing, feedbackByProduct.get(listing.id))),
+      listings: listings.map((listing) => serializeDashboardListing(listing, feedbackByProduct.get(listing.id), archivedByProduct.get(listing.id))),
     },
     meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
   });

@@ -140,7 +140,7 @@ test("submission recovers source blockers and stale versions without publishing"
     if (attempt === 1) return route.fulfill({ status: 409, json: { error: { code: "SOURCE_VERIFICATION_REQUIRED", message: "Source required" } } });
     if (attempt === 2) { version = 2; return route.fulfill({ status: 409, json: { error: { code: "LISTING_VERSION_CONFLICT", message: "Stale" } } }); }
     submitted = true;
-    return route.fulfill({ json: { data: { state: "submitted", version: 3 } } });
+    return route.fulfill({ json: { data: { state: "submitted", version: 3, published: false } } });
   });
   await page.goto("/dashboard/studio");
   const listing = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Release Notes Writer" }) });

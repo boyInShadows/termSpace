@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Download, ExternalLink, Layers3, Package, Pencil, Plus, RotateCcw, Star } from "lucide-react";
 import { ApiError, getCreatorDashboard } from "@/lib/api";
-import { transitionCreatorListing } from "./creator-api";
+import { transitionCreatorListing, type CreatorListingAction } from "./creator-api";
 import type { CreatorDashboardResult, CreatorDashboardListing } from "@/lib/types";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
@@ -27,7 +27,7 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
   const [reload, setReload] = useState(0);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [submissionFeedback, setSubmissionFeedback] = useState<SubmissionFeedback>(null);
-  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [reviewing, setReviewing] = useState<{ id: string; action: CreatorListingAction } | null>(null);
   const mutationPending = useRef(false);
 
   useEffect(() => { if (!loading) onReady?.(); }, [loading, onReady]);
@@ -61,26 +61,28 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
     setPage(nextPage);
   }
 
-  async function transitionListing(listing: CreatorDashboardListing, action: "SUBMIT" | "WITHDRAW") {
+  async function transitionListing(listing: CreatorDashboardListing, action: CreatorListingAction) {
     if (mutationPending.current) return;
     mutationPending.current = true;
     setSubmittingId(listing.id);
     setSubmissionFeedback(null);
     try {
       const transition = await transitionCreatorListing(listing.id, listing.lifecycleVersion, action);
-      setResult((current) => current ? { ...current, data: { ...current.data, listings: current.data.listings.map((item) => item.id === listing.id ? { ...item, state: transition.state.toLowerCase(), lifecycleVersion: transition.version } : item) } } : current);
-      setSubmissionFeedback({ id: listing.id, message: action === "WITHDRAW" ? hub.withdrawalSuccess : hub.statusSubmitted, success: true });
-      setReviewingId(null);
+      setResult((current) => current ? { ...current, data: { ...current.data, listings: current.data.listings.map((item) => item.id === listing.id ? { ...item, state: transition.state.toLowerCase(), lifecycleVersion: transition.version, published: transition.published, restoreTarget: null } : item) } } : current);
+      const message = { SUBMIT: hub.statusSubmitted, WITHDRAW: hub.withdrawalSuccess, ARCHIVE: hub.archiveSuccess, RESTORE: hub.restoreSuccess }[action];
+      setSubmissionFeedback({ id: listing.id, message, success: true });
+      setReviewing(null);
       setLoading(true);
       setReload((value) => value + 1);
     } catch (cause) {
       const code = cause instanceof ApiError ? cause.code : "";
       const refreshRequired = code === "LISTING_VERSION_CONFLICT" || code === "INVALID_LISTING_TRANSITION";
+      const archiveAction = action === "ARCHIVE" || action === "RESTORE";
       const message = refreshRequired
-        ? action === "WITHDRAW" ? hub.withdrawalConflict : t.creatorDraft.versionConflict
+        ? archiveAction ? hub.archiveConflict : action === "WITHDRAW" ? hub.withdrawalConflict : t.creatorDraft.versionConflict
         : code === "SOURCE_VERIFICATION_REQUIRED"
-          ? hub.submissionSourceRequired
-          : action === "WITHDRAW" ? hub.withdrawalError : hub.submissionError;
+          ? action === "RESTORE" ? hub.restoreSourceRequired : hub.submissionSourceRequired
+          : archiveAction ? hub.archiveError : action === "WITHDRAW" ? hub.withdrawalError : hub.submissionError;
       setSubmissionFeedback({ id: listing.id, message, sourceRequired: code === "SOURCE_VERIFICATION_REQUIRED", refreshRequired });
     } finally {
       mutationPending.current = false;
@@ -147,12 +149,11 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
         listing={listing}
         submitting={submittingId !== null || loading}
         feedback={submissionFeedback?.id === listing.id ? submissionFeedback : null}
-        reviewing={reviewingId === listing.id}
-        onReview={() => { setReviewingId(listing.id); setSubmissionFeedback((feedback) => feedback?.id === listing.id && feedback.refreshRequired ? feedback : null); }}
-        onCancel={() => setReviewingId(null)}
+        action={reviewing?.id === listing.id ? reviewing.action : null}
+        onReview={(action) => { setReviewing({ id: listing.id, action }); setSubmissionFeedback((feedback) => feedback?.id === listing.id && feedback.refreshRequired ? feedback : null); }}
+        onCancel={() => setReviewing(null)}
         onRefresh={retry}
-        onSubmit={(item) => transitionListing(item, "SUBMIT")}
-        onWithdraw={(item) => transitionListing(item, "WITHDRAW")}
+        onTransition={transitionListing}
       />)}
     </div>}
 
@@ -179,16 +180,15 @@ function SummaryCard({ label, value, icon }: { label: string; value: string; ico
   </div>;
 }
 
-function ListingCard({ listing, submitting, feedback, reviewing, onReview, onCancel, onRefresh, onSubmit, onWithdraw }: {
+function ListingCard({ listing, submitting, feedback, action, onReview, onCancel, onRefresh, onTransition }: {
   listing: CreatorDashboardListing;
   submitting: boolean;
   feedback: SubmissionFeedback;
-  reviewing: boolean;
-  onReview: () => void;
+  action: CreatorListingAction | null;
+  onReview: (action: CreatorListingAction) => void;
   onCancel: () => void;
   onRefresh: () => void;
-  onSubmit: (listing: CreatorDashboardListing) => void;
-  onWithdraw: (listing: CreatorDashboardListing) => void;
+  onTransition: (listing: CreatorDashboardListing, action: CreatorListingAction) => void;
 }) {
   const { locale, t } = useLocale();
   const hub = { ...t.creatorHub, ...creatorWorkspace[locale].creatorHub };
@@ -196,6 +196,24 @@ function ListingCard({ listing, submitting, feedback, reviewing, onReview, onCan
   const date = new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" });
   const stateLabel = listingStateLabel(listing.state, hub);
   const withdrawable = listing.state === "submitted";
+  const archivable = ["draft", "submitted", "changes_requested", "approved", "published", "rejected"].includes(listing.state);
+  const restorable = listing.state === "archived" && Boolean(listing.restoreTarget);
+  const actionCopy = {
+    SUBMIT: { title: hub.reviewSubmission, help: hub.submissionHelp, confirm: hub.actionSubmitted, cancel: hub.cancelSubmission },
+    WITHDRAW: { title: hub.withdrawReview, help: hub.withdrawalHelp, confirm: hub.confirmWithdrawal, cancel: hub.keepInReview },
+    ARCHIVE: { title: hub.archiveListing, help: hub.archiveHelp, confirm: hub.confirmArchive, cancel: hub.cancelArchive },
+    RESTORE: { title: hub.restoreListing, help: hub.restoreHelp.replace("{state}", listingStateLabel(listing.restoreTarget?.state ?? "", hub)) + " " + (listing.restoreTarget?.published ? hub.restorePublicHelp : hub.restorePrivateHelp), confirm: hub.confirmRestore, cancel: hub.cancelRestore },
+  };
+  const canConfirm = action === "SUBMIT" ? isEditable(listing.state) && listing.state !== "published"
+    : action === "WITHDRAW" ? withdrawable : action === "ARCHIVE" ? archivable : action === "RESTORE" && restorable;
+  const confirmation = action && canConfirm ? actionCopy[action] : null;
+  const secondaryActions = (["WITHDRAW", "ARCHIVE", "RESTORE"] as const).filter((item) => item === "WITHDRAW" ? withdrawable : item === "ARCHIVE" ? archivable : restorable);
+  const trigger = useRef<HTMLButtonElement | null>(null);
+
+  function cancel() {
+    onCancel();
+    trigger.current?.focus();
+  }
 
   return <article className="rounded-none border bg-surface p-5 sm:p-6 [&_button]:scroll-mt-32 [&_button]:scroll-mb-[calc(6rem+env(safe-area-inset-bottom))]">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -213,21 +231,23 @@ function ListingCard({ listing, submitting, feedback, reviewing, onReview, onCan
         <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/dashboard/studio/listings/${listing.id}/releases`, locale)}>
           <Layers3 aria-hidden="true" className="size-4" />{hub.manageReleases}
         </Link>
-        {isEditable(listing.state) && listing.state !== "published" && !reviewing && <Button size="sm" disabled={submitting} onClick={onReview}>
+        {isEditable(listing.state) && listing.state !== "published" && !action && <Button size="sm" disabled={submitting} onClick={() => onReview("SUBMIT")}>
           {hub.reviewSubmission}
         </Button>}
-        {withdrawable && <Button size="sm" variant="secondary" disabled={submitting} aria-expanded={reviewing} aria-controls={`listing-review-${listing.id}`} onClick={reviewing ? onCancel : onReview}>{hub.withdrawReview}</Button>}
+        {secondaryActions.map((item) => <Button key={item} size="sm" variant="secondary" disabled={submitting} aria-expanded={action === item && canConfirm} aria-controls={`listing-review-${listing.id}`} onClick={(event) => { trigger.current = event.currentTarget; if (action === item) cancel(); else onReview(item); }}>{actionCopy[item].title}</Button>)}
         {listing.published && <Link className={buttonVariants({ variant: "secondary", size: "sm" })} href={localePath(`/products/${listing.slug}`, locale)}>
           {hub.viewPublic}<ExternalLink aria-hidden="true" className="size-4" />
         </Link>}
       </div>
     </div>
 
-    {reviewing && (withdrawable || (isEditable(listing.state) && listing.state !== "published")) && <section id={`listing-review-${listing.id}`} className="mt-4 space-y-3 border-y py-4" aria-label={withdrawable ? hub.withdrawReview : hub.reviewSubmission}>
-      <h4 className="font-semibold">{withdrawable ? hub.withdrawReview : hub.reviewSubmission}: <bdi>{listing.name}</bdi></h4>
-      <p className="max-w-prose text-sm text-muted-foreground">{withdrawable ? hub.withdrawalHelp : hub.submissionHelp}</p>
-      <div className="flex flex-wrap gap-3"><Button disabled={submitting || feedback?.refreshRequired} onClick={() => withdrawable ? onWithdraw(listing) : onSubmit(listing)}>{submitting ? hub.dashboardLoading : withdrawable ? hub.confirmWithdrawal : hub.actionSubmitted}</Button><Button variant="secondary" disabled={submitting} onClick={onCancel}>{withdrawable ? hub.keepInReview : hub.cancelSubmission}</Button></div>
+    {confirmation && action && <section id={`listing-review-${listing.id}`} className="mt-4 space-y-3 border-y py-4" aria-label={confirmation.title}>
+      <h4 className="font-semibold">{confirmation.title}: <bdi>{listing.name}</bdi></h4>
+      <p className="max-w-prose text-sm text-muted-foreground">{confirmation.help}</p>
+      <div className="flex flex-wrap gap-3"><Button disabled={submitting || feedback?.refreshRequired} onClick={() => onTransition(listing, action)}>{submitting ? hub.dashboardLoading : confirmation.confirm}</Button><Button variant="secondary" disabled={submitting} onClick={cancel}>{confirmation.cancel}</Button></div>
     </section>}
+
+    {listing.state === "archived" && !restorable && !submitting && <div className="mt-4 max-w-prose text-sm text-muted-foreground"><p>{hub.restoreUnavailable}</p><Button className="mt-2" size="sm" variant="secondary" onClick={onRefresh}>{hub.retry}</Button></div>}
 
     {feedback && <div className={cn("mt-4 text-sm", feedback.success ? "text-emerald-700 dark:text-emerald-300" : "text-destructive")} role={feedback.success ? "status" : "alert"}>
       <span>{feedback.message}</span>

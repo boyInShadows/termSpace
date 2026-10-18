@@ -4,6 +4,46 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-18
 
+- **Studio archive and restore controls (DC03, owner-requested).**
+  Creators can archive eligible owned listings and restore recoverable creator
+  archives through the existing lifecycle endpoint. EN/FA confirmations explain
+  visibility and review-queue changes, preserve saved work/releases/acquisitions,
+  and describe the exact prior state before restoration. Suspended listings have
+  no archive control; staff archives and missing restore points have no creator
+  restore control. Cancellation sends nothing and returns keyboard focus.
+  - `apps/api/src/controllers/marketplaceCreatorController.ts` now selects the
+    saved resume fields and queries the latest archive actor for archived items
+    on the owner-scoped page. It exposes only a nullable restore target; actor
+    identities and raw lifecycle fields remain private. The lookup is separate
+    from the recent-activity window, so later non-archive events cannot hide it.
+    `marketplaceLifecycleController.ts` uses the same deterministic timestamp/id
+    ordering for the authoritative archive-actor check. Both backend touches are
+    needed for this owner-assigned dashboard capability; no migration or role,
+    moderation, source-verification or legacy-source exception was changed.
+  - Shared surface: `apps/web/lib/types.ts` gains the additive owner-only restore
+    target. Studio reuses one lifecycle transport/checkpoint, consumes returned
+    visibility/version, refreshes listings/counts, blocks duplicate mutations and
+    requires a successful refresh after conflicts. Source blockers explain the
+    approved-release restriction and link to release status/staff assistance.
+    Copy remains workspace-only; fixtures match the full lifecycle response.
+    No deletion or publication/moderation override was added.
+  - Removed DC03 from the ignored local `ramtin-pending.md`; four dashboard
+    capability tasks remain. Shared `changelog.md` records the cross-lane scope.
+    Restarted the owned local API to load the additive response; API/database
+    health and Studio return 200. The localhost email pause remains enabled.
+  - Verification: root typecheck, 488 unit tests (5 database-dependent skips),
+    web lint, regular production build, 213 browser tests (29 conditional skips;
+    4 local Chrome workers) and all nine Lighthouse runs passed existing gates.
+    Both locales/themes at 320/768/1280px passed 44 captures, 24 native-keyboard
+    hit-test/cancel journeys and four source/conflict/retry recoveries, with no
+    overflow or page errors. The design detector found no issue. An initial
+    English browser assertion matched both the Published badge and history;
+    scoped it to the badge and reran the full suite. Failure evidence remains
+    under `maintenance/dashboard-archive-20261018/` (ignored). Manual connected
+    source/diff review found no unresolved issue. No real listing changed;
+    live mutations/provider checks, physical devices, CI and native Persian
+    wording review were not tested. Tighter performance targets remain open.
+
 - **Studio withdrawal from review (DC02, owner-requested).**
   Connected the existing creator `WITHDRAW` lifecycle action to submitted
   listing controls. Inline EN/FA confirmation explains the return to Draft,

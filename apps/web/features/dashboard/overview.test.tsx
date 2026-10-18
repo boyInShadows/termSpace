@@ -31,7 +31,7 @@ function creatorHome(listingCount = 1): DashboardHome {
       },
       listings: Array.from({ length: listingCount }, (_, index) => ({
         id: `listing-${index}`, slug: `listing-${index}`, name: `Conversion Copywriter ${index}`, type: "Skill", typeKey: "skill",
-        state: "changes_requested", lifecycleVersion: 1, published: true, rating: 0, reviewCount: 0,
+        state: "changes_requested", lifecycleVersion: 1, published: true, restoreTarget: null, rating: 0, reviewCount: 0,
         acquisitionCount: 41, currentVersion: "2.4.0", releaseCount: 1, latestRelease: null, moderationFeedback: null,
         recentUpdates: [{ id: `event-${index}`, action: "published", state: "published", message: null, createdAt: "2026-09-20T10:00:00Z" }],
         updatedAt: "2026-09-20T10:00:00Z",

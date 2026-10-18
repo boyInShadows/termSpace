@@ -54,6 +54,7 @@ function listing(index) {
     typeKey: "skill",
     state,
     lifecycleVersion: 1,
+    restoreTarget: null,
     published: state === "published",
     rating: state === "published" ? 4.6 : 0,
     reviewCount: state === "published" ? 12 : 0,

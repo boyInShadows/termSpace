@@ -17,6 +17,7 @@ export interface CreatorModerationFeedback {
 export interface CreatorDashboardListing {
   id: string; slug: string; name: string; type: ProductType; typeKey: MarketplaceItemTypeKey | null;
   state: string; lifecycleVersion: number; published: boolean; rating: number; reviewCount: number;
+  restoreTarget: { state: string; published: boolean } | null;
   acquisitionCount: number; currentVersion: string; releaseCount: number;
   latestRelease: { version: string; releasedAt: string } | null;
   moderationFeedback: CreatorModerationFeedback | null; recentUpdates: CreatorDashboardEvent[]; updatedAt: string;

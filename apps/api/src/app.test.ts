@@ -889,6 +889,47 @@ describe("API", () => {
     }) });
   });
 
+  it.each([
+    { action: "ARCHIVE", state: "PUBLISHED", next: "ARCHIVED", visible: false },
+    { action: "RESTORE", state: "ARCHIVED", next: "PUBLISHED", visible: true },
+    { action: "RESTORE", state: "ARCHIVED", next: "SUBMITTED", visible: false, resume: "SUBMITTED", resumePublished: false },
+    { action: "RESTORE", state: "ARCHIVED", code: "SOURCE_VERIFICATION_REQUIRED", verified: false },
+    { action: "RESTORE", state: "ARCHIVED", code: "INVALID_LISTING_TRANSITION", actor: "MODERATOR" },
+    { action: "RESTORE", state: "ARCHIVED", code: "LISTING_VERSION_CONFLICT", version: 3 },
+    { action: "RESTORE", state: "ARCHIVED", code: "RESUME_STATE_REQUIRED", resume: null, resumePublished: false },
+    { action: "ARCHIVE", state: "SUSPENDED", code: "INVALID_LISTING_TRANSITION" },
+    { action: "ARCHIVE", state: "PUBLISHED", code: "LISTING_NOT_FOUND", owner: "other-reader" },
+  ])("enforces creator $action for $state ($code)", async (scenario) => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1", user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    const product = {
+      id: "product-1", slug: "owned-skill", published: scenario.state === "PUBLISHED", lifecycleState: scenario.state, lifecycleVersion: 4,
+      lifecycleResumeState: scenario.resume === undefined ? "PUBLISHED" : scenario.resume, lifecycleResumePublished: scenario.resumePublished ?? true,
+      approvedSnapshotId: "approved-1", proposedSnapshotId: "proposed-1", proposedSnapshot: null,
+      approvedSnapshot: { schemaVersion: 1, releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date(), sourceCheckStatus: scenario.verified === false ? "FAILED" : "VERIFIED" } },
+      lifecycleEvents: [{ actorType: scenario.actor ?? "CREATOR" }], creator: { ownerUserId: scenario.owner ?? "reader-1" },
+    };
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue(product);
+    prismaMock.marketplaceProduct.update.mockResolvedValue({ ...product, lifecycleState: scenario.next, lifecycleVersion: 5, published: scenario.visible });
+    prismaMock.marketplaceListingLifecycleEvent.create.mockResolvedValue({});
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+    const response = await request(createApp()).post("/api/marketplace/creator/products/product-1/lifecycle")
+      .set("Origin", "http://localhost:3000").set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ action: scenario.action, expectedVersion: scenario.version ?? 4 });
+    if (scenario.code) {
+      expect(response.status).toBe(scenario.code === "LISTING_NOT_FOUND" ? 404 : 409);
+      expect(response.body.error.code).toBe(scenario.code);
+      expect(prismaMock.marketplaceProduct.update).not.toHaveBeenCalled();
+      expect(prismaMock.marketplaceListingLifecycleEvent.create).not.toHaveBeenCalled();
+    } else {
+      expect(response.status).toBe(200);
+      expect(response.body.data).toMatchObject({ state: scenario.next!.toLowerCase(), version: 5, published: scenario.visible, approvedSnapshotId: "approved-1", proposedSnapshotId: "proposed-1" });
+      expect(prismaMock.marketplaceProduct.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lifecycleState: scenario.next, published: scenario.visible, approvedSnapshotId: "approved-1", proposedSnapshotId: "proposed-1" }) }));
+    }
+  });
+
   it("restores a creator-archived legacy publication without inventing modern source verification", async () => {
     prismaMock.readerSession.findFirst.mockResolvedValue({
       id: "session-1",
@@ -1038,6 +1079,40 @@ describe("API", () => {
       where: { creator: { ownerUserId: "reader-1" }, reviewCount: { gt: 0 } },
       select: { rating: true, reviewCount: true },
     });
+  });
+
+  it("exposes restore targets only for recoverable creator archives using the latest owner-scoped archive event", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1", user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    const cases = [
+      { id: "public", lifecycleState: "ARCHIVED", lifecycleResumeState: "SUBMITTED", lifecycleResumePublished: true, actor: "CREATOR", target: { state: "submitted", published: true } },
+      { id: "private", lifecycleState: "ARCHIVED", lifecycleResumeState: "DRAFT", lifecycleResumePublished: false, actor: "CREATOR", target: { state: "draft", published: false } },
+      { id: "staff", lifecycleState: "ARCHIVED", lifecycleResumeState: "PUBLISHED", lifecycleResumePublished: true, actor: "MODERATOR", target: null },
+      { id: "missing-state", lifecycleState: "ARCHIVED", lifecycleResumeState: null, lifecycleResumePublished: false, actor: "CREATOR", target: null },
+      { id: "missing-visibility", lifecycleState: "ARCHIVED", lifecycleResumeState: "DRAFT", lifecycleResumePublished: null, actor: "CREATOR", target: null },
+      { id: "unknown-actor", lifecycleState: "ARCHIVED", lifecycleResumeState: "DRAFT", lifecycleResumePublished: false, actor: null, target: null },
+      { id: "suspended", lifecycleState: "SUSPENDED", lifecycleResumeState: "PUBLISHED", lifecycleResumePublished: true, actor: "CREATOR", target: null },
+    ];
+    prismaMock.marketplaceProduct.findMany.mockResolvedValueOnce(cases.map((item) => ({
+      ...item, slug: item.id, name: item.id, itemType: "SKILL", type: "Skill", lifecycleVersion: 4, published: false,
+      rating: 0, reviewCount: 0, version: "1.0.0", updatedAt: new Date(), versions: [],
+      lifecycleEvents: [{ id: "recent-non-archive", action: "DRAFT_SAVED", resultingState: item.lifecycleState, publicReason: null, createdAt: new Date() }],
+      _count: { versions: 1, orders: 2 },
+    }))).mockResolvedValueOnce([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(cases.length);
+    prismaMock.marketplaceOrder.count.mockResolvedValue(0);
+    prismaMock.marketplaceListingLifecycleEvent.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce(cases.filter((item) => item.actor).map((item) => ({ productId: item.id, actorType: item.actor })));
+    const response = await request(createApp()).get("/api/marketplace/creator/dashboard?page=1&limit=12")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+    expect(response.status).toBe(200);
+    expect(response.body.data.listings.map((item: { restoreTarget: unknown }) => item.restoreTarget)).toEqual(cases.map((item) => item.target));
+    expect(prismaMock.marketplaceListingLifecycleEvent.findMany).toHaveBeenLastCalledWith({
+      where: { productId: { in: cases.filter((item) => item.lifecycleState === "ARCHIVED").map((item) => item.id) }, product: { creator: { ownerUserId: "reader-1" } }, action: "ARCHIVED" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }], distinct: ["productId"], select: { productId: true, actorType: true },
+    });
+    expect(response.body.data.listings[0]).not.toHaveProperty("actorType");
+    expect(response.body.data.listings[0]).not.toHaveProperty("lifecycleResumeState");
   });
 
   it("reports no average rating, rather than zero, when nothing has been reviewed", async () => {
