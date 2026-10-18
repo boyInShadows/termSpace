@@ -32,6 +32,12 @@ describe("ReleaseFacts", () => {
     expect(screen.getByText("Apache-2.0")).toBeInTheDocument();
   });
 
+  it("lets creator-written values keep their own direction in a right-to-left page", () => {
+    render(<dl><ReleaseFacts release={release} locale="fa" summary={{ permissions: "1 user · commercial use", license: null }} /></dl>);
+
+    expect(screen.getByText("1 user · commercial use").closest("dd")).toHaveClass("ts-bidi");
+  });
+
   it("prints what is not declared instead of hiding the row", () => {
     render(<dl><ReleaseFacts release={{ ...release, permissions: [], license: null, source: { ...release.source, integrityDigest: null, status: "stale" } }} locale="en" /></dl>);
 

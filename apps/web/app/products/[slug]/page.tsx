@@ -16,6 +16,8 @@ import { Fact } from "@/features/product/release-facts";
 import { ReleaseProvenance, provenanceTitle } from "@/features/product/release-provenance";
 import { ReviewComposer } from "@/features/product/review-composer";
 import { pageAlternates } from "@/lib/alternates";
+import { productPageLabels, type ProductPageLabels } from "@/lib/i18n/product-page";
+import { SkipLink } from "@/components/layout/skip-link";
 import { getLocale } from "@/lib/serverLocale";
 import type { ProductDetail } from "@/lib/types";
 import { SITE_URL } from "@/lib/site";
@@ -70,32 +72,6 @@ function structuredData(product: ProductDetail) {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
-/** The page's own strings. The i18n split (plan P7) will move these into lib/i18n. */
-function labels(fa: boolean) {
-  return fa
-    ? {
-        explore: "کاوش", details: "جزئیات", requirements: "پیش‌نیازها", updated: "به‌روزرسانی", package: "بسته", updatesPolicy: "سیاست به‌روزرسانی", verified: "تأییدشده", notReviewed: "هنوز بررسی نشده", safety: "بررسی ایمنی", pending: "در انتظار بررسی",
-        notDeclared: "اعلام نشده", scope: "دامنهٔ دسترسی", notStated: "ذکر نشده", licence: "مجوز", uses: "استفاده",
-        free: "رایگان برای همه", sharing: "اشتراک‌گذاری جامعه", whatItDoes: "چه می‌کند", manifest: "مانیفست",
-        useCases: "کاربردهای مناسب", included: "محتویات", example: "نمونهٔ ورودی و خروجی", input: "ورودی", output: "بخشی از خروجی",
-        reviews: "نقدها", noReviews: "هنوز نقدی ثبت نشده است.", verifiedUse: "استفادهٔ تأییدشده", worksWith: "سازگار با", models: "مدل‌ها",
-        creator: "دربارهٔ سازنده", resources: "منبع", resource: "منبع", followers: "دنبال‌کننده", related: "منابع مرتبط", keepBuilding: "ادامه دهید",
-        passed: "بررسی بسته انجام شد", notYet: "هنوز توسط تیم بررسی نشده", files: "فایل",
-        installNote: "مراحل دقیق نصب به نسخه‌ای که به کتابخانهٔ خود اضافه می‌کنید متصل است.",
-      }
-    : {
-        explore: "Explore", details: "Details", requirements: "Requirements", updated: "Updated", package: "Package", updatesPolicy: "Updates", verified: "Verified", notReviewed: "Not yet reviewed", safety: "safety reviewed", pending: "review pending",
-        notDeclared: "Not declared", scope: "permission scope", notStated: "Not stated", licence: "licence", uses: "uses",
-        free: "Free for everyone", sharing: "Community sharing", whatItDoes: "What it does", manifest: "Manifest",
-        useCases: "Ideal use cases", included: "What’s included", example: "Example input and output", input: "Input", output: "Output excerpt",
-        reviews: "Reviews", noReviews: "No reviews yet.", verifiedUse: "Verified use", worksWith: "Works with", models: "Models",
-        creator: "About the creator", resources: "resources", resource: "resource", followers: "followers", related: "Related listings", keepBuilding: "Keep building",
-        passed: "Package scan passed", notYet: "Not yet reviewed by the team", files: "files",
-        installNote: "Exact installation steps are tied to the release you add to your library.",
-      };
-}
-
-type Labels = ReturnType<typeof labels>;
 
 function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
@@ -107,7 +83,7 @@ function Section({ title, children, id }: { title: string; children: React.React
 }
 
 /** What the key-facts list does not already say. */
-function detailRows(product: ProductDetail, l: Labels, locale: Locale) {
+function detailRows(product: ProductDetail, l: ProductPageLabels, locale: Locale) {
   const date = new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" }).format(new Date(product.updatedAt));
   const rows: Array<{ key: string; label: string; value: string }> = [
     { key: "requirements", label: l.requirements, value: product.requirements ?? l.notStated },
@@ -123,7 +99,7 @@ function detailRows(product: ProductDetail, l: Labels, locale: Locale) {
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const locale = await getLocale();
   const fa = locale === "fa";
-  const l = labels(fa);
+  const l = productPageLabels(fa);
   let product: ProductDetail;
   try {
     product = await getProduct((await params).slug);
@@ -137,10 +113,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData(product) }} />
+      <SkipLink locale={locale} />
       <Header />
-      <main className="container-page py-8">
+      <main id="content" className="container-page py-8">
         <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground">
-          <Link href={localePath("/explore", locale)} className="-my-2 inline-block py-2 hover:text-foreground">{l.explore}</Link> / {typeLabel} /{" "}
+          <Link href={localePath("/explore", locale)} className="-my-3.5 inline-block py-3.5 hover:text-foreground">{l.explore}</Link> / {typeLabel} /{" "}
           <span className="text-foreground">{product.name}</span>
         </nav>
 
@@ -170,7 +147,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                       {product.benefits.map((benefit) => (
                         <li key={benefit} className="flex gap-3 text-sm">
                           <span aria-hidden className="mt-2 size-1.5 shrink-0 border border-foreground/70" />
-                          {benefit}
+                          <span className="ts-bidi">{benefit}</span>
                         </li>
                       ))}
                     </ul>
@@ -196,8 +173,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     <div className="grid divide-y divide-border border border-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
                       {(product.useCases ?? []).map((useCase) => (
                         <div key={useCase.title} className="p-4">
-                          <h3 className="font-semibold text-foreground">{useCase.title}</h3>
-                          <p className="mt-1 text-sm">{useCase.description}</p>
+                          <h3 className="ts-bidi font-semibold text-foreground">{useCase.title}</h3>
+                          <p className="ts-bidi mt-1 text-sm">{useCase.description}</p>
                         </div>
                       ))}
                     </div>
@@ -210,7 +187,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                       {(product.includedFiles ?? []).map((file) => (
                         <div className="grid gap-1 p-4 sm:grid-cols-[12rem_1fr]" key={file.name}>
                           <code className="font-mono text-xs text-foreground" dir="ltr">{file.name}</code>
-                          <span className="text-sm">{file.description}</span>
+                          <span className="ts-bidi text-sm">{file.description}</span>
                         </div>
                       ))}
                     </div>
@@ -227,8 +204,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                       <div>
                         <p className="eyebrow">{l.output}</p>
                         <div className="mt-2 border border-foreground/60 p-4">
-                          <p className="text-lg font-bold text-foreground">{product.exampleOutputTitle}</p>
-                          <p className="mt-2 text-sm">{product.exampleOutputBody}</p>
+                          <p className="ts-bidi text-lg font-bold text-foreground">{product.exampleOutputTitle}</p>
+                          <p className="ts-bidi mt-2 text-sm">{product.exampleOutputBody}</p>
                         </div>
                       </div>
                     </div>
@@ -253,7 +230,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                             </div>
                             {review.verifiedPurchase && <Badge variant="success">{l.verifiedUse}</Badge>}
                           </div>
-                          <p className="mt-3 max-w-2xl">{review.body}</p>
+                          <p className="ts-bidi mt-3 max-w-2xl">{review.body}</p>
                         </article>
                       ))}
                     </div>
@@ -263,7 +240,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <Section title={l.creator}>
                   <div>
                     <CreatorIdentity creator={product.creator} />
-                    <p className="mt-4 max-w-2xl">{product.creator.bio}</p>
+                    <p className="ts-bidi mt-4 max-w-2xl">{product.creator.bio}</p>
                     <p className="mt-4 text-xs font-semibold text-foreground">
                       {product.creator.products} {product.creator.products === 1 ? l.resource : l.resources} · {formatNumber(product.creator.followers, locale)} {l.followers}
                     </p>

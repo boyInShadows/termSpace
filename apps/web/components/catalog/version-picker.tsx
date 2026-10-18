@@ -24,7 +24,7 @@ export function VersionPicker() {
         id={id}
         value={selected.id}
         onChange={(event) => selection.select(event.target.value)}
-        className="mt-2 min-h-10 w-full rounded-md border border-input bg-background px-3 font-mono text-sm"
+        className="mt-2 min-h-11 w-full sm:min-h-10 rounded-md border border-input bg-background px-3 font-mono text-sm"
         dir="ltr"
       >
         {selection.versions.map((version, index) => (

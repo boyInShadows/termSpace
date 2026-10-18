@@ -90,6 +90,31 @@ test.describe("product detail", () => {
     await expect(page.getByRole("button", { name: "Add v2.4.0 to library" })).toBeEnabled();
   });
 
+  test("a skip link is the first stop and lands on the content", async ({ page }) => {
+    await page.goto("/products/conversion-copywriter");
+    await page.keyboard.press("Tab");
+    const skip = page.getByRole("link", { name: "Skip to content" });
+    await expect(skip).toBeFocused();
+    await expect(skip).toBeVisible();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/#content$/);
+  });
+
+  test("the controls a phone user taps are at least 44px tall", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/products/conversion-copywriter");
+    const controls = [
+      page.getByLabel("Version"),
+      page.getByRole("button", { name: "Add v2.4.0 to library" }),
+      page.locator("#provenance").getByRole("button", { name: "Copy" }).first(),
+      page.getByRole("link", { name: "termspace home" }).first(),
+    ];
+    for (const control of controls) {
+      const box = await control.boundingBox();
+      expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    }
+  });
+
   test("an unknown listing is marked noindex", async ({ page }) => {
     // loading.tsx streams the skeleton first, so the status is already 200
     // when the listing turns out not to exist; Next marks the page noindex,
