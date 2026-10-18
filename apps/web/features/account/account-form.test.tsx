@@ -10,8 +10,9 @@ const loginWithGoogle = vi.hoisted(() => vi.fn());
 const session = vi.hoisted(() => ({ email: "reader@example.com" as string | undefined, emailVerified: true, refresh: vi.fn() }));
 const replace = vi.hoisted(() => vi.fn());
 const params = vi.hoisted(() => ({ next: "" }));
+const router = vi.hoisted(() => ({ replace, refresh: vi.fn() }));
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, refresh: vi.fn() }), useSearchParams: () => new URLSearchParams({ next: params.next }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => router, usePathname: () => "/account", useSearchParams: () => new URLSearchParams({ next: params.next }) }));
 vi.mock("@/lib/api", async (importOriginal) => ({
   ...await importOriginal<typeof import("@/lib/api")>(),
   getMarketplaceLibrary,

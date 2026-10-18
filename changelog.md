@@ -4,6 +4,42 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-18
 
+- **Dashboard acquired library (DC04, owner-requested).**
+  Added `/dashboard/library`, reachable through the sidebar, mobile tabs and
+  overview quick actions, with a localized breadcrumb and page title. Readers
+  do not need a creator role. The five-slot mobile bar reuses the existing
+  accessible icon-only Publish control and keeps all navigation targets usable.
+  - Extracted `SignedInAccount`'s library into shared
+    `features/library/acquired-library.tsx`; `/account` retains its account,
+    sign-out and authentication behavior and renders the same library as an
+    embedded section. The shared view uses the dashboard's ruled, square
+    vocabulary and workspace-local EN/FA copy, without global locale growth.
+  - Pagination now lives in the URL, preserves unrelated parameters and works
+    through history/reload. A past-end page returns to the last real page;
+    stale requests are aborted/ignored. Loading, empty and error/Retry states
+    remain distinct, and changing pages hides the previous page's rows.
+    Pinned version labels and unavailable/legacy installation states remain
+    intact. The existing installation endpoint already resolves the acquired
+    release; browser checks prove the retained product link opens v1.0.0
+    without an acquisition POST. No backend, schema, role or email change.
+  - A 320px capture exposed an unbroken-name overflow. Explicit flex-item width
+    limits and wrapping now constrain names/versions; both locales have a
+    browser regression. Keyboard pagination clears the fixed tab bar.
+  - Shared surface: `changelog.md` records this owner-assigned web refactor.
+    Removed DC04 from the ignored local `ramtin-pending.md`; three dashboard
+    capability tasks remain. The localhost email pause is still enabled.
+  - Verification: root typecheck, 500 unit tests (5 database-dependent skips),
+    web lint, regular production build, 237 browser tests (29 conditional
+    skips; 4 Chrome workers) and all nine Lighthouse runs passed existing gates.
+    Twenty-four EN/FA/theme/viewport captures at 320/768/1280px, 12 native
+    keyboard/navigation hit-test journeys and four error/Retry/empty/loading
+    journeys passed without overflow or page errors. The design detector found
+    no issue. Manual connected-source/diff review found no unresolved issue.
+    Evidence: `maintenance/dashboard-library-20261018/` (ignored), including the
+    initial overflow capture. No real acquisition changed. Physical devices,
+    live acquisition/provider checks, CI and native Persian wording review
+    remain untested; existing tighter performance targets remain open.
+
 - **Studio archive and restore controls (DC03, owner-requested).**
   Creators can archive eligible owned listings and restore recoverable creator
   archives through the existing lifecycle endpoint. EN/FA confirmations explain

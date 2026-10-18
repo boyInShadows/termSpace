@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Plus, Settings, Store } from "lucide-react";
+import { LayoutGrid, LibraryBig, Plus, Settings, Store } from "lucide-react";
+import { libraryCopy } from "@/features/library/library-copy";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
@@ -25,6 +26,7 @@ function useDashboardNav() {
   return [
     { href: "/dashboard", label: t.navOverview, icon: LayoutGrid },
     { href: "/dashboard/studio", label: t.navStudio, icon: Store },
+    { href: "/dashboard/library", label: libraryCopy[locale].label, icon: LibraryBig },
     { href: "/dashboard/settings", label: t.navSettings, icon: Settings },
   ].map((item) => ({
     ...item,
@@ -98,7 +100,7 @@ export function DashboardTabBar() {
       aria-label={t.dashboardHome.tabsLabel}
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
-      <ul className="grid grid-cols-4">
+      <ul className="grid grid-cols-5">
         {items.map(({ href, label, icon: Icon, active }) => (
           <li key={href}>
             <Link
@@ -110,12 +112,12 @@ export function DashboardTabBar() {
               )}
             >
               <Icon aria-hidden className="size-5" />
-              {label}
+              <span className="px-1 text-center leading-tight">{label}</span>
             </Link>
           </li>
         ))}
         <li className="flex items-center justify-center px-2">
-          <PublishLink className="min-h-11 w-full rounded-none px-2" />
+          <PublishLink iconOnly className="min-h-11 w-full rounded-none px-2" />
         </li>
       </ul>
     </nav>

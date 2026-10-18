@@ -10,6 +10,7 @@ import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
 import { cn } from "@/lib/utils";
+import { libraryCopy } from "@/features/library/library-copy";
 
 const noSubscribe = () => () => {};
 /** The hint names the key the reader will actually press. */
@@ -33,8 +34,9 @@ export function DashboardTopbar() {
   const breadcrumb = currentPath.endsWith("/releases") ? t.creatorReleases.title
     : currentPath.endsWith("/edit") ? t.creatorDraft.editTitle
       : currentPath.endsWith("/new") ? t.creatorDraft.createTitle
-        : currentPath.endsWith("/settings") ? t.navSettings
-          : currentPath.startsWith("/dashboard/studio") ? t.navStudio : t.navOverview;
+        : currentPath.endsWith("/library") ? libraryCopy[locale].label
+          : currentPath.endsWith("/settings") ? t.navSettings
+            : currentPath.startsWith("/dashboard/studio") ? t.navStudio : t.navOverview;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

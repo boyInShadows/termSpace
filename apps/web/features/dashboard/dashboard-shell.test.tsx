@@ -84,6 +84,18 @@ describe("DashboardShell", () => {
     }
   });
 
+  it("marks the acquired library active for readers in both navigation surfaces", () => {
+    session.current = { loading: false, email: "reader@example.com", emailVerified: true, marketplaceRoles: [] };
+    nav.pathname = "/dashboard/library";
+    render(<DashboardShell><p>library content</p></DashboardShell>);
+    for (const name of [copy.en.dashboard, copy.en.dashboardHome.tabsLabel]) {
+      const navigation = screen.getByRole("navigation", { name });
+      expect(within(navigation).getByRole("link", { name: "Library" })).toHaveAttribute("aria-current", "page");
+      expect(within(navigation).getByRole("link", { name: "Library" })).toHaveAttribute("href", "/dashboard/library");
+      expect(within(navigation).getByRole("link", { name: copy.en.navOverview })).not.toHaveAttribute("aria-current");
+    }
+  });
+
   it("asks an unverified reader to verify instead of showing creator onboarding", () => {
     session.current = { loading: false, email: "reader@example.com", emailVerified: false, marketplaceRoles: [] };
     render(<DashboardShell><p>creator onboarding</p></DashboardShell>);
