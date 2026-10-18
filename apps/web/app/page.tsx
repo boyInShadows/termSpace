@@ -36,23 +36,23 @@ export const dynamic = "force-dynamic";
  *
  * `cache()` dedupes across the render pass, so each section can `await` the
  * catalogue independently — and therefore stream in behind its own skeleton —
- * without turning one request into four.
+ * without duplicating the request.
  *
  * The homepage never throws on a failed catalogue. A landing page that 500s
  * because a list of nine categories is unavailable is a worse outcome than one
- * that says so and keeps its search box working, so the failure degrades to
- * the local fixture with a visible notice scoped to the affected section.
+ * that says so and keeps its search box working, so a failure shows Retry
+ * instead of sample listings that may not exist in the real catalogue.
  */
 const loadHome = cache(
-  async (): Promise<{ home: MarketplaceHome; degraded: boolean }> => {
+  async (): Promise<MarketplaceHome | null> => {
     if (process.env.NEXT_PUBLIC_USE_MOCK === "1") {
-      return { home: mockHome, degraded: false };
+      return mockHome;
     }
     try {
-      return { home: await getMarketplaceHome(), degraded: false };
+      return await getMarketplaceHome();
     } catch (error) {
       console.error("Marketplace home load failed", error);
-      return { home: mockHome, degraded: true };
+      return null;
     }
   },
 );
@@ -82,10 +82,10 @@ const SECTION_HEADING =
 
 async function FeaturedLink({ locale }: { locale: Locale }) {
   const t = copy[locale];
-  const { home } = await loadHome();
+  const home = await loadHome();
   // "View all 0 listings" is worse than no link at all: it asserts an empty
   // catalogue, which is never what an unreachable one means.
-  if (home.total <= 0) return null;
+  if (!home || home.total <= 0) return null;
   return (
     <Link
       href={localePath("/explore", locale)}
@@ -102,12 +102,12 @@ async function FeaturedLink({ locale }: { locale: Locale }) {
 
 async function FeaturedGrid({ locale }: { locale: Locale }) {
   const t = copy[locale];
-  const { home, degraded } = await loadHome();
+  const home = await loadHome();
+  if (!home) return <SectionNotice />;
   const featured = home.products.filter((product) => product.featured);
 
   return (
     <>
-      {degraded && <SectionNotice className="mb-6" />}
       {featured.length === 0 ? (
         <SectionEmpty
           icon={PackageOpen}
@@ -151,7 +151,7 @@ export default async function Home() {
         {/* A promise, not awaited: the hero is the page shell and must not
             wait on the catalogue. The chips render at once and their counts
             stream in behind their own boundary. */}
-        <Hero locale={locale} types={loadHome().then((result) => result.home.types)}>
+        <Hero locale={locale} types={loadHome().then((home) => home?.types ?? [])}>
           {/* The featured shelf lives in the hero, directly under the search,
               so the first screen shows both how to look and what to find. */}
           <section aria-labelledby="featured-heading">

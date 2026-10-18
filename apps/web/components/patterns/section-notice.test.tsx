@@ -10,7 +10,7 @@ describe("SectionNotice", () => {
   it("explains the degraded catalogue without claiming the page failed", () => {
     render(<SectionNotice />);
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Showing an example catalogue.",
+      "The community library is unavailable.",
     );
   });
 

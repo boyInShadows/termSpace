@@ -27,9 +27,6 @@ This file tracks known improvement work that has not been completed yet. When an
   `max-potential-fid` (130 ms) exceed on GitHub's runners while the same
   budgets pass locally. Decide between a CI-specific throttling profile and
   real TBT work; the ratchet rule forbids just raising the budgets.
-- On a failed catalogue load the homepage falls back to `lib/mock-home.ts`
-  (with a notice), so its cards link to listings that do not exist. Decide
-  whether production should show an error state instead.
 
 ## Launch — Owner Decisions
 

@@ -4,6 +4,32 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-18
 
+- **Homepage catalogue failures show Retry, without sample listings.**
+  Completed the next owner-assigned shared/local pending item after reconciling
+  both redesign pulls. `apps/web/app/page.tsx` now represents an unavailable
+  catalogue as null: the featured shelf shows the existing localized Retry
+  notice, the total link disappears, and type shortcuts omit counts. Search
+  and static page content stay available. Healthy empty catalogues retain their
+  separate empty state; explicit mock preview mode is preserved. Updated the
+  shared EN/FA notice in `apps/web/lib/i18n/home.ts` to describe the outage.
+  Removed the completed entry from `pending.md` and the ignored local checklist.
+  - Five server-render regression tests cover EN/FA failure responses, healthy,
+    empty and explicit mock states. Before the fix, both failure cases exposed
+    three sample cards. Existing notice tests retain the Retry action check.
+  - Final verification: root typecheck, 436 unit tests (5 database-dependent
+    skips), web lint, regular production build, full Chrome suite at default
+    10 workers (179 passed / 29 conditional skips) and all nine Lighthouse
+    runs passed without budget changes. Eight runtime journeys on a non-mock
+    production web build simulated a failing API and recovered through Retry;
+    32 captures covered home, Explore and product in EN/FA, light/dark and
+    320/1280px, with no horizontal overflow or page errors. The mechanical
+    design detector returned no findings on the changed page surfaces.
+  - Reviewed the final changes manually. No dependencies, database records,
+    migrations or provider settings changed. Temporary test servers/Chrome
+    were stopped; the real local API/web stay available and the localhost email
+    pause is preserved. CI performance, physical devices and maintainer Persian
+    wording review remain pending. Evidence: `maintenance/redesign-merge-20261018/`.
+
 - **Fresh redesign pull reconciled (owner-requested second pull, `b04c5f1`).**
   Imported the newer Persian product-direction changes. Its only conflict was
   in this log; both branches' entries are preserved. No unresolved index

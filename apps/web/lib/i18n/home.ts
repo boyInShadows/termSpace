@@ -40,9 +40,9 @@ export const home = {
         "Publish with rich previews, version history and compatibility metadata.",
       creatorCtaPrimary: "Start publishing",
       creatorCtaSecondary: "Creator guide",
-      degradedTitle: "Showing an example catalogue.",
+      degradedTitle: "The community library is unavailable.",
       degradedBody:
-        "The community library could not be reached, so these listings are placeholders.",
+        "Featured listings could not be loaded. Please try again.",
       retry: "Retry",
       retrying: "Retrying…",
       loadingFeatured: "Loading featured building blocks",
@@ -101,9 +101,9 @@ export const home = {
         "با پیش‌نمایش کامل، تاریخچهٔ نسخه‌ها و اطلاعات سازگاری منتشر کنید.",
       creatorCtaPrimary: "شروع انتشار",
       creatorCtaSecondary: "راهنمای سازندگان",
-      degradedTitle: "فهرست نمونه نمایش داده می‌شود.",
+      degradedTitle: "کتابخانهٔ جامعه در دسترس نیست.",
       degradedBody:
-        "دسترسی به کتابخانهٔ جامعه ممکن نشد، بنابراین این فهرست‌ها نمونه هستند.",
+        "منابع منتخب بارگذاری نشدند. لطفاً دوباره تلاش کنید.",
       retry: "تلاش دوباره",
       retrying: "در حال تلاش…",
       loadingFeatured: "در حال بارگذاری منابع منتخب",
