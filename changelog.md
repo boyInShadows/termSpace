@@ -4,6 +4,42 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **Real 200% dashboard zoom and keyboard clearance (next local queue item).**
+  Replaced the inconclusive keyboard-shortcut check with actual Chrome browser
+  zoom in disposable profiles on D:. DPR doubles and the CSS viewport halves
+  relative to a matching 100% window; visual-viewport scale and CSS zoom stay 1.
+  The profile dictionary follows [Chromium's zoom preferences implementation](https://chromium.googlesource.com/chromium/src/+/lkgr/chrome/browser/ui/zoom/chrome_zoom_level_prefs.cc).
+  No user Chrome profile, global setting or installed tool was modified.
+  - The baseline exposed 20 obscured keyboard targets: provider actions and
+    Saved listing links/buttons scrolled beneath fixed dashboard tabs. The
+    shared `.dashboard-operate` control rule now supplies the same 6rem plus
+    safe-area focus-scroll clearance already used by account security/library.
+    One CSS declaration fixes current and future dashboard controls together.
+  - Added `e2e/browser-zoom.spec.ts`: 12 desktop cases cover EN/FA, light/dark
+    and 1280/1920/2560 physical window widths. Each verifies actual zoom geometry,
+    overflow, search focus and keyboard traversal across overview, Studio,
+    Profile, acquired library and Saved listings. Device-scale emulation is
+    explicitly cleared. Mobile test projects skip these desktop browser cases;
+    physical-device acceptance remains separate.
+  - Local before/after matrix: 60 captures and 168 keyboard-focus checks; the
+    repeated matrix has zero obscured controls, horizontal overflow or page
+    errors. Physical iOS/Android, native Persian review and owner-deferred live
+    service checks remain open. Evidence: `maintenance/zoom-acceptance-20261019/`.
+  - Verification: root typecheck, 513 unit tests (5 existing DB-dependent skips),
+    clean web lint, full browser suite 309 passed (29 existing skips plus 12
+    desktop-only zoom cases skipped in the mobile project), root production
+    build and all Lighthouse assertions across nine runs passed. Representative
+    performance: home 96, dashboard 90, detail 96; accessibility 100 throughout.
+    Performance budgets remain unchanged and their tighter targets remain open.
+    Impeccable reported only the two previously documented spring/focus-corner
+    advisories in globals.css; the new declaration adds no detector finding.
+    Manual second-pass review checked selector scope, native focus scrolling,
+    disposable-profile cleanup and actual zoom assertions. Graph coverage marked
+    changed metadata/new test source; the relevant source was read directly.
+    Removed the completed zoom item from the ignored local queue. No API,
+    permission, dependency or user-data changes.
+
+
 - **Dashboard Profile, saved listings, provider access and hydration repair (owner-requested).**
   Removed the redundant dashboard breadcrumb/toolbar frame; workspace search
   remains a content control with its Ctrl/Cmd+K shortcut. The shared desktop

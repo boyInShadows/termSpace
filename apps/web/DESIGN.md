@@ -106,6 +106,8 @@ clear phone navigation and safe areas.
 
 The shared header measures its actual height for sticky-sidebar and focus-scroll
 offsets, including announcement dismissal, condensation and mobile disclosure.
+Dashboard controls share focus-scroll clearance above the fixed bottom tabs,
+including safe-area insets; new sections inherit it from `.dashboard-operate`.
 Menus close on route changes because the layout persists. A single localized
 skip link precedes navigation and targets each route's focusable `main#content`.
 Keep the header in the root hydration tree: a separate Suspense boundary can

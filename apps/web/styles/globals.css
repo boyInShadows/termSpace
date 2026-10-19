@@ -3,6 +3,8 @@
 
 .dashboard-operate :is(button, input, select, textarea, a) {
   border-radius: 0;
+  /* Native focus scrolling must clear the fixed dashboard tabs. */
+  scroll-margin-bottom: calc(6rem + env(safe-area-inset-bottom));
 }
 
 .dashboard-operate :is(input, select, textarea) {
