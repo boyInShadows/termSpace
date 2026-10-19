@@ -1,4 +1,6 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { copy } from "@/lib/i18n";
+import { fireEvent, screen, within } from "@testing-library/react";
+import { renderWithLocale as render } from "@/lib/test-render";
 import { describe, expect, it, vi } from "vitest";
 import { DiscoveryExperience } from "./discovery-experience";
 import { LocaleProvider } from "@/lib/locale-context";
@@ -61,7 +63,7 @@ describe("DiscoveryExperience states", () => {
   });
 
   it.each(["en", "fa"] as const)("labels declared access and updates the URL in %s", (locale) => {
-    render(<LocaleProvider locale={locale}><DiscoveryExperience initial={emptyResult} categories={[]} platforms={[]} communities={[]} itemTypes={[]} initialFilters={{ permission: "network_access" }} /></LocaleProvider>);
+    render(<LocaleProvider locale={locale} messages={copy[locale]}><DiscoveryExperience initial={emptyResult} categories={[]} platforms={[]} communities={[]} itemTypes={[]} initialFilters={{ permission: "network_access" }} /></LocaleProvider>);
     const select = screen.getByRole("combobox", { name: locale === "fa" ? "دسترسی اعلام‌شده" : "Declared access" });
     expect(select).toHaveValue("network_access");
     fireEvent.change(select, { target: { value: "filesystem_read" } });

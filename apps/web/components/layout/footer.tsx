@@ -1,12 +1,12 @@
-"use client";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { Logo } from "./logo";
-import { useLocale } from "@/lib/locale-context";
-import { footerLabels, localePath } from "@/lib/i18n";
+import { copy, footerLabels, localePath } from "@/lib/i18n";
+import { getLocale } from "@/lib/serverLocale";
 
-export function Footer() {
-  const { locale, t } = useLocale();
+export async function Footer() {
+  const locale = await getLocale();
+  const t = copy[locale];
   const labels = footerLabels[locale];
   const blogUrl = process.env.NEXT_PUBLIC_BLOG_URL ?? "http://localhost:3001";
   const columns = [

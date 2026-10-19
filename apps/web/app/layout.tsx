@@ -6,6 +6,7 @@ import { Providers } from "@/components/layout/providers";
 import { Header } from "@/components/layout/header";
 import { SkipLink } from "@/components/layout/skip-link";
 import { getLocale } from "@/lib/serverLocale";
+import { copy } from "@/lib/i18n";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const fa = locale === "fa";
@@ -25,7 +26,7 @@ export default async function RootLayout({
         ))}
       </head>
       <body>
-        <Providers locale={locale}>
+        <Providers locale={locale} messages={copy[locale]}>
           <SkipLink locale={locale} />
           <Header />
           {children}

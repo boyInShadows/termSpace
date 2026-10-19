@@ -13,20 +13,14 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Web — Homepage Follow-ups
 
-- Meet the plan's performance budgets, then tighten the ratchet gates in
-  `lighthouserc.cjs` and `apps/web/e2e/budget.spec.ts` to them. Still
-  missing as of 2026-10-16: mobile LCP (`/` 3.2 s simulated vs 2.2 s,
-  `/dashboard` 3.62 s vs 2.0 s), `/dashboard` performance (89 vs 92) and `/`
-  first-load JS (181 KiB vs 170). The datasheet hero removed the WebGL field,
-  the manifest card and the ticker (home JS down 6 KiB, TBT 20 to 30 ms) but did
-  not move the simulated LCP: Lighthouse reports the hero paragraph with about
-  2.8 s of render delay against a 1.1 s FCP, so look at what the simulation
-  charges before the paint (hydration JS and font requests), not at the hero.
-- The `lhci` job in "Web e2e and performance" has failed on every push to
-  `main` since at least 2026-10-05: `total-blocking-time` (budget 150 ms) and
-  `max-potential-fid` (130 ms) exceed on GitHub's runners while the same
-  budgets pass locally. Decide between a CI-specific throttling profile and
-  real TBT work; the ratchet rule forbids just raising the budgets.
+- Meet the remaining mobile LCP targets: `/` 2.2 s, `/dashboard` 2.0 s
+  and product detail 2.2 s; dashboard performance must reach 92 before its gate
+  tightens. Profile the remaining shared hydration cost and private-data
+  waterfall while preserving initial favorites reads and mutation ordering.
+- Verify the current Ramtin branch on GitHub's runner with the retained
+  Lighthouse throttling and TBT/FID limits. Latest main run 38893763199 failed
+  max-potential-FID at 150 ms on home and 131 ms on detail against 130 ms;
+  its first home TBT run was also an outlier. Do not raise budgets to mask it.
 
 ## Launch — Owner Decisions
 

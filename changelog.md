@@ -4,6 +4,43 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **Web initial-load budgets (owner-assigned performance phase).** The root
+  server layout now supplies only the active language's messages to the locale
+  provider, removing the two-language dictionary module from client JavaScript.
+  The static shared footer now renders on the server; all eleven callers remain
+  unchanged. Tests and Storybook supply their dictionary explicitly. The
+  Storybook render check also exposed missing App Router context; its preview
+  now enables the [documented App Router parameter](https://storybook.js.org/docs/get-started/frameworks/nextjs-vite#nextjs-navigation)
+  and serves the existing public fonts.
+  - Initial gzip JS, identical in EN/FA: home 175.9 to 162.5 KiB, dashboard
+    191.3 to 178.6 KiB, detail 190.4 to 176.9 KiB. Active messages move into
+    HTML/RSC, so total-transfer savings are smaller than JS savings; this is
+    measured lab evidence, not a claim about real-device Core Web Vitals.
+  - Tightened home/detail JS gates to their 170/180 KiB targets and added FA
+    budget cases. Home's performance-score gate now enforces its existing 90
+    target. No budget or throttle was relaxed. Mobile LCP medians are home
+    2.64 s, dashboard 3.77 s and detail 2.80 s; dashboard performance is 89.
+    The stricter LCP and dashboard-score targets remain unfinished.
+  - Kept the existing session/favorites loading contract after reviewing the
+    private-read/mutation ordering. Dashboard waterfall work must preserve it.
+  - Verification: root typecheck, 516 unit tests (5 existing DB-dependent
+    skips), clean web lint, 312 browser tests (44 intentional skips), root
+    production build, Storybook build and all 21 Lighthouse budget assertions
+    across nine reports passed. Sixty surface captures plus eight footer
+    captures cover EN/FA, both themes and responsive widths; no overflow,
+    duplicate shells, locale/theme mismatch or page errors. Impeccable reports
+    no findings in the changed production UI. Graph coverage marked stale
+    metadata/new tests; direct source and caller checks supplied verification.
+    A manual second pass included isolated tests and the Storybook consumer;
+    two compiled stories rendered with their fonts and no console/page errors.
+  - Shared files `pending.md` and `changelog.md`: the owner accepted the
+    performance item from the shared backlog for this phase. Removed completed
+    budget work from the queues, promoted remaining performance work to the top
+    of the ignored local queue, and retained owner/device-dependent acceptance.
+    Latest main CI (38893763199) failed max-potential-FID at 150/131 ms; hosted
+    acceptance of the current branch follows through a draft PR. Evidence:
+    `maintenance/performance-20261019/`. No API, permission or dependency change.
+
 - **Real 200% dashboard zoom and keyboard clearance (next local queue item).**
   Replaced the inconclusive keyboard-shortcut check with actual Chrome browser
   zoom in disposable profiles on D:. DPR doubles and the CSS viewport halves

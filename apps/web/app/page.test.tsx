@@ -14,7 +14,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 async function renderHome(locale: "en" | "fa" = "en") {
   state.locale = locale;
-  const { prelude } = await prerender(<LocaleProvider locale={locale}>{await Home()}</LocaleProvider>);
+  const { prelude } = await prerender(<LocaleProvider locale={locale} messages={copy[locale]}>{await Home()}</LocaleProvider>);
   return new DOMParser().parseFromString(await new Response(prelude).text(), "text/html");
 }
 
