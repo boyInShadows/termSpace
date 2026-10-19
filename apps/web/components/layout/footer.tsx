@@ -4,6 +4,7 @@ import { ShieldCheck } from "lucide-react";
 import { Logo } from "./logo";
 import { useLocale } from "@/lib/locale-context";
 import { footerLabels, localePath } from "@/lib/i18n";
+import { legalLabels } from "@/lib/legal";
 
 export function Footer() {
   const { locale, t } = useLocale();
@@ -15,15 +16,13 @@ export function Footer() {
       { label: labels.collections, href: localePath("/communities", locale) },
       { label: labels.newReleases, href: `${localePath("/explore", locale)}?sort=newest` },
     ] },
-    { heading: labels.create, links: [
-      { label: labels.creatorGuide, href: localePath("/design-system", locale) },
-      { label: labels.qualityStandards, href: localePath("/design-system", locale) },
-    ] },
     { heading: labels.company, links: [
-      { label: labels.about, href: localePath("/design-system", locale) },
       { label: labels.journal, href: `${blogUrl.replace(/\/$/, "")}${locale === "fa" ? "/fa/blog" : "/blog"}` },
       { label: labels.support, href: localePath("/account", locale) },
     ] },
+    { heading: legalLabels[locale].legal, links: (["privacy", "terms", "content-policy"] as const).map((slug) => (
+      { label: legalLabels[locale][slug], href: localePath(`/${slug}`, locale) }
+    )) },
   ];
   return (
     <footer className="relative isolate mt-12 overflow-hidden border-t border-border bg-surface/40">

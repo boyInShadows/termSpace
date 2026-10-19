@@ -4,6 +4,33 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **Pre-deploy blockers, phase 2 of 2: policies, headers, footer (B4, B5, B8 in
+  `readiness.md`).** Touches `apps/web` and `apps/blog` presentation plus a shared
+  surface: `apps/web/lib/i18n/common.ts` (footer labels).
+  - Pages: `/privacy`, `/terms`, `/content-policy` in English and Persian, from
+    `lib/legal.ts` through `components/legal/legal-page.tsx`; in the sitemap; the
+    web footer has a Legal column; the blog footer links to them on the main
+    site (`NEXT_PUBLIC_WEB_URL`, build arg in `Dockerfile.blog`). The text is a
+    draft written from what the code does and has had no legal review. Contact
+    and entity come from runtime `LEGAL_CONTACT_EMAIL` (required by compose)
+    and `LEGAL_ENTITY_NAME`.
+  - Headers (web and blog `next.config`): HSTS, nosniff, Referrer-Policy,
+    Permissions-Policy, X-Frame-Options and an enforced CSP of frame-ancestors,
+    base-uri, object-src and form-action. `script-src` is report-only until
+    nonces are in place. `poweredByHeader` is off.
+  - Footer: the Creator guide, Quality standards and About links (all pointing
+    at `/design-system`) and their "Create" column are removed; the home page's
+    quality-standard link goes to `/content-policy`; `/design-system` is a 404
+    in production and `noindex`.
+  - Verified: typecheck, `npm test` (web with
+    `NODE_OPTIONS=--no-experimental-webstorage`), web lint, build,
+    `npm run e2e -w apps/web` (237 passed, 29 skipped; run with `WEB_PORT=3110
+    MOCK_API_PORT=4110` because something else holds 3100), `npm run lhci -w
+    apps/web` (assertions pass), `docker compose config`. New test:
+    `lib/legal.test.ts`.
+  - Follow-ups: legal review of the text; a consent line on sign-up; enforce
+    `script-src`; "Support" in the web footer still links to `/account`.
+
 - **Pre-deploy blockers, phase 1 of 2: API and compose (B1, B2, B3, B6, B7 in
   `readiness.md`).** Work outside the web-presentation lane: `apps/api`,
   `docker/`, `docker-compose.yml` and the `/backend` handlers in `apps/web` and

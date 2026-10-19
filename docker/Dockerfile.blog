@@ -7,6 +7,9 @@ ARG NEXT_PUBLIC_IMAGE_HOSTS=images.unsplash.com
 # Inlined at build time: canonicals, sitemap, robots, RSS and social cards.
 ARG NEXT_PUBLIC_SITE_URL=http://localhost:3001
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+# Footer links to the privacy policy, terms and content policy on the main site.
+ARG NEXT_PUBLIC_WEB_URL=http://localhost:3000
+ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
 ENV API_URL=$API_URL
 ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ENV NEXT_PUBLIC_IMAGE_HOSTS=$NEXT_PUBLIC_IMAGE_HOSTS

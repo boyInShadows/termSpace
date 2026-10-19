@@ -89,6 +89,9 @@ services:
       NEXT_PUBLIC_API_URL: /backend
       NEXT_PUBLIC_BLOG_URL: ${BLOG_SITE_URL:?Set BLOG_SITE_URL to the public blog origin in .env}
       NEXT_PUBLIC_SITE_URL: ${WEB_PUBLIC_URL:?Set WEB_PUBLIC_URL to the public web origin in .env}
+      # Policy pages: the entity and contact shown on /privacy, /terms and /content-policy.
+      LEGAL_ENTITY_NAME: ${LEGAL_ENTITY_NAME:-TermSpace}
+      LEGAL_CONTACT_EMAIL: ${LEGAL_CONTACT_EMAIL:?Set LEGAL_CONTACT_EMAIL (privacy and takedown contact) in .env}
     depends_on:
       api:
         condition: service_healthy
@@ -102,6 +105,7 @@ services:
       args:
         API_URL: ${BLOG_BUILD_API_URL:-http://api:4001}
         NEXT_PUBLIC_SITE_URL: ${BLOG_SITE_URL:?Set BLOG_SITE_URL to the public blog origin in .env}
+        NEXT_PUBLIC_WEB_URL: ${WEB_PUBLIC_URL:?Set WEB_PUBLIC_URL to the public web origin in .env}
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
         NEXT_PUBLIC_IMAGE_HOSTS: ${IMAGE_HOSTS:-images.unsplash.com}
     restart: unless-stopped

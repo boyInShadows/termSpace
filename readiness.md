@@ -18,10 +18,10 @@ Fix: `exec` the node process (or `init: true`); move `prisma migrate deploy` to 
 **B3. ~~500 responses leak internal messages unless `NODE_ENV` is exactly `production`.~~ FIXED in phase 1** (details only when `NODE_ENV=development`; compose already pinned `production` for `api`). Original finding: `apps/api/src/middleware/errorHandler.ts:97-101`. `apps/api/.env.example:65` ships `NODE_ENV=development`; in that mode cookies also lose `Secure` (`adminController.ts:9-17`, `readerController.ts:25-31`).
 Fix: invert to show details only when `NODE_ENV === "development"`; pin `NODE_ENV=production` in compose for `api`; throw at boot if it is unset.
 
-**B4. No legal or policy pages, in either app.** Neither footer links to a privacy policy, terms, cookie notice, content policy or DMCA/takedown route (`apps/web/components/layout/footer.tsx`, `apps/blog/components/SiteFooter.tsx`). The product has accounts (email+password, Google), comments, a newsletter and community-submitted content.
+**B4. ~~No legal or policy pages, in either app.~~ DONE in phase 2, draft text needs your review.** `/privacy`, `/terms`, `/content-policy` (EN + FA) live in `apps/web` (`lib/legal.ts`), linked from the web footer; the blog footer links to them on the main site (`NEXT_PUBLIC_WEB_URL`). Written from what the code does; no governing law or legal entity is invented. Contact comes from `LEGAL_CONTACT_EMAIL`, which compose requires. Not done: a consent line on the sign-up forms. Original finding: Neither footer links to a privacy policy, terms, cookie notice, content policy or DMCA/takedown route (`apps/web/components/layout/footer.tsx`, `apps/blog/components/SiteFooter.tsx`). The product has accounts (email+password, Google), comments, a newsletter and community-submitted content.
 Fix: add `/privacy`, `/terms`, `/content-policy` (with a takedown contact) to both apps, link them from the footers and the sign-up form. Add consent handling before adding any analytics. Needs legal text from you.
 
-**B5. Security headers are almost absent.** `apps/web/next.config.ts:14-19`, `apps/blog/next.config.mjs:15-20` set only `Content-Security-Policy: frame-ancestors 'none'` and `X-Frame-Options`. Missing: HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, a real CSP. Also `poweredByHeader` is on.
+**B5. ~~Security headers are almost absent.~~ DONE in phase 2, with one caveat.** Both apps now send HSTS (no `includeSubDomains`), nosniff, Referrer-Policy, Permissions-Policy, X-Frame-Options, and an enforced CSP of `frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'`; `poweredByHeader` is off. **`script-src` is report-only, not enforced:** Next's inline bootstrap scripts need a nonce setup first, so the full policy ships as `Content-Security-Policy-Report-Only` (Google sign-in allowed). Check the browser console for violations, then add nonces and enforce. Original finding: `apps/web/next.config.ts:14-19`, `apps/blog/next.config.mjs:15-20` set only `Content-Security-Policy: frame-ancestors 'none'` and `X-Frame-Options`. Missing: HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, a real CSP. Also `poweredByHeader` is on.
 Fix: add the headers in both `headers()` blocks (or at the edge), set `poweredByHeader: false`. The CSP must allow `https://accounts.google.com/gsi/client` (`web/features/account/google-sign-in.tsx:32`, `blog/components/ReaderAuthForm.tsx:56`) or Google sign-in breaks; ship it report-only first.
 
 **B6. ~~Production URLs silently fall back to localhost.~~ FIXED in phase 1** (blog build arg added; compose now requires `WEB_PUBLIC_URL`, `BLOG_SITE_URL`, `MEDIA_PUBLIC_URL`). The in-code localhost fallbacks in `next.config`/`lib` remain, deliberately: a throw there would break CI and e2e builds. Original finding:
@@ -33,7 +33,7 @@ Fix: add the `ARG`/`ENV` to `Dockerfile.blog` and a compose build arg; in `next.
 **B7. ~~A copied `.env.example` produces a live default admin.~~ FIXED in phase 1** (seed rejects `change-this*`; the API refuses to start in production with a placeholder in `DATABASE_URL`). Original finding: `apps/api/prisma/seed.ts:484` rejects only passwords starting `replace-with`; the root `.env.example` uses `change-this-admin-password` (25 chars, passes the length check). `POSTGRES_PASSWORD=change-this-database-password` (`.env.example:3`) is not checked anywhere; compose only requires non-empty.
 Fix: reject `change-this*` in the seed, or rename all placeholders to `replace-with-…`; add the same check to API startup for DB and secret placeholders.
 
-**B8. Footer links point at a dev showroom.** `apps/web/components/layout/footer.tsx:15-22`: "Creator guide", "Quality standards" and "About" all go to `/design-system`, which robots.txt disallows (`apps/web/app/robots.ts:5`) but still serves in production; "Support" goes to `/account`.
+**B8. ~~Footer links point at a dev showroom.~~ DONE in phase 2.** The three dead links and the empty "Create" column are gone, the home-page quality-standard link now goes to `/content-policy`, and `/design-system` returns 404 in production builds (and is `noindex`). "Support" still points at `/account`; that was not in scope. Original finding: `apps/web/components/layout/footer.tsx:15-22`: "Creator guide", "Quality standards" and "About" all go to `/design-system`, which robots.txt disallows (`apps/web/app/robots.ts:5`) but still serves in production; "Support" goes to `/account`.
 Fix: write the real pages or remove the links; remove or gate `/design-system` in production.
 
 ## SHOULD-FIX
@@ -134,9 +134,9 @@ Required by compose/API: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `D
 - [x] B3 (phase 1)
 - [x] B6 (phase 1)
 - [x] B7 (phase 1)
-- [ ] B5 Add HSTS, nosniff, Referrer-Policy, Permissions-Policy, CSP (report-only first, allow Google GSI); `poweredByHeader: false`
-- [ ] B4 Add privacy, terms and content/takedown pages to both apps and link them from footers and sign-up
-- [ ] B8 Fix or remove the three footer links to `/design-system`; gate that route in production
+- [x] B5 (phase 2) — enforce `script-src` after reviewing report-only violations
+- [x] B4 (phase 2) — have the text reviewed; add a consent line to sign-up
+- [x] B8 (phase 2)
 
 **Right after / if time allows**
 - [ ] S18 Take and test a `pg_dump`; write rollback + pre-deploy steps in README; add error tracking and an uptime check

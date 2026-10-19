@@ -213,7 +213,7 @@ export default async function Home() {
                   {sections.trustQuote}
                   <footer className="mt-4 font-sans text-sm not-italic text-muted-foreground">
                     <Link
-                      href={localePath("/design-system", locale)}
+                      href={localePath("/content-policy", locale)}
                       className="-my-1.5 inline-block py-1.5 transition-colors hover:text-primary"
                     >
                       {sections.trustQuoteLink}
