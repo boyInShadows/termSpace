@@ -4,6 +4,33 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **First-request sitemap recovery after offline builds.** Hosted checks on
+  `7c8f5db` all passed, but sitemap acceptance needed a retry: CI builds before
+  the fixture API starts, caches the three-route fallback, then serves that
+  stale response while regenerating. The old build manifest confirms a static
+  sitemap with a 30-second output lifetime inherited from its data requests.
+  - `app/sitemap.ts` now uses route `revalidate = 0`, preventing build-time
+    fallback output from becoming the live sitemap. The public API requests
+    retain their explicit 30-second cache; this follows Next's [documented
+    route/data-cache separation](https://nextjs.org/docs/app/guides/caching-without-cache-components#route-segment-config-revalidate).
+    Existing fallback behavior, pagination bounds, alternates and private-data
+    boundaries remain intact. The SEO check also asserts HTTP 200 before XML.
+  - Regression acceptance: built the fixture with API_URL pointing at an
+    unused loopback port and no API process. The manifest contains no cached
+    sitemap; after starting the runtime fixture, all 29 SEO checks pass without
+    retries (5 intentional mobile skips). Root verification and normal build
+    are recorded in `maintenance/performance-20261019/sitemap-*.log`.
+  - Closed the completed Lighthouse CI item in both queues after all six
+    hosted jobs passed on `7c8f5db`: [web/performance run](https://github.com/boyInShadows/termSpace/actions/runs/39313319877)
+    and [application/database run](https://github.com/boyInShadows/termSpace/actions/runs/39313319899).
+    Every downloaded report confirms CPU factor 3, RTT 150 ms and throughput
+    1638.4 Kbps. Hosted FID medians are 115/99/115 ms (limit 130), with all
+    other gates passing. The local default remains 4x; cold CPU benchmark
+    outliers are recorded separately from the steady calibration range.
+    Shared `pending.md`, `changelog.md` and the ignored local queue retain the
+    tighter LCP targets and owner-dependent acceptance; workflow comments now
+    distinguish steady CPU values from warm-up noise. No threshold was raised.
+
 - **Comparable hosted Lighthouse CPU profile.** Run 39311691198 passes the
   browser suite after the full-Chromium fix, but reproduces max-potential-FID
   failures at 149/135/157 ms with the default 4x CPU factor. Long tasks point

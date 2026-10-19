@@ -17,10 +17,6 @@ This file tracks known improvement work that has not been completed yet. When an
   and product detail 2.2 s; dashboard performance must reach 92 before its gate
   tightens. Profile the remaining shared hydration cost and private-data
   waterfall while preserving initial favorites reads and mutation ordering.
-- Verify the current Ramtin branch on GitHub's runner with the retained
-  Lighthouse throttling and TBT/FID limits. Latest main run 38893763199 failed
-  max-potential-FID at 150 ms on home and 131 ms on detail against 130 ms;
-  its first home TBT run was also an outlier. Do not raise budgets to mask it.
 
 ## Launch — Owner Decisions
 

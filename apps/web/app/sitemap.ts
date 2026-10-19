@@ -3,7 +3,8 @@ import { getMarketplaceCommunities, getProducts } from "@/lib/api";
 import { SITE_URL } from "@/lib/site";
 import type { Product } from "@/lib/types";
 
-export const revalidate = 3600;
+// A build may have no API; do not cache its fallback as the live sitemap.
+export const revalidate = 0;
 
 const PAGE_SIZE = 48;
 /** A ceiling on listing pages walked per build of the sitemap. */
