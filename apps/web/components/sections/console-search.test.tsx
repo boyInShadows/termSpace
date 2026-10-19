@@ -12,7 +12,7 @@ describe("ConsoleSearch", () => {
     window.localStorage.clear();
   });
 
-  it("gives the field a stable name rather than the rotating placeholder", () => {
+  it("gives the field a stable name independent of its placeholder", () => {
     render(<ConsoleSearch />);
     expect(
       screen.getByRole("combobox", {

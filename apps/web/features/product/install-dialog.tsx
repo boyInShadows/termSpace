@@ -28,7 +28,7 @@ export function InstallDialogContent({ installation }: { installation: Marketpla
   return (
     <Dialog.Portal>
       <Dialog.Overlay className="fixed inset-0 z-50 bg-black/55" />
-      <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(94vw,48rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border bg-background p-6 shadow-lift">
+      <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(94vw,48rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border bg-background p-6">
         <div className="flex items-start justify-between gap-5">
           <div>
             <Dialog.Title className="editorial text-3xl">{copy.title}</Dialog.Title>

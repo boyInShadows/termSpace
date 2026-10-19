@@ -177,7 +177,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
           onCheckedChange={(value) => update({ verified: value })}
           className="relative h-6 w-11 rounded-full bg-border-strong p-0.5 after:absolute after:-inset-x-1 after:-inset-y-2.5 data-[state=checked]:bg-primary"
         >
-          <Switch.Thumb className="block size-5 rounded-full bg-background shadow transition-transform data-[state=checked]:translate-x-5" />
+          <Switch.Thumb className="block size-5 rounded-full bg-background transition-transform data-[state=checked]:translate-x-5" />
         </Switch.Root>
       </div>
     </div>
@@ -245,7 +245,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
           {/* Sticky, so the count and the controls stay in reach while
               scrolling a page of results. At the very top: the site header
               scrolls away with the page. */}
-          <div className="sticky top-0 z-20 -mx-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border bg-background/90 px-2 py-3 backdrop-blur">
+          <div className="sticky top-0 z-20 -mx-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border bg-background px-2 py-3">
             <p className="shrink-0 font-mono text-sm" role="status">
               <strong>{meta.total.toLocaleString(fa ? "fa-IR" : "en")}</strong> {meta.total === 1 ? d.product : d.products}
             </p>
@@ -271,7 +271,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
                 </Dialog.Trigger>
                 <Dialog.Portal>
                   <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-                  <Dialog.Content className="fixed inset-y-0 end-0 z-50 w-[min(90vw,24rem)] overflow-y-auto bg-background p-6 shadow-lift">
+                  <Dialog.Content className="fixed inset-y-0 end-0 z-50 w-[min(90vw,24rem)] overflow-y-auto bg-background p-6">
                     <div className="flex items-center justify-between">
                       <Dialog.Title className="editorial text-2xl">
                         {d.filters}

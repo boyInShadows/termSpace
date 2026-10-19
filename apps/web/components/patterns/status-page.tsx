@@ -33,7 +33,7 @@ export function NotFoundView({ locale, eyebrow, title, body }: { locale: Locale;
           {body}
         </StatusHeading>
         <form action={localePath("/explore", locale)} role="search" className="mt-8 max-w-xl">
-          <div className="relative flex items-center rounded-xl border border-border-strong bg-surface/90 shadow-soft focus-within:border-primary">
+          <div className="relative flex items-center rounded-xl border border-border-strong bg-surface/90 focus-within:border-primary">
             <svg aria-hidden viewBox="0 0 24 24" className="ms-5 size-[18px] shrink-0 fill-none stroke-current stroke-2 text-muted-foreground" strokeLinecap="round">
               <circle cx="11" cy="11" r="7" />
               <path d="m20 20-3.5-3.5" />

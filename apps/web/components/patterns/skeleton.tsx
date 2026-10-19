@@ -43,9 +43,9 @@ export function ProductCardSkeleton({ compact = false }: { compact?: boolean }) 
     return (
       <div
         aria-hidden
-        className="flex h-[12.5rem] flex-col rounded-lg border border-border bg-surface p-4"
+        className="flex h-[12.5rem] flex-col rounded-lg border border-border-strong bg-background p-4"
       >
-        <Skeleton className="h-5 w-20 rounded-full" />
+        <Skeleton className="h-5 w-20 rounded-none" />
         <Skeleton className="mt-3 h-5 w-3/4" />
         <Skeleton className="mt-2 h-3.5 w-full" />
         <Skeleton className="mt-1.5 h-3.5 w-5/6" />
@@ -56,10 +56,10 @@ export function ProductCardSkeleton({ compact = false }: { compact?: boolean }) 
   return (
     <div
       aria-hidden
-      className="flex h-full flex-col rounded-lg border border-border bg-surface p-5"
+      className="flex h-full flex-col rounded-lg border border-border-strong bg-background p-5"
     >
       <div className="flex items-start justify-between gap-3">
-        <Skeleton className="h-5 w-20 rounded-full" />
+        <Skeleton className="h-5 w-20 rounded-none" />
         <Skeleton className="size-6 rounded-full" />
       </div>
       <Skeleton className="mt-4 h-6 w-3/4" />
@@ -72,7 +72,7 @@ export function ProductCardSkeleton({ compact = false }: { compact?: boolean }) 
         <Skeleton className="h-3.5 w-28" />
       </div>
       <div className="mt-5 flex-1 border-t border-border pt-4">
-        <Skeleton className="h-5 w-40 rounded-full" />
+        <Skeleton className="h-5 w-40 rounded-none" />
         <Skeleton className="mt-3 h-3 w-48" />
         <div className="mt-4 flex justify-end">
           <Skeleton className="h-9 w-28 rounded-md" />

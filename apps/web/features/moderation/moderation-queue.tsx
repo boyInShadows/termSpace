@@ -86,7 +86,7 @@ export function ModerationQueue() {
       {result.data.listings.map((listing) => <article key={listing.id} className="rounded-2xl border bg-surface p-5 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold">{listing.name}</h2><span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", statusClass(listing.state))}>{listingStateLabel(listing.state, t.creatorHub)}</span></div>
+            <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold">{listing.name}</h2><span className={cn("rounded-none px-2.5 py-1 text-xs font-semibold", statusClass(listing.state))}>{listingStateLabel(listing.state, t.creatorHub)}</span></div>
             <p className="mt-1 text-sm text-muted-foreground">@{listing.creator.handle} · {listing.type} · {date.format(new Date(listing.updatedAt))}</p>
             {listing.selfOwned && <p className="mt-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300"><ShieldAlert className="size-4" />{m.selfOwned}</p>}
           </div>

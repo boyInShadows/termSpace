@@ -10,9 +10,8 @@ const colors = [
   ["Raised", "bg-surface-raised", "oklch(23% .03 288)"],
   ["Foreground", "bg-foreground", "oklch(96% .01 286)"],
   ["Muted", "bg-muted", "oklch(26% .026 286)"],
-  ["Plasma / primary", "bg-primary", "oklch(68% .195 292)"],
-  ["Signal / accent", "bg-accent", "oklch(80% .135 196)"],
-  ["Ion / spark", "bg-spark", "oklch(72% .215 340)"],
+  ["Accent / primary", "bg-primary", "oklch(68% .195 292)"],
+  ["Information", "bg-accent", "oklch(80% .135 196)"],
   ["Verified", "bg-success", "oklch(82% .175 152)"],
   ["Caution", "bg-warning", "oklch(83% .15 85)"],
   ["Alert", "bg-destructive", "oklch(66% .205 22)"],
@@ -35,7 +34,7 @@ export default function DesignSystemPage() {
       <Header />
       <main>
         <section className="container-page py-16">
-          <p className="eyebrow">termspace design language · signal &amp; void</p>
+          <p className="eyebrow">termspace design language · the datasheet</p>
           <div className="mt-5 grid gap-8 md:grid-cols-[1fr_.7fr]">
             <h1 className="editorial text-5xl font-medium leading-[1.02] sm:text-6xl">
               Signal for the craft.
@@ -43,9 +42,9 @@ export default function DesignSystemPage() {
               Clarity for the choice.
             </h1>
             <p className="self-end text-base leading-7 text-muted-foreground">
-              An editorial community-library system built to make technical resources
+              A shared community-library and dashboard system built to make technical resources
               understandable, comparable, and worthy of trust — on a
-              violet-cast void that reads as emission rather than paint.
+              ruled page with clear typography and explicit product states.
             </p>
           </div>
         </section>
@@ -98,11 +97,11 @@ export default function DesignSystemPage() {
             <div className="grid gap-8 lg:grid-cols-[15rem_1fr]">
               <div>
                 <p className="eyebrow">Typography</p>
-                <h2 className="editorial mt-2 text-3xl">Three voices</h2>
+                <h2 className="editorial mt-2 text-3xl">Words and data</h2>
               </div>
               <div className="space-y-8">
                 <div>
-                  <p className="eyebrow">Newsreader · editorial display</p>
+                  <p className="eyebrow">Geist Sans · shared headings</p>
                   <p className="editorial mt-2 text-5xl leading-none">
                     Useful things, beautifully explained.
                   </p>
@@ -142,7 +141,7 @@ export default function DesignSystemPage() {
                 </p>
               </div>
               <div>
-                <p className="eyebrow">Radius</p>
+                <p className="eyebrow">Square geometry</p>
                 <div className="mt-5 flex gap-3">
                   {["rounded-sm", "rounded-md", "rounded-lg", "rounded-xl"].map(
                     (x) => (
@@ -155,10 +154,10 @@ export default function DesignSystemPage() {
                 </div>
               </div>
               <div>
-                <p className="eyebrow">Elevation</p>
+                <p className="eyebrow">Ruled surfaces</p>
                 <div className="mt-5 flex gap-4">
-                  <span className="size-14 rounded-md bg-surface shadow-soft" />
-                  <span className="size-14 rounded-md bg-surface shadow-lift" />
+                  <span className="size-14 border border-border bg-background" />
+                  <span className="size-14 border border-foreground/60 bg-background" />
                 </div>
               </div>
             </div>
@@ -172,24 +171,23 @@ export default function DesignSystemPage() {
                   Is this the right shelf for the work?
                 </h2>
                 <p className="mt-5 leading-7 text-muted-foreground">
-                  The concept is distinctive through its editorial serif, a
-                  disciplined plasma accent, technical mono details, and
+                  The system is recognizable through its ruled sections, a
+                  restrained accent, technical mono data, and
                   product-information-first composition. Trust comes from
                   explicit compatibility, permissions, versioning, and scan
                   status—not decorative security claims.
                 </p>
                 <p className="mt-4 leading-7 text-muted-foreground">
-                  Colour is used semantically rather than decoratively. Plasma
-                  is the only hue permitted to cover large areas, Signal stays
-                  on technical metadata, Ion exists only inside gradients, and
-                  Verified green is reserved for trust claims — if something is
-                  green here, it is an assertion about safety, never a garnish.
+                  Primary actions use ink. Accent marks focus and selection.
+                  Green identifies reviewed or successful states; amber and red
+                  identify caution, errors or absence. Labels carry the meaning
+                  alongside color, in both themes.
                 </p>
                 <div className="mt-7 grid gap-5 sm:grid-cols-2">
                   <Decision
                     title="Strengths"
                     items={[
-                      "Recognizable editorial voice",
+                      "One identity across discovery and dashboard",
                       "Trust metadata is first-class",
                       "Cards scale across asset types",
                       "Strong creator craft signal",
@@ -198,9 +196,9 @@ export default function DesignSystemPage() {
                   <Decision
                     title="Risks to test"
                     items={[
-                      "Serif density on small screens",
+                      "Typography and wrapping on small screens",
                       "How much metadata users need",
-                      "Terracotta action salience",
+                      "Primary action salience",
                       "Meaning of verified status",
                     ]}
                   />

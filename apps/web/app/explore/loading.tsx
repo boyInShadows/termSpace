@@ -19,7 +19,7 @@ export default async function ExploreLoading() {
         <Skeleton className="h-12 w-72 max-w-full" />
         <Skeleton className="mt-6 h-12 w-full max-w-2xl" />
         <div className="mt-6 flex flex-wrap gap-2">
-          {[0, 1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-9 w-24 rounded-full" />)}
+          {[0, 1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-9 w-24 rounded-none" />)}
         </div>
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((item) => <Skeleton key={item} className="h-64 w-full rounded-xl" />)}

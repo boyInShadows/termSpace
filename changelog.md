@@ -2,6 +2,49 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-19
+
+- **Main-site/dashboard design consistency (owner-requested highest priority).**
+  Added the P0 plan to ignored `ramtin-pending.md` and completed UI01–UI03 as
+  this session's implementation phase. `AGENTS.md` now requires the installed
+  Impeccable skill for design planning, creation, changes and review throughout
+  the project, with rendered theme/locale/responsive verification.
+  - Extended the established Datasheet identity through shared web foundations:
+    Geist/Estedad headings, square radius tokens, ink-filled primary actions,
+    plain outlined badges and ruled listing frames. Shared fields use readable
+    16px text. Header/footer, homepage sections, search suggestions, menus,
+    dialogs, moderation labels and loading placeholders now use that vocabulary.
+    Retained familiar avatar/switch geometry, state labels, focus and role gates.
+  - Removed decorative gradients, blur, shadows, lift, scroll entrances,
+    Newsreader requests and typed-placeholder timers. Search submission, scope,
+    suggestions and recent history remain. Removed unused effect definitions
+    and reconciled DESIGN.md, the landing surface brief and design-system
+    showroom with the actual shipped composition. Blog remains its separate
+    editorial app; the project-wide design workflow requirement applies to it.
+  - Added browser regressions across public/account/dashboard/community routes
+    in EN/FA and both themes. Updated the retired reveal and different-English-
+    weight assertions to require immediately visible sections and shared heading
+    weight with Persian's looser leading. The first run caught an English font
+    fallback mismatch; fixed the shared heading declaration and reran the suite.
+  - Verification: root typecheck, 500 unit tests (5 database-dependent skips),
+    web lint, regular root production build, 247 Chrome tests (29 conditional
+    skips, four workers), and all nine Lighthouse runs passed unchanged gates.
+    Representative home/dashboard/detail performance scores: 96/91/95;
+    accessibility 100 throughout. Existing tighter LCP/JS/CI targets stay open.
+    Sixty before and sixty after captures at 320/768/1280px cover home,
+    dashboard, explore, detail and account in both themes/locales, with no
+    horizontal overflow or page errors. Reviewed representative renders at
+    desktop/tablet/phone sizes. The Impeccable detector had 13 advisory findings,
+    no blocking findings; intentional typography/focus/feedback dispositions
+    are documented. Manual connected-source/diff review found no unresolved
+    functional issue; graph freshness warnings were checked through source.
+  - Shared surfaces: owner-authorized `AGENTS.md` design policy and this
+    `changelog.md` entry. No API/schema/authentication/provider/email change.
+    Local evidence: `maintenance/design-consistency-20261019/` (ignored).
+    DC05–DC07 and the remaining backlog are still open under the one-phase
+    rule. Physical devices, actual 200% browser zoom, native Persian wording,
+    live providers and CI acceptance were not performed.
+
 ## 2026-10-18
 
 - **Dashboard acquired library (DC04, owner-requested).**

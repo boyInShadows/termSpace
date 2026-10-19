@@ -110,10 +110,9 @@ export function Process({ copy }: { copy: Pick<HomeSections, "processEyebrow" | 
   const current = STEPS[active];
 
   return (
-    <section className="border-y border-border bg-surface/40">
+    <section className="border-y border-border bg-background">
       <div className="container-page section-y">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="eyebrow">{copy.processEyebrow}</p>
           <h2 className="editorial mt-3 text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]">
             {copy.processTitle}
           </h2>
@@ -142,9 +141,9 @@ export function Process({ copy }: { copy: Pick<HomeSections, "processEyebrow" | 
                     <span
                       aria-hidden
                       className={cn(
-                        "absolute start-0 top-8 grid size-8 place-items-center rounded-full border transition-all duration-500 lg:top-12",
+                        "absolute start-0 top-8 grid size-8 place-items-center rounded-none border transition-all duration-200 lg:top-12",
                         isActive
-                          ? "border-primary bg-primary text-primary-foreground shadow-plasma"
+                          ? "border-foreground bg-foreground text-background"
                           : "border-border bg-background text-muted-foreground",
                       )}
                     >
@@ -153,7 +152,7 @@ export function Process({ copy }: { copy: Pick<HomeSections, "processEyebrow" | 
 
                     <p
                       className={cn(
-                        "font-mono text-xs transition-colors duration-500",
+                        "font-mono text-xs transition-colors duration-200",
                         isActive ? "text-primary" : "text-muted-foreground",
                       )}
                     >
@@ -161,7 +160,7 @@ export function Process({ copy }: { copy: Pick<HomeSections, "processEyebrow" | 
                     </p>
                     <h3
                       className={cn(
-                        "editorial mt-2 text-2xl transition-colors duration-500 sm:text-3xl",
+                        "editorial mt-2 text-2xl transition-colors duration-200 sm:text-3xl",
                         isActive ? "text-foreground" : "text-muted-foreground",
                       )}
                     >
@@ -214,8 +213,8 @@ export function Process({ copy }: { copy: Pick<HomeSections, "processEyebrow" | 
 function StepPanel({ step, index }: { step: Step; index: number }) {
   const PanelIcon = PANEL_ICONS[index];
   return (
-    <div className="panel overflow-hidden rounded-2xl shadow-lift">
-      <div className="flex items-center gap-2.5 border-b border-border/80 bg-surface-raised/60 px-4 py-3">
+    <div className="panel overflow-hidden rounded-2xl">
+      <div className="flex items-center gap-2.5 border-b border-border/80 bg-muted px-4 py-3">
         <PanelIcon size={14} className="text-primary" />
         <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           {step.id}
@@ -225,7 +224,7 @@ function StepPanel({ step, index }: { step: Step; index: number }) {
             <span
               key={candidate.id}
               className={cn(
-                "h-1 rounded-full transition-[width,background-color] duration-(--duration-chip) ease-(--ease-spring)",
+                "h-1 rounded-none transition-[width,background-color] duration-(--duration-chip) ease-(--ease-spring)",
                 position === index ? "w-6 bg-primary" : "w-1.5 bg-border-strong",
               )}
             />
@@ -256,7 +255,6 @@ function StepPanel({ step, index }: { step: Step; index: number }) {
             </span>
           </div>
         ))}
-        <span className="mt-2 inline-block h-4 w-2 animate-pulse bg-accent align-middle" />
       </div>
     </div>
   );

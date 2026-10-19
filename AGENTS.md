@@ -49,6 +49,18 @@ Tool-agnostic rules first; Claude Code specifics are in their own section at the
 - Apply its smallest-change/YAGNI guidance without weakening validation, authentication,
   authorization, security, accessibility, migrations, or the verification gates in this file.
 
+## Design consistency — Impeccable required
+
+- Use the installed `impeccable` skill for every design-related task: planning, creating,
+  changing or reviewing UI/UX, layout, typography, color, components, states and motion.
+  Read its project context, `DESIGN.md` and the applicable surface brief before deciding.
+- Keep the whole project visually consistent. The main site and dashboard share the
+  Datasheet identity, existing theme tokens, typography and control vocabulary; adapt
+  density and hierarchy to the task without introducing a competing visual system.
+- Build with Impeccable's guidance and check the rendered result with it before completion:
+  both themes, English/Persian RTL, responsive widths, keyboard focus and relevant states.
+  Record verification and unresolved acceptance in the changelog and pending list.
+
 ## Claude Code session commands
 
 When to use each, not just what it does.

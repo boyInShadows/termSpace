@@ -46,7 +46,7 @@ function ReviewRow({ review, onChange }: { review: OwnReview; onChange: (id: str
           <Rating rating={review.rating} />
           <span className="text-xs text-muted-foreground">{date.format(new Date(review.createdAt))}{review.updatedAt !== review.createdAt && ` · ${t.edited}`}</span>
         </div>
-        {review.hidden && <span className="rounded-full bg-muted px-2 py-0.5 text-xs">{t.hiddenBy}</span>}
+        {review.hidden && <span className="rounded-none bg-muted px-2 py-0.5 text-xs">{t.hiddenBy}</span>}
       </div>
       <p className="ts-bidi mt-2 text-sm">{review.body}</p>
       {review.hidden?.reason && <p className="mt-2 text-xs text-muted-foreground">{review.hidden.reason}</p>}

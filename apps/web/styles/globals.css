@@ -28,7 +28,7 @@
 
 @theme {
   --font-sans: var(--font-geist), ui-sans-serif, sans-serif;
-  --font-serif: var(--font-newsreader), Georgia, serif;
+  --font-serif: var(--font-geist), ui-sans-serif, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --color-background: var(--background);
@@ -56,15 +56,13 @@
   --color-destructive: var(--destructive);
   --color-info: var(--info);
 
-  --radius-sm: 0.35rem;
-  --radius-md: 0.6rem;
-  --radius-lg: 0.9rem;
-  --radius-xl: 1.25rem;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
 
-  --shadow-soft: var(--shadow-soft);
-  --shadow-lift: var(--shadow-lift);
-  --shadow-plasma: var(--glow-plasma);
-  --shadow-signal: var(--glow-signal);
 
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
@@ -109,7 +107,7 @@ html[dir="rtl"] body {
 }
 
 html[dir="rtl"] .editorial {
-  font-family: var(--font-estedad), var(--font-newsreader), serif;
+  font-family: var(--font-estedad), var(--font-geist), sans-serif;
   letter-spacing: 0;
 }
 
@@ -129,7 +127,7 @@ html[dir="rtl"] .eyebrow {
 }
 
 /* --- Persian type scale ----------------------------------------------------
-   Estedad has a taller x-height and wider glyphs than Newsreader, so Persian
+   Estedad has a taller x-height and wider glyphs than Geist, so Persian
    display type runs smaller, looser and lighter than the English.
    Unlayered, so it wins over the per-element leading utilities. */
 html[lang="fa"] body {
@@ -168,7 +166,8 @@ select {
 
 /* --- typography -------------------------------------------------------- */
 .editorial {
-  font-family: var(--font-newsreader), Georgia, serif;
+  font-family: var(--font-geist), sans-serif;
+  font-weight: 600;
   letter-spacing: -0.025em;
 }
 
@@ -182,14 +181,14 @@ select {
 }
 
 .eyebrow {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-family: var(--font-geist), ui-sans-serif, sans-serif;
   /* 12px, not 11.2px. --muted-foreground itself is comfortably AA on every
      surface it is used on here (8.25:1 dark, 6.98:1 light), so the problem
      with these labels was never colour — it is 0.16em of tracking on type
      small enough that the letterforms stop carrying it. */
   font-size: 0.75rem;
   line-height: 1.1rem;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 600;
   color: var(--muted-foreground);
@@ -197,7 +196,7 @@ select {
 
 
 .rule-plasma {
-  background: linear-gradient(90deg, transparent, var(--primary), var(--spark), transparent);
+  background: var(--border-strong);
 }
 
 /* A horizontally scrolling strip on the page background, with a soft edge
@@ -215,9 +214,8 @@ select {
 
 /* --- surfaces ---------------------------------------------------------- */
 .panel {
-  background: color-mix(in oklab, var(--surface) 82%, transparent);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(12px);
+  background: var(--background);
+  border: 1px solid var(--border-strong);
 }
 
 
@@ -228,17 +226,8 @@ select {
    subsets for the Latin faces; Estedad is the Arabic-script subset only, so
    Latin inside Persian text falls through to Geist.
 
-   The Fallback faces are the metric overrides next/font generates for these
-   files (Times New Roman and Arial resized to match), so text does not
+   The fallback face uses metric overrides (Arial resized to match), so text does not
    move when the web font arrives. */
-@font-face {
-  font-family: "Newsreader Variable";
-  font-style: normal;
-  font-display: swap;
-  font-weight: 200 800;
-  src: url("/fonts/newsreader-latin-wght-v5.3.0.woff2") format("woff2-variations");
-  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-}
 @font-face {
   font-family: "Geist Variable";
   font-style: normal;
@@ -254,14 +243,6 @@ select {
   font-weight: 100 900;
   src: url("/fonts/geist-mono-latin-wght-v5.3.0.woff2") format("woff2-variations");
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-}
-@font-face {
-  font-family: "Newsreader Fallback";
-  src: local("Times New Roman");
-  ascent-override: 70.13%;
-  descent-override: 25.29%;
-  line-gap-override: 0%;
-  size-adjust: 104.8%;
 }
 @font-face {
   font-family: "Geist Fallback";
@@ -282,15 +263,6 @@ select {
 
 /* --- motion primitives ------------------------------------------------- */
 
-/* The logo's terminal caret. `steps(2)` so it snaps on and off like a real
-   cursor instead of fading, which would read as a pulsing decoration. The
-   global reduced-motion rule stops it and leaves the bar visible. */
-@keyframes ts-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.ts-caret { animation: ts-blink 1.15s steps(2, jump-none) infinite; }
 
 /* Each line of the pinned process panel cross-fades in when the step
    changes. React remounts them (the key includes the value), so the animation
@@ -301,40 +273,6 @@ select {
 }
 .ts-panel-line {
   animation: ts-fade var(--duration-panel) var(--ease-out-expo) backwards;
-}
-
-/* --- hover lift -----------------------------------------------------------
-   Replaces the pointer-tracking tilt: the same "this is live" cue from two
-   properties and no script. */
-.ts-lift {
-  transition:
-    translate var(--duration-hover) var(--ease-out-expo),
-    box-shadow var(--duration-hover) var(--ease-out-expo);
-}
-.ts-lift:hover {
-  translate: 0 -2px;
-  box-shadow: var(--shadow-lift);
-}
-
-/* --- scroll reveal ------------------------------------------------------
-   Driven by the scroll position itself (a view timeline), so there is no
-   observer, no React state and no script. Opacity and translate only, so a
-   reveal never reflows the page. Browsers without scroll-driven animations
-   get no reveal at all: the content is simply there. A reveal is
-   decoration, and a JS fallback would keep the worst code path for the
-   smallest audience. */
-@keyframes ts-reveal-in {
-  from {
-    opacity: 0;
-    translate: 0 16px;
-  }
-}
-@supports (animation-timeline: view()) {
-  .ts-reveal {
-    animation: ts-reveal-in linear both;
-    animation-timeline: view();
-    animation-range: entry 0% entry 40%;
-  }
 }
 
 /* --- listing morph ------------------------------------------------------
@@ -387,8 +325,6 @@ html.light [data-theme-icon="moon"] {
 /* --- accessibility ------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .ts-reveal { animation: none !important; }
-  .ts-lift:hover { translate: none; }
   *,
   *::before,
   *::after {

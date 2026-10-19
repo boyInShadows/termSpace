@@ -45,8 +45,8 @@ export function ProductCard({
   return (
     <article
       className={cn(
-        "group relative flex h-full flex-col rounded-lg border border-border bg-surface p-5 transition duration-200",
-        "hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lift focus-within:border-primary",
+          "group relative flex h-full min-w-0 flex-col border border-border-strong bg-background p-5 transition-colors duration-200",
+          "hover:border-foreground/60 focus-within:border-primary",
         isList && "sm:flex-row sm:items-stretch sm:gap-6",
       )}
     >
@@ -109,7 +109,7 @@ export function ProductCard({
         {product.communities.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2" aria-label={card.communities}>
             {product.communities.slice(0, 3).map((community) => (
-              <Link key={community.slug} href={localePath(`/communities/${community.slug}`, locale)} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Link key={community.slug} href={localePath(`/communities/${community.slug}`, locale)} className="rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 <Badge variant="outline">{fa ? community.nameFa ?? community.nameEn : community.nameEn}</Badge>
               </Link>
             ))}

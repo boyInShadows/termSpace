@@ -4,7 +4,7 @@ import { BadgeCheck, ShieldAlert, ShieldCheck, Star } from "lucide-react";
 import type { Compatibility, Creator, ProductType } from "@/lib/types";
 /** `label` is the localized name; server callers without a locale fall back to the type key. */
 export function ProductTypeBadge({ type, label }: { type: ProductType; label?: string }) {
-  return <Badge variant="info">{label ?? type}</Badge>;
+  return <Badge variant="outline">{label ?? type}</Badge>;
 }
 export function CreatorIdentity({
   creator,

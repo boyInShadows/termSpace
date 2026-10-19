@@ -148,7 +148,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
         <Panel title={m.communities}>{preview.proposedSnapshot?.communityRequests.length ? <div className="space-y-3">{preview.proposedSnapshot.communityRequests.map(({ community, placement }) => {
           const actions = placement?.state === "REQUESTED" ? ["APPROVE", "REJECT"] as const : placement?.state === "APPROVED" ? ["REMOVE"] as const : [];
           return <article key={community.slug} className="rounded-lg border p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-semibold">{locale === "fa" ? community.nameFa ?? community.nameEn : community.nameEn}</h3><p className="mt-1 text-xs text-muted-foreground">{community.primaryPlatform}</p></div><span className="rounded-full border px-2.5 py-1 text-xs font-semibold">{placement?.state.toLowerCase() ?? "requested"}</span></div>
+            <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-semibold">{locale === "fa" ? community.nameFa ?? community.nameEn : community.nameEn}</h3><p className="mt-1 text-xs text-muted-foreground">{community.primaryPlatform}</p></div><span className="rounded-none border px-2.5 py-1 text-xs font-semibold">{placement?.state.toLowerCase() ?? "requested"}</span></div>
             <p className="mt-3 text-sm">{locale === "fa" ? community.rulesFa ?? community.rulesEn : community.rulesEn}</p>
             {placement?.publicReason && <p className="mt-3 rounded-md bg-muted/50 p-3 text-sm">{placement.publicReason}</p>}
             {placement && actions.length > 0 && <form className="mt-4 grid gap-3 border-t pt-4" onSubmit={(event) => void submitPlacement(event, community.slug, placement.version)}>
