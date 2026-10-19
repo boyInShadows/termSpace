@@ -136,7 +136,7 @@ export const api = {
     const data: ArticleSummary[] = [];
     let page = 1;
     do {
-      const response = await this.listArticles({ page, limit: 200 }, options);
+      const response = await this.listArticles({ page, limit: 50 }, options);
       data.push(...response.data);
       if (!response.meta.hasNextPage) break;
       page += 1;

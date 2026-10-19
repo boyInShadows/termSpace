@@ -1,14 +1,21 @@
 import "dotenv/config";
 import { createApp } from "./app.js";
+import { assertProductionConfig } from "./lib/productionConfig.js";
 import { prisma } from "./lib/prisma.js";
 
 const port = Number(process.env.PORT ?? 4001);
 
+// Crash on a stray rejection or exception instead of limping on in an unknown state;
+// the container restarts the API. Log the message only, never request data.
+for (const event of ["unhandledRejection", "uncaughtException"] as const) {
+  process.on(event, (reason) => {
+    console.error(`${event}:`, reason instanceof Error ? reason.stack : reason);
+    process.exit(1);
+  });
+}
+
 async function main() {
-  // The compose file only checks that the database password is non-empty.
-  if (process.env.NODE_ENV === "production" && /change-this|replace-with/.test(process.env.DATABASE_URL ?? "")) {
-    throw new Error("DATABASE_URL still contains a .env.example placeholder");
-  }
+  assertProductionConfig();
   const app = createApp();
 
   // Verify the database connection before serving.

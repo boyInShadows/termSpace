@@ -4,6 +4,33 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **Security hardening, phase 3: `readiness.md` S1-S12.** Outside the web lane:
+  `apps/api`, `docker-compose.yml`, the `/backend` handlers, and the explore and
+  community pages' search calls (`lib/api.ts` is a shared surface).
+  - Rate limits: separate per-IP limiters for reader login, admin login,
+    register, Google sign-in and password change; a 30/min search limiter on
+    products, community pages and articles; the web search pages forward the
+    visitor's `X-Forwarded-For` (searches only, so the 30 s catalogue cache is
+    untouched) via `lib/clientIp.ts`.
+  - Login timing: a real bcrypt compare runs for unknown users (`lib/passwordCompare.ts`).
+  - Boot: `assertProductionConfig()` (database placeholder, `CORS_ORIGINS`, email
+    secret, provider token key, no `LOCAL_AUTO_VERIFY_EMAIL`); the bypass is also
+    off in production in code; crash handlers for unhandled rejections;
+    compose requires `MARKETPLACE_PROVIDER_TOKEN_KEY` for the API.
+  - Load: relevance ranking capped at 2000 matches; article page size max 50
+    (the blog pages by 50); Prisma `connection_limit` per compose service.
+  - Proxy: `/backend` strips stale encoding headers and rejects bodies over
+    12 MB with a 413.
+  - Not changed, with reasons in `readiness.md`: S2 (no shared store yet), S6
+    (those lists are admin-curated or per-user), S10 enumeration on register
+    (product decision), S11 and S12 (not exploitable in the current builds).
+  - Verified: typecheck, `npm test` (web with
+    `NODE_OPTIONS=--no-experimental-webstorage`), web lint, build, e2e (237
+    passed), `docker compose config`. Not run: the two API integration test files
+    (need a database), lhci (no page changed visually). New tests:
+    `passwordCompare`, `productionConfig`, extended `security` and
+    `emailVerification`.
+
 - **Pre-deploy blockers, phase 2 of 2: policies, headers, footer (B4, B5, B8 in
   `readiness.md`).** Touches `apps/web` and `apps/blog` presentation plus a shared
   surface: `apps/web/lib/i18n/common.ts` (footer labels).

@@ -69,7 +69,8 @@ export const updateArticleSchema = z.object({
 
 export const articleQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
-  limit: z.coerce.number().int().min(1).max(200).optional().default(9),
+  // Each row carries its full body (reading time is computed from it), so keep pages small.
+  limit: z.coerce.number().int().min(1).max(50).optional().default(9),
   category: z.string().optional(),
   tag: z.string().optional(),
   series: z.string().optional(),

@@ -54,6 +54,18 @@ describe("email verification tokens", () => {
     expect(() => localEmailVerificationBypassEnabled()).toThrow(/restricted to loopback/);
   });
 
+  it("never enables the local bypass in production, even on a loopback URL", () => {
+    process.env.LOCAL_AUTO_VERIFY_EMAIL = "true";
+    process.env.WEB_PUBLIC_URL = "http://localhost:3100";
+    const previousEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    try {
+      expect(localEmailVerificationBypassEnabled()).toBe(false);
+    } finally {
+      process.env.NODE_ENV = previousEnv;
+    }
+  });
+
   it("keeps the local bypass disabled by default", () => {
     delete process.env.LOCAL_AUTO_VERIFY_EMAIL;
     expect(localEmailVerificationBypassEnabled()).toBe(false);

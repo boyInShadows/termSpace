@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { compare } from "bcryptjs";
+import { comparePassword } from "../lib/passwordCompare.js";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { ADMIN_SESSION_COOKIE, hashSessionToken } from "../middleware/auth.js";
@@ -19,7 +19,7 @@ function cookieOptions() {
 export async function loginAdmin(req: Request, res: Response) {
   const email = String(req.body.email).trim().toLowerCase();
   const user = await prisma.adminUser.findUnique({ where: { email } });
-  const valid = user ? await compare(String(req.body.password), user.passwordHash) : false;
+  const valid = await comparePassword(String(req.body.password), user?.passwordHash);
 
   if (!user || !valid) {
     res.status(401).json({ error: { code: "INVALID_CREDENTIALS", message: "Invalid email or password" } });

@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { compare, hash } from "bcryptjs";
+import { comparePassword } from "../lib/passwordCompare.js";
 import { OAuth2Client } from "google-auth-library";
 import { Prisma, type MarketplaceRole } from "@prisma/client";
 import type { Request, Response } from "express";
@@ -69,7 +70,9 @@ export async function loginReader(req: Request, res: Response) {
     where: { email },
     include: { marketplaceRoleGrants: activeMarketplaceRoles },
   });
-  if (!user?.passwordHash || !(await compare(String(req.body.password), user.passwordHash))) {
+  // Compare even when there is no user, so response time does not reveal which emails exist.
+  const passwordMatches = await comparePassword(String(req.body.password), user?.passwordHash);
+  if (!user || !passwordMatches) {
     res.status(401).json({ error: { code: "INVALID_CREDENTIALS", message: "Invalid email or password" } });
     return;
   }

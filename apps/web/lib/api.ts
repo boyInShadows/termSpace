@@ -72,15 +72,15 @@ const publicRevalidate = (filters: ProductFilters) => (filters.q?.trim() ? undef
 export async function getMarketplaceHome() { return (await request<{ data: MarketplaceHome }>("/api/marketplace/home", { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
 export async function getMarketplaceItemTypes() { return (await request<{ data: MarketplaceItemType[] }>("/api/marketplace/item-types", { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
 export async function getMarketplaceCommunities() { return (await request<{ data: MarketplaceCommunity[] }>("/api/marketplace/communities", { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
-export async function getMarketplaceCommunity(slug: string, filters: ProductFilters = {}) {
+export async function getMarketplaceCommunity(slug: string, filters: ProductFilters = {}, forward?: Record<string, string>) {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => { if (key !== "community" && value !== undefined && value !== "" && value !== "All" && value !== false) params.set(key, String(value)); });
-  return request<MarketplaceCommunityPageResult>(`/api/marketplace/communities/${encodeURIComponent(slug)}?${params}`, { revalidate: publicRevalidate(filters) });
+  return request<MarketplaceCommunityPageResult>(`/api/marketplace/communities/${encodeURIComponent(slug)}?${params}`, { headers: forward, revalidate: publicRevalidate(filters) });
 }
-export async function getProducts(filters: ProductFilters = {}, signal?: AbortSignal) {
+export async function getProducts(filters: ProductFilters = {}, signal?: AbortSignal, forward?: Record<string, string>) {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== "" && value !== "All" && value !== false) params.set(key, String(value)); });
-  return request<ProductPageResult>(`/api/marketplace/products?${params}`, { signal, revalidate: publicRevalidate(filters) });
+  return request<ProductPageResult>(`/api/marketplace/products?${params}`, { signal, headers: forward, revalidate: publicRevalidate(filters) });
 }
 export async function getProduct(slug: string) { return (await request<{ data: ProductDetail }>(`/api/marketplace/products/${encodeURIComponent(slug)}`, { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
 export async function getProductRelease(slug: string, version: string, signal?: AbortSignal) { return (await request<{ data: ProductRelease }>(`/api/marketplace/products/${encodeURIComponent(slug)}/releases/${encodeURIComponent(version)}`, { signal })).data; }

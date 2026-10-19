@@ -7,6 +7,7 @@ import { ApiError, getMarketplaceCommunities, getMarketplaceHome, getMarketplace
 import { discoveryHref, filtersFromParams, toSearchParams, type RawSearchParams } from "@/lib/discovery-url";
 import { localePath } from "@/lib/i18n";
 import { pageAlternates } from "@/lib/alternates";
+import { visitorHeaders } from "@/lib/clientIp";
 import { getLocale } from "@/lib/serverLocale";
 import { copy } from "@/lib/i18n";
 
@@ -18,8 +19,10 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   const locale = await getLocale();
   const raw = await searchParams;
   const filters = filtersFromParams(raw);
+  // Only searches are rate-limited per visitor; leave the shared catalogue cache alone.
+  const forward = filters.q ? await visitorHeaders() : undefined;
   const [initialState, home, communities, itemTypes] = await Promise.all([
-    getProducts(filters)
+    getProducts(filters, undefined, forward)
       .then((result) => ({ result, error: false, rejected: false, rateLimited: false }))
       .catch((failure: unknown) => ({
         result: { data: [], meta: { page: filters.page ?? 1, limit: filters.limit ?? 12, total: 0, totalPages: 0 } },

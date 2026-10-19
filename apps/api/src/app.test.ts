@@ -50,7 +50,7 @@ process.env.LOCAL_AUTO_VERIFY_EMAIL = "false";
 process.env.GOOGLE_CLIENT_ID = "test-google-client-id";
 process.env.EMAIL_VERIFICATION_SECRET = "test-secret-that-is-definitely-longer-than-32-bytes";
 const { createApp } = await import("./app.js");
-const { loginRateLimit } = await import("./middleware/security.js");
+const { authRateLimiters } = await import("./middleware/security.js");
 const { createEmailVerificationToken, createPasswordResetCode } = await import("./lib/emailVerification.js");
 
 function marketplaceManifestFixture() {
@@ -84,8 +84,10 @@ function marketplaceManifestFixture() {
 describe("API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    loginRateLimit.resetKey(ipKeyGenerator("::ffff:127.0.0.1"));
-    loginRateLimit.resetKey(ipKeyGenerator("127.0.0.1"));
+    for (const limiter of authRateLimiters) {
+      limiter.resetKey(ipKeyGenerator("::ffff:127.0.0.1"));
+      limiter.resetKey(ipKeyGenerator("127.0.0.1"));
+    }
     prismaMock.$transaction.mockResolvedValue([]);
     prismaMock.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     prismaMock.article.updateMany.mockResolvedValue({ count: 0 });
