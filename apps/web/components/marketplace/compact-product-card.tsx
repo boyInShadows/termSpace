@@ -28,7 +28,7 @@ export function CompactProductCard({ product }: { product: Product }) {
   const href = localePath(`/products/${product.slug}`, locale);
 
   return (
-    <article className="group relative flex h-full flex-col rounded-lg border border-border bg-surface p-4 transition duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lift focus-within:border-primary">
+    <article className="group relative flex h-full flex-col rounded-lg border border-border bg-surface p-4 fit-short:p-3 transition duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lift focus-within:border-primary">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <ProductTypeBadge type={product.type} label={card.types[product.type]} />
@@ -62,7 +62,7 @@ export function CompactProductCard({ product }: { product: Product }) {
         </ListingLink>
       </h3>
 
-      <p className="ts-bidi mt-1 line-clamp-2 text-sm leading-5 text-muted-foreground">
+      <p className="ts-bidi mt-1 line-clamp-2 fit-short:line-clamp-1 text-sm leading-5 text-muted-foreground">
         {product.outcome}
       </p>
 

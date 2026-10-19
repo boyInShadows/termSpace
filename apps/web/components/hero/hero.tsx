@@ -25,18 +25,24 @@ export function Hero({
   const sheet = homeSections[locale].datasheet;
 
   return (
-    <section className="border-b border-border">
-      <div className="container-page py-6 lg:py-8">
-        <div>
-          <div className="text-center">
-            <h1 className="editorial mx-auto max-w-4xl text-balance text-4xl leading-[1.1] sm:text-5xl">
-              <span className="block">{t.heroStop} {t.heroScratch}</span>
-              <span className="block">{t.heroStart}</span>
-            </h1>
-          </div>
+    // From tablet up the hero fills the screen under the header (`fit` and
+    // `--header-chrome` live in globals.css). Whatever height the content
+    // leaves free is shared out by the spacers: the gaps between blocks grow
+    // up to their caps, the rest goes above and below. A min-height, not a
+    // height, so content that still cannot fit pushes the fold down instead
+    // of overlapping the header or the next section.
+    <section className="border-b border-border fit:flex fit:min-h-[calc(100svh-var(--header-chrome))] fit:flex-col">
+      <div className="container-page py-6 lg:py-8 fit:flex fit:flex-1 fit:flex-col fit:py-3">
+        <Spacer />
+        <div className="text-center">
+          <h1 className="editorial mx-auto max-w-4xl text-balance text-4xl leading-[1.1] sm:text-5xl fit:text-[clamp(1.875rem,5.5svh,3rem)]">
+            <span className="block">{t.heroStop} {t.heroScratch}</span>
+            <span className="block">{t.heroStart}</span>
+          </h1>
         </div>
 
-        <div className="mx-auto mt-5 max-w-3xl">
+        <Spacer max="fit:max-h-12" />
+        <div className="mx-auto mt-5 w-full max-w-3xl fit:mt-0">
           <ConsoleSearch
             variant="hero"
             types={types}
@@ -44,8 +50,27 @@ export function Hero({
           />
         </div>
 
-        {children && <div className="mt-6">{children}</div>}
+        {children && (
+          <>
+            <Spacer max="fit:max-h-20" />
+            <div className="mt-6 fit:mt-0">{children}</div>
+          </>
+        )}
+        <Spacer />
       </div>
     </section>
+  );
+}
+
+/**
+ * A gap that grows into free height, up to `max` when given. Gaps between
+ * blocks start at 0.75rem; the outer two start at 0, the padding is their floor.
+ */
+function Spacer({ max }: { max?: string }) {
+  return (
+    <div
+      aria-hidden
+      className={`hidden fit:block fit:shrink-0 fit:grow ${max ? `fit:basis-3 ${max}` : "fit:basis-0"}`}
+    />
   );
 }

@@ -121,6 +121,7 @@ export function Header() {
       {/* --- announcement strip, retracts on scroll, dismissible ---------- */}
       {isAnnouncementVisible && (
         <div
+          data-announcement
           className={cn(
             "overflow-hidden border-b border-border/60 bg-surface/60 backdrop-blur transition-[height,opacity] duration-500",
             isCondensed ? "h-0 opacity-0" : "h-9 opacity-100",

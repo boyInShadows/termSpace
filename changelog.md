@@ -2,6 +2,17 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-19
+
+- **Landing hero fits the first screen (owner-requested).** From tablet width
+  (`md`) and 600px viewport height up, the hero is at least
+  `100svh` minus the header (`--header-chrome`, which tracks the dismissible
+  announcement strip through `:has([data-announcement])`). Free height is
+  shared by flex spacers: gaps grow to 48px / 80px caps, the rest centres the
+  block. Under 720px of height the headline, card padding and card copy
+  tighten (`fit` / `fit-short` custom variants in `globals.css`). Phones keep
+  natural flow. A min-height, so content that still cannot fit (Persian at
+  800×600) moves the fold instead of overlapping.
 ## 2026-10-18
 
 - **Dashboard acquired library (DC04, owner-requested).**

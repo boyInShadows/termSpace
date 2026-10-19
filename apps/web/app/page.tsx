@@ -162,7 +162,7 @@ export default async function Home() {
               {t.featuredTitle}
             </h2>
 
-            <div className="mt-4">
+            <div className="mt-4 fit:mt-[clamp(0.5rem,6svh_-_1.75rem,1.75rem)]">
               <Suspense
                 fallback={
                   <ProductGridSkeleton label={t.homePage.loadingFeatured} compact />
