@@ -86,7 +86,9 @@
 }
 
 html {
+  --site-header-height: 6.25rem;
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--site-header-height) + 1rem);
   color-scheme: dark;
 }
 html.light {

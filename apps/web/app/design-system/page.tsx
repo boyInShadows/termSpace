@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Logo } from "@/components/layout/logo";
 import { Showroom } from "./showroom";
@@ -31,8 +30,7 @@ const checks = [
 export default function DesignSystemPage() {
   return (
     <>
-      <Header />
-      <main>
+      <main id="content" tabIndex={-1}>
         <section className="container-page py-16">
           <p className="eyebrow">termspace design language · the datasheet</p>
           <div className="mt-5 grid gap-8 md:grid-cols-[1fr_.7fr]">

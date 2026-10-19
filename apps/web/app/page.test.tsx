@@ -9,7 +9,6 @@ import Home from "./page";
 const state = vi.hoisted(() => ({ locale: "en", home: vi.fn() }));
 vi.mock("@/lib/api", () => ({ getMarketplaceHome: state.home }));
 vi.mock("@/lib/serverLocale", () => ({ getLocale: async () => state.locale }));
-vi.mock("@/components/layout/header", () => ({ Header: () => null }));
 vi.mock("@/components/layout/footer", () => ({ Footer: () => null }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 

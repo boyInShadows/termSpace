@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "@/styles/globals.css";
 import { preloadedFonts } from "@/lib/fonts";
 import { SITE_URL } from "@/lib/site";
 import { Providers } from "@/components/layout/providers";
+import { Header } from "@/components/layout/header";
+import { SkipLink } from "@/components/layout/skip-link";
 import { getLocale } from "@/lib/serverLocale";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -23,7 +26,13 @@ export default async function RootLayout({
         ))}
       </head>
       <body>
-        <Providers locale={locale}>{children}</Providers>
+        <Providers locale={locale}>
+          <SkipLink locale={locale} />
+          <Suspense fallback={<div aria-hidden className="h-25 border-b border-border" />}>
+            <Header />
+          </Suspense>
+          {children}
+        </Providers>
       </body>
     </html>
   );

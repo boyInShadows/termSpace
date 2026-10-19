@@ -23,6 +23,11 @@ and overview, with visible labels. No serif display, ornamental badges, elevated
 cards, decorative motion or colored panel washes.
 
 Overview, studio, listing editor, releases and Settings share this vocabulary.
+The root layout supplies the main site's global header on every dashboard route.
+The local toolbar contains only breadcrumb and search; account, theme, locale
+and role-aware global navigation have one implementation. The root skip link
+targets the workspace content. Sticky sidebar offsets follow the measured global
+header height, and mobile disclosures fit landscape and close on navigation.
 Phone navigation stays fixed; editor actions clear its height and safe area.
 Search is available at every width. Long identifiers yield to readable route
 labels, and Latin identifiers are isolated in Persian. The long form has section

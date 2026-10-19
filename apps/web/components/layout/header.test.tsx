@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Header } from "./header";
 
 let pathname = "/";
@@ -11,6 +11,7 @@ let session: { marketplaceRoles: string[]; email: string | null; refresh: () => 
 };
 const replace = vi.fn();
 const logout = vi.fn(async () => ({}));
+let resizeHeader = () => {};
 
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
@@ -28,11 +29,30 @@ vi.mock("next-themes", () => ({ useTheme: () => ({ setTheme: () => {} }) }));
 
 describe("Header", () => {
   beforeEach(() => {
+    vi.stubGlobal("ResizeObserver", class {
+      constructor(callback: () => void) { resizeHeader = callback; }
+      observe() {}
+      disconnect() {}
+    });
     pathname = "/";
     session = { marketplaceRoles: [], email: null, refresh: async () => {} };
     replace.mockClear();
     logout.mockClear();
     window.localStorage.clear();
+  });
+
+  afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+
+  it("keeps sticky workspace offsets in sync with the actual header height", () => {
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect");
+    bounds.mockReturnValue({ height: 100 } as DOMRect);
+    const { unmount } = render(<Header />);
+    expect(document.documentElement.style.getPropertyValue("--site-header-height")).toBe("100px");
+    bounds.mockReturnValue({ height: 64 } as DOMRect);
+    act(() => resizeHeader());
+    expect(document.documentElement.style.getPropertyValue("--site-header-height")).toBe("64px");
+    unmount();
+    expect(document.documentElement.style.getPropertyValue("--site-header-height")).toBe("");
   });
 
   it("marks the current route for sighted and assistive readers alike", () => {

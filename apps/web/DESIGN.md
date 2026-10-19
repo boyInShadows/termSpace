@@ -49,9 +49,10 @@ floating cards or scroll entrances as a precedent.
   the first desktop viewport. Follow with discover/inspect/install, explicit
   trust information and newsletter signup. Preserve the actual product copy.
 - Discovery, product, account, moderation and dashboard: Operate. Prioritize the
-  task, readable state, scanability and recovery. The dashboard retains its
-  workbench header, desktop sidebar and phone tabs; consistency does not require
-  marketing navigation inside the workbench.
+  task, readable state, scanability and recovery. The root web layout owns the
+  same global navigation for public pages and dashboard routes. The nested
+  dashboard layout adds breadcrumb/search, desktop sidebar, phone tabs and the
+  session gate, without duplicating account, theme or language controls.
 - Blog: Read. It remains a separate editorial app with its own reading hierarchy;
   project-wide design changes still require Impeccable and cross-surface review.
 
@@ -102,6 +103,13 @@ increments and section rhythm; dashboard density follows the task. At phone
 widths, stack sections and keep filters/menus reachable. Sticky surfaces remain
 opaque. Long content wraps, tables scroll within their region, and fixed actions
 clear phone navigation and safe areas.
+
+The shared header measures its actual height for sticky-sidebar and focus-scroll
+offsets, including announcement dismissal, condensation and mobile disclosure.
+Menus close on route changes because the layout persists. A single localized
+skip link precedes navigation and targets each route's focusable `main#content`.
+Pages and loading boundaries render content, not a second global header. Use
+nested Next.js layouts for persistent structure rather than a route overlay.
 
 Content is visible immediately: no card lift, scroll reveals, blinking decorative
 carets or typed placeholders. Short feedback transitions, theme feedback and

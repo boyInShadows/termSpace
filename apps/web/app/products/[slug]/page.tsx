@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ReleaseSelectionProvider, SelectedRelease } from "@/features/product/release-selection";
 import { ProductFacts, ProductHeader } from "@/features/product/title-block";
-import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "@/features/product/product-actions";
@@ -17,7 +16,6 @@ import { ReleaseProvenance, provenanceTitle } from "@/features/product/release-p
 import { ReviewComposer } from "@/features/product/review-composer";
 import { pageAlternates } from "@/lib/alternates";
 import { productPageLabels, type ProductPageLabels } from "@/lib/i18n/product-page";
-import { SkipLink } from "@/components/layout/skip-link";
 import { getLocale } from "@/lib/serverLocale";
 import type { ProductDetail } from "@/lib/types";
 import { SITE_URL } from "@/lib/site";
@@ -113,9 +111,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData(product) }} />
-      <SkipLink locale={locale} />
-      <Header />
-      <main id="content" className="container-page py-8">
+      <main id="content" tabIndex={-1} className="container-page py-8">
         <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground">
           <Link href={localePath("/explore", locale)} className="-my-3.5 inline-block py-3.5 hover:text-foreground">{l.explore}</Link> / {typeLabel} /{" "}
           <span className="text-foreground">{product.name}</span>

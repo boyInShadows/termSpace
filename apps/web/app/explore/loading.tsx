@@ -1,4 +1,3 @@
-import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Skeleton } from "@/components/patterns/skeleton";
 import { getLocale } from "@/lib/serverLocale";
@@ -13,8 +12,7 @@ export default async function ExploreLoading() {
   const fa = (await getLocale()) === "fa";
   return (
     <>
-      <Header />
-      <main className="container-page py-8" aria-busy>
+      <main id="content" tabIndex={-1} className="container-page py-8" aria-busy>
         <p role="status" className="sr-only">{fa ? "در حال بارگذاری منابع…" : "Loading resources…"}</p>
         <Skeleton className="h-12 w-72 max-w-full" />
         <Skeleton className="mt-6 h-12 w-full max-w-2xl" />

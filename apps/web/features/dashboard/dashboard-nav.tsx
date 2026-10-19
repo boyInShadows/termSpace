@@ -44,7 +44,7 @@ export function DashboardSidebar() {
 
   return (
     <aside className="hidden border-e border-border lg:block">
-      <div className="sticky top-15 flex h-[calc(100dvh-3.75rem)] flex-col px-3 py-6">
+      <div className="sticky top-[var(--site-header-height)] flex h-[calc(100dvh-var(--site-header-height))] flex-col overflow-y-auto px-3 py-6">
         <nav aria-label={t.dashboard}>
           <ul className="space-y-1">
             {items.map(({ href, label, icon: Icon, active }) => (

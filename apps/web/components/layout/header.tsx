@@ -57,6 +57,7 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [dismissed, setDismissed] = useStoredString(ANNOUNCEMENT_KEY);
   const progressRef = useRef<HTMLDivElement | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const isAnnouncementVisible = dismissed !== ANNOUNCEMENT_ID;
@@ -65,6 +66,20 @@ export function Header() {
   // sibling routes, but `/` must not match everything.
   const isCurrent = (href: string) =>
     href === "/" ? currentPath === "/" : currentPath.startsWith(href);
+
+  useEffect(() => {
+    const header = headerRef.current!;
+    const measure = () => document.documentElement.style.setProperty(
+      "--site-header-height", `${header.getBoundingClientRect().height}px`,
+    );
+    const observer = new ResizeObserver(measure);
+    observer.observe(header);
+    measure();
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty("--site-header-height");
+    };
+  }, []);
 
   // Escape closes the open menu and hands focus back to the button that opened
   // it, so a keyboard user is not left on a control that has just disappeared.
@@ -78,6 +93,12 @@ export function Header() {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isMenuOpen]);
+
+  useEffect(() => {
+    // The root header survives navigation, but an open disclosure must not.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     let queued = false;
@@ -114,10 +135,7 @@ export function Header() {
   }, []);
 
   return (
-    /* One landmark. The announcement strip and the mobile menu used to sit
-       outside <header> as siblings, which left banner content in no landmark
-       at all. The bar inside stays sticky; the wrapper does not need to be. */
-    <header>
+    <header ref={headerRef} data-site-header className="sticky top-0 z-50 bg-background">
       {/* --- announcement strip, retracts on scroll, dismissible ---------- */}
       {isAnnouncementVisible && (
         <div
@@ -155,7 +173,7 @@ export function Header() {
         </div>
       )}
 
-      <div className="sticky top-0 z-40 border-b border-border-strong bg-background">
+      <div className="relative border-b border-border-strong bg-background">
         <div
           className={cn(
             "container-page grid grid-cols-[1fr_auto] items-center transition-[height] duration-500 md:grid-cols-[1fr_auto_1fr]",
@@ -253,7 +271,7 @@ export function Header() {
 
       {/* --- mobile menu -------------------------------------------------- */}
       {isMenuOpen && (
-        <div className="sticky top-14 z-30 border-b border-border bg-background md:hidden">
+        <div className="max-h-[calc(100dvh-6.25rem)] overflow-y-auto border-b border-border bg-background md:hidden">
           <nav className="container-page flex flex-col py-3" aria-label={t.mobile}>
             {NAV.map((item) => (
               <Link

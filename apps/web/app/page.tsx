@@ -10,7 +10,6 @@ import {
   ScrollText,
   PackageOpen,
 } from "lucide-react";
-import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Hero } from "@/components/hero/hero";
 import { Process } from "@/components/sections/process";
@@ -125,8 +124,7 @@ export default async function Home() {
 
   return (
     <>
-      <Header />
-      <main>
+      <main id="content" tabIndex={-1}>
         {/* A promise, not awaited: the hero is the page shell and must not
             wait on the catalogue. The chips render at once and their counts
             stream in behind their own boundary. */}

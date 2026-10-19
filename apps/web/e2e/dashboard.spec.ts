@@ -43,7 +43,8 @@ test.describe("dashboard", () => {
 
     await page.goto("/creator/listings/new");
     await expect(page).toHaveURL(/\/dashboard\/studio\/listings\/new$/);
-    // Inside the dashboard shell, not the marketing site's header and footer.
+    // The dashboard adds its workspace shell below the shared global header.
+    await expect(page.locator("[data-site-header]")).toHaveCount(1);
     await expect(page.getByRole("contentinfo")).toHaveCount(0);
 
     await page.goto("/fa/creator");

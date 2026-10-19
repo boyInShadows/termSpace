@@ -183,7 +183,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
     </div>
   );
   return (
-    <main className="container-page py-6 sm:py-10">
+    <main id="content" tabIndex={-1} className="container-page py-6 sm:py-10">
       <div className="mx-auto max-w-2xl text-center">
         <p className="eyebrow">{context?.eyebrow ?? d.marketplace}</p>
         <h1 className="editorial mt-2 text-4xl sm:text-5xl">{context?.title ?? d.title}</h1>

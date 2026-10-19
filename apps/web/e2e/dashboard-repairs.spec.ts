@@ -64,6 +64,22 @@ test("internal navigation offers stay/discard and preserves a retained draft", a
   await expect(page).toHaveURL(/\/dashboard\/studio$/);
 });
 
+test("global navigation also protects an unsaved dashboard draft", async ({ page }) => {
+  await editorFixtures(page);
+  await page.goto("/dashboard/studio/listings/new");
+  await page.locator('[name="slug"]').fill("keep-this-global-navigation-draft");
+  const header = page.locator("[data-site-header]");
+  if ((page.viewportSize()?.width ?? 1280) < 768) await header.getByRole("button", { name: copy.en.open }).click();
+  const navigation = header.getByRole("navigation", { name: (page.viewportSize()?.width ?? 1280) < 768 ? copy.en.mobile : copy.en.primary });
+  page.once("dialog", (dialog) => dialog.dismiss());
+  await navigation.getByRole("link", { name: copy.en.explore, exact: true }).click();
+  await expect(page).toHaveURL(/\/listings\/new$/);
+  await expect(page.locator('[name="slug"]')).toHaveValue("keep-this-global-navigation-draft");
+  page.once("dialog", (dialog) => dialog.accept());
+  await navigation.getByRole("link", { name: copy.en.explore, exact: true }).click();
+  await expect(page).toHaveURL(/\/explore$/);
+});
+
 test("Settings reaches the asynchronously loaded creator profile form", async ({ page }) => {
   await page.goto("/dashboard/settings");
   await page.getByRole("link", { name: copy.en.creatorHub.editTitle }).click();

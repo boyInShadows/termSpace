@@ -4,6 +4,60 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **One global main-site/dashboard navigation and layout (owner-requested).**
+  The root `apps/web/app/layout.tsx` now renders the existing shared header
+  once for public and dashboard routes. Removed its 11 page/loading callers.
+  The nested dashboard layout retains the reader gate, sidebar/mobile tabs,
+  breadcrumb and search; account, theme, locale and global links have one owner.
+  Uses native Next.js layout nesting; no route overlay, new dependency or API.
+  - The root localized skip link is the first keyboard stop, targeting a
+    focusable `main#content` on each route. Browser verification caught and
+    repaired the initial product skip-link ordering regression. Sticky sidebar
+    and focus offsets use the measured header height. Persistent mobile menus
+    close on route changes and history, scroll in landscape, and layer above
+    fixed dashboard tabs. Search shortcuts and unsaved-draft guards remain.
+  - The inherited header closes DC06: moderators/administrators can reach
+    moderation from the dashboard, in EN/FA and desktop/mobile; readers and
+    ordinary creators see no staff link. Existing API role enforcement remains
+    authoritative. Removed DC06 from the local queue after role-aware browser
+    checks; DC05 and DC07 remain open.
+  - Inspected the owner's local AgentSkills, Task Observer, CodeBaseMemory,
+    Graphify and Ponytail references. `AGENTS.md` documents when to use each,
+    prioritizes installed/shared skills over stale mirror instructions, and
+    assigns global versus nested-layout ownership. No tool installation or
+    global configuration change. Graphify builds and Task Observer reviews
+    were not requested by this documentation task and were not run.
+  - `ramtin-pending.md` now contains unfinished work and necessary operating
+    notes: removed the completed UI01–UI03 section, DC01–DC04 completion notes,
+    historical completion/review blocks, checked tasks, this navigation plan,
+    DC06 and empty audit headings. Outcomes remain in this changelog and local
+    evidence. Preserved owner-deferred email/provider work, physical-device,
+    language and deployment acceptance, and the shared backlog snapshot.
+    `AGENTS.md` now requires removing verified-complete local task sections
+    rather than retaining a second changelog. The local queue remains ignored.
+  - Verification: root typecheck, 501 unit tests (5 database-dependent skips),
+    web lint, regular root production build, 277 Chrome tests (29 conditional
+    skips, four workers) and all nine Lighthouse runs passed existing gates.
+    Representative home/dashboard/detail scores: 96/93/95, accessibility 100.
+    One hundred EN/FA/light/dark captures cover eight routes at 320/768/1280px
+    plus landscape menus; an explicit four-case landscape repeat passed too.
+    Eighty additional route-logged navigations passed. Verified one global
+    header, content focus, no overflow, measured offsets and sidebar/menu hits.
+    Impeccable returned six advisory findings, no blocking findings; the
+    established font, compact metadata, focus-corner and feedback-easing
+    exceptions remain intentional. Reviewed representative renders and the
+    connected source/diff; graph freshness flags were checked through source.
+  - Known follow-up: the initial capture emitted one React hydration warning
+    (#418) without route context. It did not recur in the final matrix or
+    targeted repetitions; no cause or fix is claimed. HQ01 in the local queue
+    retains this observation and its evidence. No real accounts, credentials,
+    listings, provider connections or email changed. Real devices, actual 200%
+    browser zoom, native Persian wording, live providers and CI were not tested.
+  - Shared surfaces: owner-requested `AGENTS.md` workflow/layout rules and this
+    `changelog.md` entry. Evidence: `maintenance/shared-navigation-20261019/`
+    (ignored), with the earlier failed checks preserved. Public footer placement
+    and the separately deployed Blog remain independent of the global web nav.
+
 - **Main-site/dashboard design consistency (owner-requested highest priority).**
   Added the P0 plan to ignored `ramtin-pending.md` and completed UI01–UI03 as
   this session's implementation phase. `AGENTS.md` now requires the installed

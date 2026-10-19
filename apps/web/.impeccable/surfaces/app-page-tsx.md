@@ -16,6 +16,8 @@ copy. Geist/Estedad headings, square search and controls, ruled listing frames,
 opaque header/footer, linear process and trust sections. Ink primary actions,
 accent search/focus, no decorative gradients, blur, elevated cards or entrances.
 Search suggestions and recent/scope behavior remain; its placeholder is static.
+The global header and skip link belong to the root layout and persist across
+public and dashboard navigation; route pages must not render another header.
 Preserve loading, empty and outage/Retry states without fabricated live data.
 
 Phone search stays above the fold; the desktop shelf remains in the first screen.

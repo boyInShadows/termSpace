@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { DiscoveryExperience } from "@/features/discovery/discovery-experience";
 import { ApiError, getMarketplaceCommunities, getMarketplaceHome, getMarketplaceItemTypes, getProducts } from "@/lib/api";
@@ -44,7 +43,6 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   if (!initialState.error && meta.total > 0 && meta.page > meta.totalPages) redirect(pageHref(meta.totalPages));
   return (
     <>
-      <Header />
       <DiscoveryExperience initial={initialState.result} initialError={initialState.error} rateLimited={initialState.rateLimited} categories={home?.categories ?? []} platforms={home?.platforms ?? []} communities={communities} itemTypes={itemTypes} initialFilters={filters} />
       <Footer />
     </>
