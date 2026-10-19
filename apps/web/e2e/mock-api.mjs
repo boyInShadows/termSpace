@@ -160,6 +160,7 @@ async function handle(request, response) {
       },
     });
   }
+  if (route === "GET /api/marketplace/creator/provider-connections") return send(response, 200, { data: [] });
   if (route === "GET /api/marketplace/favorites") return send(response, 200, { data: [] });
   if (route === "GET /api/readers/profile") return send(response, 200, {
     data: { email: PERSONAS[persona].email, createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false, emailVerified: true },

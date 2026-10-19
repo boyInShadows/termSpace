@@ -1,9 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSession = vi.hoisted(() => vi.fn());
 const getFavorites = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/api", async (importOriginal) => ({ ...await importOriginal<typeof import("@/lib/api")>(), getSession, getFavorites }));
+const setFavorite = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/api", async (importOriginal) => ({ ...await importOriginal<typeof import("@/lib/api")>(), getSession, getFavorites, setFavorite }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: "en" }) }));
 const { MarketplaceSessionProvider, useMarketplaceSession } = await import("./marketplace-session");
@@ -11,6 +12,11 @@ const { MarketplaceSessionProvider, useMarketplaceSession } = await import("./ma
 function Identity() {
   const session = useMarketplaceSession();
   return <p role="status">{session.loading ? "Loading" : `${session.email ?? "Anonymous"}|${session.emailVerified}|${session.error ?? ""}`}</p>;
+}
+
+function SavedState() {
+  const session = useMarketplaceSession();
+  return <button onClick={() => void session.removeFavorite("saved").catch(() => {})}>{session.loading ? "Loading" : session.isFavorite("saved") ? "Saved" : "Removed"}</button>;
 }
 
 describe("marketplace session", () => {
@@ -38,5 +44,17 @@ describe("marketplace session", () => {
     render(<MarketplaceSessionProvider><Identity /></MarketplaceSessionProvider>);
     expect(await screen.findByText("Anonymous|false|")).toBeInTheDocument();
     expect(getFavorites).not.toHaveBeenCalled();
+  });
+
+  it("updates existing hearts after successful removal and retains them after a failed removal", async () => {
+    getFavorites.mockResolvedValue(["saved"]);
+    setFavorite.mockRejectedValueOnce(new Error("offline")).mockResolvedValue(undefined);
+    render(<MarketplaceSessionProvider><SavedState /></MarketplaceSessionProvider>);
+    fireEvent.click(await screen.findByRole("button", { name: "Saved" }));
+    await vi.waitFor(() => expect(setFavorite).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole("button", { name: "Saved" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Saved" }));
+    expect(await screen.findByRole("button", { name: "Removed" })).toBeVisible();
+    expect(setFavorite).toHaveBeenLastCalledWith("saved", false);
   });
 });

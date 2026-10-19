@@ -56,7 +56,7 @@ test("internal navigation offers stay/discard and preserves a retained draft", a
   await page.goto("/dashboard/studio/listings/new");
   await page.locator('[name="slug"]').fill("retain-this-draft");
   page.once("dialog", (dialog) => dialog.dismiss());
-  await page.getByRole("link", { name: "Settings", exact: true }).click();
+  await page.getByRole("navigation", { name: /Dashboard/ }).getByRole("link", { name: "Profile", exact: true }).click();
   await expect(page).toHaveURL(/\/listings\/new$/);
   await expect(page.locator('[name="slug"]')).toHaveValue("retain-this-draft");
   page.once("dialog", (dialog) => dialog.accept());

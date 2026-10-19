@@ -299,13 +299,6 @@ export function Header() {
                   {session.email}
                 </p>
                 <Link
-                  href={localePath("/account", locale)}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="border-t border-border/60 py-3 text-sm"
-                >
-                  {t.profile}
-                </Link>
-                <Link
                   href={localePath("/dashboard", locale)}
                   onClick={() => setIsMenuOpen(false)}
                   className="border-t border-border/60 py-3 text-sm"

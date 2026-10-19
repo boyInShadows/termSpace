@@ -7,7 +7,7 @@ import { EmailVerification } from "@/features/account/email-verification";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
 import { DashboardSidebar, DashboardTabBar } from "./dashboard-nav";
-import { DashboardTopbar } from "./dashboard-topbar";
+import { DashboardSearch } from "./dashboard-search";
 import { DashboardOverviewSkeleton } from "./overview";
 
 /**
@@ -58,8 +58,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {/* Bottom padding clears the fixed tab bar below lg. */}
         <main id="content" tabIndex={-1} className="min-w-0 px-4 pb-24 pt-6 sm:px-6 lg:px-10 lg:py-8">
           <div className="mx-auto max-w-[1200px]">
-            <DashboardTopbar />
-            <div className="mt-6">
+            <DashboardSearch />
+            <div>
               {session.loading ? <DashboardOverviewSkeleton /> : !session.emailVerified ? <EmailVerification /> : children}
             </div>
           </div>

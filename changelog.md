@@ -4,6 +4,65 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **Dashboard Profile, saved listings, provider access and hydration repair (owner-requested).**
+  Removed the redundant dashboard breadcrumb/toolbar frame; workspace search
+  remains a content control with its Ctrl/Cmd+K shortcut. The shared desktop
+  dropdown and phone menu no longer contain Profile. Dashboard navigation and
+  quick actions now label the existing Settings/account-security destination
+  Profile, preserving its identity, password and creator-profile controls.
+  `AGENTS.md` allows explicitly authorized sequential queue work and documents
+  the root header's hydration ownership. No permission prompt or global config
+  change was needed during this task.
+  - DC05: added `/dashboard/library/saved`, library collection links and a quick
+    action. It resolves at most 12 public details per page, cancels stale reads,
+    isolates unavailable listings and per-item failures, retries, removes saved
+    items and clamps pagination after removals or a shrinking refreshed list.
+    Successful removals update existing hearts; failed removals preserve state.
+    Shared `apps/web/lib/api.ts` only adds optional AbortSignal parameters.
+  - Authorized API scope: `apps/api/src/controllers/marketplaceController.ts`
+    now deletes the current reader's saved relation by slug even when the listing
+    is unavailable. The previous published-only lookup silently retained those
+    records. No product details are returned; no schema or permission change.
+    Regression coverage asserts reader scoping and idempotent 204 behavior.
+  - DC07: extracted existing GitHub/npm controls into `ProviderConnections`, used
+    by Profile for eligible creators and by listing releases. Creators need no
+    listings to connect. Provider failures and retries are independent of release
+    history; permissions/revocation guidance remains. Submission clears token
+    fields after success or failure. Tests use synthetic credentials exclusively.
+    Corrected the inherited phone grid/input overflow and long identity wrapping.
+    Long saved titles wrap at 320px; listing prose detects its own text direction
+    inside Persian pages. Eight additional EN/FA long-content captures fit at
+    320/1280px, including 80-character titles and provider identities.
+  - HQ01: reproduced the intermittent hydration warning in a route-logged
+    production capture, then obtained its exact development HTML diff. A fast
+    session response changed the separately suspended Header from a Sign-in
+    anchor to AccountMenu before hydration. Removed that unnecessary root
+    Suspense boundary; the root already awaits request headers. The isolated
+    development reproduction then passed 72 navigations, and the production
+    112-capture EN/FA, light/dark, 320/768/1280 plus landscape matrix had no page
+    errors or horizontal overflow. Added fast-session browser regressions covering
+    72 additional navigations. No warning suppression or authentication bypass.
+  - Removed DC05, DC07, HQ01 and their completed execution block from ignored
+    `ramtin-pending.md`; retained unfinished browser-zoom, physical-device,
+    Persian, live-provider/domain and owner/deployment acceptance, plus the
+    explicitly other-maintainer-owned shared backlog snapshot.
+  - Verification: root typecheck, all 513 unit tests (5 existing DB-dependent
+    skips), clean web lint, full browser suite 297 passed/29 existing skips,
+    root production build and all Lighthouse assertions across nine runs passed.
+    Representative performance: home 96, dashboard 91, detail 96; accessibility
+    100 throughout. LCP 2.79/3.47/2.79 s, TBT 32/18/37 ms. Budgets are unchanged;
+    tighter LCP/performance targets and CI-runner work remain in the shared queue.
+    The final normal production build also passed eight long-content captures.
+    Actual browser zoom remains open: the headless shortcut did not change DPR
+    or the viewport, so it was not counted as 200% acceptance. Impeccable's
+    initial and follow-up detectors returned no findings. Evidence is local in
+    `maintenance/dashboard-queue-20261019/` (including the preserved failing
+    hydration capture and development diff).
+    Manual second-pass review covered callers, cancellation, reader scoping,
+    token clearing, role gates and state recovery. Graph coverage flagged changed
+    metadata and partial test mock syntax; relevant source was read directly.
+    No dependencies, migrations, real-provider actions or user data changes.
+
 - **One global main-site/dashboard navigation and layout (owner-requested).**
   The root `apps/web/app/layout.tsx` now renders the existing shared header
   once for public and dashboard routes. Removed its 11 page/loading callers.

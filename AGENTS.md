@@ -23,7 +23,9 @@ Tool-agnostic rules first; Claude Code specifics are in their own section at the
    for your phase. Nothing else up front.
 2. Plan before touching more than one app or any shared surface. Write the plan into the
    session (or `plan.md`) with: goal, files, acceptance, verification.
-3. Implement one phase. Don't start the next phase in the same session.
+3. Implement one phase at a time. When the owner explicitly requests sequential
+   queue execution, continue with the next actionable item after verification;
+   keep each item independently reviewable and retain owner-dependent work.
 4. Verification gate before commit (existing rule, unchanged): root typecheck, the affected
    app's tests, lint (`npm run lint -w apps/web` — only `apps/web` has a lint script),
    production build. Web UI changes additionally: `npm run e2e -w apps/web`
@@ -37,7 +39,7 @@ Tool-agnostic rules first; Claude Code specifics are in their own section at the
   output is a list of paths — never dump file contents into the main context.
 - Don't paste logs. Grep them for the error, quote ≤ 10 lines.
 - Don't re-read a file you just edited. The edit result is the state.
-- One phase per session. When the phase is committed, end the session or clear.
+- One phase at a time; explicit owner-authorized queue runs may continue sequentially.
 - Prefer editing an existing plan/checklist to re-explaining state in prose.
 - Never commit `.env*`, `node_modules`, Playwright traces, or Lighthouse reports.
 
@@ -80,6 +82,9 @@ not instructions to reinstall tools or load every skill for every task.
 - `apps/web/app/layout.tsx` owns the main site's global navigation once, including
   dashboard routes. Pages and loading boundaries must not import/render another
   `Header`. Put truly global interface elements in that layout.
+- Keep the header in the root hydration tree. A separate Suspense boundary can
+  hydrate its anonymous HTML after the session provider has already signed in,
+  producing a recoverable HTML mismatch. The root already awaits request headers.
 - The root skip link must remain the first keyboard stop. Each rendered route
   supplies one focusable `<main id="content" tabIndex={-1}>` as its target.
 - Nested layouts own section-specific structure. The dashboard keeps its session

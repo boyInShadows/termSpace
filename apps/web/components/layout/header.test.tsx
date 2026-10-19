@@ -149,7 +149,7 @@ describe("Header", () => {
 
     await user.click(screen.getByRole("button", { name: "Your account" }));
     expect(screen.getByText("ada@example.com")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Profile" })).toHaveAttribute("href", "/account");
+    expect(screen.queryByRole("link", { name: "Profile" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/dashboard");
     expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
   });

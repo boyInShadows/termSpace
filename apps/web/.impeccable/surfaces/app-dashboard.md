@@ -22,10 +22,16 @@ the accent marks selection and focus. Lifecycle colors are shared between studio
 and overview, with visible labels. No serif display, ornamental badges, elevated
 cards, decorative motion or colored panel washes.
 
-Overview, studio, listing editor, releases and Settings share this vocabulary.
+Overview, studio, listing editor, releases, library collections and Profile share
+this vocabulary. Saved listings and acquisitions stay distinct; public
+availability and per-item recovery remain explicit.
 The root layout supplies the main site's global header on every dashboard route.
-The local toolbar contains only breadcrumb and search; account, theme, locale
-and role-aware global navigation have one implementation. The root skip link
+Workspace search is a content control, without a second toolbar or repeated
+breadcrumb. Profile lives in the dashboard, not the shared account dropdown.
+Account, theme, locale and role-aware global navigation have one implementation.
+The root header hydrates with the session provider, without a separate boundary
+that could race sign-in. Provider connections work without a listing and fail
+independently of release history. The root skip link
 targets the workspace content. Sticky sidebar offsets follow the measured global
 header height, and mobile disclosures fit landscape and close on navigation.
 Phone navigation stays fixed; editor actions clear its height and safe area.

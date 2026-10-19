@@ -51,7 +51,7 @@ floating cards or scroll entrances as a precedent.
 - Discovery, product, account, moderation and dashboard: Operate. Prioritize the
   task, readable state, scanability and recovery. The root web layout owns the
   same global navigation for public pages and dashboard routes. The nested
-  dashboard layout adds breadcrumb/search, desktop sidebar, phone tabs and the
+  dashboard layout adds workspace search, desktop sidebar, phone tabs and the
   session gate, without duplicating account, theme or language controls.
 - Blog: Read. It remains a separate editorial app with its own reading hierarchy;
   project-wide design changes still require Impeccable and cross-surface review.
@@ -108,7 +108,9 @@ The shared header measures its actual height for sticky-sidebar and focus-scroll
 offsets, including announcement dismissal, condensation and mobile disclosure.
 Menus close on route changes because the layout persists. A single localized
 skip link precedes navigation and targets each route's focusable `main#content`.
-Pages and loading boundaries render content, not a second global header. Use
+Keep the header in the root hydration tree: a separate Suspense boundary can
+race a fast session response and mismatch its anonymous server HTML. Pages and
+loading boundaries render content, not a second global header. Use
 nested Next.js layouts for persistent structure rather than a route overlay.
 
 Content is visible immediately: no card lift, scroll reveals, blinking decorative

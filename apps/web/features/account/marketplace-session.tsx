@@ -7,9 +7,9 @@ import { useLocale } from "@/lib/locale-context";
 
 type SessionState = {
   loading: boolean; email: string | null; emailVerified: boolean; marketplaceRoles: MarketplaceRole[]; error: string | null;
-  isFavorite: (slug: string) => boolean; toggleFavorite: (slug: string) => Promise<void>; refresh: () => Promise<void>;
+  isFavorite: (slug: string) => boolean; toggleFavorite: (slug: string) => Promise<void>; removeFavorite: (slug: string) => Promise<void>; refresh: () => Promise<void>;
 };
-const anonymousSession: SessionState = { loading: false, email: null, emailVerified: false, marketplaceRoles: [], error: null, isFavorite: () => false, toggleFavorite: async () => {}, refresh: async () => {} };
+const anonymousSession: SessionState = { loading: false, email: null, emailVerified: false, marketplaceRoles: [], error: null, isFavorite: () => false, toggleFavorite: async () => {}, removeFavorite: async () => {}, refresh: async () => {} };
 const SessionContext = createContext<SessionState>(anonymousSession);
 
 export function MarketplaceSessionProvider({ children }: { children: React.ReactNode }) {
@@ -74,7 +74,15 @@ export function MarketplaceSessionProvider({ children }: { children: React.React
       console.error("Favorite update failed", cause); setError("Could not update your saved products.");
     }
   }, [email, favorites, locale, router]);
-  const value = useMemo(() => ({ loading, email, emailVerified, marketplaceRoles, error, isFavorite: (slug: string) => favorites.has(slug), toggleFavorite, refresh }), [loading, email, emailVerified, marketplaceRoles, error, favorites, toggleFavorite, refresh]);
+  const removeFavorite = useCallback(async (slug: string) => {
+    await setFavorite(slug, false);
+    setFavorites((current) => {
+      const next = new Set(current);
+      next.delete(slug);
+      return next;
+    });
+  }, []);
+  const value = useMemo(() => ({ loading, email, emailVerified, marketplaceRoles, error, isFavorite: (slug: string) => favorites.has(slug), toggleFavorite, removeFavorite, refresh }), [loading, email, emailVerified, marketplaceRoles, error, favorites, toggleFavorite, removeFavorite, refresh]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 export function useMarketplaceSession() { return useContext(SessionContext); }

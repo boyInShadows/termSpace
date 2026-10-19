@@ -54,13 +54,17 @@ describe("DashboardShell", () => {
     expect(screen.getByRole("status")).toHaveTextContent(copy.en.dashboardHome.loading);
   });
 
-  it("frames the page with a top bar, sidebar and tab bar that mark the current route", () => {
+  it("frames the page with search, sidebar and tab bar that mark the current route", () => {
     session.current = { loading: false, email: "kasra@example.com", emailVerified: true, marketplaceRoles: ["creator"] };
     nav.pathname = "/dashboard/studio";
     render(<DashboardShell><p>content</p></DashboardShell>);
 
     expect(screen.getByText("content")).toBeInTheDocument();
     expect(screen.getByRole("search")).toBeInTheDocument();
+    expect(screen.queryByTitle(copy.en.navStudio)).not.toBeInTheDocument();
+    for (const link of screen.getAllByRole("link", { name: copy.en.profile })) {
+      expect(link).toHaveAttribute("href", "/dashboard/settings");
+    }
 
     const sidebar = screen.getByRole("navigation", { name: copy.en.dashboard });
     expect(within(sidebar).getByRole("link", { name: copy.en.navStudio })).toHaveAttribute("aria-current", "page");

@@ -96,13 +96,6 @@ export function AccountMenu({ email }: { email: string }) {
           </p>
           <div role="separator" className="my-1 h-px bg-border" />
           <Link
-            href={localePath("/account", locale)}
-            onClick={() => setOpen(false)}
-            className={itemClass}
-          >
-            {t.profile}
-          </Link>
-          <Link
             href={localePath("/dashboard", locale)}
             onClick={() => setOpen(false)}
             className={itemClass}

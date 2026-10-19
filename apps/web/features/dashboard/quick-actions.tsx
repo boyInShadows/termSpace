@@ -3,6 +3,7 @@ import Link from "next/link";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
 import { DashboardCard } from "./dashboard-card";
+import { savedCopy } from "@/features/library/saved-copy";
 import { libraryCopy } from "@/features/library/library-copy";
 
 /** Ghost rows only — the sidebar's Publish is the page's one primary button. */
@@ -13,7 +14,8 @@ export function QuickActions() {
     { label: copy.quickPublish, href: "/dashboard/studio/listings/new" },
     { label: copy.quickManage, href: "/dashboard/studio" },
     { label: libraryCopy[locale].quickAction, href: "/dashboard/library" },
-    { label: copy.quickSettings, href: "/dashboard/settings" },
+    { label: savedCopy[locale].title, href: "/dashboard/library/saved" },
+    { label: t.profile, href: "/dashboard/settings" },
   ];
 
   return (

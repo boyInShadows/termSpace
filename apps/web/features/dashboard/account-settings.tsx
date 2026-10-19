@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
+import { ProviderConnections } from "@/features/creator/provider-connections";
 import { AccountSecurity } from "./account-security";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -49,7 +50,7 @@ export function AccountSettings() {
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
-          {t.settingsTitle}
+          {t.profile}
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">{t.settingsIntro}</p>
       </header>
@@ -73,6 +74,8 @@ export function AccountSettings() {
       </section>
 
       <AccountSecurity />
+
+      {profile && session.marketplaceRoles.includes("creator") && <ProviderConnections />}
 
       <Button
         variant="secondary"

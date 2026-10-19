@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, LibraryBig, Plus, Settings, Store } from "lucide-react";
+import { LayoutGrid, LibraryBig, Plus, UserRound, Store } from "lucide-react";
 import { libraryCopy } from "@/features/library/library-copy";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { localePath } from "@/lib/i18n";
@@ -27,7 +27,7 @@ function useDashboardNav() {
     { href: "/dashboard", label: t.navOverview, icon: LayoutGrid },
     { href: "/dashboard/studio", label: t.navStudio, icon: Store },
     { href: "/dashboard/library", label: libraryCopy[locale].label, icon: LibraryBig },
-    { href: "/dashboard/settings", label: t.navSettings, icon: Settings },
+    { href: "/dashboard/settings", label: t.profile, icon: UserRound },
   ].map((item) => ({
     ...item,
     href: localePath(item.href, locale),
@@ -80,7 +80,7 @@ export function DashboardSidebar() {
           </span>
           <span className="min-w-0">
             <span className="block truncate text-sm">{session.email}</span>
-            <span className="block font-mono text-xs text-muted-foreground">{t.dashboardHome.toAccount}</span>
+            <span className="block font-mono text-xs text-muted-foreground">{t.profile}</span>
           </span>
         </Link>
       </div>

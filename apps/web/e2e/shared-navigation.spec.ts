@@ -13,6 +13,26 @@ async function globalNavigation(page: Page, locale: "en" | "fa") {
 
 for (const locale of ["en", "fa"] as const) {
   const prefix = locale === "fa" ? "/fa" : "";
+  test(`fast sessions hydrate the shared header without mismatches (${locale})`, async ({ page, context, baseURL }) => {
+    test.setTimeout(60_000);
+    await context.addCookies([{ name: "e2e_persona", value: "creator", url: baseURL! }]);
+    await page.setViewportSize({ width: 768, height: 900 });
+    await page.route("**/api/readers/session", (route) => route.fulfill({ json: { data: {
+      authenticated: true,
+      user: { email: "creator@e2e.test", emailVerified: true, marketplaceRoles: ["creator"] },
+    } } }));
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(`${page.url()}: ${error.message}`));
+    for (let round = 0; round < 3; round++) {
+      for (const route of ["/", "/dashboard", "/dashboard/settings", "/dashboard/library", "/dashboard/library/saved", "/explore"]) {
+        await page.goto(`${prefix}${route}`, { waitUntil: "networkidle" });
+        await expect(page.locator("[data-site-header]")).toHaveCount(1);
+        await expect(page.getByRole("button", { name: copy[locale].account, exact: true })).toBeVisible();
+        expect(errors).toEqual([]);
+      }
+    }
+  });
+
   test(`one global header persists through home, dashboard and discovery (${locale})`, async ({ page, context, baseURL }) => {
     await context.addCookies([{ name: "e2e_persona", value: "creator", url: baseURL! }]);
     await page.goto(prefix || "/");

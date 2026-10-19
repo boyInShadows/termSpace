@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import "@/styles/globals.css";
 import { preloadedFonts } from "@/lib/fonts";
 import { SITE_URL } from "@/lib/site";
@@ -28,9 +27,7 @@ export default async function RootLayout({
       <body>
         <Providers locale={locale}>
           <SkipLink locale={locale} />
-          <Suspense fallback={<div aria-hidden className="h-25 border-b border-border" />}>
-            <Header />
-          </Suspense>
+          <Header />
           {children}
         </Providers>
       </body>
