@@ -89,7 +89,10 @@ jobs:
           path: apps/web/.next
 
       - name: Lighthouse CI
-        run: npm run lhci -w apps/web
+        # Reference CPU index ~4500 at 4x; hosted indices 2400-3020 at 3x
+        # still emulate a slower CPU (800-1007 vs 1125). Network/gates unchanged.
+        # shortcut: recalibrate if hosted CPU indices leave this measured range.
+        run: npm run lhci -w apps/web -- --collect.settings.throttling.cpuSlowdownMultiplier=3
 
       - name: Upload Lighthouse reports
         if: always()

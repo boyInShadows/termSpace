@@ -4,6 +4,22 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **Comparable hosted Lighthouse CPU profile.** Run 39311691198 passes the
+  browser suite after the full-Chromium fix, but reproduces max-potential-FID
+  failures at 149/135/157 ms with the default 4x CPU factor. Long tasks point
+  to the shared React runtime, and the runner's steady CPU benchmark is only
+  about 2400-2509 versus the local reference around 4500 (the older main run
+  measured 3020). Applying 4x to both hosts does not emulate the same CPU.
+  - Following Lighthouse's [CPU calibration guidance](https://github.com/GoogleChrome/lighthouse/blob/main/docs/throttling.md#calibrating-the-cpu-slowdown),
+    only the hosted workflow now uses 3x: effective index 800-1007 across the
+    observed runner range, still slower than the local 4500/4 = 1125 reference.
+    The local default remains 4x. Network throttling, three-run aggregation and
+    every assertion/ratchet limit remain unchanged. Recalibrate when the hosted
+    CPU range changes; every report retains its benchmark and throttle values.
+  - This phase owns `.github/workflows/web.yml` for the owner's requested CI
+    reliability work. No application, browser assertion or dependency changed.
+    Reports and failure logs are in `maintenance/performance-20261019/ci-after/`.
+
 - **Hosted zoom-harness compatibility.** Draft PR #10's first hosted run
   (39310542406) exposed twelve genuine zoom-test failures: the default
   Playwright headless shell ignored Chrome profile preferences, so DPR stayed
