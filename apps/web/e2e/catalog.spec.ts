@@ -12,7 +12,7 @@ test.describe("product detail", () => {
     // React keeps a hidden copy of the content beside the visible one, which a
     // strict text locator counts twice. Wait for the copy to go.
     await expect(page.locator('[id^="S:"][hidden]')).toHaveCount(0);
-    for (const claim of ["Safety reviewed", "Reads the current selection · no network access", "MIT"]) {
+    for (const claim of ["Reviewed", "Reads the current selection · no network access", "MIT"]) {
       await expect(page.getByRole("region", { name: "Key facts" }).getByText(claim, { exact: true })).toBeVisible();
     }
     const details = page.locator("#details dl");
@@ -175,10 +175,10 @@ test.describe("explore", () => {
     const cards = page.locator("article");
     await expect(cards).toHaveCount(12);
     for (const card of await cards.all()) {
-      await expect(card.getByText(/Safety reviewed|Not yet reviewed/)).toHaveCount(1);
-      await expect(card.getByText(/Permissions not declared|·/).first()).toBeVisible();
+      await expect(card.getByText(/^(Reviewed|Not yet reviewed)$/)).toHaveCount(1);
+      await expect(card.getByRole("term")).toHaveText(["Review", "Permissions", "Licence"]);
     }
-    await expect(cards.first().getByText("Safety reviewed")).toBeVisible();
+    await expect(cards.first().getByText("Reviewed", { exact: true })).toBeVisible();
     await expect(cards.first().getByText("MIT")).toBeVisible();
     await expect(cards.first().getByText("Reads the current selection · no network access")).toBeVisible();
 
@@ -259,7 +259,7 @@ test.describe("explore", () => {
 
   test("an active filter chip removes only that filter", async ({ page }) => {
     await page.goto("/explore?type=skill&verified=true");
-    await page.getByRole("button", { name: "Remove filter: Safety reviewed only" }).click();
+    await page.getByRole("button", { name: "Remove filter: Reviewed only" }).click();
     await expect(page).toHaveURL(/\/explore\?type=skill$/);
     await expect(page.getByRole("button", { name: /^Remove filter: Verified/ })).toHaveCount(0);
   });

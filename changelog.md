@@ -13,6 +13,39 @@ Project changes completed from `pending.md` should be recorded here with the dat
   tighten (`fit` / `fit-short` custom variants in `globals.css`). Phones keep
   natural flow. A min-height, so content that still cannot fit (Persian at
   800×600) moves the fold instead of overlapping.
+- **Product card critique fixes (owner-requested, `/impeccable critique`, 20/36).**
+  - The trust strip on `ProductCard` is now a labelled `dl`: Review,
+    Permissions, Licence at full weight; values wrap instead of truncating;
+    undeclared permissions are a red bordered "Not declared" mark. The
+    landing's `CompactProductCard` keeps its one-line compact strip.
+  - One link per card: the title is stretched over the card and "View details"
+    is gone (3 tab stops to 2). The article is named by its title; no lift or
+    shadow on hover; "Trending" is neutral so amber only means "not reviewed".
+  - RTL: the date is no longer forced `dir="ltr"` (it rendered reversed),
+    rating and review count follow the locale's digits, "+N" keeps its plus in
+    front, the creator badge label is localized and has `role="img"`.
+  - **Copy, owner decision:** "Safety reviewed" is now "Reviewed" site-wide
+    (EN and FA, filter chip, title block, OG image, landing copy). "Verified"
+    stays reserved for creator identity.
+  - Not done: the card stays in the live serif/rounded look (owner decision;
+    `DESIGN.md` still describes the removed datasheet hero and is stale).
+- **Follow-ups (not fixed here):** the seed's `license: "1 user · commercial
+  use"` and `refundPolicy` (`apps/api/prisma/seed.ts:660`) break the
+  free-only rule. API lane. `DESIGN.md` needs re-documenting for the current
+  hero.
+  - Shared surfaces: `apps/web/lib/i18n/` (catalog, home-sections,
+    product-page) and `changelog.md`.
+  - Verification: root typecheck, web lint, web build, 270 web unit tests,
+    237 browser tests (29 conditional skips) and all nine Lighthouse runs pass.
+    Browser checks at 1280×600 to 2560×1300, 390×844 and `/fa`. Environment
+    notes: on Node 26 the unit tests need
+    `NODE_OPTIONS=--no-experimental-webstorage` (Node's built-in
+    `localStorage` shadows jsdom's; 19 failures otherwise). E2E needed
+    `WEB_PORT=3200` (the Docker web container holds 3100) and
+    `PW_CHANNEL=chrome` (the bumped Playwright's browser is not downloaded).
+    The Persian `account-security` tab-bar test failed once and passed on
+    rerun.
+
 ## 2026-10-18
 
 - **Dashboard acquired library (DC04, owner-requested).**

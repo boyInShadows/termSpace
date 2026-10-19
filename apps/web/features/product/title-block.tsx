@@ -8,11 +8,11 @@ import { SelectedRelease } from "./release-selection";
 
 const text = {
   en: {
-    uses: "uses", platforms: "Platforms", models: "Models", review: "Review", reviewed: "Safety reviewed",
+    uses: "uses", platforms: "Platforms", models: "Models", review: "Review", reviewed: "Reviewed",
     notReviewed: "Not yet reviewed", notStated: "Not stated", noRelease: "No approved release", release: "Release", keyFacts: "Key facts",
   },
   fa: {
-    uses: "استفاده", platforms: "پلتفرم‌ها", models: "مدل‌ها", review: "بررسی", reviewed: "ایمنی بررسی‌شده",
+    uses: "استفاده", platforms: "پلتفرم‌ها", models: "مدل‌ها", review: "بررسی", reviewed: "بررسی‌شده",
     notReviewed: "هنوز بررسی نشده", notStated: "ذکر نشده", noRelease: "نسخهٔ تأییدشده‌ای نیست", release: "نسخه", keyFacts: "اطلاعات کلیدی",
   },
 };

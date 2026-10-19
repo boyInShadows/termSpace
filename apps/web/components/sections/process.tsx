@@ -29,7 +29,7 @@ const STEPS: readonly Step[] = [
       { label: "reads", value: "current selection only" },
       { label: "network", value: "none requested", tone: "verified" },
       { label: "licence", value: "MIT" },
-      { label: "safety", value: "reviewed 2 days ago", tone: "verified" },
+      { label: "status", value: "reviewed 2 days ago", tone: "verified" },
     ],
   },
   {

@@ -75,7 +75,7 @@ export function CompactProductCard({ product }: { product: Product }) {
       />
 
       <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3">
-        <CreatorIdentity creator={product.creator} compact />
+        <CreatorIdentity creator={product.creator} compact verifiedLabel={card.verifiedCreator} />
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1 text-xs font-medium">
             <Star size={14} className="fill-warning text-warning" />
