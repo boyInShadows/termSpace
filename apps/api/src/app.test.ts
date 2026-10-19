@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { hash } from "bcryptjs";
 import request from "supertest";
 import { ipKeyGenerator } from "express-rate-limit";
@@ -535,16 +536,15 @@ describe("API", () => {
   });
 
   it("registers a password account with an atomic verification outbox record", async () => {
-    prismaMock.readerUser.create.mockResolvedValue({
-      id: "reader-1", email: "reader@example.com", emailVerifiedAt: null, marketplaceRoleGrants: [],
-    });
+    prismaMock.readerUser.create.mockResolvedValue({ id: "reader-1" });
 
     const response = await request(createApp())
       .post("/api/readers/register")
       .send({ email: "reader@example.com", password: "correct-password" });
 
-    expect(response.status).toBe(200);
-    expect(response.body.data.user.emailVerified).toBe(false);
+    expect(response.status).toBe(202);
+    expect(response.body).toEqual({ data: { accepted: true } });
+    expect(response.headers["set-cookie"]).toBeUndefined();
     expect(prismaMock.readerUser.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         email: "reader@example.com",
@@ -553,22 +553,40 @@ describe("API", () => {
     }));
   });
 
+  it("answers a taken email exactly like a new one, with no session", async () => {
+    const taken = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", { code: "P2002", clientVersion: "test" });
+    prismaMock.readerUser.create.mockRejectedValue(taken);
+
+    const response = await request(createApp())
+      .post("/api/readers/register")
+      .send({ email: "reader@example.com", password: "correct-password" });
+
+    expect(response.status).toBe(202);
+    expect(response.body).toEqual({ data: { accepted: true } });
+    expect(response.headers["set-cookie"]).toBeUndefined();
+  });
+
+  it("still fails loudly on other database errors during registration", async () => {
+    prismaMock.readerUser.create.mockRejectedValue(new Error("connection lost"));
+    const response = await request(createApp())
+      .post("/api/readers/register")
+      .send({ email: "reader@example.com", password: "correct-password" });
+    expect(response.status).toBe(500);
+  });
+
   it("auto-verifies local registrations without creating an email job when explicitly enabled", async () => {
     const previousBypass = process.env.LOCAL_AUTO_VERIFY_EMAIL;
     const previousUrl = process.env.WEB_PUBLIC_URL;
     process.env.LOCAL_AUTO_VERIFY_EMAIL = "true";
     process.env.WEB_PUBLIC_URL = "http://localhost:3100";
-    prismaMock.readerUser.create.mockResolvedValue({
-      id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [],
-    });
+    prismaMock.readerUser.create.mockResolvedValue({ id: "reader-1" });
 
     try {
       const response = await request(createApp())
         .post("/api/readers/register")
         .send({ email: "reader@example.com", password: "correct-password" });
 
-      expect(response.status).toBe(200);
-      expect(response.body.data.user.emailVerified).toBe(true);
+      expect(response.status).toBe(202);
       const createData = prismaMock.readerUser.create.mock.calls[0][0].data;
       expect(createData.emailVerifiedAt).toBeInstanceOf(Date);
       expect(createData.emailVerifications).toBeUndefined();

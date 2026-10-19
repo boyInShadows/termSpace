@@ -35,10 +35,11 @@ describe.skipIf(!databaseUrl)("marketplace journey on a real database", () => {
 
   async function reader(label: string) {
     const agent = request.agent(app);
-    const response = await agent.post("/api/readers/register").set("Origin", origin)
-      .send({ email: `${label}-${run}@smoke.test`, password: `${label}-smoke-password-${run}` });
-    expect(response.status).toBe(200);
-    return { agent, userId: response.body.data.user.id as string };
+    const credentials = { email: `${label}-${run}@smoke.test`, password: `${label}-smoke-password-${run}` };
+    expect((await agent.post("/api/readers/register").set("Origin", origin).send(credentials)).status).toBe(202);
+    const login = await agent.post("/api/readers/login").set("Origin", origin).send(credentials);
+    expect(login.status).toBe(200);
+    return { agent, userId: login.body.data.user.id as string };
   }
 
   it("takes a listing from draft to a reviewed acquisition", async () => {

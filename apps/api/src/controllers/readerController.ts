@@ -88,24 +88,24 @@ export async function loginReader(req: Request, res: Response) {
 
 export async function registerReader(req: Request, res: Response) {
   const email = String(req.body.email).trim().toLowerCase();
+  // Hash before touching the database so a taken email costs the same as a new one.
   const passwordHash = await hash(String(req.body.password), 12);
   const autoVerify = localEmailVerificationBypassEnabled();
 
   try {
-    const user = await prisma.readerUser.create({
+    await prisma.readerUser.create({
       data: autoVerify
         ? { email, passwordHash, emailVerifiedAt: new Date() }
         : { email, passwordHash, emailVerifications: { create: newVerificationData() } },
-      select: { id: true, email: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
+      select: { id: true },
     });
-    await createSession(res, user);
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      res.status(409).json({ error: { code: "EMAIL_ALREADY_REGISTERED", message: "An account with this email already exists" } });
-      return;
-    }
-    throw error;
+    // A taken email gets the same answer as a new one, so this endpoint cannot be used to
+    // find out who has an account. The owner still has sign-in and password reset.
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")) throw error;
   }
+  // No session either: the caller signs in once they know the password works.
+  res.status(202).json({ data: { accepted: true } });
 }
 
 export async function requestReaderEmailVerification(req: Request, res: Response) {

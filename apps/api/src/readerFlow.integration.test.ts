@@ -41,18 +41,23 @@ describe.skipIf(!databaseUrl)("reader authentication on a real database", () => 
     const email = `${label}-${suffix}`;
     const agent = request.agent(app);
     const response = await agent.post("/api/readers/register").set("Origin", origin).send({ email, password });
-    expect(response.status).toBe(200);
-    expect(response.body.data.user.emailVerified).toBe(false);
-    expect(response.headers["set-cookie"][0]).toContain("HttpOnly");
-    return { agent, email, id: response.body.data.user.id as string };
+    expect(response.status).toBe(202);
+    expect(response.headers["set-cookie"]).toBeUndefined();
+    // Registering does not sign anyone in; the owner does that with the password they chose.
+    const login = await agent.post("/api/readers/login").set("Origin", origin).send({ email, password });
+    expect(login.status).toBe(200);
+    expect(login.body.data.user.emailVerified).toBe(false);
+    expect(login.headers["set-cookie"][0]).toContain("HttpOnly");
+    return { agent, email, id: login.body.data.user.id as string };
   }
 
   it("registers, sends verification, verifies once, logs in and logs out", async () => {
     const reader = await register("lifecycle");
     expect((await reader.agent.get("/api/readers/session")).body.data.user.email).toBe(reader.email);
     const duplicate = await request(app).post("/api/readers/register").send({ email: reader.email.toUpperCase(), password });
-    expect(duplicate.status).toBe(409);
-    expect(duplicate.body.error.code).toBe("EMAIL_ALREADY_REGISTERED");
+    expect(duplicate.status).toBe(202);
+    expect(duplicate.body).toEqual({ data: { accepted: true } });
+    expect(await prisma.readerUser.count({ where: { email: reader.email } })).toBe(1);
     const blocked = await reader.agent.post("/api/marketplace/creator/profile").set("Origin", origin)
       .send({ name: "Auth Tester", handle: `auth-${randomUUID().slice(0, 8)}`, bio: "Tests verified creator access." });
     expect(blocked.body.error.code).toBe("EMAIL_VERIFICATION_REQUIRED");

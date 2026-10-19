@@ -28,7 +28,7 @@ vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: "en", t: {
   account: "Your account", signedInAs: "Signed in as", signOut: "Sign out", signIn: "Sign in", createAccount: "Create account",
   forgotPassword: "Forgot password?", forgotPasswordIntro: "Enter your email", enterResetCode: "Enter reset code", resetCodeIntro: "Enter the code",
   accountIntro: "Account intro", email: "Email", password: "Password", newPassword: "New password", resetCode: "Reset code", wait: "Please wait",
-  confirmPassword: "Confirm password", passwordMismatch: "Passwords do not match", invalidCredentials: "Invalid credentials", emailAlreadyRegistered: "Already registered",
+  confirmPassword: "Confirm password", passwordMismatch: "Passwords do not match", invalidCredentials: "Invalid credentials", registerAccepted: "Check your inbox, then sign in",
   resetCodeInvalid: "Invalid reset code", passwordUnchanged: "Password unchanged",
   sendResetCode: "Send reset code", resetPassword: "Reset password", resetCodeSent: "Code sent", resetComplete: "Password reset complete",
   needAccount: "Register", registered: "Sign in instead", backToSignIn: "Back to sign in", serviceError: "Service unavailable",
@@ -76,7 +76,7 @@ describe("password sign-in and signup", () => {
     session.refresh.mockResolvedValue(undefined);
     params.next = "";
     login.mockResolvedValue({});
-    register.mockResolvedValue({ data: { user: { emailVerified: false } } });
+    register.mockResolvedValue({ data: { accepted: true } });
     loginWithGoogle.mockResolvedValue({});
   });
 
@@ -103,7 +103,7 @@ describe("password sign-in and signup", () => {
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
   });
 
-  it("checks password confirmation, creates the account, and opens verification", async () => {
+  it("checks password confirmation, then asks the reader to verify and sign in without starting a session", async () => {
     render(<AccountForm />);
     fireEvent.click(screen.getByRole("button", { name: "Register" }));
     credentials();
@@ -113,8 +113,11 @@ describe("password sign-in and signup", () => {
     expect(register).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "correct-password" } });
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/account/verify-email"));
-    expect(register).toHaveBeenCalledWith("reader@example.com", "correct-password");
+    await waitFor(() => expect(register).toHaveBeenCalledWith("reader@example.com", "correct-password"));
+    expect(await screen.findByRole("status")).toHaveTextContent("Check your inbox, then sign in");
+    expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+    expect(replace).not.toHaveBeenCalled();
+    expect(session.refresh).not.toHaveBeenCalled();
   });
 
   it("reports bad credentials and permits retry", async () => {
@@ -126,17 +129,6 @@ describe("password sign-in and signup", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Invalid credentials");
     expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
     expect(replace).not.toHaveBeenCalled();
-  });
-
-  it("skips the verification page when local signup is already accepted", async () => {
-    register.mockResolvedValue({ data: { user: { emailVerified: true } } });
-    params.next = "/dashboard";
-    render(<AccountForm />);
-    fireEvent.click(screen.getByRole("button", { name: "Register" }));
-    credentials();
-    fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "correct-password" } });
-    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard"));
   });
 
   it("signs in through Google and preserves the requested destination", async () => {

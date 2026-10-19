@@ -4,6 +4,33 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **Shared rate-limit store, non-revealing signup, Google wording (phase 4;
+  `readiness.md` S2 and S10).** Shared surfaces and outside the web lane:
+  `docker-compose.yml`, `apps/web/lib/api.ts`, `apps/web/lib/i18n/common.ts`,
+  `apps/api` and its dependencies.
+  - Redis: new `redis` compose service (no persistence, 64 MB, internal only);
+    every API limiter counts there through `limiter()` in
+    `middleware/security.ts`, so limits hold across replicas and restarts. New
+    dependencies `rate-limit-redis` (the store express-rate-limit documents for
+    Redis) and `ioredis` (its client). The API refuses to start in production
+    without `REDIS_URL`; if Redis goes down requests pass uncounted. Unset
+    `REDIS_URL` keeps in-memory counters for local work and tests.
+  - Signup: `POST /api/readers/register` returns `202 {accepted:true}` for a new
+    and a taken email and sets no cookie; the web form then shows "check your
+    inbox" and switches to sign-in. The `EMAIL_ALREADY_REGISTERED` string and
+    branch are gone. A taken email gets no email.
+  - Google: sign-up already worked on both apps (an unknown verified Google
+    email creates the account). The register tab's button now says "Sign up with
+    Google" (`text` prop, remounted per tab).
+  - Verified: typecheck, `npm test` (web with
+    `NODE_OPTIONS=--no-experimental-webstorage`), web lint, build, e2e (237
+    passed; the two signup specs were rewritten for the new flow), compose
+    config; the Redis store against a live `redis-server` and with Redis
+    unreachable. Not run: the two API integration test files (no database
+    here); their register helpers were updated and CI runs them. Run
+    `TEST_REDIS_URL=redis://127.0.0.1:6379 npx vitest run security.redis` in
+    `apps/api` for the shared-store test.
+
 - **Security hardening, phase 3: `readiness.md` S1-S12.** Outside the web lane:
   `apps/api`, `docker-compose.yml`, the `/backend` handlers, and the explore and
   community pages' search calls (`lib/api.ts` is a shared surface).

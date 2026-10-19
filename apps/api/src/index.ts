@@ -2,6 +2,7 @@ import "dotenv/config";
 import { createApp } from "./app.js";
 import { assertProductionConfig } from "./lib/productionConfig.js";
 import { prisma } from "./lib/prisma.js";
+import { redis } from "./lib/redis.js";
 
 const port = Number(process.env.PORT ?? 4001);
 
@@ -41,6 +42,7 @@ async function main() {
       server.close((error) => (error ? reject(error) : resolve()));
     });
     await prisma.$disconnect();
+    redis?.disconnect();
     clearTimeout(forceExit);
     console.log("Shutting down...");
     process.exit(0);
