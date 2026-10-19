@@ -24,7 +24,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() ?? "/dashboard";
   const signInHref = `${localePath("/account", locale)}?next=${encodeURIComponent(pathname)}`;
-  const isSignedOut = !session.loading && !session.email;
+  const isSignedOut = !session.identityLoading && !session.email;
 
   useEffect(() => {
     // Smooth page scrolling can leave keyboard focus behind the fixed tab bar.
@@ -60,7 +60,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <div className="mx-auto max-w-[1200px]">
             <DashboardSearch />
             <div>
-              {session.loading ? <DashboardOverviewSkeleton /> : !session.emailVerified ? <EmailVerification /> : children}
+                {session.identityLoading ? <DashboardOverviewSkeleton /> : !session.emailVerified ? <EmailVerification /> : children}
             </div>
           </div>
         </main>

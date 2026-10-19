@@ -4,6 +4,37 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **Dashboard data no longer waits for favorites.** The shell now uses identity
+  readiness to mount verified workspace content, allowing overview and Profile
+  requests to overlap the initial favorites read. The session's existing full
+  `loading` contract is retained for its other consumers. Saved waits for that
+  complete snapshot before fetching its own collection or exposing removal
+  controls, including during refresh. A favorites 401 still clears identity
+  and redirects out; API authorization and email verification remain intact.
+  - A three-run controlled mobile-viewport experiment with a 1000 ms favorites
+    delay reduced median navigation-to-table time from 1462 ms to 230 ms.
+    With immediate favorites it measured 205 ms before / 225 ms after, within
+    noise. This is request overlap under delay, not an LCP claim. Raw events,
+    captures and verification logs: `maintenance/dashboard-loading-20261019/`.
+  - Root typecheck, 519 unit tests (5 database-dependent skips), web lint and
+    the full browser suite pass: 324 cases, 44 intentional skips, no retries.
+    Twelve new browser cases cover delayed favorites, blocked Saved mutation,
+    persistent removal and session expiry in EN/FA on desktop/mobile. Thirty-six
+    captures cover both themes and 320/768/1280 widths, including Saved loading
+    and empty states; geometry/page-error checks and representative visual
+    review pass. Impeccable's detector reports no findings.
+  - All 21 existing Lighthouse assertions pass across nine local mobile reports
+    at unchanged 4x CPU/network settings. Median LCP/performance: home
+    2643 ms/97, dashboard 3766 ms/89, detail 2785 ms/96; accessibility is 100.
+    Dashboard LCP is effectively unchanged from the prior 3767 ms/89, so the
+    tighter targets remain open. The normal root production build also passes.
+  - Shared `pending.md` and `changelog.md` are updated for the owner's assigned
+    performance phase; the completed waterfall investigation is removed from
+    both queues, retaining hydration/rendering targets and owner acceptance.
+    CodebaseMemory coverage flagged changed metadata; relevant source and
+    callers were read directly. Manual diff review found no remaining issue.
+    No agent cost/usage meter is exposed by this harness.
+
 - **First-request sitemap recovery after offline builds.** Hosted checks on
   `7c8f5db` all passed, but sitemap acceptance needed a retry: CI builds before
   the fixture API starts, caches the three-route fallback, then serves that

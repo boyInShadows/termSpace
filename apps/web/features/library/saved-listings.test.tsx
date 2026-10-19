@@ -2,15 +2,31 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { savedCopy } from "./saved-copy";
 
-const mocks = vi.hoisted(() => ({ favorites: vi.fn(), product: vi.fn(), remove: vi.fn() }));
+const mocks = vi.hoisted(() => ({ favorites: vi.fn(), product: vi.fn(), remove: vi.fn(), loading: false }));
 vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), getFavorites: mocks.favorites, getProduct: mocks.product }));
 vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: "en" }) }));
-vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => ({ removeFavorite: mocks.remove }) }));
+vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => ({ loading: mocks.loading, removeFavorite: mocks.remove }) }));
 const { ApiError } = await import("@/lib/api");
 const { SavedListings } = await import("./saved-listings");
 
 describe("Saved listings", () => {
-  beforeEach(() => { vi.clearAllMocks(); mocks.remove.mockResolvedValue(undefined); mocks.product.mockImplementation(async (slug) => ({ name: slug, outcome: "Public summary" })); });
+  beforeEach(() => { vi.clearAllMocks(); mocks.loading = false; mocks.remove.mockResolvedValue(undefined); mocks.product.mockImplementation(async (slug) => ({ name: slug, outcome: "Public summary" })); });
+
+  it("waits for the session snapshot before reading or removing saved items, including refresh", async () => {
+    mocks.loading = true;
+    mocks.favorites.mockResolvedValue(["saved"]);
+    const { rerender } = render(<SavedListings />);
+    expect(screen.getByRole("status")).toHaveTextContent(savedCopy.en.loading);
+    expect(mocks.favorites).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: savedCopy.en.remove })).not.toBeInTheDocument();
+    mocks.loading = false;
+    rerender(<SavedListings />);
+    expect(await screen.findByRole("heading", { name: "saved" })).toBeVisible();
+    mocks.loading = true;
+    rerender(<SavedListings />);
+    expect(screen.queryByRole("button", { name: savedCopy.en.remove })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(savedCopy.en.loading);
+  });
 
   it("bounds detail reads to a page and removes a saved listing", async () => {
     mocks.favorites.mockResolvedValue(Array.from({ length: 13 }, (_, index) => `item-${index}`));

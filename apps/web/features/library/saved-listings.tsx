@@ -28,6 +28,7 @@ export function SavedListings() {
   const [removeError, setRemoveError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (session.loading) return;
     const controller = new AbortController();
     void getFavorites(controller.signal).then((result) => {
       if (!controller.signal.aborted) {
@@ -36,7 +37,7 @@ export function SavedListings() {
       }
     }).catch(() => { if (!controller.signal.aborted) setError(true); });
     return () => controller.abort();
-  }, [attempt]);
+  }, [attempt, session.loading]);
 
   useEffect(() => {
     if (!slugs) return;
@@ -64,13 +65,13 @@ export function SavedListings() {
     finally { setBusy(null); }
   }
 
-  return <section aria-labelledby="saved-title" aria-busy={!error && entries === null}>
+  return <section aria-labelledby="saved-title" aria-busy={session.loading || (!error && entries === null)}>
     <h1 id="saved-title" className="text-2xl font-semibold sm:text-3xl">{copy.title}</h1>
     <p className="mt-3 text-muted-foreground">{copy.intro}</p>
-    {error ? <div className="mt-6 border-y py-5"><p role="alert" className="text-sm text-destructive">{copy.error}</p><Button className="mt-4" variant="secondary" onClick={retry}>{labels.retry}</Button></div>
-      : entries === null ? <p className="mt-6 text-sm text-muted-foreground" role="status">{copy.loading}</p>
+    {session.loading || (!error && entries === null) ? <p className="mt-6 text-sm text-muted-foreground" role="status">{copy.loading}</p>
+      : error ? <div className="mt-6 border-y py-5"><p role="alert" className="text-sm text-destructive">{copy.error}</p><Button className="mt-4" variant="secondary" onClick={retry}>{labels.retry}</Button></div>
         : slugs?.length === 0 ? <div className="mt-6 border-y py-8"><p>{copy.empty}</p><Link className={`${buttonVariants({ variant: "secondary" })} mt-4`} href={localePath("/explore", locale)}>{labels.browse}</Link></div>
-          : <ul className="mt-6 divide-y border-y bg-surface">{entries.map((entry) => <li key={entry.slug} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+          : <ul className="mt-6 divide-y border-y bg-surface">{entries?.map((entry) => <li key={entry.slug} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               {entry.status === "ready" ? <><h2 className="break-words font-semibold"><Link className="block min-h-11 py-2 hover:underline" href={localePath(`/products/${encodeURIComponent(entry.slug)}`, locale)}><bdi>{entry.product.name}</bdi></Link></h2><p dir="auto" className="break-words text-sm text-muted-foreground">{entry.product.outcome}</p></>
                 : <><p className="text-sm text-muted-foreground" role={entry.status === "error" ? "alert" : undefined}>{entry.status === "unavailable" ? copy.unavailable : copy.itemError}</p>{entry.status === "error" && <Button className="mt-3" variant="secondary" onClick={retry}>{labels.retry}</Button>}</>}
@@ -78,7 +79,7 @@ export function SavedListings() {
             </div>
             <Button className="shrink-0" variant="secondary" disabled={busy !== null} onClick={() => void remove(entry.slug)}>{busy === entry.slug ? copy.loading : copy.remove}</Button>
           </li>)}</ul>}
-    {slugs && slugs.length > PAGE_SIZE && <nav aria-label={labels.pages} className="mt-6 flex items-center justify-between gap-4">
+    {!session.loading && slugs && slugs.length > PAGE_SIZE && <nav aria-label={labels.pages} className="mt-6 flex items-center justify-between gap-4">
       <Button variant="secondary" disabled={entries === null || busy !== null || page === 0} onClick={() => { setEntries(null); setPage((value) => value - 1); }}>{labels.previous}</Button>
       <span className="text-center text-xs text-muted-foreground">{labels.page.replace("{page}", new Intl.NumberFormat(locale).format(page + 1)).replace("{pages}", new Intl.NumberFormat(locale).format(Math.ceil(slugs.length / PAGE_SIZE)))}</span>
       <Button variant="secondary" disabled={entries === null || busy !== null || (page + 1) * PAGE_SIZE >= slugs.length} onClick={() => { setEntries(null); setPage((value) => value + 1); }}>{labels.next}</Button>
