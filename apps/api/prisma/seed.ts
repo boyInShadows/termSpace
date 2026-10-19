@@ -481,7 +481,7 @@ async function main() {
     if (adminPassword.length < 12) {
       throw new Error("ADMIN_PASSWORD must contain at least 12 characters");
     }
-    if (adminPassword.startsWith("replace-with")) {
+    if (/^(replace-with|change-this)/.test(adminPassword)) {
       throw new Error("ADMIN_PASSWORD is still the .env.example placeholder");
     }
     const passwordHash = await hash(adminPassword, 12);

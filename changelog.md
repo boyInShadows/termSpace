@@ -4,6 +4,31 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **Pre-deploy blockers, phase 1 of 2: API and compose (B1, B2, B3, B6, B7 in
+  `readiness.md`).** Work outside the web-presentation lane: `apps/api`,
+  `docker/`, `docker-compose.yml` and the `/backend` handlers in `apps/web` and
+  `apps/blog`.
+  - Rate limit: server-rendered API calls (no `X-Forwarded-For`) no longer count
+    against the shared global bucket when `TRUST_PROXY` is on; both `/backend`
+    handlers always send the header so browser traffic stays counted.
+  - Shutdown and migrations: new one-shot `migrate` compose service; `api` runs
+    `node dist/index.js` as PID 1 and waits for it; the three worker loops use
+    `init: true`.
+  - 500 responses show `err.message` only when `NODE_ENV=development`.
+  - `Dockerfile.blog` takes `NEXT_PUBLIC_SITE_URL`; compose requires
+    `WEB_PUBLIC_URL`, `BLOG_SITE_URL` and `MEDIA_PUBLIC_URL` instead of
+    defaulting them to localhost.
+  - Seed rejects `change-this*` admin passwords; the API refuses to start in
+    production with a placeholder in `DATABASE_URL`.
+  - Verified: `npm run typecheck`, `npm test` (web run with
+    `NODE_OPTIONS=--no-experimental-webstorage`: Node 26 breaks jsdom's
+    `localStorage`, 19 web tests fail without it, unrelated to this change),
+    `npm run lint -w apps/web`, `npm run build`, `docker compose config`. New
+    tests: `errorHandler.test.ts`, `security.test.ts`. Not run: e2e, lhci (no UI
+    change).
+  - Follow-up for the edge proxy (not code): set or append `X-Forwarded-For`
+    with the real client address. Phase 2 (B4, B5, B8) is separate.
+
 - **Moderation moves into the dashboard and leads with risk (owner-requested,
   `/impeccable critique` of the moderator page, 16/40).**
   - Routes: `/dashboard/moderation` and `/dashboard/moderation/listings/[id]`

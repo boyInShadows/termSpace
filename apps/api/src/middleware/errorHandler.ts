@@ -10,7 +10,7 @@ import multer from "multer";
  * - Validation errors (Zod) -> 400
  * - Prisma "not found" -> 404
  * - Prisma unique constraint -> 409
- * - Everything else -> 500 (details hidden in production)
+ * - Everything else -> 500 (details shown only when NODE_ENV=development)
  */
 
 export const notFoundHandler: RequestHandler = (req, res) => {
@@ -94,11 +94,12 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     method: req.method,
     path: req.path,
   }, "Unhandled request error");
-  const isProd = process.env.NODE_ENV === "production";
+  // Opt in to details: an unset or mistyped NODE_ENV must not leak err.message.
+  const showDetails = process.env.NODE_ENV === "development";
   res.status(500).json({
     error: {
       code: "INTERNAL_ERROR",
-      message: isProd ? "Internal server error" : err.message,
+      message: showDetails ? err.message : "Internal server error",
     },
   });
 };

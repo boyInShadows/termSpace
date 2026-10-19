@@ -17,6 +17,9 @@ async function proxyRequest(request: NextRequest): Promise<Response> {
   const headers = new Headers(request.headers);
   headers.delete("host");
   headers.delete("content-length");
+  // The API rate-limits by this header and does not count requests without it, so
+  // it must always be present. The edge proxy has to set it; this is the fail-closed fallback.
+  if (!headers.has("x-forwarded-for")) headers.set("x-forwarded-for", "127.0.0.1");
 
   const body = ["GET", "HEAD"].includes(request.method) ? undefined : await request.arrayBuffer();
 

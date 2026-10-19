@@ -5,6 +5,10 @@ import { prisma } from "./lib/prisma.js";
 const port = Number(process.env.PORT ?? 4001);
 
 async function main() {
+  // The compose file only checks that the database password is non-empty.
+  if (process.env.NODE_ENV === "production" && /change-this|replace-with/.test(process.env.DATABASE_URL ?? "")) {
+    throw new Error("DATABASE_URL still contains a .env.example placeholder");
+  }
   const app = createApp();
 
   // Verify the database connection before serving.

@@ -39,12 +39,19 @@ export const csrfProtection: RequestHandler = (req, res, next) => {
   next();
 };
 
+const trustsProxy = () => Boolean(process.env.TRUST_PROXY) && process.env.TRUST_PROXY !== "0";
+
 export const apiRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 300,
   standardHeaders: "draft-8",
   legacyHeaders: false,
-  skip: (req) => req.path === "/api/health",
+  // Browser traffic reaches the API through the frontends' /backend proxy, which
+  // always sends X-Forwarded-For. Server-rendered pages call the API directly from
+  // the frontend containers without it; behind a trusted proxy those would all share
+  // one client IP and exhaust this limit for every visitor, so they are not counted.
+  // The API port is bound to loopback in docker-compose.yml.
+  skip: (req) => req.path === "/api/health" || (trustsProxy() && !req.headers["x-forwarded-for"]),
   message: rateLimitResponse,
 });
 
