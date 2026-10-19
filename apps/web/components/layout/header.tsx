@@ -51,7 +51,7 @@ export function Header() {
   const NAV = [
     { href: "/explore", label: t.explore },
     { href: "/dashboard/studio", label: t.shareWork },
-    ...(canModerate ? [{ href: "/moderation", label: t.moderationNav }] : []),
+    ...(canModerate ? [{ href: "/dashboard/moderation", label: t.moderationNav }] : []),
   ];
   const [isCondensed, setIsCondensed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);

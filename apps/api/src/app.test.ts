@@ -1589,8 +1589,18 @@ describe("API", () => {
       creator: { name: "Creator", handle: "creator", ownerUserId: "reader-1" },
       proposedSnapshot: {
         revision: 2, createdAt: new Date("2026-09-17T07:00:00.000Z"), _count: { communityRequests: 1 },
+        content: { release: { permissions: [
+          { capability: "secret_access", purpose: "Reads API keys" },
+          { capability: "network_access", required: false, purpose: "Calls the provider" },
+          { purpose: "Malformed entry without a capability" },
+        ] } },
         releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: null, productVersion: { version: "1.1.0" } },
       },
+    }, {
+      id: "product-2", slug: "legacy-skill", name: "Legacy Skill", itemType: null, type: "Skill",
+      lifecycleState: "APPROVED", lifecycleVersion: 1, published: false, updatedAt: new Date("2026-09-17T09:00:00.000Z"),
+      creator: { name: "Creator", handle: "creator", ownerUserId: "reader-1" },
+      proposedSnapshot: { revision: 1, createdAt: new Date(), _count: { communityRequests: 0 }, content: { schemaVersion: 0, legacy: true }, releaseManifest: null },
     }]);
     prismaMock.marketplaceProduct.count.mockResolvedValueOnce(1).mockResolvedValueOnce(1).mockResolvedValueOnce(0);
 
@@ -1603,10 +1613,35 @@ describe("API", () => {
     expect(response.body.data.listings[0]).toMatchObject({
       id: "product-1", state: "submitted", selfOwned: false, sourceResolved: true,
       ownershipVerified: false, communityRequestCount: 1, releaseVersion: "1.1.0",
+      capabilities: [{ capability: "secret_access", required: true }, { capability: "network_access", required: false }],
     });
+    expect(response.body.data.listings[1].capabilities).toEqual([]);
     expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { lifecycleState: { in: ["SUBMITTED", "APPROVED"] }, NOT: { creator: { ownerUserId: "moderator-1" } } }, skip: 0, take: 24,
     }));
+  });
+
+  it("shows a listing with nothing pending what its approved version declares, not an empty list", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findMany
+      .mockResolvedValueOnce([{
+        id: "product-3", slug: "live-skill", name: "Live Skill", itemType: "SKILL", type: "Skill",
+        lifecycleState: "PUBLISHED", lifecycleVersion: 5, published: true, updatedAt: new Date("2026-09-17T08:00:00.000Z"),
+        creator: { name: "Creator", handle: "creator", ownerUserId: "reader-1" }, proposedSnapshot: null,
+      }])
+      .mockResolvedValueOnce([{ id: "product-3", approvedSnapshot: { content: { release: { version: "2.0.0", permissions: [{ capability: "secret_access", purpose: "Reads keys" }] } } } }]);
+    prismaMock.marketplaceProduct.count.mockResolvedValueOnce(1).mockResolvedValueOnce(0).mockResolvedValueOnce(0);
+
+    const response = await request(createApp())
+      .get("/api/marketplace/moderation/queue?state=published&page=1&limit=24")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.listings[0]).toMatchObject({ id: "product-3", releaseVersion: "2.0.0", capabilities: [{ capability: "secret_access", required: true }] });
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenLastCalledWith(expect.objectContaining({ where: { id: { in: ["product-3"] } } }));
   });
 
   it("does not expose the moderation queue to creators", async () => {

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, LibraryBig, Plus, Settings, Store } from "lucide-react";
+import { LayoutGrid, LibraryBig, Plus, Settings, ShieldCheck, Store } from "lucide-react";
 import { libraryCopy } from "@/features/library/library-copy";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { localePath } from "@/lib/i18n";
@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
  */
 function useDashboardNav() {
   const { locale, t } = useLocale();
+  const session = useMarketplaceSession();
+  const canModerate = session.marketplaceRoles.includes("moderator") || session.marketplaceRoles.includes("administrator");
   const pathname = usePathname() ?? "/dashboard";
   // The Persian tree is served under `/fa` by a rewrite, but the browser path
   // keeps the prefix.
@@ -27,6 +29,7 @@ function useDashboardNav() {
     { href: "/dashboard", label: t.navOverview, icon: LayoutGrid },
     { href: "/dashboard/studio", label: t.navStudio, icon: Store },
     { href: "/dashboard/library", label: libraryCopy[locale].label, icon: LibraryBig },
+    ...(canModerate ? [{ href: "/dashboard/moderation", label: t.moderationNav, icon: ShieldCheck }] : []),
     { href: "/dashboard/settings", label: t.navSettings, icon: Settings },
   ].map((item) => ({
     ...item,
@@ -100,7 +103,7 @@ export function DashboardTabBar() {
       aria-label={t.dashboardHome.tabsLabel}
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
-      <ul className="grid grid-cols-5">
+      <ul className="grid" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr)) 3.25rem` }}>
         {items.map(({ href, label, icon: Icon, active }) => (
           <li key={href}>
             <Link
@@ -116,8 +119,8 @@ export function DashboardTabBar() {
             </Link>
           </li>
         ))}
-        <li className="flex items-center justify-center px-2">
-          <PublishLink iconOnly className="min-h-11 w-full rounded-none px-2" />
+        <li className="flex items-center justify-center px-1">
+          <PublishLink iconOnly className="min-h-11 w-full rounded-none px-1" />
         </li>
       </ul>
     </nav>

@@ -4,6 +4,84 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **Moderation moves into the dashboard and leads with risk (owner-requested,
+  `/impeccable critique` of the moderator page, 16/40).**
+  - Routes: `/dashboard/moderation` and `/dashboard/moderation/listings/[id]`
+    inside the dashboard shell (sidebar and tab bar entry for moderators, the
+    top bar names it, titles per page). `/moderation` and
+    `/moderation/listings/[id]` now `permanentRedirect` to them, keeping `/fa`.
+    The site header link points at the new route. The marketing banner and
+    footer no longer wrap a staff tool.
+  - Queue: ruled dashboard rows, one link per listing (its name), filters, search
+    and page in the URL (reload, back and shared links keep them; the preview's
+    Back returns to them through a whitelisted `from` parameter). Each row shows
+    the declared capabilities with a "Needs a closer look" marker for secret
+    access, process execution, file writes and network access. That list is a
+    heuristic that steers attention and blocks nothing (`capabilities.ts`). The
+    green "Passed / Passed" is replaced by plain Source and Ownership facts;
+    pending ones are marked. The three summary tiles are a compact strip on
+    phones.
+  - Preview: opens with "What it touches" (each capability with scope, purpose,
+    destinations, required or optional, flagged, and marked New or Changed
+    against the approved version), then source and checks (source and
+    ownership are now separate results, plus integrity and snapshot digests),
+    install steps and requirements as readable text, screenshots as text (never
+    links), communities, and the raw JSON folded away. A listing with nothing
+    pending shows its live approved version instead of empty fields. The
+    Quiet-Notes-style overflow at 390px is gone.
+  - Decision: no preselected action; radio choices each state their effect; the
+    button names the action and is red for reject, suspend and archive; a
+    confirm step restates the listing, release and (for approve and publish)
+    the declared access before anything is recorded; Enter in a field can no
+    longer commit; the result appears inside the decision panel and names what
+    was recorded; the public reason enforces the server's 10-character minimum
+    in the browser; the review Hide minimum is stated. The audit trail uses
+    plain action, actor and state words.
+  - Persian: state, audit, placement, source and install labels, digits and
+    dates, left-to-right handles and the install steps' direction.
+  - **Site-wide, announced:** `globals.css` now defines `@custom-variant dark`
+    so `dark:` follows the theme switch, not the OS. It had followed
+    `prefers-color-scheme`, which put dark colours on the wrong ground whenever
+    the two disagreed (measured 2.46:1 and 3.48:1 on the moderation status
+    colours; 1.5:1 the other way). Seven files use `dark:`.
+  - **Cross-lane, announced:** the API's moderation queue now returns each
+    listing's declared `capabilities` (read from the stored manifest, malformed
+    entries skipped), with a test. Read-only; no schema or migration change.
+    Shared surfaces touched: `lib/types.ts`, `lib/i18n/` (moderation) and
+    `changelog.md`.
+  - Code review before push (`/code-review high`, 10 findings), all handled:
+    fixed — the queue showed "Declares no permissions" for published and
+    suspended listings because only the pending revision was read (it now
+    falls back to the approved version, fetched only for rows without a
+    pending one); a failed refresh after saving left a stale decision form
+    beside "Recorded" (decisions are disabled with a retry until it
+    refreshes); the reason code was rewritten on commit but not shown in the
+    confirmation (normalised up front and shown); an unknown `?state=` got a
+    retry that could never work and the real error was hidden (whitelisted,
+    API message shown); a failed review hide said the list could not load;
+    the legacy redirects dropped the query string; destinations order no
+    longer reads as a change; one shared `isRecord`; the Publish slot of the
+    phone tab bar is a fixed 52px so "Moderation" no longer spills into its
+    neighbours. Dismissed — the queue reads each row's manifest JSON for its
+    permissions (bounded by the manifest limits, 24 rows a page, and the
+    approved manifest is fetched only when nothing is pending; a stored
+    column is the upgrade if manifests grow); the capability parsing exists
+    once in the API and once in the web app (the apps share no code today;
+    each side has a test); key order in section diffs (JSONB stores a
+    canonical key order for both snapshots).
+  - Not done: reason codes stay free text. There is no policy list in the repo
+    and inventing one is the maintainers' call. No moderation e2e exists (the
+    mock API has no moderator persona); coverage is unit tests plus a browser
+    pass against local data. A second-moderator or attestation rule for
+    high-risk capabilities is a product decision, left open.
+  - Verification: root typecheck, web lint, 287 web tests (new
+    `moderation-preview.test.tsx`, rewritten queue test), 213 API tests (5
+    database-dependent skips), web build, 237 browser tests (29 conditional
+    skips) and all nine Lighthouse runs pass. Browser checks on local fixtures
+    at 1440 and 390 in English and `/fa`, dark and light, with the
+    confirmation step opened and cancelled (no decision recorded). Local
+    fixtures remain in the dev database: four `critique-*-c1226@example.com`
+    accounts, two submitted listings and one published listing with a review.
 - **Landing hero fits the first screen (owner-requested).** From tablet width
   (`md`) and 600px viewport height up, the hero is at least
   `100svh` minus the header (`--header-chrome`, which tracks the dismissible

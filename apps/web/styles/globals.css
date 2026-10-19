@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "./tokens.css";
 
+/* `dark:` follows the site's theme switch (next-themes puts `.dark` on <html>),
+   not the operating system: without this, Tailwind's default variant reads
+   `prefers-color-scheme`, and a dark site on a light OS (or the reverse)
+   rendered `dark:` colours on the wrong ground. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* The landing hero fills the first screen from tablet width up. Under 600px
    of viewport height (a phone on its side) nothing fits, so it flows instead. */
 @custom-variant fit (@media (min-width: 48rem) and (min-height: 37.5rem));

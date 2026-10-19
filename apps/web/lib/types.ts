@@ -69,6 +69,8 @@ export interface MarketplaceModerationQueueListing {
   state: string; version: number; published: boolean; creator: { name: string; handle: string }; selfOwned: boolean;
   proposedRevision: number | null; releaseVersion: string | null; sourceResolved: boolean; ownershipVerified: boolean;
   communityRequestCount: number; updatedAt: string;
+  /** What the proposed release declares it touches, so the queue can show risk before the preview is opened. */
+  capabilities: Array<{ capability: string; required: boolean }>;
 }
 export interface MarketplaceModerationQueueResult {
   data: {

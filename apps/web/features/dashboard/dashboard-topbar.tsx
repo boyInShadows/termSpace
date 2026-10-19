@@ -36,7 +36,8 @@ export function DashboardTopbar() {
       : currentPath.endsWith("/new") ? t.creatorDraft.createTitle
         : currentPath.endsWith("/library") ? libraryCopy[locale].label
           : currentPath.endsWith("/settings") ? t.navSettings
-            : currentPath.startsWith("/dashboard/studio") ? t.navStudio : t.navOverview;
+            : currentPath.startsWith("/dashboard/moderation") ? t.moderationNav
+              : currentPath.startsWith("/dashboard/studio") ? t.navStudio : t.navOverview;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

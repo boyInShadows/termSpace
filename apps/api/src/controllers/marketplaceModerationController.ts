@@ -10,6 +10,30 @@ const stateMap = {
   published: "PUBLISHED", rejected: "REJECTED", suspended: "SUSPENDED", archived: "ARCHIVED",
 } as const;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * What a release declares it touches, read from its stored manifest, so the
+ * queue can rank risk before a moderator opens the preview. Malformed entries
+ * are skipped rather than guessed; a legacy snapshot with no release declares
+ * nothing.
+ */
+function declaredCapabilities(content: Prisma.JsonValue | undefined) {
+  const release = isRecord(content) && isRecord(content.release) ? content.release : null;
+  const permissions = release && Array.isArray(release.permissions) ? release.permissions : [];
+  return permissions.flatMap((entry) => isRecord(entry) && typeof entry.capability === "string"
+    ? [{ capability: entry.capability, required: entry.required !== false }]
+    : []);
+}
+
+/** The version a release declares, from its stored manifest; empty for a legacy snapshot with no release. */
+function declaredReleaseVersion(content: Prisma.JsonValue | undefined) {
+  const release = isRecord(content) && isRecord(content.release) ? content.release : null;
+  return release && typeof release.version === "string" ? release.version : null;
+}
+
 function queueStateWhere(state: string) {
   if (state === "all") return {};
   if (state === "review") return { lifecycleState: { in: [...reviewStates] } };
@@ -37,7 +61,7 @@ export async function listMarketplaceModerationQueue(req: Request, res: Response
         lifecycleVersion: true, published: true, updatedAt: true,
         creator: { select: { name: true, handle: true, ownerUserId: true } },
         proposedSnapshot: { select: {
-          revision: true, createdAt: true,
+          revision: true, createdAt: true, content: true,
           releaseManifest: { select: { sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true, productVersion: { select: { version: true } } } },
           _count: { select: { communityRequests: true } },
         } },
@@ -50,6 +74,14 @@ export async function listMarketplaceModerationQueue(req: Request, res: Response
     prisma.marketplaceProduct.count({ where: { lifecycleState: "SUBMITTED", NOT: { creator: { ownerUserId: userId } } } }),
     prisma.marketplaceProduct.count({ where: { lifecycleState: "APPROVED", NOT: { creator: { ownerUserId: userId } } } }),
   ]);
+  // A listing with nothing pending (published, suspended) has no proposed
+  // snapshot; what it declares is in its approved one. Fetched only for those
+  // rows, so rows with a pending revision do not carry both manifests.
+  const withoutPending = products.filter((product) => !product.proposedSnapshot).map((product) => product.id);
+  const live = withoutPending.length
+    ? await prisma.marketplaceProduct.findMany({ where: { id: { in: withoutPending } }, select: { id: true, approvedSnapshot: { select: { content: true } } } })
+    : [];
+  const liveContent = new Map(live.map((product) => [product.id, product.approvedSnapshot?.content]));
   res.json({
     data: {
       summary: { submitted, approved, awaitingAction: submitted + approved },
@@ -65,10 +97,11 @@ export async function listMarketplaceModerationQueue(req: Request, res: Response
         creator: { name: product.creator.name, handle: product.creator.handle },
         selfOwned: product.creator.ownerUserId === userId,
         proposedRevision: product.proposedSnapshot?.revision ?? null,
-        releaseVersion: product.proposedSnapshot?.releaseManifest?.productVersion.version ?? null,
+        releaseVersion: product.proposedSnapshot?.releaseManifest?.productVersion.version ?? declaredReleaseVersion(liveContent.get(product.id)),
         sourceResolved: Boolean(product.proposedSnapshot?.releaseManifest?.sourceResolvedAt),
         ownershipVerified: Boolean(product.proposedSnapshot?.releaseManifest?.ownershipVerifiedAt && product.proposedSnapshot.releaseManifest.sourceCheckStatus === "VERIFIED"),
         communityRequestCount: product.proposedSnapshot?._count.communityRequests ?? 0,
+        capabilities: declaredCapabilities(product.proposedSnapshot?.content ?? liveContent.get(product.id)),
         updatedAt: product.updatedAt,
       })),
     },
