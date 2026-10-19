@@ -4,6 +4,18 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-19
 
+- **Hosted zoom-harness compatibility.** Draft PR #10's first hosted run
+  (39310542406) exposed twelve genuine zoom-test failures: the default
+  Playwright headless shell ignored Chrome profile preferences, so DPR stayed
+  1 instead of doubling. The helper now defaults to the full `chromium`
+  channel, while preserving the local `PW_CHANNEL=chrome` override. This uses
+  Playwright's [documented full-browser headless mode](https://playwright.dev/docs/browsers#chromium-new-headless-mode).
+  The workflow already installs both browser variants. No zoom assertion,
+  viewport, retry, application code or performance budget was weakened.
+  Root typecheck, 516 unit tests, web lint, the normal build and all twelve
+  focused local Chrome zoom cases pass; the full Chromium fallback is checked
+  by the hosted rerun. Failed-run logs are retained with the phase evidence.
+
 - **Web initial-load budgets (owner-assigned performance phase).** The root
   server layout now supplies only the active language's messages to the locale
   provider, removing the two-language dictionary module from client JavaScript.

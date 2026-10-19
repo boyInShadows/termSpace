@@ -10,8 +10,9 @@ async function zoomContext(info: TestInfo, zoom: number, width: number, height: 
     partition: { default_zoom_level: { x: Math.log(zoom) / Math.log(1.2) } },
   }));
   // Clear the runner's emulated DPR so Chrome can apply native browser zoom.
+  // The full browser reads zoom preferences; Playwright's headless shell does not.
   return chromium.launchPersistentContext(profile, {
-    channel: process.env.PW_CHANNEL, headless: true, viewport: null, deviceScaleFactor: undefined,
+    channel: process.env.PW_CHANNEL ?? "chromium", headless: true, viewport: null, deviceScaleFactor: undefined,
     args: [`--window-size=${width},${height}`],
   });
 }
