@@ -88,8 +88,14 @@ jobs:
               ;;
             web)
               docker run -d --name termspace-smoke -p 127.0.0.1:3330:3000 -e API_URL=http://127.0.0.1:9 "$IMAGE"
-              trap 'docker rm -f termspace-smoke >/dev/null' EXIT
-              curl --retry 15 --retry-delay 2 --retry-connrefused --fail http://127.0.0.1:3330/account -o /dev/null
+              cleanup() {
+                status=$?
+                if [ "$status" -ne 0 ]; then docker logs --tail 50 termspace-smoke; fi
+                docker rm -f termspace-smoke >/dev/null
+                exit "$status"
+              }
+              trap cleanup EXIT
+              curl --retry 15 --retry-delay 2 --retry-all-errors --max-time 15 --fail http://127.0.0.1:3330/account -o /dev/null
               curl --fail http://127.0.0.1:3330/privacy -o /dev/null
               curl --fail http://127.0.0.1:3330/fa/account -o /dev/null
               ;;

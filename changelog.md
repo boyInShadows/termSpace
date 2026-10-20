@@ -4,6 +4,15 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-20
 
+- **Hosted image smoke checks (deployment phase 1 follow-up).** The first hosted
+  run caught TypeScript retained as Prisma's optional peer despite `--omit=dev`;
+  the runtime prune now also omits peers. The web check initially hit Docker's
+  cold-start connection reset; readiness retries all transient errors within its
+  existing bound and prints container diagnostics on failure. The operations
+  image passed its CLI smoke check. Application source is unchanged; the preceding
+  root/browser/Lighthouse gates apply. Hosted image validation is rerunning.
+  Shared surface: `changelog.md`; manual diff review found no additional issue.
+
 - **Private web/API deployment packaging (phase 1).** Owner-approved work outside
   the presentation lane: `docker/`, `docker-compose.yml`, `deploy/`, build-context
   exclusions and `.github/workflows/preview-images.yml`. Shared surfaces:

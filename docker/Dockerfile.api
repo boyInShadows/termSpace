@@ -17,7 +17,7 @@ USER node
 CMD ["npm", "run", "prisma:deploy", "--workspace", "@termspace/api"]
 
 FROM build AS production-deps
-RUN npm prune --omit=dev --workspace @termspace/api --include-workspace-root=false
+RUN npm prune --omit=dev --omit=peer --workspace @termspace/api --include-workspace-root=false
 
 FROM base AS runtime
 ENV NODE_ENV=production
