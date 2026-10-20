@@ -1,22 +1,7 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 
-// Enforced: framing, plugins, <base> and form targets. script-src is still
-// report-only (below) because Next's inline bootstrap scripts need a nonce setup
-// before it can be enforced; watch the browser console for violations first.
-const enforcedCsp = "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'";
-const reportOnlyCsp = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client",
-  "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
-  "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
-  "connect-src 'self' https://accounts.google.com/gsi/",
-  "frame-src https://accounts.google.com/gsi/",
-].join("; ");
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: enforcedCsp },
-  { key: "Content-Security-Policy-Report-Only", value: reportOnlyCsp },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

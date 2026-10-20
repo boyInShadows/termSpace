@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { ReleaseSelectionProvider, SelectedRelease } from "@/features/product/release-selection";
 import { ProductFacts, ProductHeader } from "@/features/product/title-block";
@@ -95,6 +96,7 @@ function detailRows(product: ProductDetail, l: ProductPageLabels, locale: Locale
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   const locale = await getLocale();
   const fa = locale === "fa";
   const l = productPageLabels(fa);
@@ -110,7 +112,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData(product) }} />
+      <script nonce={nonce} type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData(product) }} />
       <main id="content" tabIndex={-1} className="container-page py-8">
         <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground">
           <Link href={localePath("/explore", locale)} className="-my-3.5 inline-block py-3.5 hover:text-foreground">{l.explore}</Link> / {typeLabel} /{" "}

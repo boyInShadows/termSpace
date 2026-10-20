@@ -1,6 +1,7 @@
 "use client";
 import { useRef } from "react";
 import Script from "next/script";
+import { useCspNonce } from "@/components/layout/providers";
 
 declare global {
   interface Window {
@@ -19,6 +20,7 @@ export function GoogleSignIn({ locale, text = "signin_with", disabled, onCredent
   onCredential: (credential: string) => Promise<void>;
   onUnavailable: () => void;
 }) {
+  const nonce = useCspNonce();
   const button = useRef<HTMLDivElement>(null);
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   if (!clientId) return null;
@@ -31,7 +33,7 @@ export function GoogleSignIn({ locale, text = "signin_with", disabled, onCredent
   }
 
   return <>
-    <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onReady={renderButton} onError={onUnavailable} />
+    <Script nonce={nonce} src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onReady={renderButton} onError={onUnavailable} />
     <div ref={button} className="mt-5 flex justify-center" inert={disabled} aria-busy={disabled} />
   </>;
 }

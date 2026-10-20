@@ -4,6 +4,23 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-20
 
+- **Enforced web script CSP (deployment phase 2).** The proxy supplies a fresh
+  nonce to Next and the response policy on English/Persian routes, replacing
+  client-supplied nonce/policy headers. Theme bootstrapping, product JSON-LD and
+  the Google loader receive nonces. Production scripts have no unsafe-inline or
+  eval exception; inline styles remain compatible with the existing UI. Dotted
+  HTML routes also receive the policy. The deferred blog is unchanged.
+  - Verification: root typecheck, 574 unit tests (6 database/Redis skips), all
+    production builds and web lint pass. Full browser suite: 328 passed,
+    44 intentional skips; includes fresh nonce and unauthorized inline-script
+    rejection on both languages and viewport projects. Lighthouse passes all
+    existing budgets across 9 runs. The first new assertion incorrectly required
+    explicit nonces on scripts loaded by trusted runtime code; the final test
+    checks server scripts and browser enforcement directly. Manual diff/security
+    review found no remaining issue. Real Google acceptance still needs owner
+    credentials. Shared surface: `changelog.md`; readiness B5 is updated for web
+    only. Usage/cost meter unavailable.
+
 - **Hosted image smoke checks (deployment phase 1 follow-up).** The first hosted
   run caught TypeScript retained as Prisma's optional peer despite `--omit=dev`;
   a clean production dependency stage omits dev/peer dependencies and explicitly
