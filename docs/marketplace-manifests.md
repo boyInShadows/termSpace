@@ -91,3 +91,30 @@ update the canonical registry, database enum and migration, type-specific schema
 permission and installation behavior, English/Persian presentation, API
 serialization/filtering, creator and public UI, fixtures, and regression tests in
 one reviewed change.
+
+## Generated installation output
+
+The [platform registry](../apps/api/src/lib/marketplacePlatforms.ts) already
+defines the accepted compatibility keys. Those keys and their translated names
+do not define a client's configuration format or installation command.
+
+The current [command builders](../apps/web/lib/install.ts) produce:
+
+| Output | Supported input |
+| --- | --- |
+| Pinned fetch command | Exact npm version, GitHub repository commit, or GitHub release asset |
+| Generic `mcpServers` configuration | `stdio` MCP server from an exact npm version, with required environment-variable placeholders |
+| Client-specific configuration or commands | No automatic mapping from platform compatibility |
+
+The manifest accepts `stdio`, `streamable_http`, and `sse` transport labels,
+but connection method, distribution identity, and authentication method remain
+free text. A transport label alone is insufficient to generate a remote endpoint
+or launch configuration. The generic npm snippet also cannot infer extra creator
+arguments; readers must follow the release's instructions.
+
+Before scheduling additional generated configurations, select the target client
+and transport, define and validate the required structured fields, and verify
+the output against that client's documentation. Additional artifact providers
+require an amendment to [ADR 0001](architecture/0001-external-artifact-sources.md).
+Until then, retain the existing validated output and return no generated snippet
+for unsupported combinations.

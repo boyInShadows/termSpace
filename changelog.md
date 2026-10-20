@@ -4,6 +4,27 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-21
 
+- **Remaining local follow-ups reconciled (owner-requested).** Documented the
+  existing installation-output matrix and corrected the stale platform-registry
+  blocker: compatibility keys already exist, but client-specific configuration
+  and remote transports still need structured fields and a selected target.
+  Additional source providers retain ADR 0001's decision requirement. No new
+  configuration, commands, providers or registry entries are implemented.
+  - Reviewed the assistant-authored Persian account, Profile, hero and listing
+    trust/licence/permission text in source and the current rendered layouts.
+    Recorded concrete terminology/wording choices in ignored
+    `maintenance/performance-20261020/persian-review.json`; a Persian-speaking
+    maintainer's acceptance remains open. No copy change or native approval is
+    claimed. Consolidated duplicate local review entries, retained physical-phone
+    acceptance and the owner's email/Google pause, and moved backup retention
+    into operating notes after confirming the recovery dump still exists.
+  - Scope: `docs/marketplace-manifests.md`, shared `changelog.md` and ignored
+    `ramtin-pending.md`. Existing command builders, manifest validation and the
+    platform registry were checked directly after graph freshness warnings.
+    All four documentation links and the review JSON validate. Root typecheck,
+    535 unit tests (5 database-dependent skips), web lint and production build
+    pass; browser/Lighthouse checks were not repeated for documentation changes.
+
 - **Cold dashboard summary and performance ratchet (owner-requested local queue).**
   The dashboard can now render its verified reader's summary and totals in the
   initial HTML. Request-scoped server reads forward the current cookie without
@@ -11,6 +32,8 @@ Project changes completed from `pending.md` should be recorded here with the dat
   back to the existing browser reads. Public pages retain their client identity
   lookup. The browser still revalidates identity and dashboard data, and Saved
   still waits for the complete favorites read before showing removal controls.
+  Cold loads therefore add server reads alongside browser revalidation; this
+  reduces the client dependency chain rather than the total request count.
   - Older refresh results cannot overwrite a newer identity. Account changes
     remount dashboard content. A fresh review caught a server/browser timezone
     mismatch, reproduced in both browser projects; the initial clock-dependent
@@ -28,6 +51,8 @@ Project changes completed from `pending.md` should be recorded here with the dat
     pass again. LCP gates remain unchanged: the tighter 2.2/2.0/2.2-second
     targets are still unfinished in both queues. Public-page timing variation
     is not claimed as a public rendering improvement.
+    All six hosted checks also passed on `09b9ebc`: [browser/performance](https://github.com/boyInShadows/termSpace/actions/runs/39495640293)
+    and [application/database](https://github.com/boyInShadows/termSpace/actions/runs/39495640296).
   - CSS inlining and below-fold containment experiments were not retained;
     their samples did not establish a useful public LCP improvement. Evidence,
     traces, RED/GREEN regressions and rejected experiments are preserved in
