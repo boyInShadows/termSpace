@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import type { Metadata } from "next";
 import { AccountForm } from "@/features/account/account-form";
@@ -10,4 +9,4 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: copy[await getLocale()].account };
 }
 
-export default function AccountPage() { return <><Header /><main className="container-page py-16"><Suspense><AccountForm /></Suspense></main><Footer /></>; }
+export default function AccountPage() { return <><main id="content" tabIndex={-1} className="container-page py-16"><Suspense><AccountForm /></Suspense></main><Footer /></>; }

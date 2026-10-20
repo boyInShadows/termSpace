@@ -122,11 +122,11 @@ export function Showroom() {
               <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md border bg-secondary px-4 text-sm font-semibold">
                 Actions <ChevronDown size={15} />
               </summary>
-              <ul className="absolute z-50 mt-1 min-w-40 rounded-md border bg-surface p-1 shadow-lift">
-                <li><button className="w-full rounded px-3 py-2 text-start text-sm hover:bg-muted focus:bg-muted">Edit listing</button></li>
-                <li><button className="w-full rounded px-3 py-2 text-start text-sm hover:bg-muted focus:bg-muted">View analytics</button></li>
+              <ul className="absolute z-50 mt-1 min-w-40 rounded-md border bg-surface p-1">
+                <li><button className="w-full rounded-none px-3 py-2 text-start text-sm hover:bg-muted focus:bg-muted">Edit listing</button></li>
+                <li><button className="w-full rounded-none px-3 py-2 text-start text-sm hover:bg-muted focus:bg-muted">View analytics</button></li>
                 <li className="my-1 h-px bg-border" role="separator" />
-                <li><button className="w-full rounded px-3 py-2 text-start text-sm text-destructive hover:bg-muted focus:bg-muted">Unpublish</button></li>
+                <li><button className="w-full rounded-none px-3 py-2 text-start text-sm text-destructive hover:bg-muted focus:bg-muted">Unpublish</button></li>
               </ul>
             </details>
             <Dialog.Root>
@@ -135,7 +135,7 @@ export function Showroom() {
               </Dialog.Trigger>
               <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-                <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(90vw,30rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-background p-6 shadow-lift">
+                <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(90vw,30rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-background p-6">
                   <Dialog.Title className="editorial text-2xl">
                     Publish this product?
                   </Dialog.Title>
@@ -167,7 +167,7 @@ export function Showroom() {
           {toast && (
             <div
               role="status"
-              className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-lg border bg-surface-raised p-4 shadow-lift"
+              className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-lg border bg-surface-raised p-4"
             >
               <Check className="text-success" size={18} />
               <div>

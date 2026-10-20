@@ -1,7 +1,7 @@
 "use client";
 import { ThemeProvider } from "next-themes";
 import { MarketplaceSessionProvider } from "@/features/account/marketplace-session";
-import { LocaleProvider } from "@/lib/locale-context";
+import { LocaleProvider, type Messages } from "@/lib/locale-context";
 import type { Locale } from "@/lib/i18n";
 
 /**
@@ -14,10 +14,10 @@ import type { Locale } from "@/lib/i18n";
  * cross-rotating icons are the switch's whole affordance, and that flag would
  * suppress them along with everything else.
  */
-export function Providers({ children, locale }: { children: React.ReactNode; locale: Locale }) {
+export function Providers({ children, locale, messages }: { children: React.ReactNode; locale: Locale; messages: Messages }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-      <LocaleProvider locale={locale}><MarketplaceSessionProvider>{children}</MarketplaceSessionProvider></LocaleProvider>
+      <LocaleProvider locale={locale} messages={messages}><MarketplaceSessionProvider>{children}</MarketplaceSessionProvider></LocaleProvider>
     </ThemeProvider>
   );
 }

@@ -5,7 +5,7 @@ import { copy } from "@/lib/i18n";
 const replace = vi.hoisted(() => vi.fn());
 const nav = vi.hoisted(() => ({ pathname: "/dashboard" }));
 const session = vi.hoisted(() => ({
-  current: { loading: false, email: null as string | null, emailVerified: true, marketplaceRoles: [] as string[] },
+  current: { identityLoading: false, loading: false, email: null as string | null, emailVerified: true, marketplaceRoles: [] as string[] },
 }));
 
 vi.mock("next/navigation", () => ({
@@ -25,7 +25,7 @@ describe("DashboardShell", () => {
   });
 
   it("keeps focus scrolling immediate in the workbench and restores the page preference on exit", () => {
-    session.current = { loading: true, email: null, emailVerified: false, marketplaceRoles: [] };
+    session.current = { identityLoading: true, loading: true, email: null, emailVerified: false, marketplaceRoles: [] };
     const root = document.documentElement;
     const previous = root.style.scrollBehavior;
     root.style.scrollBehavior = "smooth";
@@ -37,7 +37,7 @@ describe("DashboardShell", () => {
   });
 
   it("sends a signed-out visitor to sign in and back here afterwards", () => {
-    session.current = { loading: false, email: null, emailVerified: false, marketplaceRoles: [] };
+    session.current = { identityLoading: false, loading: false, email: null, emailVerified: false, marketplaceRoles: [] };
     nav.pathname = "/dashboard/settings";
     render(<DashboardShell><p>secret</p></DashboardShell>);
 
@@ -46,7 +46,7 @@ describe("DashboardShell", () => {
   });
 
   it("holds the skeleton while the session is still loading", () => {
-    session.current = { loading: true, email: null, emailVerified: false, marketplaceRoles: [] };
+    session.current = { identityLoading: true, loading: true, email: null, emailVerified: false, marketplaceRoles: [] };
     render(<DashboardShell><p>secret</p></DashboardShell>);
 
     expect(replace).not.toHaveBeenCalled();
@@ -54,13 +54,17 @@ describe("DashboardShell", () => {
     expect(screen.getByRole("status")).toHaveTextContent(copy.en.dashboardHome.loading);
   });
 
-  it("frames the page with a top bar, sidebar and tab bar that mark the current route", () => {
-    session.current = { loading: false, email: "kasra@example.com", emailVerified: true, marketplaceRoles: ["creator"] };
+  it("frames the page with search, sidebar and tab bar that mark the current route", () => {
+    session.current = { identityLoading: false, loading: false, email: "kasra@example.com", emailVerified: true, marketplaceRoles: ["creator"] };
     nav.pathname = "/dashboard/studio";
     render(<DashboardShell><p>content</p></DashboardShell>);
 
     expect(screen.getByText("content")).toBeInTheDocument();
     expect(screen.getByRole("search")).toBeInTheDocument();
+    expect(screen.queryByTitle(copy.en.navStudio)).not.toBeInTheDocument();
+    for (const link of screen.getAllByRole("link", { name: copy.en.profile })) {
+      expect(link).toHaveAttribute("href", "/dashboard/settings");
+    }
 
     const sidebar = screen.getByRole("navigation", { name: copy.en.dashboard });
     expect(within(sidebar).getByRole("link", { name: copy.en.navStudio })).toHaveAttribute("aria-current", "page");
@@ -75,8 +79,15 @@ describe("DashboardShell", () => {
     }
   });
 
+  it("opens the verified workspace while favorites are still loading", () => {
+    session.current = { identityLoading: false, loading: true, email: "reader@example.com", emailVerified: true, marketplaceRoles: [] };
+    render(<DashboardShell><p>overview data can load</p></DashboardShell>);
+    expect(screen.getByText("overview data can load")).toBeVisible();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
   it("sends a reader who is not yet a creator to onboarding when they publish", () => {
-    session.current = { loading: false, email: "reader@example.com", emailVerified: true, marketplaceRoles: [] };
+    session.current = { identityLoading: false, loading: false, email: "reader@example.com", emailVerified: true, marketplaceRoles: [] };
     render(<DashboardShell><p>content</p></DashboardShell>);
 
     for (const link of screen.getAllByRole("link", { name: copy.en.dashboardHome.publish })) {
@@ -85,7 +96,7 @@ describe("DashboardShell", () => {
   });
 
   it("marks the acquired library active for readers in both navigation surfaces", () => {
-    session.current = { loading: false, email: "reader@example.com", emailVerified: true, marketplaceRoles: [] };
+    session.current = { identityLoading: false, loading: false, email: "reader@example.com", emailVerified: true, marketplaceRoles: [] };
     nav.pathname = "/dashboard/library";
     render(<DashboardShell><p>library content</p></DashboardShell>);
     for (const name of [copy.en.dashboard, copy.en.dashboardHome.tabsLabel]) {
@@ -97,7 +108,7 @@ describe("DashboardShell", () => {
   });
 
   it("asks an unverified reader to verify instead of showing creator onboarding", () => {
-    session.current = { loading: false, email: "reader@example.com", emailVerified: false, marketplaceRoles: [] };
+    session.current = { identityLoading: false, loading: false, email: "reader@example.com", emailVerified: false, marketplaceRoles: [] };
     render(<DashboardShell><p>creator onboarding</p></DashboardShell>);
     expect(screen.getByRole("heading", { name: copy.en.verifyEmail })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: copy.en.resendVerification })).toBeInTheDocument();

@@ -7,12 +7,12 @@ import { EmailVerification } from "@/features/account/email-verification";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
 import { DashboardSidebar, DashboardTabBar } from "./dashboard-nav";
-import { DashboardTopbar } from "./dashboard-topbar";
+import { DashboardSearch } from "./dashboard-search";
 import { DashboardOverviewSkeleton } from "./overview";
 
 /**
- * The dashboard frame — top bar, sidebar, bottom tab bar — and the reader
- * session gate for every page inside it.
+ * Workspace search, sidebar, bottom tabs and the reader session gate below
+ * the root layout's shared global navigation.
  *
  * The gate lives here rather than in each page so a new dashboard route cannot
  * accidentally ship ungated. It is a convenience, not a security boundary — the
@@ -24,7 +24,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() ?? "/dashboard";
   const signInHref = `${localePath("/account", locale)}?next=${encodeURIComponent(pathname)}`;
-  const isSignedOut = !session.loading && !session.email;
+  const isSignedOut = !session.identityLoading && !session.email;
 
   useEffect(() => {
     // Smooth page scrolling can leave keyboard focus behind the fixed tab bar.
@@ -40,7 +40,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (isSignedOut) {
     return (
-      <main className="grid min-h-dvh place-items-center bg-background px-5">
+      <main id="content" tabIndex={-1} className="grid min-h-dvh place-items-center bg-background px-5">
         <p className="text-sm text-muted-foreground" role="status">
           {t.dashboardHome.redirecting}{" "}
           <Link href={signInHref} className="text-primary underline-offset-4 hover:underline">
@@ -52,14 +52,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="dashboard-operate min-h-dvh bg-background text-foreground">
-      <DashboardTopbar />
+    <div className="dashboard-operate min-h-[calc(100dvh-var(--site-header-height))] bg-background text-foreground">
       <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
         <DashboardSidebar />
         {/* Bottom padding clears the fixed tab bar below lg. */}
-        <main className="min-w-0 px-4 pb-24 pt-6 sm:px-6 lg:px-10 lg:py-8">
+        <main id="content" tabIndex={-1} className="min-w-0 px-4 pb-24 pt-6 sm:px-6 lg:px-10 lg:py-8">
           <div className="mx-auto max-w-[1200px]">
-            {session.loading ? <DashboardOverviewSkeleton /> : !session.emailVerified ? <EmailVerification /> : children}
+            <DashboardSearch />
+            <div>
+                {session.identityLoading ? <DashboardOverviewSkeleton /> : !session.emailVerified ? <EmailVerification /> : children}
+            </div>
           </div>
         </main>
       </div>

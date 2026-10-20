@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
@@ -17,8 +16,7 @@ export async function LegalPage({ slug }: { slug: LegalSlug }) {
   const labels = legalLabels[locale];
   const contact = legalContact();
   return <>
-    <Header />
-    <main id="content" className="container-page py-12 sm:py-16">
+    <main id="content" tabIndex={-1} className="container-page py-12 sm:py-16">
       <article className="max-w-3xl">
         <p className="eyebrow">{legalEntity()}</p>
         <h1 className="editorial mt-3 text-4xl sm:text-5xl">{doc.title}</h1>

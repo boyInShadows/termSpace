@@ -107,7 +107,7 @@ export function ReleaseProvenance({ release, slug, locale }: { release: ProductR
             {release.environment.map((variable) => (
               <li key={variable.name} className="text-sm">
                 <span className="font-mono text-xs text-foreground" dir="ltr">{variable.name}</span>
-                {variable.sensitive && <span className="ms-2 rounded-full bg-muted px-2 py-0.5 text-xs">{t.secret}</span>}
+                {variable.sensitive && <span className="ms-2 rounded-none bg-muted px-2 py-0.5 text-xs">{t.secret}</span>}
                 <span className="ts-bidi"> — {variable.purpose}</span>
               </li>
             ))}

@@ -85,7 +85,7 @@ export function AccountMenu({ email }: { email: string }) {
       {open && (
         <div
           id={panelId}
-          className="absolute end-0 top-full z-50 mt-2 w-60 rounded-lg border border-border bg-surface p-1 shadow-lg"
+          className="absolute end-0 top-full z-50 mt-2 w-60 rounded-lg border border-border bg-surface p-1"
         >
           <p
             dir="auto"
@@ -95,13 +95,6 @@ export function AccountMenu({ email }: { email: string }) {
             {email}
           </p>
           <div role="separator" className="my-1 h-px bg-border" />
-          <Link
-            href={localePath("/account", locale)}
-            onClick={() => setOpen(false)}
-            className={itemClass}
-          >
-            {t.profile}
-          </Link>
           <Link
             href={localePath("/dashboard", locale)}
             onClick={() => setOpen(false)}

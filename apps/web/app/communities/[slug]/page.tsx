@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { DiscoveryExperience } from "@/features/discovery/discovery-experience";
 import { getMarketplaceCommunities, getMarketplaceCommunity, getMarketplaceHome, getMarketplaceItemTypes } from "@/lib/api";
@@ -39,7 +38,6 @@ export default async function CommunityPage({ params, searchParams }: {
   const community = result.data.community;
   const fa = locale === "fa";
   return <>
-    <Header />
     <DiscoveryExperience
       initial={{ data: result.data.products, meta: result.meta }}
         categories={home?.categories ?? []}

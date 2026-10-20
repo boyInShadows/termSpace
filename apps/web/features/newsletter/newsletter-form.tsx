@@ -70,7 +70,7 @@ export function NewsletterForm() {
           aria-label={t.homePage.newsletterEmail}
           aria-invalid={status.kind === "failed"}
           placeholder="you@example.com"
-          className="min-h-12 min-w-0 flex-1 rounded-lg border border-border-strong bg-background/80 px-4 backdrop-blur placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="min-h-12 min-w-0 flex-1 rounded-lg border border-border-strong bg-background px-4 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <button
           type="submit"

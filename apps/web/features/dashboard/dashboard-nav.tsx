@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, LibraryBig, Plus, Settings, ShieldCheck, Store } from "lucide-react";
+import { LayoutGrid, LibraryBig, Plus, UserRound, ShieldCheck, Store } from "lucide-react";
 import { libraryCopy } from "@/features/library/library-copy";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { localePath } from "@/lib/i18n";
@@ -30,7 +30,7 @@ function useDashboardNav() {
     { href: "/dashboard/studio", label: t.navStudio, icon: Store },
     { href: "/dashboard/library", label: libraryCopy[locale].label, icon: LibraryBig },
     ...(canModerate ? [{ href: "/dashboard/moderation", label: t.moderationNav, icon: ShieldCheck }] : []),
-    { href: "/dashboard/settings", label: t.navSettings, icon: Settings },
+    { href: "/dashboard/settings", label: t.profile, icon: UserRound },
   ].map((item) => ({
     ...item,
     href: localePath(item.href, locale),
@@ -47,7 +47,7 @@ export function DashboardSidebar() {
 
   return (
     <aside className="hidden border-e border-border lg:block">
-      <div className="sticky top-15 flex h-[calc(100dvh-3.75rem)] flex-col px-3 py-6">
+      <div className="sticky top-[var(--site-header-height)] flex h-[calc(100dvh-var(--site-header-height))] flex-col overflow-y-auto px-3 py-6">
         <nav aria-label={t.dashboard}>
           <ul className="space-y-1">
             {items.map(({ href, label, icon: Icon, active }) => (
@@ -83,7 +83,7 @@ export function DashboardSidebar() {
           </span>
           <span className="min-w-0">
             <span className="block truncate text-sm">{session.email}</span>
-            <span className="block font-mono text-xs text-muted-foreground">{t.dashboardHome.toAccount}</span>
+            <span className="block font-mono text-xs text-muted-foreground">{t.profile}</span>
           </span>
         </Link>
       </div>

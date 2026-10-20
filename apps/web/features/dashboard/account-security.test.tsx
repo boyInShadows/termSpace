@@ -1,4 +1,5 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { renderWithLocale as render } from "@/lib/test-render";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LocaleProvider } from "@/lib/locale-context";
 import { copy } from "@/lib/i18n";
@@ -20,7 +21,7 @@ describe("account security", () => {
   beforeEach(() => { vi.clearAllMocks(); mocks.profile.mockResolvedValue(profile); mocks.change.mockResolvedValue({ data: { updated: true } }); });
 
   it.each(["en", "fa"] as const)("loads sign-in details and a bounded password form (%s)", async (locale) => {
-    render(<LocaleProvider locale={locale}><AccountSecurity /></LocaleProvider>);
+    render(<LocaleProvider locale={locale} messages={copy[locale]}><AccountSecurity /></LocaleProvider>);
     const field = await screen.findByLabelText(accountSecurityCopy[locale].currentPassword);
     expect(field).toHaveAttribute("autocomplete", "current-password");
     expect(field).toHaveAttribute("maxlength", "128");

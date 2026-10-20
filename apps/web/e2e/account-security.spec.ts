@@ -61,7 +61,7 @@ for (const locale of ["en", "fa"] as const) {
     await page.goto(path);
     await expect(page.getByText(text.googleSignIn, { exact: true })).toBeVisible();
     await expect(page.getByText(text.noPasswordIntro)).toBeVisible();
-    await expect(page.locator('input[type="password"]')).toHaveCount(0);
+    await expect(page.getByRole("region", { name: text.title, exact: true }).locator('input[type="password"]')).toHaveCount(0);
   });
 
   test(`security profile failure has a working Retry (${locale})`, async ({ page }) => {

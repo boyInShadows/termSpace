@@ -29,19 +29,18 @@ test.describe("performance wiring", () => {
   });
 });
 
-test.describe("scroll reveals", () => {
-  test("are complete once a section has scrolled fully into view", async ({ page }) => {
+test.describe("static sections", () => {
+  for (const reducedMotion of ["no-preference", "reduce"] as const) test(`content is visible before scrolling (${reducedMotion})`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion });
     await page.goto("/");
-    const reveal = page.getByRole("region", { name: "Featured building blocks" }).locator(".ts-reveal").last();
-    await reveal.evaluate((node) => node.scrollIntoView({ block: "center", behavior: "instant" }));
-    await expect.poll(() => reveal.evaluate((node) => getComputedStyle(node).opacity)).toBe("1");
-  });
-
-  test("do nothing under reduced motion: content is there before any scroll", async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
-    const opacities = await page.locator(".ts-reveal").evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).opacity));
-    expect(opacities.length).toBeGreaterThan(0);
-    expect(opacities.every((opacity) => opacity === "1")).toBe(true);
+    const closingSection = page.locator("main > section").last();
+    await expect(closingSection).toBeVisible();
+    const measure = () => closingSection.evaluate((node) => ({
+      opacity: getComputedStyle(node).opacity,
+      animations: node.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running").length,
+    }));
+    expect(await measure()).toEqual({ opacity: "1", animations: 0 });
+    await closingSection.evaluate((node) => node.scrollIntoView({ block: "center", behavior: "instant" }));
+    expect(await measure()).toEqual({ opacity: "1", animations: 0 });
   });
 });

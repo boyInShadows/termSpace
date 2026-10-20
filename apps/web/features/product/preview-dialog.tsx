@@ -24,7 +24,7 @@ export function PreviewDialogContent({ product }: { product: ProductDetail }) {
   return (
     <Dialog.Portal>
       <Dialog.Overlay className="fixed inset-0 z-50 bg-black/55" />
-      <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[88vh] w-[min(92vw,46rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border bg-background p-6 shadow-lift">
+      <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[88vh] w-[min(92vw,46rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border bg-background p-6">
         <div className="flex items-start justify-between">
           <div>
             <Dialog.Title className="editorial text-3xl">{copy.inside} {product.name}</Dialog.Title>

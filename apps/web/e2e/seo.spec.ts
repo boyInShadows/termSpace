@@ -49,7 +49,9 @@ test.describe("search engines and sharing", () => {
   });
 
   test("the sitemap lists every live listing", async ({ request }) => {
-    const xml = await (await request.get("/sitemap.xml")).text();
+    const response = await request.get("/sitemap.xml");
+    expect(response.status()).toBe(200);
+    const xml = await response.text();
     const listings = [...xml.matchAll(/<loc>[^<]*\/products\/([^<]+)<\/loc>/g)].map((match) => match[1]);
     expect(listings).toHaveLength(15);
     expect(listings).toContain("conversion-copywriter");

@@ -2,7 +2,347 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-20
+
+- **Merge `ramtin` into `redesign`.** Combines `ea26053` and `9326134` with
+  both histories retained. Resolutions preserve the risk-first moderation flow,
+  legacy redirects, trust rows, legal footer links and production showroom
+  restriction alongside the shared root navigation, server-rendered footer,
+  Profile/Saved dashboard and performance improvements. The obsolete dashboard
+  topbar stays removed; role-aware moderation remains in dashboard navigation.
+  Shared surfaces merged: `AGENTS.md`, `pending.md`, `changelog.md` and
+  `apps/web/lib/api.ts`. No pending queue item was implemented in this phase.
+  Integration fixes also adapt the two moderation test providers to explicit
+  messages, remove the legal pages' duplicate header and make their skip target
+  focusable. Footer tests retain legal destinations in both languages; shared
+  navigation browser checks cover legal skip targets and the moderation route.
+  - Verified: root typecheck; root unit suite (571 passed, 6 database/Redis
+    dependent skips, with `NODE_OPTIONS=--no-experimental-webstorage`); web lint;
+    root production build (all three apps); full web e2e with local Chrome
+    (324 passed, 44 intentional skips, no retries); Lighthouse (all budgets
+    across 9 runs at the unchanged local settings); design detector (no findings).
+    Twelve desktop/mobile captures cover English/Persian and both themes;
+    visual review, geometry, single-header/main and page-error checks pass.
+    Logs and captures are under `/tmp/termspace-merge-*`; generated reports
+    remain ignored. Manual integration diff/security review found no remaining
+    issue. Graph metadata was stale, so relevant source was inspected directly.
+    Impeccable's existing stale design sidecar remains unchanged; `DESIGN.md`
+    remains authoritative. Usage/cost meter unavailable in this harness.
+
 ## 2026-10-19
+
+- **Dashboard data no longer waits for favorites.** The shell now uses identity
+  readiness to mount verified workspace content, allowing overview and Profile
+  requests to overlap the initial favorites read. The session's existing full
+  `loading` contract is retained for its other consumers. Saved waits for that
+  complete snapshot before fetching its own collection or exposing removal
+  controls, including during refresh. A favorites 401 still clears identity
+  and redirects out; API authorization and email verification remain intact.
+  - A three-run controlled mobile-viewport experiment with a 1000 ms favorites
+    delay reduced median navigation-to-table time from 1462 ms to 230 ms.
+    With immediate favorites it measured 205 ms before / 225 ms after, within
+    noise. This is request overlap under delay, not an LCP claim. Raw events,
+    captures and verification logs: `maintenance/dashboard-loading-20261019/`.
+  - Root typecheck, 519 unit tests (5 database-dependent skips), web lint and
+    the full browser suite pass: 324 cases, 44 intentional skips, no retries.
+    Twelve new browser cases cover delayed favorites, blocked Saved mutation,
+    persistent removal and session expiry in EN/FA on desktop/mobile. Thirty-six
+    captures cover both themes and 320/768/1280 widths, including Saved loading
+    and empty states; geometry/page-error checks and representative visual
+    review pass. Impeccable's detector reports no findings.
+  - All 21 existing Lighthouse assertions pass across nine local mobile reports
+    at unchanged 4x CPU/network settings. Median LCP/performance: home
+    2643 ms/97, dashboard 3766 ms/89, detail 2785 ms/96; accessibility is 100.
+    Dashboard LCP is effectively unchanged from the prior 3767 ms/89, so the
+    tighter targets remain open. The normal root production build also passes.
+  - Shared `pending.md` and `changelog.md` are updated for the owner's assigned
+    performance phase; the completed waterfall investigation is removed from
+    both queues, retaining hydration/rendering targets and owner acceptance.
+    CodebaseMemory coverage flagged changed metadata; relevant source and
+    callers were read directly. Manual diff review found no remaining issue.
+    No agent cost/usage meter is exposed by this harness.
+
+- **First-request sitemap recovery after offline builds.** Hosted checks on
+  `7c8f5db` all passed, but sitemap acceptance needed a retry: CI builds before
+  the fixture API starts, caches the three-route fallback, then serves that
+  stale response while regenerating. The old build manifest confirms a static
+  sitemap with a 30-second output lifetime inherited from its data requests.
+  - `app/sitemap.ts` now uses route `revalidate = 0`, preventing build-time
+    fallback output from becoming the live sitemap. The public API requests
+    retain their explicit 30-second cache; this follows Next's [documented
+    route/data-cache separation](https://nextjs.org/docs/app/guides/caching-without-cache-components#route-segment-config-revalidate).
+    Existing fallback behavior, pagination bounds, alternates and private-data
+    boundaries remain intact. The SEO check also asserts HTTP 200 before XML.
+  - Regression acceptance: built the fixture with API_URL pointing at an
+    unused loopback port and no API process. The manifest contains no cached
+    sitemap; after starting the runtime fixture, all 29 SEO checks pass without
+    retries (5 intentional mobile skips). Root verification and normal build
+    are recorded in `maintenance/performance-20261019/sitemap-*.log`.
+  - Closed the completed Lighthouse CI item in both queues after all six
+    hosted jobs passed on `7c8f5db`: [web/performance run](https://github.com/boyInShadows/termSpace/actions/runs/39313319877)
+    and [application/database run](https://github.com/boyInShadows/termSpace/actions/runs/39313319899).
+    Every downloaded report confirms CPU factor 3, RTT 150 ms and throughput
+    1638.4 Kbps. Hosted FID medians are 115/99/115 ms (limit 130), with all
+    other gates passing. The local default remains 4x; cold CPU benchmark
+    outliers are recorded separately from the steady calibration range.
+    Shared `pending.md`, `changelog.md` and the ignored local queue retain the
+    tighter LCP targets and owner-dependent acceptance; workflow comments now
+    distinguish steady CPU values from warm-up noise. No threshold was raised.
+
+- **Comparable hosted Lighthouse CPU profile.** Run 39311691198 passes the
+  browser suite after the full-Chromium fix, but reproduces max-potential-FID
+  failures at 149/135/157 ms with the default 4x CPU factor. Long tasks point
+  to the shared React runtime, and the runner's steady CPU benchmark is only
+  about 2400-2509 versus the local reference around 4500 (the older main run
+  measured 3020). Applying 4x to both hosts does not emulate the same CPU.
+  - Following Lighthouse's [CPU calibration guidance](https://github.com/GoogleChrome/lighthouse/blob/main/docs/throttling.md#calibrating-the-cpu-slowdown),
+    only the hosted workflow now uses 3x: effective index 800-1007 across the
+    observed runner range, still slower than the local 4500/4 = 1125 reference.
+    The local default remains 4x. Network throttling, three-run aggregation and
+    every assertion/ratchet limit remain unchanged. Recalibrate when the hosted
+    CPU range changes; every report retains its benchmark and throttle values.
+  - This phase owns `.github/workflows/web.yml` for the owner's requested CI
+    reliability work. No application, browser assertion or dependency changed.
+    Reports and failure logs are in `maintenance/performance-20261019/ci-after/`.
+
+- **Hosted zoom-harness compatibility.** Draft PR #10's first hosted run
+  (39310542406) exposed twelve genuine zoom-test failures: the default
+  Playwright headless shell ignored Chrome profile preferences, so DPR stayed
+  1 instead of doubling. The helper now defaults to the full `chromium`
+  channel, while preserving the local `PW_CHANNEL=chrome` override. This uses
+  Playwright's [documented full-browser headless mode](https://playwright.dev/docs/browsers#chromium-new-headless-mode).
+  The workflow already installs both browser variants. No zoom assertion,
+  viewport, retry, application code or performance budget was weakened.
+  Root typecheck, 516 unit tests, web lint, the normal build and all twelve
+  focused local Chrome zoom cases pass; the full Chromium fallback is checked
+  by the hosted rerun. Failed-run logs are retained with the phase evidence.
+
+- **Web initial-load budgets (owner-assigned performance phase).** The root
+  server layout now supplies only the active language's messages to the locale
+  provider, removing the two-language dictionary module from client JavaScript.
+  The static shared footer now renders on the server; all eleven callers remain
+  unchanged. Tests and Storybook supply their dictionary explicitly. The
+  Storybook render check also exposed missing App Router context; its preview
+  now enables the [documented App Router parameter](https://storybook.js.org/docs/get-started/frameworks/nextjs-vite#nextjs-navigation)
+  and serves the existing public fonts.
+  - Initial gzip JS, identical in EN/FA: home 175.9 to 162.5 KiB, dashboard
+    191.3 to 178.6 KiB, detail 190.4 to 176.9 KiB. Active messages move into
+    HTML/RSC, so total-transfer savings are smaller than JS savings; this is
+    measured lab evidence, not a claim about real-device Core Web Vitals.
+  - Tightened home/detail JS gates to their 170/180 KiB targets and added FA
+    budget cases. Home's performance-score gate now enforces its existing 90
+    target. No budget or throttle was relaxed. Mobile LCP medians are home
+    2.64 s, dashboard 3.77 s and detail 2.80 s; dashboard performance is 89.
+    The stricter LCP and dashboard-score targets remain unfinished.
+  - Kept the existing session/favorites loading contract after reviewing the
+    private-read/mutation ordering. Dashboard waterfall work must preserve it.
+  - Verification: root typecheck, 516 unit tests (5 existing DB-dependent
+    skips), clean web lint, 312 browser tests (44 intentional skips), root
+    production build, Storybook build and all 21 Lighthouse budget assertions
+    across nine reports passed. Sixty surface captures plus eight footer
+    captures cover EN/FA, both themes and responsive widths; no overflow,
+    duplicate shells, locale/theme mismatch or page errors. Impeccable reports
+    no findings in the changed production UI. Graph coverage marked stale
+    metadata/new tests; direct source and caller checks supplied verification.
+    A manual second pass included isolated tests and the Storybook consumer;
+    two compiled stories rendered with their fonts and no console/page errors.
+  - Shared files `pending.md` and `changelog.md`: the owner accepted the
+    performance item from the shared backlog for this phase. Removed completed
+    budget work from the queues, promoted remaining performance work to the top
+    of the ignored local queue, and retained owner/device-dependent acceptance.
+    Latest main CI (38893763199) failed max-potential-FID at 150/131 ms; hosted
+    acceptance of the current branch follows through a draft PR. Evidence:
+    `maintenance/performance-20261019/`. No API, permission or dependency change.
+
+- **Real 200% dashboard zoom and keyboard clearance (next local queue item).**
+  Replaced the inconclusive keyboard-shortcut check with actual Chrome browser
+  zoom in disposable profiles on D:. DPR doubles and the CSS viewport halves
+  relative to a matching 100% window; visual-viewport scale and CSS zoom stay 1.
+  The profile dictionary follows [Chromium's zoom preferences implementation](https://chromium.googlesource.com/chromium/src/+/lkgr/chrome/browser/ui/zoom/chrome_zoom_level_prefs.cc).
+  No user Chrome profile, global setting or installed tool was modified.
+  - The baseline exposed 20 obscured keyboard targets: provider actions and
+    Saved listing links/buttons scrolled beneath fixed dashboard tabs. The
+    shared `.dashboard-operate` control rule now supplies the same 6rem plus
+    safe-area focus-scroll clearance already used by account security/library.
+    One CSS declaration fixes current and future dashboard controls together.
+  - Added `e2e/browser-zoom.spec.ts`: 12 desktop cases cover EN/FA, light/dark
+    and 1280/1920/2560 physical window widths. Each verifies actual zoom geometry,
+    overflow, search focus and keyboard traversal across overview, Studio,
+    Profile, acquired library and Saved listings. Device-scale emulation is
+    explicitly cleared. Mobile test projects skip these desktop browser cases;
+    physical-device acceptance remains separate.
+  - Local before/after matrix: 60 captures and 168 keyboard-focus checks; the
+    repeated matrix has zero obscured controls, horizontal overflow or page
+    errors. Physical iOS/Android, native Persian review and owner-deferred live
+    service checks remain open. Evidence: `maintenance/zoom-acceptance-20261019/`.
+  - Verification: root typecheck, 513 unit tests (5 existing DB-dependent skips),
+    clean web lint, full browser suite 309 passed (29 existing skips plus 12
+    desktop-only zoom cases skipped in the mobile project), root production
+    build and all Lighthouse assertions across nine runs passed. Representative
+    performance: home 96, dashboard 90, detail 96; accessibility 100 throughout.
+    Performance budgets remain unchanged and their tighter targets remain open.
+    Impeccable reported only the two previously documented spring/focus-corner
+    advisories in globals.css; the new declaration adds no detector finding.
+    Manual second-pass review checked selector scope, native focus scrolling,
+    disposable-profile cleanup and actual zoom assertions. Graph coverage marked
+    changed metadata/new test source; the relevant source was read directly.
+    Removed the completed zoom item from the ignored local queue. No API,
+    permission, dependency or user-data changes.
+
+
+- **Dashboard Profile, saved listings, provider access and hydration repair (owner-requested).**
+  Removed the redundant dashboard breadcrumb/toolbar frame; workspace search
+  remains a content control with its Ctrl/Cmd+K shortcut. The shared desktop
+  dropdown and phone menu no longer contain Profile. Dashboard navigation and
+  quick actions now label the existing Settings/account-security destination
+  Profile, preserving its identity, password and creator-profile controls.
+  `AGENTS.md` allows explicitly authorized sequential queue work and documents
+  the root header's hydration ownership. No permission prompt or global config
+  change was needed during this task.
+  - DC05: added `/dashboard/library/saved`, library collection links and a quick
+    action. It resolves at most 12 public details per page, cancels stale reads,
+    isolates unavailable listings and per-item failures, retries, removes saved
+    items and clamps pagination after removals or a shrinking refreshed list.
+    Successful removals update existing hearts; failed removals preserve state.
+    Shared `apps/web/lib/api.ts` only adds optional AbortSignal parameters.
+  - Authorized API scope: `apps/api/src/controllers/marketplaceController.ts`
+    now deletes the current reader's saved relation by slug even when the listing
+    is unavailable. The previous published-only lookup silently retained those
+    records. No product details are returned; no schema or permission change.
+    Regression coverage asserts reader scoping and idempotent 204 behavior.
+  - DC07: extracted existing GitHub/npm controls into `ProviderConnections`, used
+    by Profile for eligible creators and by listing releases. Creators need no
+    listings to connect. Provider failures and retries are independent of release
+    history; permissions/revocation guidance remains. Submission clears token
+    fields after success or failure. Tests use synthetic credentials exclusively.
+    Corrected the inherited phone grid/input overflow and long identity wrapping.
+    Long saved titles wrap at 320px; listing prose detects its own text direction
+    inside Persian pages. Eight additional EN/FA long-content captures fit at
+    320/1280px, including 80-character titles and provider identities.
+  - HQ01: reproduced the intermittent hydration warning in a route-logged
+    production capture, then obtained its exact development HTML diff. A fast
+    session response changed the separately suspended Header from a Sign-in
+    anchor to AccountMenu before hydration. Removed that unnecessary root
+    Suspense boundary; the root already awaits request headers. The isolated
+    development reproduction then passed 72 navigations, and the production
+    112-capture EN/FA, light/dark, 320/768/1280 plus landscape matrix had no page
+    errors or horizontal overflow. Added fast-session browser regressions covering
+    72 additional navigations. No warning suppression or authentication bypass.
+  - Removed DC05, DC07, HQ01 and their completed execution block from ignored
+    `ramtin-pending.md`; retained unfinished browser-zoom, physical-device,
+    Persian, live-provider/domain and owner/deployment acceptance, plus the
+    explicitly other-maintainer-owned shared backlog snapshot.
+  - Verification: root typecheck, all 513 unit tests (5 existing DB-dependent
+    skips), clean web lint, full browser suite 297 passed/29 existing skips,
+    root production build and all Lighthouse assertions across nine runs passed.
+    Representative performance: home 96, dashboard 91, detail 96; accessibility
+    100 throughout. LCP 2.79/3.47/2.79 s, TBT 32/18/37 ms. Budgets are unchanged;
+    tighter LCP/performance targets and CI-runner work remain in the shared queue.
+    The final normal production build also passed eight long-content captures.
+    Actual browser zoom remains open: the headless shortcut did not change DPR
+    or the viewport, so it was not counted as 200% acceptance. Impeccable's
+    initial and follow-up detectors returned no findings. Evidence is local in
+    `maintenance/dashboard-queue-20261019/` (including the preserved failing
+    hydration capture and development diff).
+    Manual second-pass review covered callers, cancellation, reader scoping,
+    token clearing, role gates and state recovery. Graph coverage flagged changed
+    metadata and partial test mock syntax; relevant source was read directly.
+    No dependencies, migrations, real-provider actions or user data changes.
+
+- **One global main-site/dashboard navigation and layout (owner-requested).**
+  The root `apps/web/app/layout.tsx` now renders the existing shared header
+  once for public and dashboard routes. Removed its 11 page/loading callers.
+  The nested dashboard layout retains the reader gate, sidebar/mobile tabs,
+  breadcrumb and search; account, theme, locale and global links have one owner.
+  Uses native Next.js layout nesting; no route overlay, new dependency or API.
+  - The root localized skip link is the first keyboard stop, targeting a
+    focusable `main#content` on each route. Browser verification caught and
+    repaired the initial product skip-link ordering regression. Sticky sidebar
+    and focus offsets use the measured header height. Persistent mobile menus
+    close on route changes and history, scroll in landscape, and layer above
+    fixed dashboard tabs. Search shortcuts and unsaved-draft guards remain.
+  - The inherited header closes DC06: moderators/administrators can reach
+    moderation from the dashboard, in EN/FA and desktop/mobile; readers and
+    ordinary creators see no staff link. Existing API role enforcement remains
+    authoritative. Removed DC06 from the local queue after role-aware browser
+    checks; DC05 and DC07 remain open.
+  - Inspected the owner's local AgentSkills, Task Observer, CodeBaseMemory,
+    Graphify and Ponytail references. `AGENTS.md` documents when to use each,
+    prioritizes installed/shared skills over stale mirror instructions, and
+    assigns global versus nested-layout ownership. No tool installation or
+    global configuration change. Graphify builds and Task Observer reviews
+    were not requested by this documentation task and were not run.
+  - `ramtin-pending.md` now contains unfinished work and necessary operating
+    notes: removed the completed UI01–UI03 section, DC01–DC04 completion notes,
+    historical completion/review blocks, checked tasks, this navigation plan,
+    DC06 and empty audit headings. Outcomes remain in this changelog and local
+    evidence. Preserved owner-deferred email/provider work, physical-device,
+    language and deployment acceptance, and the shared backlog snapshot.
+    `AGENTS.md` now requires removing verified-complete local task sections
+    rather than retaining a second changelog. The local queue remains ignored.
+  - Verification: root typecheck, 501 unit tests (5 database-dependent skips),
+    web lint, regular root production build, 277 Chrome tests (29 conditional
+    skips, four workers) and all nine Lighthouse runs passed existing gates.
+    Representative home/dashboard/detail scores: 96/93/95, accessibility 100.
+    One hundred EN/FA/light/dark captures cover eight routes at 320/768/1280px
+    plus landscape menus; an explicit four-case landscape repeat passed too.
+    Eighty additional route-logged navigations passed. Verified one global
+    header, content focus, no overflow, measured offsets and sidebar/menu hits.
+    Impeccable returned six advisory findings, no blocking findings; the
+    established font, compact metadata, focus-corner and feedback-easing
+    exceptions remain intentional. Reviewed representative renders and the
+    connected source/diff; graph freshness flags were checked through source.
+  - Known follow-up: the initial capture emitted one React hydration warning
+    (#418) without route context. It did not recur in the final matrix or
+    targeted repetitions; no cause or fix is claimed. HQ01 in the local queue
+    retains this observation and its evidence. No real accounts, credentials,
+    listings, provider connections or email changed. Real devices, actual 200%
+    browser zoom, native Persian wording, live providers and CI were not tested.
+  - Shared surfaces: owner-requested `AGENTS.md` workflow/layout rules and this
+    `changelog.md` entry. Evidence: `maintenance/shared-navigation-20261019/`
+    (ignored), with the earlier failed checks preserved. Public footer placement
+    and the separately deployed Blog remain independent of the global web nav.
+
+- **Main-site/dashboard design consistency (owner-requested highest priority).**
+  Added the P0 plan to ignored `ramtin-pending.md` and completed UI01–UI03 as
+  this session's implementation phase. `AGENTS.md` now requires the installed
+  Impeccable skill for design planning, creation, changes and review throughout
+  the project, with rendered theme/locale/responsive verification.
+  - Extended the established Datasheet identity through shared web foundations:
+    Geist/Estedad headings, square radius tokens, ink-filled primary actions,
+    plain outlined badges and ruled listing frames. Shared fields use readable
+    16px text. Header/footer, homepage sections, search suggestions, menus,
+    dialogs, moderation labels and loading placeholders now use that vocabulary.
+    Retained familiar avatar/switch geometry, state labels, focus and role gates.
+  - Removed decorative gradients, blur, shadows, lift, scroll entrances,
+    Newsreader requests and typed-placeholder timers. Search submission, scope,
+    suggestions and recent history remain. Removed unused effect definitions
+    and reconciled DESIGN.md, the landing surface brief and design-system
+    showroom with the actual shipped composition. Blog remains its separate
+    editorial app; the project-wide design workflow requirement applies to it.
+  - Added browser regressions across public/account/dashboard/community routes
+    in EN/FA and both themes. Updated the retired reveal and different-English-
+    weight assertions to require immediately visible sections and shared heading
+    weight with Persian's looser leading. The first run caught an English font
+    fallback mismatch; fixed the shared heading declaration and reran the suite.
+  - Verification: root typecheck, 500 unit tests (5 database-dependent skips),
+    web lint, regular root production build, 247 Chrome tests (29 conditional
+    skips, four workers), and all nine Lighthouse runs passed unchanged gates.
+    Representative home/dashboard/detail performance scores: 96/91/95;
+    accessibility 100 throughout. Existing tighter LCP/JS/CI targets stay open.
+    Sixty before and sixty after captures at 320/768/1280px cover home,
+    dashboard, explore, detail and account in both themes/locales, with no
+    horizontal overflow or page errors. Reviewed representative renders at
+    desktop/tablet/phone sizes. The Impeccable detector had 13 advisory findings,
+    no blocking findings; intentional typography/focus/feedback dispositions
+    are documented. Manual connected-source/diff review found no unresolved
+    functional issue; graph freshness warnings were checked through source.
+  - Shared surfaces: owner-authorized `AGENTS.md` design policy and this
+    `changelog.md` entry. No API/schema/authentication/provider/email change.
+    Local evidence: `maintenance/design-consistency-20261019/` (ignored).
+    DC05–DC07 and the remaining backlog are still open under the one-phase
+    rule. Physical devices, actual 200% browser zoom, native Persian wording,
+    live providers and CI acceptance were not performed.
 
 - **Shared rate-limit store, non-revealing signup, Google wording (phase 4;
   `readiness.md` S2 and S10).** Shared surfaces and outside the web lane:

@@ -1,4 +1,6 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { copy } from "@/lib/i18n";
+import { cleanup, screen } from "@testing-library/react";
+import { renderWithLocale as render } from "@/lib/test-render";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProductCard } from "./product-card";
 
@@ -49,7 +51,7 @@ describe("ProductCard", () => {
 
   it("renders card chrome and community names in Persian, with no English labels", () => {
     const product = { ...products[0], featured: true, trending: true, communities: [{ slug: "codex", nameEn: "Codex", nameFa: "کودکس", primaryPlatform: "codex" }] };
-    render(<LocaleProvider locale="fa"><ProductCard product={product} /></LocaleProvider>);
+    render(<LocaleProvider locale="fa" messages={copy.fa}><ProductCard product={product} /></LocaleProvider>);
     expect(screen.getByText("انتخاب سردبیر")).toBeInTheDocument();
     expect(screen.getByText("پرطرفدار")).toBeInTheDocument();
     expect(screen.getByText("مهارت")).toBeInTheDocument();
@@ -61,7 +63,7 @@ describe("ProductCard", () => {
 
   it("falls back to the English community name when no Persian name exists", () => {
     const product = { ...products[0], communities: [{ slug: "codex", nameEn: "Codex", nameFa: null, primaryPlatform: "codex" }] };
-    render(<LocaleProvider locale="fa"><ProductCard product={product} /></LocaleProvider>);
+    render(<LocaleProvider locale="fa" messages={copy.fa}><ProductCard product={product} /></LocaleProvider>);
     expect(screen.getByRole("link", { name: "Codex" })).toBeInTheDocument();
   });
 
@@ -91,7 +93,7 @@ describe("ProductCard", () => {
   });
 
   it("labels the strip and the creator badge in Persian", () => {
-    render(<LocaleProvider locale="fa"><ProductCard product={{ ...products[0], verified: true, permissions: null, creator: { ...products[0].creator, verified: true } }} /></LocaleProvider>);
+    render(<LocaleProvider locale="fa" messages={copy.fa}><ProductCard product={{ ...products[0], verified: true, permissions: null, creator: { ...products[0].creator, verified: true } }} /></LocaleProvider>);
     expect(screen.getByText("بررسی‌شده")).toBeInTheDocument();
     expect(screen.getByText("اعلام نشده")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "سازندهٔ تأییدشده" })).toBeInTheDocument();

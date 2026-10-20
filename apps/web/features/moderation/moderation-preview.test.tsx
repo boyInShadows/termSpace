@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { copy } from "@/lib/i18n";
 
 const getPreview = vi.hoisted(() => vi.fn());
 const moderate = vi.hoisted(() => vi.fn());
@@ -39,7 +40,7 @@ const submitted = {
 };
 
 function renderPreview() {
-  return render(<LocaleProvider locale="en"><ModerationPreview productId="product-1" /></LocaleProvider>);
+  return render(<LocaleProvider locale="en" messages={copy.en}><ModerationPreview productId="product-1" /></LocaleProvider>);
 }
 const decision = () => screen.getByRole("complementary", { name: "Decision" });
 

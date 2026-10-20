@@ -59,6 +59,7 @@ describe("CreatorReleaseManager", () => {
   it("puts provider permissions and revocation guidance beside the token controls", async () => {
     render(<CreatorReleaseManager productId="product-1" />);
     await screen.findByRole("heading", { name: "Owned Skill" });
+    await screen.findAllByLabelText("Access token");
     expect(screen.getByText(copy.githubTokenHelp)).toBeInTheDocument();
     expect(screen.getByText(copy.npmTokenHelp)).toBeInTheDocument();
     expect(screen.getByText(copy.tokenRevocation)).toBeInTheDocument();
@@ -73,5 +74,20 @@ describe("CreatorReleaseManager", () => {
     render(<CreatorReleaseManager productId="product-1" />);
     expect(await screen.findByRole("alert")).toHaveTextContent(copy.sourceRefHelp);
     expect(screen.getByRole("alert").querySelector("a")).toHaveAttribute("href", "/dashboard/studio/listings/product-1/edit");
+  });
+
+  it("keeps release history readable when provider loading fails", async () => {
+    getConnections.mockRejectedValue(new Error("provider offline"));
+    render(<CreatorReleaseManager productId="product-1" />);
+    expect(await screen.findByRole("heading", { name: "Owned Skill" })).toBeVisible();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Provider connections could not be loaded.");
+    expect(screen.getByText("Current public release")).toBeVisible();
+  });
+
+  it("keeps account-wide provider controls available when release history fails", async () => {
+    getReleases.mockRejectedValue(new Error("history offline"));
+    render(<CreatorReleaseManager productId="product-1" />);
+    expect(await screen.findByRole("alert")).toHaveTextContent(creatorWorkspace.en.creatorReleases.loadError);
+    expect(await screen.findAllByLabelText("Access token")).toHaveLength(2);
   });
 });

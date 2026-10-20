@@ -439,8 +439,7 @@ export async function addMarketplaceFavorite(req: Request, res: Response) {
 }
 
 export async function removeMarketplaceFavorite(req: Request, res: Response) {
-  const product = await findPublishedProduct(String(req.params.slug));
-  if (product) await prisma.marketplaceFavorite.deleteMany({ where: { userId: res.locals.reader.id, productId: product.id } });
+  await prisma.marketplaceFavorite.deleteMany({ where: { userId: res.locals.reader.id, product: { slug: String(req.params.slug) } } });
   res.status(204).send();
 }
 

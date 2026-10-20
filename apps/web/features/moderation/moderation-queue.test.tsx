@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { copy } from "@/lib/i18n";
 
 const getQueue = vi.hoisted(() => vi.fn());
 const session = vi.hoisted(() => ({ loading: false, marketplaceRoles: ["moderator"] as string[] }));
@@ -25,7 +26,7 @@ const listing = {
 };
 
 function renderQueue() {
-  return render(<LocaleProvider locale="en"><ModerationQueue /></LocaleProvider>);
+  return render(<LocaleProvider locale="en" messages={copy.en}><ModerationQueue /></LocaleProvider>);
 }
 
 describe("ModerationQueue", () => {
