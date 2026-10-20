@@ -6,7 +6,7 @@ import { Providers } from "@/components/layout/providers";
 import { Header } from "@/components/layout/header";
 import { SkipLink } from "@/components/layout/skip-link";
 import { getLocale } from "@/lib/serverLocale";
-import { copy } from "@/lib/i18n";
+import { sharedMessages } from "@/lib/i18n";
 import { getServerSession } from "@/lib/server-session";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -27,7 +27,7 @@ export default async function RootLayout({
         ))}
       </head>
       <body>
-        <Providers locale={locale} messages={copy[locale]} initialSession={initialSession}>
+        <Providers locale={locale} messages={sharedMessages(locale)} initialSession={initialSession}>
           <SkipLink locale={locale} />
           <Header />
           {children}

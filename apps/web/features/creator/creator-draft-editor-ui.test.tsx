@@ -18,7 +18,7 @@ describe("draft editor navigation and recovery", () => {
 
   it("keeps dirty input when an internal exit is cancelled and allows discard", async () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
-    render(<CreatorDraftEditor />);
+    render(<CreatorDraftEditor messages={copy.en.creatorDraft} />);
     const slug = await screen.findByRole("textbox", { name: copy.en.creatorDraft.slug });
     fireEvent.change(slug, { target: { value: "retain-this-draft" } });
     const exit = screen.getByRole("link", { name: copy.en.creatorDraft.cancel });
@@ -36,7 +36,7 @@ describe("draft editor navigation and recovery", () => {
 
   it("keeps context on load failure and retries without refreshing the page", async () => {
     mocks.get.mockRejectedValueOnce(new Error("offline")).mockResolvedValue({ id: "draft-1", version: 1, draft: { content: {} } });
-    render(<CreatorDraftEditor productId="draft-1" />);
+    render(<CreatorDraftEditor productId="draft-1" messages={copy.en.creatorDraft} />);
     expect(await screen.findByRole("alert")).toHaveTextContent(copy.en.creatorDraft.loadError);
     expect(screen.getByRole("heading", { name: copy.en.creatorDraft.editTitle })).toBeVisible();
     expect(screen.getByRole("link", { name: copy.en.creatorDraft.back })).toHaveAttribute("href", "/dashboard/studio");

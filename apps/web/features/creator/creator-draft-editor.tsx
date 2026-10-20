@@ -8,7 +8,7 @@ import { ApiError, createCreatorDraft, getCreatorDraft, getMarketplaceDraftOptio
 import type { MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceItemType, MarketplaceItemTypeKey } from "@/lib/types";
 import { useLocale } from "@/lib/locale-context";
 import { creatorWorkspace } from "./workspace-copy";
-import { localePath } from "@/lib/i18n";
+import { localePath, type DraftMessages } from "@/lib/i18n";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DeclarationRows } from "./declaration-rows";
@@ -112,9 +112,9 @@ const detailFields: Record<MarketplaceItemTypeKey, DetailField[]> = {
 
 const permissionCapabilities = ["filesystem_read", "filesystem_write", "process_execution", "network_access", "environment_access", "secret_access", "browser_automation", "external_account_access", "persistent_storage", "background_execution", "code_modification", "telemetry"];
 
-export function CreatorDraftEditor({ productId }: { productId?: string }) {
+export function CreatorDraftEditor({ productId, messages }: { productId?: string; messages: DraftMessages }) {
   const { locale, t } = useLocale();
-  const copy = { ...t.creatorDraft, ...creatorWorkspace[locale].creatorDraft };
+  const copy = { ...messages, ...creatorWorkspace[locale].creatorDraft };
   const router = useRouter();
   const [options, setOptions] = useState<MarketplaceDraftOptions | null>(null);
   const [itemTypes, setItemTypes] = useState<MarketplaceItemType[]>([]);
@@ -282,7 +282,7 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
       </FormSection>
 
       <FormSection title={copy.presentationTitle} intro={copy.presentationIntro}>
-          <DeclarationRows name="screenshots" label={copy.screenshots} onChange={markDirty} initialRows={screenshots.map((item) => [item.url, item.alt.en, item.alt.fa ?? ""])} columns={[{ label: copy.imageUrl, type: "url" }, { label: copy.altEn }, { label: copy.altFa, optional: true }]} />
+          <DeclarationRows messages={copy} name="screenshots" label={copy.screenshots} onChange={markDirty} initialRows={screenshots.map((item) => [item.url, item.alt.en, item.alt.fa ?? ""])} columns={[{ label: copy.imageUrl, type: "url" }, { label: copy.altEn }, { label: copy.altFa, optional: true }]} />
         <div className="mt-5 grid gap-5 sm:grid-cols-3"><Field label={copy.documentationUrl}><Input name="documentationUrl" type="url" defaultValue={stringValue(listing.documentationUrl)} dir="ltr" /></Field><Field label={copy.supportUrl}><Input name="supportUrl" type="url" defaultValue={stringValue(listing.supportUrl)} dir="ltr" /></Field><Field label={copy.issueTrackerUrl}><Input name="issueTrackerUrl" type="url" defaultValue={stringValue(listing.issueTrackerUrl)} dir="ltr" /></Field></div>
       </FormSection>
 
@@ -290,14 +290,14 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
         <div className="grid gap-5 sm:grid-cols-2"><Field label={copy.version}><Input name="releaseVersion" required defaultValue={stringValue(release.version)} dir="ltr" /></Field><Field label={copy.sourceKind}><select name="sourceKind" value={sourceKind} onChange={(event) => setSourceKind(event.target.value as SourceKind)} className={selectClass}><option value="github_repository">GitHub repository</option><option value="github_release">GitHub release</option><option value="npm">npm</option></select></Field></div>
         <SourceFields key={sourceKind} kind={sourceKind} source={source} copy={copy} />
         <div className="mt-5"><Field label={copy.releaseNotes}><Textarea name="releaseNotes" required defaultValue={stringValue(release.releaseNotes)} /></Field></div>
-          <DeclarationRows name="compatibility" label={copy.compatibility} required onChange={markDirty} initialRows={compatibility.map((item) => [item.platform, item.models.join(", "), item.notes ?? ""])} columns={[{ label: copy.platform, options: options.platforms.map((item) => item.key) }, { label: copy.models }, { label: copy.notes, optional: true }]} />
+          <DeclarationRows messages={copy} name="compatibility" label={copy.compatibility} required onChange={markDirty} initialRows={compatibility.map((item) => [item.platform, item.models.join(", "), item.notes ?? ""])} columns={[{ label: copy.platform, options: options.platforms.map((item) => item.key) }, { label: copy.models }, { label: copy.notes, optional: true }]} />
         <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.installationMethod}><select name="installationMethod" required defaultValue={stringValue(installation.method) || "manual"} className={selectClass}>{["manual", "npm", "git", "download", "container", "hosted"].map((item) => <option key={item}>{item}</option>)}</select></Field><Field label={copy.installationInstructions} hint={copy.lineHint}><Textarea name="installationInstructions" required defaultValue={listValue(installation.instructions)} /></Field></div>
       </FormSection>
 
       <FormSection title={copy.requirementsTitle} intro={copy.requirementsIntro}>
         <div className="grid gap-5 sm:grid-cols-2"><Field label={copy.runtimes} hint={copy.lineHint}><Textarea name="runtimes" defaultValue={listValue(requirements.runtimes)} /></Field><Field label={copy.accounts} hint={copy.lineHint}><Textarea name="accounts" defaultValue={listValue(requirements.accounts)} /></Field><Field label={copy.operatingSystems} hint={copy.lineHint}><Textarea name="operatingSystems" defaultValue={listValue(requirements.operatingSystems)} /></Field><Field label={copy.dependencies} hint={copy.lineHint}><Textarea name="dependencies" defaultValue={listValue(requirements.dependencies)} /></Field></div>
-          <DeclarationRows name="environmentVariables" label={copy.environmentVariables} onChange={markDirty} initialRows={environmentVariables.map((item) => [item.name, item.purpose, String(item.required), String(item.sensitive)])} columns={[{ label: copy.variableName }, { label: copy.purpose }, { label: copy.required, type: "checkbox" }, { label: copy.sensitive, type: "checkbox" }]} />
-          <DeclarationRows name="permissions" label={copy.permissions} onChange={markDirty} initialRows={permissions.map((item) => [item.capability, String(item.required), item.scope ?? "", item.destinations.join(", "), item.purpose])} columns={[{ label: copy.capability, options: permissionCapabilities }, { label: copy.required, type: "checkbox" }, { label: copy.scope, optional: true }, { label: copy.destinations, optional: true }, { label: copy.purpose }]} />
+          <DeclarationRows messages={copy} name="environmentVariables" label={copy.environmentVariables} onChange={markDirty} initialRows={environmentVariables.map((item) => [item.name, item.purpose, String(item.required), String(item.sensitive)])} columns={[{ label: copy.variableName }, { label: copy.purpose }, { label: copy.required, type: "checkbox" }, { label: copy.sensitive, type: "checkbox" }]} />
+          <DeclarationRows messages={copy} name="permissions" label={copy.permissions} onChange={markDirty} initialRows={permissions.map((item) => [item.capability, String(item.required), item.scope ?? "", item.destinations.join(", "), item.purpose])} columns={[{ label: copy.capability, options: permissionCapabilities }, { label: copy.required, type: "checkbox" }, { label: copy.scope, optional: true }, { label: copy.destinations, optional: true }, { label: copy.purpose }]} />
       </FormSection>
 
       <FormSection title={copy.licenseTitle} intro={copy.licenseIntro}>
@@ -307,7 +307,7 @@ export function CreatorDraftEditor({ productId }: { productId?: string }) {
       </FormSection>
 
       <FormSection title={copy.typeDetailsTitle} intro={copy.typeDetailsIntro}>
-          <div className="grid gap-5 sm:grid-cols-2">{detailFields[type].map((field) => field.kind === "stages" ? <DeclarationRows key={`${type}-${field.key}`} name={`detail_${field.key}`} label={locale === "fa" ? field.fa : field.en} required={field.required} onChange={markDirty} initialRows={Array.isArray(details[field.key]) ? (details[field.key] as Array<{ name: string; description: string; humanApproval: boolean }>).map((stage) => [stage.name, stage.description, String(stage.humanApproval)]) : []} columns={[{ label: copy.stageName }, { label: copy.stageDescription }, { label: copy.humanApproval, type: "checkbox" }]} /> : <DetailInput key={`${type}-${field.key}`} field={field} locale={locale} value={details[field.key]} />)}</div>
+          <div className="grid gap-5 sm:grid-cols-2">{detailFields[type].map((field) => field.kind === "stages" ? <DeclarationRows messages={copy} key={`${type}-${field.key}`} name={`detail_${field.key}`} label={locale === "fa" ? field.fa : field.en} required={field.required} onChange={markDirty} initialRows={Array.isArray(details[field.key]) ? (details[field.key] as Array<{ name: string; description: string; humanApproval: boolean }>).map((stage) => [stage.name, stage.description, String(stage.humanApproval)]) : []} columns={[{ label: copy.stageName }, { label: copy.stageDescription }, { label: copy.humanApproval, type: "checkbox" }]} /> : <DetailInput key={`${type}-${field.key}`} field={field} locale={locale} value={details[field.key]} />)}</div>
       </FormSection>
 
         <FormSection title={copy.reviewTitle} intro={copy.reviewIntro}>

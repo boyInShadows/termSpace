@@ -5,6 +5,7 @@
  * file and spread it here. Both locales must carry the same keys.
  */
 import { common } from "./common";
+import type { Locale } from "./common";
 import { dashboard } from "./dashboard";
 import { catalog } from "./catalog";
 import { creator } from "./creator";
@@ -31,3 +32,11 @@ export const copy = {
     ...titles.fa,
   },
 } as const;
+
+/** Keep editor-only labels off every page's root hydration payload. */
+export function sharedMessages(locale: Locale) {
+  const { creatorDraft, ...messages } = copy[locale];
+  return { ...messages, creatorDraft: { versionConflict: creatorDraft.versionConflict } };
+}
+
+export type DraftMessages = (typeof creator)[Locale]["creatorDraft"];

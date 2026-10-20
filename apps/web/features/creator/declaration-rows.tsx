@@ -3,21 +3,19 @@
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useLocale } from "@/lib/locale-context";
-import { creatorWorkspace } from "./workspace-copy";
 
 type Column = { label: string; type?: "checkbox" | "url"; optional?: boolean; options?: string[] };
 
-export function DeclarationRows({ name, label, columns, initialRows, required = false, onChange }: {
+export function DeclarationRows({ name, label, columns, initialRows, required = false, onChange, messages }: {
   name: string;
   label: string;
   columns: Column[];
   initialRows: string[][];
   required?: boolean;
   onChange: () => void;
+  messages: { choose: string; removeRow: string; noDeclarations: string; addRow: string };
 }) {
-  const { locale, t } = useLocale();
-  const copy = { ...t.creatorDraft, ...creatorWorkspace[locale].creatorDraft };
+  const copy = messages;
   const id = useId();
   const [rows, setRows] = useState(() => initialRows.length ? initialRows : required ? [columns.map(() => "")] : []);
   function update(next: string[][]) { setRows(next); onChange(); }

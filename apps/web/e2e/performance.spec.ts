@@ -1,6 +1,26 @@
 import { expect, test } from "@playwright/test";
+import { copy } from "../lib/i18n";
 
 test.describe("performance wiring", () => {
+  for (const path of ["/", "/dashboard", "/products/conversion-copywriter", "/fa", "/fa/dashboard", "/fa/products/conversion-copywriter"]) {
+    test(`${path} excludes draft editor labels from its shared HTML`, async ({ request }) => {
+      const html = await (await request.get(path, { headers: { Cookie: "e2e_persona=creator" } })).text();
+      expect(html.includes("createTitle")).toBe(false);
+    });
+  }
+
+  for (const path of ["/dashboard/studio/listings/new", "/fa/dashboard/studio/listings/new"]) {
+    test(`${path} receives the draft editor labels`, async ({ request, page, context, baseURL }) => {
+      const html = await (await request.get(path, { headers: { Cookie: "e2e_persona=creator" } })).text();
+      expect(html.includes("createTitle")).toBe(true);
+      await context.addCookies([{ name: "e2e_persona", value: "creator", url: baseURL! }]);
+      await page.route("**/api/marketplace/draft-options", (route) => route.fulfill({ json: { data: { categories: [], communities: [], platforms: [] } } }));
+      await page.goto(path);
+      const messages = copy[path.startsWith("/fa") ? "fa" : "en"].creatorDraft;
+      await expect(page.getByRole("textbox", { name: messages.slug, exact: true })).toBeVisible();
+    });
+  }
+
   test("preloads only Geist for the English first paint", async ({ request }) => {
     const html = await (await request.get("/")).text();
     const preloads = [...html.matchAll(/<link[^>]+rel="preload"[^>]+as="font"[^>]*>/g)].map((match) => match[0]);

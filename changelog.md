@@ -4,6 +4,36 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-21
 
+- **Scope editor labels and trim homepage hydration data (owner-requested next
+  performance step).** Root locale messages no longer serialize the draft
+  editor's labels on every page. New/edit server pages supply the active
+  locale's labels directly to the editor and its declaration rows. The shared
+  creator dashboard retains its conflict message. The homepage process section
+  receives only its three consumed fields. Wording, layout, session handling,
+  API requests and caching are unchanged.
+  - In the English fixture comparison, document transfer fell from 24,033 to
+    22,029 bytes on home (8.3%), 16,718 to 15,490 on dashboard (7.3%) and 24,320
+    to 23,141 on detail (4.8%). First-load JavaScript is unchanged. LCP did not
+    materially improve: final local 4x CPU medians are 2,407 / 2,936 / 2,404 ms,
+    with performance 98 / 95 / 98 and accessibility 100 throughout. All nine
+    LHCI reports pass the existing assertions. The stricter LCP targets remain
+    open; neither budgets nor throttling were changed.
+  - Rejected experiments: the default Turbopack build was slower on all three
+    routes; limiting webpack's initial requests did not help. Neither change
+    is retained. Ignored profiles, critical-path analysis and before/after
+    evidence are under `maintenance/lcp-20261021/`.
+  - Verification: three baseline HTML checks failed before the fix. The new
+    checks cover both locales and retain editor labels on editor routes;
+    scoped draft-options fixtures also open the localized form. Root typecheck,
+    535 unit tests (5 database-dependent skips), web lint, production build,
+    350 browser passes (44 intentional skips, no retries), and Impeccable
+    detection pass. Reviewed 60 public/dashboard and 24 normal editor captures
+    across EN/FA, both themes and 320/768/1280 widths: no overflow, duplicate
+    shells or page errors. Editor outage layouts were checked separately.
+    Physical-device and native Persian acceptance remain outstanding.
+  - Shared surfaces: `apps/web/lib/i18n/index.ts` and `changelog.md`. The ignored
+    local queue retains the unfinished LCP and owner-dependent acceptance work.
+
 - **Explore streaming assertion repair (owner-requested next step).** The latest
   hosted browser run exposed a strict-selector failure: React temporarily kept
   a hidden `S:0` result tree beside the visible Explore page. The two result-count
