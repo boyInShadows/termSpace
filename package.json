@@ -17,7 +17,9 @@
     "prisma:generate": "npm run prisma:generate --workspace @termspace/api",
     "prisma:migrate": "npm run prisma:migrate --workspace @termspace/api",
     "prisma:deploy": "npm run prisma:deploy --workspace @termspace/api",
-    "seed": "npm run seed --workspace @termspace/api"
+    "seed": "npm run seed --workspace @termspace/api",
+    "deploy:check": "node deploy/check-config.mjs",
+    "deploy:test": "node --test deploy/*.test.mjs"
   },
   "engines": {
     "node": ">=22"

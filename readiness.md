@@ -1,5 +1,22 @@
 # TermSpace pre-deployment readiness review
 
+## Deployment follow-up — 2026-10-20
+
+The original summary/checklist below describe the 2026-10-19 review and contain
+stale unchecked entries. B1–B8 and S1–S10 have later fixes/corrections in their
+detailed sections; the current merged code also has Redis and a shared web skip
+link. The merge passed unit/browser tests and Lighthouse (see `changelog.md`).
+
+Owner decision: web/API first, blog later; fresh isolated database; private HTTPS
+preview through SSH before choosing public DNS/email. VPS upgrade is verified:
+2 CPUs, about 4 GB RAM and an expanded 40 GB disk; existing INSIGHT stays separate.
+Deployment packaging/configuration work is in progress under `deploy/README.md`.
+Do not mark S13–S19 or the deployment complete until hosted image, backup/restore
+and VPS acceptance evidence is recorded. CSP enforcement is a separate phase.
+Email delivery, public origin/contact, legal review/consent, Google OAuth and
+external alerting remain pending owner input. Never enable a verification bypass
+to satisfy preview acceptance.
+
 Date: 2026-10-19 · Branch: `ramtin` · Scope: `apps/web`, `apps/blog`, `apps/api`, `docker/`, `docker-compose.yml`, `.github/`
 
 **How this was produced.** Source files were not modified. Findings come from three read-only code explorations (API; web+blog; infra/secrets/CI), plus the commands listed under "Commands run". Line numbers come from those explorations and were not all re-checked by hand, so confirm a line before you edit it. Nothing was run against a live deployment. Items marked *verify* depend on your production topology, which I could not see.

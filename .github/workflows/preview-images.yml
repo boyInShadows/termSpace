@@ -1,0 +1,108 @@
+name: Preview images
+
+on:
+  push:
+    branches: [codex/vps-preview]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-images-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - kind: web
+            file: docker/Dockerfile.web
+            target: runtime
+          - kind: api
+            file: docker/Dockerfile.api
+            target: runtime
+          - kind: ops
+            file: docker/Dockerfile.api
+            target: ops
+    env:
+      KIND: ${{ matrix.kind }}
+      WEB_ORIGIN: https://termspace.localhost:8443
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Test deployment safeguards
+        run: node --test deploy/*.test.mjs
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/termspace-${KIND}:${GITHUB_SHA}" >> "$GITHUB_ENV"
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          target: ${{ matrix.target }}
+          platforms: linux/amd64
+          load: true
+          tags: ${{ env.IMAGE }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            io.termspace.web-origin=${{ env.WEB_ORIGIN }}
+            io.termspace.google-client-id=
+            io.termspace.mock=false
+          build-args: |
+            NEXT_PUBLIC_SITE_URL=${{ env.WEB_ORIGIN }}
+            NEXT_PUBLIC_BLOG_URL=
+          cache-from: type=gha,scope=preview-${{ matrix.kind }}
+          cache-to: type=gha,mode=max,scope=preview-${{ matrix.kind }}
+      - name: Smoke-test runtime image
+        run: |
+          case "$KIND" in
+            api)
+              docker run --rm --entrypoint node "$IMAGE" --input-type=module -e '
+                await import("./dist/app.js");
+                const { createRequire } = await import("node:module");
+                const require = createRequire(process.cwd() + "/package.json");
+                for (const dependency of ["typescript", "tsx", "prisma"]) {
+                  try { require.resolve(dependency); } catch { continue; }
+                  throw new Error("Development tool in runtime: " + dependency);
+                }
+              '
+              ;;
+            ops)
+              docker run --rm "$IMAGE" npm exec --workspace @termspace/api -- prisma --version
+              ;;
+            web)
+              docker run -d --name termspace-smoke -p 127.0.0.1:3330:3000 -e API_URL=http://127.0.0.1:9 "$IMAGE"
+              trap 'docker rm -f termspace-smoke >/dev/null' EXIT
+              curl --retry 15 --retry-delay 2 --retry-connrefused --fail http://127.0.0.1:3330/account -o /dev/null
+              curl --fail http://127.0.0.1:3330/privacy -o /dev/null
+              curl --fail http://127.0.0.1:3330/fa/account -o /dev/null
+              ;;
+          esac
+      - name: Scan runtime dependencies
+        if: matrix.kind == 'api'
+        run: docker run --rm --entrypoint npm "$IMAGE" audit --omit=dev --workspace @termspace/api --include-workspace-root=false --audit-level=high
+      - name: Publish tested image and digest
+        run: |
+          docker push "$IMAGE"
+          docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE" > "${KIND}-image.txt"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: preview-${{ matrix.kind }}-${{ github.sha }}
+          path: ${{ matrix.kind }}-image.txt
+          retention-days: 30

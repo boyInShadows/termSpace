@@ -50,6 +50,8 @@ maintenance/
 .cursor/
 .claude/
 .turbo/
+.codex/
+.playwright-mcp/
 
 # additional local artifacts
 build/

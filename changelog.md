@@ -4,6 +4,31 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-20
 
+- **Private web/API deployment packaging (phase 1).** Owner-approved work outside
+  the presentation lane: `docker/`, `docker-compose.yml`, `deploy/`, build-context
+  exclusions and `.github/workflows/preview-images.yml`. Shared surfaces:
+  `changelog.md` and `pending.md`.
+  - Separate, digest-only preview Compose project; dedicated database/uploads,
+    internal API/PostgreSQL/Redis, web on loopback 3300, private TLS proxy on 8443.
+    No blog or editorial scheduler; email delivery remains an explicit profile.
+  - Standalone web runtime; production-only API dependencies and a separate
+    operations image. Existing Compose migration/worker commands follow the new
+    image layout. Worker errors exit visibly; health requires a recent good poll.
+    Journal is omitted without a configured blog URL. Catalog browser assertions
+    use visible headings rather than hidden streamed text duplicates.
+  - Configuration generation refuses to overwrite secrets. Preflight rejects
+    placeholders, mutable image tags, unsafe flags, broad file permissions,
+    mismatched origins and incomplete email configuration. Release checks baked
+    origin/Google/fixture labels. Backup/release scripts and operator runbook
+    require encrypted, matching off-server backups before updating existing data.
+  - Verification: root typecheck, 573 unit tests (6 database/Redis skips), web
+    lint, all production builds, deployment configuration/worker tests and Compose
+    validation pass. Browser suite: 324 passed, 44 intentional skips; Lighthouse
+    passes all existing budgets across 9 runs. Design detector has no findings.
+    Hosted Docker image checks and VPS acceptance remain pending. Manual review
+    found no remaining implementation issue after adding baked-config checks and
+    matching off-server backup confirmation. Usage/cost meter unavailable.
+
 - **Merge `ramtin` into `redesign`.** Combines `ea26053` and `9326134` with
   both histories retained. Resolutions preserve the risk-first moderation flow,
   legacy redirects, trust rows, legal footer links and production showroom

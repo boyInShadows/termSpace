@@ -4,6 +4,12 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Deployment Safety
 
+- Private VPS preview: sending domain/provider credentials, legal/contact email,
+  Google OAuth, public origin and external alert destination remain owner decisions.
+  Complete real inbox verification/reset and verified creator/moderator acceptance
+  before public launch. Keep `LOCAL_AUTO_VERIFY_EMAIL` and demo/mock flags off.
+  The blog deploys after web. Track release/restore evidence in `changelog.md`.
+
 - Before applying migration `202609240001_remove_duplicate_creator_ownership`
   to any database that served the retired `/api/community` publishing routes,
   audit `MarketplaceCreator.userId`. If any row is non-null, reconcile it into

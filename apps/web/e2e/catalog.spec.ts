@@ -161,9 +161,9 @@ test.describe("explore", () => {
     await page.getByRole("combobox", { name: "Declared access" }).selectOption("telemetry");
     await expect(page).toHaveURL(/permission=telemetry/);
     if (isMobile(testInfo.project.name)) await page.getByRole("button", { name: /^Show results \(\d+\)/ }).click();
-    await expect(page.getByText("No resources found")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "No resources found", exact: true })).toBeVisible();
     await page.reload();
-    await expect(page.getByText("No resources found")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "No resources found", exact: true })).toBeVisible();
     await expect(page.getByText("Send telemetry", { exact: true }).last()).toBeVisible();
     await page.getByRole("button", { name: "Clear all", exact: true }).first().click();
     await expect(page).toHaveURL(/\/explore$/);
@@ -266,7 +266,7 @@ test.describe("explore", () => {
 
   test("an empty result offers to drop each filter on its own", async ({ page }) => {
     await page.goto("/explore?type=agent&minRating=5");
-    await expect(page.getByText("No resources found")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "No resources found", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Remove filter: 5+ Rating" }).last().click();
     await expect(page).toHaveURL(/\/explore\?type=agent$/);
     await expect(page.locator("article h3")).toHaveCount(3);
@@ -274,7 +274,7 @@ test.describe("explore", () => {
 
   test("no results offers to clear the filters", async ({ page }) => {
     await page.goto("/explore?q=nothing-matches-this");
-    await expect(page.getByText("No resources found")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "No resources found", exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "Clear all" }).last().click();
     await expect(page).toHaveURL(/\/explore$/);

@@ -34,6 +34,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.api
+      target: ops
     restart: "no"
     environment:
       NODE_ENV: production
@@ -147,7 +148,7 @@ services:
     depends_on:
       api:
         condition: service_healthy
-    command: ["sh", "-c", "while true; do node apps/api/dist/jobs/publishScheduled.js; sleep 60; done"]
+    command: ["sh", "-c", "while node dist/jobs/publishScheduled.js; do sleep 60; done"]
 
   # Runs by default: password accounts cannot verify or reset without it. It exits
   # (and restarts visibly) while misconfigured instead of failing queued mail.
@@ -170,7 +171,7 @@ services:
     depends_on:
       api:
         condition: service_healthy
-    command: ["sh", "-c", "while node apps/api/dist/jobs/sendTransactionalEmails.js; do sleep 30; done"]
+    command: ["node", "/app/deploy/worker.mjs", "email"]
 
   marketplace-source-worker:
     build:
@@ -186,7 +187,7 @@ services:
     depends_on:
       api:
         condition: service_healthy
-    command: ["sh", "-c", "while true; do node apps/api/dist/jobs/processMarketplaceSourceChecks.js; sleep 60; done"]
+    command: ["node", "/app/deploy/worker.mjs", "source"]
 
 volumes:
   blog_pgdata:
