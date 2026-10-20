@@ -6,8 +6,10 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 - **Hosted image smoke checks (deployment phase 1 follow-up).** The first hosted
   run caught TypeScript retained as Prisma's optional peer despite `--omit=dev`;
-  a clean production dependency stage now omits dev/peer dependencies (workspace
-  pruning retained the optional peer even with both omit flags). The web check initially hit Docker's
+  a clean production dependency stage omits dev/peer dependencies and explicitly
+  removes the optional TypeScript/Prisma code-generation peers. npm's `devOptional`
+  workspace lock entries retained them even on a clean install with omit flags.
+  Compiled JS/client imports remain part of the strict smoke test. The web check initially hit Docker's
   cold-start connection reset; readiness retries all transient errors within its
   existing bound and prints container diagnostics on failure. The operations
   and web images passed their smoke checks. Application source is unchanged; the preceding

@@ -19,6 +19,9 @@ CMD ["npm", "run", "prisma:deploy", "--workspace", "@termspace/api"]
 FROM base AS production-deps
 # Install into a clean tree: workspace pruning can retain build-time peers.
 RUN npm ci --omit=dev --omit=peer --workspace @termspace/api --include-workspace-root=false
+# npm retains Prisma's devOptional code-generation peers from the workspace lock.
+# The compiled JS/client engine needs neither compiler nor migration CLI.
+RUN rm -rf /app/node_modules/typescript /app/apps/api/node_modules/typescript /app/node_modules/prisma /app/apps/api/node_modules/prisma
 COPY --from=build /app/apps/api/node_modules/.prisma ./apps/api/node_modules/.prisma
 
 FROM base AS runtime
