@@ -7,6 +7,7 @@ export function proxy(request: NextRequest) {
   const effectivePath = isPersian ? pathname.slice(3) || "/" : pathname;
   const headers = new Headers(request.headers);
   headers.set("x-term-locale", isPersian ? "fa" : "en");
+  headers.set("x-term-path", effectivePath);
   if (!isPersian) return NextResponse.next({ request: { headers } });
   const url = request.nextUrl.clone();
   url.pathname = effectivePath;

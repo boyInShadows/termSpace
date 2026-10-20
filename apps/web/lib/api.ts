@@ -85,7 +85,8 @@ export async function getProducts(filters: ProductFilters = {}, signal?: AbortSi
 export async function getProduct(slug: string, signal?: AbortSignal) { return (await request<{ data: ProductDetail }>(`/api/marketplace/products/${encodeURIComponent(slug)}`, { signal, revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
 export async function getProductRelease(slug: string, version: string, signal?: AbortSignal) { return (await request<{ data: ProductRelease }>(`/api/marketplace/products/${encodeURIComponent(slug)}/releases/${encodeURIComponent(version)}`, { signal })).data; }
 export type MarketplaceRole = "creator" | "moderator" | "administrator";
-export async function getSession() { return request<{ data: { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } | { authenticated: false } }>("/api/readers/session"); }
+export type ReaderSession = { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } | { authenticated: false };
+export async function getSession(init?: RequestInit) { return request<{ data: ReaderSession }>("/api/readers/session", init); }
 export async function login(email: string, password: string) { return request("/api/readers/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function loginWithGoogle(credential: string) { return request("/api/readers/google", { method: "POST", body: JSON.stringify({ credential }) }); }
 export async function register(email: string, password: string) { return request<{ data: { user: { emailVerified: boolean } } }>("/api/readers/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
@@ -96,10 +97,10 @@ export async function getReaderProfile(signal?: AbortSignal) { return (await req
 export async function changeReaderPassword(currentPassword: string, newPassword: string) { return request<{ data: { updated: true } }>("/api/readers/profile/password", { method: "PUT", body: JSON.stringify({ currentPassword, newPassword }) }); }
 export async function requestEmailVerification() { return request<{ data: { accepted: true } }>("/api/readers/email-verification/request", { method: "POST" }); }
 export async function confirmEmailVerification(token: string) { return request<{ data: { verified: true } }>("/api/readers/email-verification/confirm", { method: "POST", body: JSON.stringify({ token }) }); }
-export async function getOwnedCreatorProfile() { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile")).data; }
+export async function getOwnedCreatorProfile(init?: RequestInit) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", init)).data; }
 export async function createOwnedCreatorProfile(input: { name: string; handle: string; bio: string }) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", { method: "POST", body: JSON.stringify(input) })).data; }
 export async function updateOwnedCreatorProfile(input: { name: string; bio: string }) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", { method: "PATCH", body: JSON.stringify(input) })).data; }
-export async function getCreatorDashboard(page = 1, limit = 24, signal?: AbortSignal) { return request<CreatorDashboardResult>(`/api/marketplace/creator/dashboard?page=${page}&limit=${limit}`, { signal }); }
+export async function getCreatorDashboard(page = 1, limit = 24, signal?: AbortSignal, headers?: HeadersInit) { return request<CreatorDashboardResult>(`/api/marketplace/creator/dashboard?page=${page}&limit=${limit}`, { signal, headers }); }
 export async function getMarketplaceDraftOptions() { return (await request<{ data: MarketplaceDraftOptions }>("/api/marketplace/draft-options")).data; }
 export async function getCreatorDraft(id: string) { return (await request<{ data: MarketplaceDraftRecord }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/draft`)).data; }
 export async function getCreatorReleases(id: string, signal?: AbortSignal) { return (await request<{ data: CreatorReleaseHistory }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/releases`, { signal })).data; }

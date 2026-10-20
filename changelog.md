@@ -2,6 +2,44 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-21
+
+- **Cold dashboard summary and performance ratchet (owner-requested local queue).**
+  The dashboard can now render its verified reader's summary and totals in the
+  initial HTML. Request-scoped server reads forward the current cookie without
+  caching private responses; each lookup has a 1.5-second deadline and falls
+  back to the existing browser reads. Public pages retain their client identity
+  lookup. The browser still revalidates identity and dashboard data, and Saved
+  still waits for the complete favorites read before showing removal controls.
+  - Older refresh results cannot overwrite a newer identity. Account changes
+    remount dashboard content. A fresh review caught a server/browser timezone
+    mismatch, reproduced in both browser projects; the initial clock-dependent
+    content is now deterministic and switches to browser-local time after data
+    loads. Pending panels keep their accessible loading status.
+  - Root typecheck, 535 unit tests (5 database-dependent skips), web lint,
+    334 browser tests (44 intentional skips, no retries), normal production
+    build and 60 EN/FA/theme/320/768/1280 captures pass. The captures check
+    overflow, page errors, locale/theme and one global header/main; representative
+    renders were reviewed. The Impeccable detector returned no findings.
+  - All nine local Lighthouse reports pass at the unchanged 4x CPU/network
+    profile. Median LCP/performance: home 2408 ms/98, dashboard 2955 ms/95,
+    detail 2404 ms/98; accessibility is 100 throughout. Dashboard performance
+    meets its 92 target, so its gate is tightened from 85 to 92 and all reports
+    pass again. LCP gates remain unchanged: the tighter 2.2/2.0/2.2-second
+    targets are still unfinished in both queues. Public-page timing variation
+    is not claimed as a public rendering improvement.
+  - CSS inlining and below-fold containment experiments were not retained;
+    their samples did not establish a useful public LCP improvement. Evidence,
+    traces, RED/GREEN regressions and rejected experiments are preserved in
+    ignored `maintenance/performance-20261020/`. Graph metadata/partial-parse
+    warnings were checked against current source. Fresh review findings were
+    addressed; no external-model review was authorized or run.
+  - Shared surfaces: `apps/web/lib/api.ts`, `pending.md` and `changelog.md` for
+    this assigned performance phase. No API-server, schema, provider, secret,
+    environment or live user-data change; the local email pause is preserved.
+    Physical devices, native Persian review and live providers remain open.
+    No usage/cost meter is exposed by this harness.
+
 ## 2026-10-20
 
 - **README refresh (owner-requested).** Updated the shipped feature summary for

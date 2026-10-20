@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
-import { getDashboardHome, greetingPeriod } from "@/lib/dashboard";
+import { getDashboardHome, greetingPeriod, type DashboardHome } from "@/lib/dashboard";
 import { useLocale } from "@/lib/locale-context";
 import { ActivityFeed } from "./activity-feed";
 import { Skeleton } from "./dashboard-card";
@@ -13,20 +13,21 @@ import { intlLocale } from "@/lib/format";
 import { CardError } from "./dashboard-card";
 
 /** Fetches the overview once, and again on Retry. */
-export function DashboardOverview() {
+export function DashboardOverview({ initialHome }: { initialHome?: { email: string; home: DashboardHome } }) {
   const session = useMarketplaceSession();
-  const [state, setState] = useState<OverviewState>({ status: "loading" });
+  const [state, setState] = useState<OverviewState>(() => initialHome?.email === session.email ? { status: "ready", home: initialHome.home } : { status: "loading" });
   const [reload, setReload] = useState(0);
-  // Read once per mount; relative times and the greeting do not need to tick.
-  const [now] = useState(() => Date.now());
+  // The first render must not depend on the server's timezone.
+  const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
     getDashboardHome(controller.signal)
-      .then((home) => setState({ status: "ready", home }))
+      .then((home) => { setNow(Date.now()); setState({ status: "ready", home }); })
       .catch((cause: unknown) => {
         if (controller.signal.aborted) return;
         console.error("Dashboard overview failed to load", cause);
+        setNow(Date.now());
         setState({ status: "error" });
       });
     return () => controller.abort();
@@ -40,7 +41,7 @@ export function DashboardOverview() {
   const emailName = session.email?.split("@")[0] ?? "";
   const name = state.status === "ready" && state.home.kind === "creator" ? state.home.profile.name : emailName;
 
-  return <OverviewLayout state={state} now={now} name={name} onRetry={retry} />;
+  return <OverviewLayout state={state} now={now ?? 0} name={now === null ? undefined : name} onRetry={retry} />;
 }
 
 /** The route-level skeleton: the real layout, held in its loading state. */
@@ -60,15 +61,17 @@ function OverviewLayout({
   name?: string;
   onRetry: () => void;
 }) {
+  const datedPanels: OverviewState = now === 0 ? { status: "loading" } : state;
+  const loading = state.status === "loading" || (state.status === "ready" && now === 0);
   return (
-    <div className="space-y-8" aria-busy={state.status === "loading"}>
-      {state.status === "loading" && <LoadingStatus />}
+    <div className="space-y-8" aria-busy={loading}>
+      {loading && <LoadingStatus />}
       <OverviewHeader state={state} now={now} name={name} />
       <OverviewStats state={state} />
       {state.status === "error" ? <div className="space-y-6"><CardError onRetry={onRetry} /><QuickActions /></div> : <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <ListingsTable state={state} now={now} onRetry={onRetry} />
+        <ListingsTable state={datedPanels} now={now} onRetry={onRetry} />
         <div className="space-y-6">
-          <ActivityFeed state={state} now={now} onRetry={onRetry} />
+          <ActivityFeed state={datedPanels} now={now} onRetry={onRetry} />
           <QuickActions />
         </div>
       </div>}

@@ -17,11 +17,11 @@ export type DashboardHome =
  * collapse to `no-profile`. Anything else propagates so the page can offer a
  * retry.
  */
-export async function getDashboardHome(signal?: AbortSignal): Promise<DashboardHome> {
+export async function getDashboardHome(signal?: AbortSignal, headers?: HeadersInit): Promise<DashboardHome> {
   try {
     const [profile, result] = await Promise.all([
-      getOwnedCreatorProfile(),
-      getCreatorDashboard(1, OVERVIEW_LISTING_LIMIT, signal),
+      getOwnedCreatorProfile({ signal, headers }),
+      getCreatorDashboard(1, OVERVIEW_LISTING_LIMIT, signal, headers),
     ]);
     return { kind: "creator", profile, dashboard: result.data };
   } catch (cause) {

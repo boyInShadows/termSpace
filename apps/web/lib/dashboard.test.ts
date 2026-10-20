@@ -40,7 +40,7 @@ describe("getDashboardHome", () => {
     getDashboard.mockResolvedValue({ data, meta: {} });
 
     await expect(getDashboardHome()).resolves.toEqual({ kind: "creator", profile, dashboard: data });
-    expect(getDashboard).toHaveBeenCalledWith(1, OVERVIEW_LISTING_LIMIT, undefined);
+    expect(getDashboard).toHaveBeenCalledWith(1, OVERVIEW_LISTING_LIMIT, undefined, undefined);
   });
 
   it.each([403, 404])("treats a %i as a reader without a creator workspace", async (status) => {

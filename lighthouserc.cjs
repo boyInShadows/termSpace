@@ -28,7 +28,7 @@ const GATES = {
   },
   dashboard: {
     lcp: { gate: 4000, target: 2000 },
-    performance: { gate: 0.85, target: 0.92 },
+    performance: { gate: 0.92, target: 0.92 },
     imageBytes: { gate: 150 * 1024, target: 150 * 1024 },
   },
   detail: {

@@ -14,9 +14,9 @@ This file tracks known improvement work that has not been completed yet. When an
 ## Web — Homepage Follow-ups
 
 - Meet the remaining mobile LCP targets: `/` 2.2 s, `/dashboard` 2.0 s
-  and product detail 2.2 s; dashboard performance must reach 92 before its gate
-  tightens. Profile the remaining shared hydration and mobile rendering cost
-  while preserving the Saved collection's initial-read and mutation ordering.
+  and product detail 2.2 s. Profile the remaining shared hydration and mobile
+  rendering cost while preserving request-scoped dashboard snapshots and the
+  Saved collection's initial-read and mutation ordering.
 
 ## Launch — Owner Decisions
 

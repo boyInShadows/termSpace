@@ -43,6 +43,20 @@ function creatorHome(listingCount = 1): DashboardHome {
 describe("DashboardOverview", () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it("renders its own server summary while the browser revalidates", () => {
+    getHome.mockReturnValue(new Promise(() => {}));
+    render(<DashboardOverview initialHome={{ email: "kasra@example.com", home: creatorHome() }} />);
+    expect(screen.getByText("5 acquisitions this week, 1,234 in all. 1 of your 1 listings are in review.")).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(copy.en.dashboardHome.loading);
+  });
+
+  it("ignores a snapshot belonging to another account", () => {
+    getHome.mockReturnValue(new Promise(() => {}));
+    render(<DashboardOverview initialHome={{ email: "other@example.com", home: creatorHome() }} />);
+    expect(screen.queryByText("5 acquisitions this week, 1,234 in all. 1 of your 1 listings are in review.")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(copy.en.dashboardHome.loading);
+  });
+
   it("greets the creator and shows their totals, listings and activity", async () => {
     getHome.mockResolvedValue(creatorHome());
     render(<DashboardOverview />);
