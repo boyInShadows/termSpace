@@ -195,7 +195,8 @@ test.describe("explore", () => {
 
   test("a filter changes the URL and the results", async ({ page }) => {
     await page.goto("/explore");
-    const count = page.locator("section p[role=status]");
+    // Streamed pages can retain a hidden copy; assert the exposed result count.
+    const count = page.locator("section").getByRole("status");
     await expect(count).toHaveText("15 resources");
 
     await page.getByRole("button", { name: "Agents", exact: true }).click();
@@ -278,6 +279,6 @@ test.describe("explore", () => {
 
     await page.getByRole("button", { name: "Clear all" }).last().click();
     await expect(page).toHaveURL(/\/explore$/);
-    await expect(page.locator("section p[role=status]")).toHaveText("15 resources");
+    await expect(page.locator("section").getByRole("status")).toHaveText("15 resources");
   });
 });

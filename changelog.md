@@ -4,6 +4,25 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-21
 
+- **Explore streaming assertion repair (owner-requested next step).** The latest
+  hosted browser run exposed a strict-selector failure: React temporarily kept
+  a hidden `S:0` result tree beside the visible Explore page. The two result-count
+  assertions now query the exposed status role, while retaining exact totals,
+  filtering, reload persistence and clear-filter checks. Application rendering,
+  timeouts, retries and performance/accessibility gates are unchanged.
+  - Evidence: hosted run `39497147842` and its downloaded trace confirm the hidden
+    duplicate. A focused local reproduction preserves a hidden stale count and
+    confirms that the old CSS selector matches both trees while the role query
+    matches only the current count. Both affected scenarios pass 60 repeated
+    desktop/mobile cases. The full browser suite passes 334 cases with 44
+    intentional skips and no retries. Root typecheck, 535 unit tests (5
+    database-dependent skips), web lint and production build pass.
+  - Scope: `apps/web/e2e/catalog.spec.ts` and shared `changelog.md`. Ignored
+    evidence is under `maintenance/ci-streaming-20261021/`. Local Lighthouse and
+    visual captures were not repeated for this test-only change; the existing
+    strict LCP targets, physical-device checks and native Persian acceptance
+    remain open. This repair restores the browser gate needed by hosted LHCI.
+
 - **Remaining local follow-ups reconciled (owner-requested).** Documented the
   existing installation-output matrix and corrected the stale platform-registry
   blocker: compatibility keys already exist, but client-specific configuration
