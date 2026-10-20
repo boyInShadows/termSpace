@@ -2,6 +2,25 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-20
+
+- **README refresh (owner-requested).** Updated the shipped feature summary for
+  community browsing, dashboard/Saved/library/Studio and acquisition-backed
+  reviews. Documented root/app environment setup, mismatched example database
+  passwords, Prisma generation, optional demo-seed limitations, local routes,
+  worker execution, verification commands and production metadata settings.
+  Linked the existing deployment ownership audit and remaining roadmap.
+  - Scope: `README.md` and shared `changelog.md`; no application, dependency,
+    environment, schema or pending-task changes. Current `origin/main` is
+    already included in `ramtin`; no history rewrite or merge was needed.
+  - Verification: root typecheck, 519 unit tests (5 database-dependent skips),
+    web lint and root production build passed. All 14 local README links,
+    18 npm script references and code fences passed documentation checks;
+    `git diff --check` passed. Manual second-pass diff review found no issue.
+    Logs: ignored `maintenance/readme-20261020/`. Browser/Lighthouse, fresh
+    installs, Docker startup and live providers were not rerun for this
+    documentation-only change. No usage/cost meter is exposed by this harness.
+
 ## 2026-10-19
 
 - **Dashboard data no longer waits for favorites.** The shell now uses identity
