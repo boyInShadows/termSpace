@@ -27,12 +27,12 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Launch — Owner Decisions
 
-- Privacy policy, terms and content policy pages: none exist. The footer's
-  "About" and "Quality standards" point at `/design-system`, "Support" at
-  `/account`.
-- Seeded listings cannot be acquired (no approved release). Launch empty, with
-  curated real listings, or with the demo seed (`SEED_DEMO=true`) knowing the
-  acquire and review loop is unavailable on those items.
+- Review the existing English/Persian privacy, terms and content policy drafts;
+  supply the legal entity/contact details and complete signup consent before
+  public launch. The pages and footer links are implemented.
+- Decide which curated listings and approved releases to publish for public
+  launch. The private preview intentionally has an empty catalog and no demo
+  data; keep `SEED_DEMO=false`.
 
 ## Marketplace — P0 Discovery and Community
 

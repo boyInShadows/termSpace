@@ -17,7 +17,15 @@ restore recovered all 30 migrations, 8 categories, 9 platforms, empty readers an
 catalog, and the exact upload marker bytes in disposable resources. Previous
 web image compatibility, stopped-worker detection and API/web restart recovery
 passed. Nightly encrypted backups and five-minute local health checks are active.
-See `changelog.md` and `deploy/README.md` for evidence, image digests and operation.
+See [changelog.md](changelog.md) and [deploy/README.md](deploy/README.md) for
+evidence, image digests and operation.
+
+Repository status: `codex/vps-preview` is in
+[draft PR #11](https://github.com/boyInShadows/termSpace/pull/11), not yet merged
+into `main`. Live application images remain pinned to `41a818d`; VPS deployment
+scripts are at `f780314`. All PR checks passed at `f780314`, including browser,
+integration and image checks. Lighthouse passed after one failed-job retry at
+unchanged budgets. Later image builds are not automatically deployed.
 
 The original summary/checklist below describe the 2026-10-19 review and contain
 stale unchecked entries. B1–B8 and S1–S10 have later fixes/corrections in their
@@ -29,11 +37,13 @@ creator/moderator acceptance remain owner-dependent launch gates. No verificatio
 bypass is used to satisfy preview acceptance. Private readiness does not approve
 public launch.
 
+## Original assessment — 2026-10-19 (historical)
+
 Date: 2026-10-19 · Branch: `ramtin` · Scope: `apps/web`, `apps/blog`, `apps/api`, `docker/`, `docker-compose.yml`, `.github/`
 
 **How this was produced.** Source files were not modified. Findings come from three read-only code explorations (API; web+blog; infra/secrets/CI), plus the commands listed under "Commands run". Line numbers come from those explorations and were not all re-checked by hand, so confirm a line before you edit it. Nothing was run against a live deployment. Items marked *verify* depend on your production topology, which I could not see.
 
-## Summary
+### Original summary — superseded by the deployment follow-up above
 
 **Verdict: don't ship yet.** The application code is in good shape: typecheck, lint and build pass, production dependencies have 0 known vulnerabilities, and the API is careful (Zod everywhere, owner-scoped queries, parameterized SQL, no SSRF or open redirects, hashed tokens, Origin-checked CSRF, git history free of secrets). The blockers are almost all deployment configuration and launch hygiene. The rate limiter probably buckets every user together behind your proxy chain. The API container will not shut down gracefully. A mistyped `NODE_ENV` leaks error messages. The blog can bake `localhost` into canonicals and the sitemap. A copied `.env.example` yields a live default admin. Neither site has a privacy policy, terms or content policy, and the footer links to a dev showroom. Security headers are limited to `frame-ancestors`. Each is a small fix; I'd expect a day's work to clear all eight.
 

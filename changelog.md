@@ -4,6 +4,15 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-21
 
+- **Deployment documentation reconciled.** Shared surfaces: `pending.md` and
+  `changelog.md`. The README now links the private VPS setup, readiness gates
+  and draft PR #11; readiness distinguishes deployed images (`41a818d`) from
+  operations scripts (`f780314`) and labels the original assessment as historical.
+  Replaced stale missing-policy/demo-seed choices with the remaining legal review,
+  consent and curated-release decisions. Verification: live private HTTPS health
+  returned `ok`, all PR checks at `f780314` passed, local Markdown links and the
+  documentation diff checked. No application or deployment configuration changed.
+
 - **Private VPS deployment and operations (phase 3).** Owner-approved deployment
   tooling work; shared surfaces: `changelog.md` and `pending.md`. INSIGHT remains
   active with its original site, ports, certificate and host PostgreSQL. The
