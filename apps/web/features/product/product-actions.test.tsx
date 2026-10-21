@@ -40,7 +40,7 @@ const installation: MarketplaceInstallation = {
 const acquirable: ProductDetail = {
   ...productDetail,
   release: {
-    version: "1.0.0", source: installation.release.source,
+    version: "1.0.0", current: true, source: installation.release.source,
     installation: { method: "manual", url: installation.release.installation.url },
     permissions: [], environment: [], license: "MIT", mcp: null,
   },
@@ -59,7 +59,7 @@ describe("ProductActions acquisition flow", () => {
   it("requires sign-in before acquisition", () => {
     session.email = null;
     render(<ProductActions product={acquirable} />);
-    fireEvent.click(screen.getByRole("button", { name: "Add to library" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add v1.0.0 to library" }));
     expect(push).toHaveBeenCalledWith(expect.stringMatching(/^\/account\?next=/));
     expect(acquireProduct).not.toHaveBeenCalled();
   });
@@ -70,7 +70,7 @@ describe("ProductActions acquisition flow", () => {
       .mockResolvedValueOnce(installation);
     render(<ProductActions product={acquirable} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Add to library" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add v1.0.0 to library" }));
 
     expect(await screen.findByRole("dialog", { name: "Install acquired release" })).toBeInTheDocument();
     expect(screen.getByText("v1.0.0")).toBeInTheDocument();
@@ -80,19 +80,42 @@ describe("ProductActions acquisition flow", () => {
     await waitFor(() => expect(acquireProduct).toHaveBeenCalledTimes(1));
   });
 
-  it("blocks acquisition up front when the listing has no approved release", () => {
+  it("says there is no release to add, and why, instead of showing a dead button", () => {
     render(<ProductActions product={productDetail} />);
-    const button = screen.getByRole("button", { name: "No approved release is available yet." });
-    expect(button).toBeDisabled();
-    fireEvent.click(button);
+    expect(screen.getByText("No release to add yet")).toBeInTheDocument();
+    expect(screen.getByText(/hasn’t published an approved release/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Add/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview" })).toBeEnabled();
     expect(acquireProduct).not.toHaveBeenCalled();
   });
 
   it("says why when the release disappears between render and click", async () => {
     acquireProduct.mockRejectedValue(new ApiError(409, "RELEASE_UNAVAILABLE", "No approved release"));
     render(<ProductActions product={acquirable} />);
-    fireEvent.click(screen.getByRole("button", { name: "Add to library" }));
-    expect(await screen.findByText("No approved release is available yet.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Add v1.0.0 to library" }));
+    expect(await screen.findByText("This release is no longer available to add.")).toBeInTheDocument();
+  });
+
+  it.each([
+    [new ApiError(401, "UNAUTHENTICATED", "x"), "Your session has ended. Sign in again to add this."],
+    [new ApiError(429, "RATE_LIMITED", "x"), "Too many requests. Wait a minute and try again."],
+    [new ApiError(409, "ALREADY_IN_LIBRARY", "x"), "This resource is already in your library."],
+    [new ApiError(500, "FAILED", "x"), "Could not add this resource. Check your connection and try again."],
+  ])("names the real reason an add failed (%#)", async (error, message) => {
+    acquireProduct.mockRejectedValue(error);
+    render(<ProductActions product={acquirable} />);
+    fireEvent.click(screen.getByRole("button", { name: "Add v1.0.0 to library" }));
+    expect(await screen.findByText(message)).toBeInTheDocument();
+  });
+
+  it("tells a signed-out visitor what signing in is for, and says nothing once signed in", () => {
+    session.email = null;
+    const { unmount } = render(<ProductActions product={acquirable} />);
+    expect(screen.getByText("Sign in to add or save this listing.")).toBeInTheDocument();
+    unmount();
+    session.email = "reader@example.com";
+    render(<ProductActions product={acquirable} />);
+    expect(screen.queryByText("Sign in to add or save this listing.")).not.toBeInTheDocument();
   });
 
   it("loads an existing entitlement without creating another acquisition", async () => {

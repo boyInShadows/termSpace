@@ -11,6 +11,20 @@ roles never grant Blog publishing access. See
 [Product Direction](docs/product-direction.md) for the durable product
 boundaries and core user journeys.
 
+## Current deployment — 2026-10-21
+
+Web/API runs as a private VPS preview at `https://termspace.localhost:8443`
+through an operator SSH tunnel. The existing INSIGHT service remains active;
+TermSpace uses loopback ports 3300/8443 and isolated data volumes. Blog deployment
+is deferred. Nightly encrypted backups and five-minute local health checks are
+active; public launch still requires the owner decisions in
+[readiness.md](readiness.md).
+
+Deployment changes are on `codex/vps-preview` in
+[draft PR #11](https://github.com/boyInShadows/termSpace/pull/11), awaiting merge
+into `main`. Use [the VPS runbook](deploy/README.md) and `deploy/compose.yml` for
+this setup. Image builds do not automatically deploy to the VPS.
+
 ## Current product foundation
 
 - A localized English/Persian community library with public catalog and item pages.
@@ -126,7 +140,7 @@ services wait for the API health check, so a migration failure prevents a
 partially working stack from coming online.
 
 After configuring Cloudflare Email Service, start the transactional email worker
-with `docker compose --profile email up --build -d`.
+with `docker compose up --build -d email-worker` (the worker also starts with the full stack).
 
 With the example host ports, the loopback-only services are available at:
 
@@ -171,10 +185,11 @@ as Blog: English uses `/`, while Persian uses `/fa` (for example `/fa/explore`
 and `/fa/account`). The web proxy strips the locale prefix internally, sets the
 request locale, and applies RTL document direction and Persian typography.
 
-## Production subdomain deployment
+## Future public subdomain deployment
 
-The intended production layout is one parent domain with two Next.js surfaces,
-for example:
+After the private web preview, the intended public layout is one parent domain
+with two Next.js surfaces, with Blog deployed later. The domain is undecided;
+this is a reference topology, not the current VPS routing. For example:
 
 ```text
 www.example.com   -> apps/web

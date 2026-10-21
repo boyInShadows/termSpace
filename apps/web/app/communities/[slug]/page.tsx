@@ -1,20 +1,24 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { DiscoveryExperience } from "@/features/discovery/discovery-experience";
 import { getMarketplaceCommunities, getMarketplaceCommunity, getMarketplaceHome, getMarketplaceItemTypes } from "@/lib/api";
 import type { ProductFilters } from "@/lib/types";
 import { filtersFromParams } from "@/lib/discovery-url";
 import { pageAlternates } from "@/lib/alternates";
+import { visitorHeaders } from "@/lib/clientIp";
 import { getLocale } from "@/lib/serverLocale";
+import { copy } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const result = await getMarketplaceCommunity(slug, { page: 1, limit: 1 }).catch(() => null);
-  return { title: result?.data.community.nameEn ?? "Community", alternates: pageAlternates(`/communities/${slug}`, await getLocale()) };
+  const locale = await getLocale();
+  const community = result?.data.community;
+  const name = locale === "fa" ? community?.nameFa ?? community?.nameEn : community?.nameEn;
+  return { title: name ?? copy[locale].productCard.communities, alternates: pageAlternates(`/communities/${slug}`, locale) };
 }
 
 export default async function CommunityPage({ params, searchParams }: {
@@ -25,7 +29,7 @@ export default async function CommunityPage({ params, searchParams }: {
   // The community is the route, not a filter a URL can override.
   const filters: ProductFilters = { ...filtersFromParams(raw), community: slug };
   const [result, home, communities, itemTypes] = await Promise.all([
-    getMarketplaceCommunity(slug, filters).catch((error: { status?: number }) => error?.status === 404 ? null : Promise.reject(error)),
+    getMarketplaceCommunity(slug, filters, filters.q ? await visitorHeaders() : undefined).catch((error: { status?: number }) => error?.status === 404 ? null : Promise.reject(error)),
     getMarketplaceHome().catch(() => null),
     getMarketplaceCommunities().catch(() => []),
     getMarketplaceItemTypes().catch(() => []),
@@ -34,7 +38,6 @@ export default async function CommunityPage({ params, searchParams }: {
   const community = result.data.community;
   const fa = locale === "fa";
   return <>
-    <Header />
     <DiscoveryExperience
       initial={{ data: result.data.products, meta: result.meta }}
         categories={home?.categories ?? []}

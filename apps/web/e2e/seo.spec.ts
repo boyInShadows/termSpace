@@ -15,15 +15,32 @@ test.describe("not found and errors", () => {
   });
 
   test("an unknown listing gets the listing not-found page", async ({ page }) => {
-    await page.goto("/products/no-such-listing");
+    const response = await page.goto("/products/no-such-listing");
+    expect(response?.status()).toBe(404);
     await expect(page.getByRole("heading", { level: 1, name: "This listing isn’t here." })).toBeVisible();
   });
 
   test("a failing page shows the error boundary with a retry", async ({ page }) => {
-    await page.goto("/products/fixture-error");
+    const response = await page.goto("/products/fixture-error");
+    expect(response?.status()).toBe(500);
     await expect(page.getByRole("heading", { level: 1, name: "Something went wrong here." })).toBeVisible();
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
   });
+
+  for (const prefix of ["", "/fa"]) for (const slug of ["no-such-listing", "fixture-suspended", "fixture-archived"]) {
+    test(`unavailable listing ${prefix}/products/${slug} sends a real 404`, async ({ request, page }) => {
+      const api = await request.get(`/backend/api/marketplace/products/${slug}`);
+      expect(api.status()).toBe(404);
+      const response = await page.goto(`${prefix}/products/${slug}`);
+      expect(response?.status()).toBe(404);
+      await expect(page.getByRole("heading", { level: 1, name: prefix ? "این فهرست اینجا نیست." : "This listing isn’t here." })).toBeVisible();
+      await expect(page.locator('meta[name="robots"][content*="noindex"]').first()).toBeAttached();
+      await expect(page.locator("html")).toHaveAttribute("lang", prefix ? "fa" : "en");
+      await expect(page.locator("html")).toHaveAttribute("dir", prefix ? "rtl" : "ltr");
+      expect(await page.content()).not.toContain("Private suspended fixture");
+      expect(await page.content()).not.toContain("Private archived fixture");
+    });
+  }
 });
 
 test.describe("search engines and sharing", () => {
@@ -32,7 +49,9 @@ test.describe("search engines and sharing", () => {
   });
 
   test("the sitemap lists every live listing", async ({ request }) => {
-    const xml = await (await request.get("/sitemap.xml")).text();
+    const response = await request.get("/sitemap.xml");
+    expect(response.status()).toBe(200);
+    const xml = await response.text();
     const listings = [...xml.matchAll(/<loc>[^<]*\/products\/([^<]+)<\/loc>/g)].map((match) => match[1]);
     expect(listings).toHaveLength(15);
     expect(listings).toContain("conversion-copywriter");
@@ -88,5 +107,30 @@ test.describe("search engines and sharing", () => {
     const card = await request.get("/opengraph-image");
     expect(card.status()).toBe(200);
     expect(pngSize(await card.body())).toEqual({ width: 1200, height: 630 });
+  });
+});
+
+test.describe("page titles", () => {
+  test("pages that used to share the homepage title have their own", async ({ page }) => {
+    await page.goto("/account");
+    await expect(page).toHaveTitle("Your account · termspace");
+    await page.goto("/products/no-such-listing");
+    await expect(page).toHaveTitle("Listing not found · termspace");
+  });
+
+  test("Persian pages are titled in Persian", async ({ page }) => {
+    await page.goto("/fa/explore");
+    await expect(page).toHaveTitle("کاوش · ترم‌اسپیس");
+    await page.goto("/fa/products/conversion-copywriter");
+    const title = await page.title();
+    expect(title).toMatch(/· ترم‌اسپیس$/);
+    expect(title).toMatch(/[؀-ۿ]/);
+    expect(title).not.toContain("Skill for");
+  });
+
+  test("the creator studio is titled, signed in", async ({ page, context, baseURL }) => {
+    await context.addCookies([{ name: "e2e_persona", value: "creator", url: baseURL! }]);
+    await page.goto("/dashboard/studio");
+    await expect(page).toHaveTitle("Creator studio · termspace");
   });
 });

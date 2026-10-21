@@ -4,6 +4,9 @@ import type { NextRequest } from "next/server";
 export const dynamic = "force-dynamic";
 
 const backendTimeoutMs = 15_000;
+const MAX_BODY_BYTES = 12 * 1024 * 1024;
+
+const tooLarge = () => NextResponse.json({ error: { code: "FILE_TOO_LARGE", message: "The request body is too large" } }, { status: 413 });
 
 function upstreamUrl(request: NextRequest): string {
   const baseUrl = process.env.API_URL ?? "http://localhost:4001";
@@ -17,8 +20,14 @@ async function proxyRequest(request: NextRequest): Promise<Response> {
   const headers = new Headers(request.headers);
   headers.delete("host");
   headers.delete("content-length");
+  // The API rate-limits by this header and does not count requests without it, so
+  // it must always be present. The edge proxy has to set it; this is the fail-closed fallback.
+  if (!headers.has("x-forwarded-for")) headers.set("x-forwarded-for", "127.0.0.1");
 
+  // The API caps uploads at 10 MB; refuse bigger bodies before buffering them.
+  if (Number(request.headers.get("content-length")) > MAX_BODY_BYTES) return tooLarge();
   const body = ["GET", "HEAD"].includes(request.method) ? undefined : await request.arrayBuffer();
+  if (body && body.byteLength > MAX_BODY_BYTES) return tooLarge();
 
   try {
     const upstream = await fetch(upstreamUrl(request), {
@@ -30,7 +39,11 @@ async function proxyRequest(request: NextRequest): Promise<Response> {
     });
 
     const responseHeaders = new Headers(upstream.headers);
+    // fetch() has already decoded the body, so the encoding header no longer applies.
     responseHeaders.delete("content-length");
+    responseHeaders.delete("content-encoding");
+    responseHeaders.delete("transfer-encoding");
+    responseHeaders.delete("connection");
 
     // The API must never set a parent-domain cookie. Since this response is
     // served by the frontend origin, omitting Domain keeps the session cookie

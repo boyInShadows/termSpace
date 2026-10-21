@@ -1,0 +1,48 @@
+---
+target: /explore
+total_score: 26
+max_score: 40
+na_heuristics: 
+p0_count: 0
+p1_count: 1
+target_identity: "file:/home/spacecowboy/term/web/termSpace/apps/web/app/explore/page.tsx"
+target_fingerprint: "sha256:ed71bf646fe643d6fcb5ad2945fde653dfbb48e600f898e4b9e42a0211cf41a2"
+target_path: /home/spacecowboy/term/web/termSpace/apps/web/app/explore/page.tsx
+timestamp: 2026-10-16T13-01-27Z
+slug: app-explore-page-tsx
+---
+Method: dual-agent (design-review sub-agent + detector sub-agent), isolated. Combined critique of `/`, `/dashboard`, `/explore` (apps/web, branch redesign, fixture server). Scores: `/` 21/32 (n/a: 7, 10), `/dashboard` 25/40, `/explore` 26/40 (after correcting one addition error and two scores that assumed no applied-filter chips; chips and Clear all exist when a filter is set).
+
+## Design Health Score
+| # | Heuristic | `/` | `/dashboard` | `/explore` |
+|---|---|---|---|---|
+| 1 | Visibility of system status | 3 | 3 | 3 |
+| 2 | Match with the real world | 3 | 3 | 3 |
+| 3 | User control and freedom | 3 | 2 | 3 |
+| 4 | Consistency and standards | 3 | 3 | 3 |
+| 5 | Error prevention | 2 | 2 | 3 |
+| 6 | Recognition over recall | 3 | 3 | 2 |
+| 7 | Flexibility and efficiency | n/a | 3 | 2 |
+| 8 | Aesthetic and minimalist | 2 | 3 | 3 |
+| 9 | Error recovery | 2 | 1 | 2 |
+| 10 | Help and documentation | n/a | 2 | 2 |
+| Total | | 21/32 | 25/40 | 26/40 |
+
+## Design specificity
+Authored only in the caret wordmark, the hero manifest terminal and the permissions copy. Below the hero `/` is eight bands of eyebrow + serif heading + cards; `/dashboard` and `/explore` are category-interchangeable (no permissions or trust surface). Detector: markup 3 advisories (10px text at features/dashboard/dashboard-topbar.tsx:69 and listings-table.tsx:84, both real; 13px terminal text at components/sections/process.tsx:238, deliberate); styles 9 findings (Geist overused-font x3, gradient-text, grid background: intentional; bounce-easing token is used by the theme toggle); browser: `/` 8 patterns, `/dashboard` 4, `/explore` 3, including a real h1 to h3 heading skip on `/explore` (components/marketplace/product-card.tsx:79). Headless run, no human-visible overlay.
+
+## Priority issues
+1. [P1] The central claim never appears on a listing card (product-card.tsx). Add a permissions strip and reviewed state, a permissions filter on /explore; give creator identity (cyan, product-parts.tsx:24) and safety review distinct marks. Commands: layout, clarify.
+2. [P1] /dashboard hides listing names on mobile (measured 0px, listings-table.tsx:78 max-w-0) and "Changes requested" is a dead end (no reason, link goes to releases). Stack rows below sm, show reviewer reason inline, 10px badge to 11px. Command: adapt.
+3. [P1] Landing hero is a four-way fork and the proof arrives late; oversized H1 (35vh) and eyebrow chip also flagged by the detector. Make search the single primary action, render the manifest final frame at once, cap terminal height on mobile. Command: distill.
+4. [P2] Below the hero the landing page is a template stack (eyebrow + serif H2 repeated; trust section is a three-icon grid). Replace with a real permission sheet against a listing. Commands: shape, bolder.
+5. [P2] /explore: type is both tabs and a Category select, native selects beside custom controls, h1 to h3 skip. One type control, checkable groups, correct card heading level, permissions filter. Commands: clarify, layout.
+
+## Persona red flags
+Jordan (/): search before context, unexplained chips, no permissions example on any card. Casey (/): about 1.5 screens before a listing, empty terminal, chips wrap to 3 rows. Riley (/): announcement truncates mid-word, marquee clips, no newsletter validation hint. Alex (/dashboard): no row actions, no sort/filter, Ctrl K searches the catalogue not my listings, Publish appears 3 times. Sam (/dashboard): empty sighted name column vs names for screen readers, unlabeled delta, check red pill contrast. Alex/Sam (/explore): 11px meta text, low-contrast Verified-only off state, two tab stops per card.
+
+## Minor observations
+Dashboard panel leaves about 250px empty at 1440; identical card template everywhere; nebula and gradient headline read as generic AI; thin footer.
+
+## Questions
+If the permission sheet is the product, why isn't it the card? What is left that is only TermSpace without the nebula, gradient text and tilted terminal? Should a creator with "Changes requested" see the same dashboard as one who is published?

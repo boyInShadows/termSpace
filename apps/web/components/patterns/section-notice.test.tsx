@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithLocale as render } from "@/lib/test-render";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { SectionNotice } from "./section-notice";
@@ -10,7 +11,7 @@ describe("SectionNotice", () => {
   it("explains the degraded catalogue without claiming the page failed", () => {
     render(<SectionNotice />);
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Showing an example catalogue.",
+      "The community library is unavailable.",
     );
   });
 

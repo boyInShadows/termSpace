@@ -12,7 +12,7 @@
 // No cookie means signed out.
 import { createServer } from "node:http";
 import { mockHome } from "../lib/mock-home.ts";
-import { ITEM_TYPES, PLATFORMS, listProducts, productDetail } from "./mock-catalog.mjs";
+import { ITEM_TYPES, PLATFORMS, listProducts, productDetail, releaseOf } from "./mock-catalog.mjs";
 
 const PORT = Number(process.env.MOCK_API_PORT ?? 4099);
 const COOKIE = "e2e_persona";
@@ -54,6 +54,7 @@ function listing(index) {
     typeKey: "skill",
     state,
     lifecycleVersion: 1,
+    restoreTarget: null,
     published: state === "published",
     rating: state === "published" ? 4.6 : 0,
     reviewCount: state === "published" ? 12 : 0,
@@ -118,7 +119,16 @@ async function handle(request, response) {
   if (route === "GET /api/marketplace/home") return send(response, 200, { data: { ...mockHome, platforms: PLATFORMS } });
   if (route === "GET /api/marketplace/item-types") return send(response, 200, { data: ITEM_TYPES });
   if (route === "GET /api/marketplace/communities") return send(response, 200, { data: [] });
-  if (route === "GET /api/marketplace/products") return send(response, 200, listProducts(searchParams));
+  if (route === "GET /api/marketplace/products") {
+    const type = searchParams.get("type");
+    if (type && !ITEM_TYPES.some((item) => item.key === type)) return send(response, 400, error("VALIDATION_ERROR", "Invalid request"));
+    return send(response, 200, listProducts(searchParams));
+  }
+  const releaseRoute = /^GET \/api\/marketplace\/products\/([^/]+)\/releases\/([^/]+)$/.exec(route);
+  if (releaseRoute) {
+    const found = releaseOf(decodeURIComponent(releaseRoute[1]), decodeURIComponent(releaseRoute[2]));
+    return found ? send(response, 200, { data: found }) : send(response, 404, error("RELEASE_NOT_FOUND", "No published release has this version"));
+  }
   const detail = /^GET \/api\/marketplace\/products\/([^/]+)$/.exec(route);
   if (detail) {
     // A listing whose API call fails, for the error boundary.
@@ -138,6 +148,8 @@ async function handle(request, response) {
     return send(response, 204, undefined, { "Set-Cookie": `${COOKIE}=; Path=/; Max-Age=0` });
   }
 
+  // Like the real API: asking who is signed in is not an error when nobody is.
+  if (route === "GET /api/readers/session" && !persona) return send(response, 200, { data: { authenticated: false } });
   if (!persona) return send(response, 401, error("UNAUTHENTICATED", "Sign in to continue"));
 
   if (route === "GET /api/readers/session") {
@@ -148,7 +160,11 @@ async function handle(request, response) {
       },
     });
   }
+  if (route === "GET /api/marketplace/creator/provider-connections") return send(response, 200, { data: [] });
   if (route === "GET /api/marketplace/favorites") return send(response, 200, { data: [] });
+  if (route === "GET /api/readers/profile") return send(response, 200, {
+    data: { email: PERSONAS[persona].email, createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false, emailVerified: true },
+  });
   if (route === "GET /api/marketplace/library") {
     return send(response, 200, { data: [], meta: { page: 1, limit: 24, total: 0, totalPages: 0 } });
   }

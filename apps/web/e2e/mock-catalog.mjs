@@ -25,6 +25,14 @@ const generated = Array.from({ length: GENERATED }, (_, index) => {
 
 export const CATALOG = [...mockHome.products, ...generated];
 
+const hiddenProducts = ["suspended", "archived"].map((state) => ({
+  ...mockHome.products[0],
+  slug: `fixture-${state}`,
+  name: `Private ${state} fixture`,
+  published: false,
+  lifecycleState: state,
+}));
+
 export const PLATFORMS = [...new Set(CATALOG.flatMap((product) => product.compatibility.platforms))].map((name) => ({
   key: platformKey(name),
   nameEn: name,
@@ -56,6 +64,7 @@ export function listProducts(params) {
   const q = (params.get("q") ?? "").trim().toLowerCase();
   const type = params.get("type");
   const platform = params.get("platform");
+  const permission = params.get("permission");
   const category = params.get("category");
   const verified = params.get("verified") === "true";
   const minRating = Number(params.get("minRating") ?? 0);
@@ -67,6 +76,7 @@ export function listProducts(params) {
     (!q || `${product.name} ${product.outcome}`.toLowerCase().includes(q)) &&
     (!type || product.typeKey === type) &&
     (!platform || product.compatibility.platforms.some((name) => platformKey(name) === platform)) &&
+    (!permission || permission === "filesystem_read") &&
     (!category || product.category.toLowerCase() === category.toLowerCase()) &&
     (!verified || product.verified) &&
     product.rating >= minRating,
@@ -80,8 +90,8 @@ export function listProducts(params) {
 }
 
 export function productDetail(slug) {
-  const product = CATALOG.find((candidate) => candidate.slug === slug);
-  if (!product) return null;
+  const product = [...CATALOG, ...hiddenProducts].find((candidate) => candidate.slug === slug);
+  if (!product || product.published === false) return null;
   const released = (daysAgo) => new Date(Date.parse(product.updatedAt) - daysAgo * DAY).toISOString();
   return {
     ...withPlatformKeys(product),
@@ -112,17 +122,40 @@ export function productDetail(slug) {
       { id: `${product.id}-r1`, author: "Priya S.", rating: 5, createdAt: released(3), body: "Caught a migration mistake in its first week.", verifiedPurchase: true },
     ],
     related: CATALOG.filter((candidate) => candidate.slug !== slug).slice(0, 3).map(withPlatformKeys),
-    release: {
-      version: product.version,
-      source: {
-        kind: "github_repository", url: `https://github.com/termspace-fixtures/${product.slug}`, ref: "0123456789abcdef0123456789abcdef01234567",
-        path: null, integrityDigest: null, artifactSizeBytes: null, status: "verified", checkedAt: released(1),
-      },
-      installation: { method: "git", url: `https://github.com/termspace-fixtures/${product.slug}/archive/0123456789abcdef0123456789abcdef01234567.tar.gz` },
-      permissions: [{ capability: "filesystem_read", required: true, scope: "The current selection", destinations: [], purpose: "Reads the diff it reviews." }],
-      environment: [],
-      license: "MIT",
-      mcp: null,
+    release: releaseOf(product.slug, product.version),
+  };
+}
+
+const OLDER_RELEASES = {
+  "2.3.0": {
+    ref: "89abcdef0123456789abcdef0123456789abcdef", digest: "sha512-fixtureolderrelease==",
+    permissions: [
+      { capability: "filesystem_read", required: true, scope: "The current selection", destinations: [], purpose: "Reads the diff it reviews." },
+      { capability: "network_access", required: false, scope: null, destinations: ["api.fixtures.test"], purpose: "Fetches style guides." },
+    ],
+  },
+  "2.0.0": { ref: "fedcba9876543210fedcba9876543210fedcba98", digest: null, permissions: [] },
+};
+
+/** The current release of a listing, or one of the earlier ones its version list names. */
+export function releaseOf(slug, version) {
+  const product = CATALOG.find((candidate) => candidate.slug === slug);
+  if (!product) return null;
+  const current = version === product.version;
+  const older = OLDER_RELEASES[version];
+  if (!current && !older) return null;
+  const ref = current ? "0123456789abcdef0123456789abcdef01234567" : older.ref;
+  return {
+    version,
+    current,
+    source: {
+      kind: "github_repository", url: `https://github.com/termspace-fixtures/${product.slug}`, ref,
+      path: null, integrityDigest: current ? null : older.digest, artifactSizeBytes: null, status: "verified", checkedAt: product.updatedAt,
     },
+    installation: { method: "git", url: `https://github.com/termspace-fixtures/${product.slug}/archive/${ref}.tar.gz` },
+    permissions: current ? [{ capability: "filesystem_read", required: true, scope: "The current selection", destinations: [], purpose: "Reads the diff it reviews." }] : older.permissions,
+    environment: [],
+    license: "MIT",
+    mcp: null,
   };
 }

@@ -23,7 +23,7 @@ const BASE = `http://127.0.0.1:${process.env.WEB_PORT ?? "3100"}`;
 const GATES = {
   home: {
     lcp: { gate: 3500, target: 2200 },
-    performance: { gate: 0.88, target: 0.9 },
+    performance: { gate: 0.9, target: 0.9 },
     imageBytes: { gate: 250 * 1024, target: 250 * 1024 },
   },
   dashboard: {

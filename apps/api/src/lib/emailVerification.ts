@@ -14,6 +14,8 @@ const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
 export function localEmailVerificationBypassEnabled(): boolean {
   if (process.env.LOCAL_AUTO_VERIFY_EMAIL !== "true") return false;
+  // Never in production, whatever WEB_PUBLIC_URL says (assertProductionConfig also refuses to boot).
+  if (process.env.NODE_ENV === "production") return false;
 
   const configured = process.env.WEB_PUBLIC_URL;
   if (!configured) {

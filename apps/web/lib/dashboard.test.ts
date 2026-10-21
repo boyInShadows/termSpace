@@ -23,7 +23,7 @@ const {
 function listing(id: string, events: Array<[string, string]>): CreatorDashboardListing {
   return {
     id, slug: id, name: `Listing ${id}`, type: "Skill", typeKey: "skill", state: "published",
-    lifecycleVersion: 1, published: true, rating: 0, reviewCount: 0, acquisitionCount: 0,
+    lifecycleVersion: 1, published: true, restoreTarget: null, rating: 0, reviewCount: 0, acquisitionCount: 0,
     currentVersion: "1.0.0", releaseCount: 1, latestRelease: null, moderationFeedback: null,
     recentUpdates: events.map(([eventId, createdAt]) => ({ id: eventId, action: "published", state: "published", message: null, createdAt })),
     updatedAt: "2026-09-20T00:00:00.000Z",

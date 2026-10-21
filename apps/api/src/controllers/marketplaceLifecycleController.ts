@@ -37,12 +37,12 @@ const productLifecycleSelect = {
   },
   lifecycleEvents: {
     where: { action: "ARCHIVED" as const },
-    orderBy: { createdAt: "desc" as const },
+    orderBy: [{ createdAt: "desc" as const }, { id: "desc" as const }],
     take: 1,
     select: { actorType: true },
   },
   creator: { select: { ownerUserId: true } },
-} as const;
+} satisfies Prisma.MarketplaceProductSelect;
 
 const publicReasonActions = new Set<MarketplaceListingAction>(["REQUEST_CHANGES", "REJECT", "SUSPEND"]);
 

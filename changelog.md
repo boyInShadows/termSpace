@@ -2,7 +2,1511 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-21
+
+- **Deployment documentation reconciled.** Shared surfaces: `pending.md` and
+  `changelog.md`. The README now links the private VPS setup, readiness gates
+  and draft PR #11; readiness distinguishes deployed images (`41a818d`) from
+  operations scripts (`f780314`) and labels the original assessment as historical.
+  Replaced stale missing-policy/demo-seed choices with the remaining legal review,
+  consent and curated-release decisions. Verification: live private HTTPS health
+  returned `ok`, all PR checks at `f780314` passed, local Markdown links and the
+  documentation diff checked. No application or deployment configuration changed.
+
+- **Private VPS deployment and operations (phase 3).** Owner-approved deployment
+  tooling work; shared surfaces: `changelog.md` and `pending.md`. INSIGHT remains
+  active with its original site, ports, certificate and host PostgreSQL. The
+  upgraded host has 2 CPUs, about 4 GB RAM and 40 GB disk. Key-only operator SSH
+  access has neither sudo nor Docker-group membership. The preview uses only
+  loopback 3300/8443; external checks reject 3300/8443/4001/5432/6379.
+  - All three hosted image checks passed in run 39424662557 (`41a818d`). Deployed
+    web `c5713d5d865320c7f5a2a3337bf92ce812ff7b5c7b07a479a7ec79fd2448beec`,
+    API `044801a52921c909dc65a9dc5f2338cec6700117bf7141183dbfbc901f866b8c`,
+    operations `055a3d7716f0515d47bf9157f15eccbd94b5b50a8fa025b2b517601f7cc567ba`
+    are GHCR sha256 digests under `boyinshadows/termspace-{web,api,ops}`. The
+    previous tested web digest `f46876c35c696c71de963dfef0c6ef866ffa8b6357a3b2e434155a893954dea7`
+    booted against the current API/schema on a separate loopback port; the live
+    frontend was not rolled back. Test container was removed afterward.
+  - Fresh database: all 30 migrations, 8 reference categories and 9 platforms;
+    zero products, readers and administrators after acceptance cleanup. Six real
+    database/Redis integration cases passed in disposable, isolated containers.
+    The test runner needed writable temporary Vite configuration; only that
+    disposable container used the source-file owner. Production runs as node.
+    Live trusted HTTPS passed registration, Secure/HttpOnly/host-only sessions,
+    CSRF rejection, unverified creator rejection and logout. English/Persian
+    page controls/theme switching pass; browser console has no errors.
+  - Startup caught YAML flow-list commas splitting tmpfs mount options. Quoted
+    mount strings fix all three services; the new Compose-parsing test includes
+    the optional email profile and rejects split options/public internal ports.
+    Retry used the required matching off-server encrypted backup.
+  - Encrypted snapshot `20261020T130135Z.tar.age` matches off-server SHA-256
+    `f0e94f289502660203d2c6dd7be93b09d0b49b0627151902d9e4f862a5d56d01`.
+    Isolated restore recovered migration/reference/empty-user counts and exact
+    upload marker hash `f88b266dca5c6bd97d65a18f93b8d2fe86b9f46d96a198cab6943b64ad075f47`.
+    PostgreSQL readiness uses its final TCP listener rather than the temporary
+    initialization socket. Restore containers/volume and the live marker were
+    removed. CA/backup private keys remain on the computer; secrets stay outside
+    Git. The pre-change INSIGHT backup was also encrypted and copied off-server.
+  - Stopped-worker rejection and API/web restart recovery passed. Nightly
+    encrypted backup (03:15 UTC plus up to five minutes) and five-minute local
+    health timers are enabled. Health checks verify containers, TLS, disk,
+    available memory and backup freshness. External alerts remain pending.
+    Automatic review rejected forwarding broad GitHub OAuth access; a separate
+    registry bearer requested only pull scopes for the three images and was
+    removed from the VPS after pulls. Broad OAuth stayed on the computer.
+  - Verification: deployment regression tests, root typecheck/tests/build and web
+    lint; preceding application phase passed 328 browser cases and all nine
+    Lighthouse runs. No UI source changed in this operations phase. Manual
+    deployment/security diff review completed; public launch remains blocked on
+    owner settings and real inbox/Google/verified-role acceptance. Usage/cost
+    meter unavailable.
+
+## 2026-10-20
+
+- **Enforced web script CSP (deployment phase 2).** The proxy supplies a fresh
+  nonce to Next and the response policy on English/Persian routes, replacing
+  client-supplied nonce/policy headers. Theme bootstrapping, product JSON-LD and
+  the Google loader receive nonces. Production scripts have no unsafe-inline or
+  eval exception; inline styles remain compatible with the existing UI. Dotted
+  HTML routes also receive the policy. The deferred blog is unchanged.
+  - Verification: root typecheck, 574 unit tests (6 database/Redis skips), all
+    production builds and web lint pass. Full browser suite: 328 passed,
+    44 intentional skips; includes fresh nonce and unauthorized inline-script
+    rejection on both languages and viewport projects. Lighthouse passes all
+    existing budgets across 9 runs. The first new assertion incorrectly required
+    explicit nonces on scripts loaded by trusted runtime code; the final test
+    checks server scripts and browser enforcement directly. Manual diff/security
+    review found no remaining issue. Real Google acceptance still needs owner
+    credentials. Shared surface: `changelog.md`; readiness B5 is updated for web
+    only. Usage/cost meter unavailable.
+
+- **Hosted image smoke checks (deployment phase 1 follow-up).** The first hosted
+  run caught TypeScript retained as Prisma's optional peer despite `--omit=dev`;
+  a clean production dependency stage omits dev/peer dependencies and explicitly
+  removes the optional TypeScript/Prisma code-generation peers. npm's `devOptional`
+  workspace lock entries retained them even on a clean install with omit flags.
+  Compiled JS/client imports remain part of the strict smoke test. The web check initially hit Docker's
+  cold-start connection reset; readiness retries all transient errors within its
+  existing bound and prints container diagnostics on failure. The operations
+  and web images passed their smoke checks. Application source is unchanged; the preceding
+  root/browser/Lighthouse gates apply. Hosted image validation is rerunning.
+  Shared surface: `changelog.md`; manual diff review found no additional issue.
+
+- **Private web/API deployment packaging (phase 1).** Owner-approved work outside
+  the presentation lane: `docker/`, `docker-compose.yml`, `deploy/`, build-context
+  exclusions and `.github/workflows/preview-images.yml`. Shared surfaces:
+  `changelog.md` and `pending.md`.
+  - Separate, digest-only preview Compose project; dedicated database/uploads,
+    internal API/PostgreSQL/Redis, web on loopback 3300, private TLS proxy on 8443.
+    No blog or editorial scheduler; email delivery remains an explicit profile.
+  - Standalone web runtime; production-only API dependencies and a separate
+    operations image. Existing Compose migration/worker commands follow the new
+    image layout. Worker errors exit visibly; health requires a recent good poll.
+    Journal is omitted without a configured blog URL. Catalog browser assertions
+    use visible headings rather than hidden streamed text duplicates.
+  - Configuration generation refuses to overwrite secrets. Preflight rejects
+    placeholders, mutable image tags, unsafe flags, broad file permissions,
+    mismatched origins and incomplete email configuration. Release checks baked
+    origin/Google/fixture labels. Backup/release scripts and operator runbook
+    require encrypted, matching off-server backups before updating existing data.
+  - Verification: root typecheck, 573 unit tests (6 database/Redis skips), web
+    lint, all production builds, deployment configuration/worker tests and Compose
+    validation pass. Browser suite: 324 passed, 44 intentional skips; Lighthouse
+    passes all existing budgets across 9 runs. Design detector has no findings.
+    Hosted Docker image checks and VPS acceptance remain pending. Manual review
+    found no remaining implementation issue after adding baked-config checks and
+    matching off-server backup confirmation. Usage/cost meter unavailable.
+
+- **Merge `ramtin` into `redesign`.** Combines `ea26053` and `9326134` with
+  both histories retained. Resolutions preserve the risk-first moderation flow,
+  legacy redirects, trust rows, legal footer links and production showroom
+  restriction alongside the shared root navigation, server-rendered footer,
+  Profile/Saved dashboard and performance improvements. The obsolete dashboard
+  topbar stays removed; role-aware moderation remains in dashboard navigation.
+  Shared surfaces merged: `AGENTS.md`, `pending.md`, `changelog.md` and
+  `apps/web/lib/api.ts`. No pending queue item was implemented in this phase.
+  Integration fixes also adapt the two moderation test providers to explicit
+  messages, remove the legal pages' duplicate header and make their skip target
+  focusable. Footer tests retain legal destinations in both languages; shared
+  navigation browser checks cover legal skip targets and the moderation route.
+  - Verified: root typecheck; root unit suite (571 passed, 6 database/Redis
+    dependent skips, with `NODE_OPTIONS=--no-experimental-webstorage`); web lint;
+    root production build (all three apps); full web e2e with local Chrome
+    (324 passed, 44 intentional skips, no retries); Lighthouse (all budgets
+    across 9 runs at the unchanged local settings); design detector (no findings).
+    Twelve desktop/mobile captures cover English/Persian and both themes;
+    visual review, geometry, single-header/main and page-error checks pass.
+    Logs and captures are under `/tmp/termspace-merge-*`; generated reports
+    remain ignored. Manual integration diff/security review found no remaining
+    issue. Graph metadata was stale, so relevant source was inspected directly.
+    Impeccable's existing stale design sidecar remains unchanged; `DESIGN.md`
+    remains authoritative. Usage/cost meter unavailable in this harness.
+
+## 2026-10-19
+
+- **Dashboard data no longer waits for favorites.** The shell now uses identity
+  readiness to mount verified workspace content, allowing overview and Profile
+  requests to overlap the initial favorites read. The session's existing full
+  `loading` contract is retained for its other consumers. Saved waits for that
+  complete snapshot before fetching its own collection or exposing removal
+  controls, including during refresh. A favorites 401 still clears identity
+  and redirects out; API authorization and email verification remain intact.
+  - A three-run controlled mobile-viewport experiment with a 1000 ms favorites
+    delay reduced median navigation-to-table time from 1462 ms to 230 ms.
+    With immediate favorites it measured 205 ms before / 225 ms after, within
+    noise. This is request overlap under delay, not an LCP claim. Raw events,
+    captures and verification logs: `maintenance/dashboard-loading-20261019/`.
+  - Root typecheck, 519 unit tests (5 database-dependent skips), web lint and
+    the full browser suite pass: 324 cases, 44 intentional skips, no retries.
+    Twelve new browser cases cover delayed favorites, blocked Saved mutation,
+    persistent removal and session expiry in EN/FA on desktop/mobile. Thirty-six
+    captures cover both themes and 320/768/1280 widths, including Saved loading
+    and empty states; geometry/page-error checks and representative visual
+    review pass. Impeccable's detector reports no findings.
+  - All 21 existing Lighthouse assertions pass across nine local mobile reports
+    at unchanged 4x CPU/network settings. Median LCP/performance: home
+    2643 ms/97, dashboard 3766 ms/89, detail 2785 ms/96; accessibility is 100.
+    Dashboard LCP is effectively unchanged from the prior 3767 ms/89, so the
+    tighter targets remain open. The normal root production build also passes.
+  - Shared `pending.md` and `changelog.md` are updated for the owner's assigned
+    performance phase; the completed waterfall investigation is removed from
+    both queues, retaining hydration/rendering targets and owner acceptance.
+    CodebaseMemory coverage flagged changed metadata; relevant source and
+    callers were read directly. Manual diff review found no remaining issue.
+    No agent cost/usage meter is exposed by this harness.
+
+- **First-request sitemap recovery after offline builds.** Hosted checks on
+  `7c8f5db` all passed, but sitemap acceptance needed a retry: CI builds before
+  the fixture API starts, caches the three-route fallback, then serves that
+  stale response while regenerating. The old build manifest confirms a static
+  sitemap with a 30-second output lifetime inherited from its data requests.
+  - `app/sitemap.ts` now uses route `revalidate = 0`, preventing build-time
+    fallback output from becoming the live sitemap. The public API requests
+    retain their explicit 30-second cache; this follows Next's [documented
+    route/data-cache separation](https://nextjs.org/docs/app/guides/caching-without-cache-components#route-segment-config-revalidate).
+    Existing fallback behavior, pagination bounds, alternates and private-data
+    boundaries remain intact. The SEO check also asserts HTTP 200 before XML.
+  - Regression acceptance: built the fixture with API_URL pointing at an
+    unused loopback port and no API process. The manifest contains no cached
+    sitemap; after starting the runtime fixture, all 29 SEO checks pass without
+    retries (5 intentional mobile skips). Root verification and normal build
+    are recorded in `maintenance/performance-20261019/sitemap-*.log`.
+  - Closed the completed Lighthouse CI item in both queues after all six
+    hosted jobs passed on `7c8f5db`: [web/performance run](https://github.com/boyInShadows/termSpace/actions/runs/39313319877)
+    and [application/database run](https://github.com/boyInShadows/termSpace/actions/runs/39313319899).
+    Every downloaded report confirms CPU factor 3, RTT 150 ms and throughput
+    1638.4 Kbps. Hosted FID medians are 115/99/115 ms (limit 130), with all
+    other gates passing. The local default remains 4x; cold CPU benchmark
+    outliers are recorded separately from the steady calibration range.
+    Shared `pending.md`, `changelog.md` and the ignored local queue retain the
+    tighter LCP targets and owner-dependent acceptance; workflow comments now
+    distinguish steady CPU values from warm-up noise. No threshold was raised.
+
+- **Comparable hosted Lighthouse CPU profile.** Run 39311691198 passes the
+  browser suite after the full-Chromium fix, but reproduces max-potential-FID
+  failures at 149/135/157 ms with the default 4x CPU factor. Long tasks point
+  to the shared React runtime, and the runner's steady CPU benchmark is only
+  about 2400-2509 versus the local reference around 4500 (the older main run
+  measured 3020). Applying 4x to both hosts does not emulate the same CPU.
+  - Following Lighthouse's [CPU calibration guidance](https://github.com/GoogleChrome/lighthouse/blob/main/docs/throttling.md#calibrating-the-cpu-slowdown),
+    only the hosted workflow now uses 3x: effective index 800-1007 across the
+    observed runner range, still slower than the local 4500/4 = 1125 reference.
+    The local default remains 4x. Network throttling, three-run aggregation and
+    every assertion/ratchet limit remain unchanged. Recalibrate when the hosted
+    CPU range changes; every report retains its benchmark and throttle values.
+  - This phase owns `.github/workflows/web.yml` for the owner's requested CI
+    reliability work. No application, browser assertion or dependency changed.
+    Reports and failure logs are in `maintenance/performance-20261019/ci-after/`.
+
+- **Hosted zoom-harness compatibility.** Draft PR #10's first hosted run
+  (39310542406) exposed twelve genuine zoom-test failures: the default
+  Playwright headless shell ignored Chrome profile preferences, so DPR stayed
+  1 instead of doubling. The helper now defaults to the full `chromium`
+  channel, while preserving the local `PW_CHANNEL=chrome` override. This uses
+  Playwright's [documented full-browser headless mode](https://playwright.dev/docs/browsers#chromium-new-headless-mode).
+  The workflow already installs both browser variants. No zoom assertion,
+  viewport, retry, application code or performance budget was weakened.
+  Root typecheck, 516 unit tests, web lint, the normal build and all twelve
+  focused local Chrome zoom cases pass; the full Chromium fallback is checked
+  by the hosted rerun. Failed-run logs are retained with the phase evidence.
+
+- **Web initial-load budgets (owner-assigned performance phase).** The root
+  server layout now supplies only the active language's messages to the locale
+  provider, removing the two-language dictionary module from client JavaScript.
+  The static shared footer now renders on the server; all eleven callers remain
+  unchanged. Tests and Storybook supply their dictionary explicitly. The
+  Storybook render check also exposed missing App Router context; its preview
+  now enables the [documented App Router parameter](https://storybook.js.org/docs/get-started/frameworks/nextjs-vite#nextjs-navigation)
+  and serves the existing public fonts.
+  - Initial gzip JS, identical in EN/FA: home 175.9 to 162.5 KiB, dashboard
+    191.3 to 178.6 KiB, detail 190.4 to 176.9 KiB. Active messages move into
+    HTML/RSC, so total-transfer savings are smaller than JS savings; this is
+    measured lab evidence, not a claim about real-device Core Web Vitals.
+  - Tightened home/detail JS gates to their 170/180 KiB targets and added FA
+    budget cases. Home's performance-score gate now enforces its existing 90
+    target. No budget or throttle was relaxed. Mobile LCP medians are home
+    2.64 s, dashboard 3.77 s and detail 2.80 s; dashboard performance is 89.
+    The stricter LCP and dashboard-score targets remain unfinished.
+  - Kept the existing session/favorites loading contract after reviewing the
+    private-read/mutation ordering. Dashboard waterfall work must preserve it.
+  - Verification: root typecheck, 516 unit tests (5 existing DB-dependent
+    skips), clean web lint, 312 browser tests (44 intentional skips), root
+    production build, Storybook build and all 21 Lighthouse budget assertions
+    across nine reports passed. Sixty surface captures plus eight footer
+    captures cover EN/FA, both themes and responsive widths; no overflow,
+    duplicate shells, locale/theme mismatch or page errors. Impeccable reports
+    no findings in the changed production UI. Graph coverage marked stale
+    metadata/new tests; direct source and caller checks supplied verification.
+    A manual second pass included isolated tests and the Storybook consumer;
+    two compiled stories rendered with their fonts and no console/page errors.
+  - Shared files `pending.md` and `changelog.md`: the owner accepted the
+    performance item from the shared backlog for this phase. Removed completed
+    budget work from the queues, promoted remaining performance work to the top
+    of the ignored local queue, and retained owner/device-dependent acceptance.
+    Latest main CI (38893763199) failed max-potential-FID at 150/131 ms; hosted
+    acceptance of the current branch follows through a draft PR. Evidence:
+    `maintenance/performance-20261019/`. No API, permission or dependency change.
+
+- **Real 200% dashboard zoom and keyboard clearance (next local queue item).**
+  Replaced the inconclusive keyboard-shortcut check with actual Chrome browser
+  zoom in disposable profiles on D:. DPR doubles and the CSS viewport halves
+  relative to a matching 100% window; visual-viewport scale and CSS zoom stay 1.
+  The profile dictionary follows [Chromium's zoom preferences implementation](https://chromium.googlesource.com/chromium/src/+/lkgr/chrome/browser/ui/zoom/chrome_zoom_level_prefs.cc).
+  No user Chrome profile, global setting or installed tool was modified.
+  - The baseline exposed 20 obscured keyboard targets: provider actions and
+    Saved listing links/buttons scrolled beneath fixed dashboard tabs. The
+    shared `.dashboard-operate` control rule now supplies the same 6rem plus
+    safe-area focus-scroll clearance already used by account security/library.
+    One CSS declaration fixes current and future dashboard controls together.
+  - Added `e2e/browser-zoom.spec.ts`: 12 desktop cases cover EN/FA, light/dark
+    and 1280/1920/2560 physical window widths. Each verifies actual zoom geometry,
+    overflow, search focus and keyboard traversal across overview, Studio,
+    Profile, acquired library and Saved listings. Device-scale emulation is
+    explicitly cleared. Mobile test projects skip these desktop browser cases;
+    physical-device acceptance remains separate.
+  - Local before/after matrix: 60 captures and 168 keyboard-focus checks; the
+    repeated matrix has zero obscured controls, horizontal overflow or page
+    errors. Physical iOS/Android, native Persian review and owner-deferred live
+    service checks remain open. Evidence: `maintenance/zoom-acceptance-20261019/`.
+  - Verification: root typecheck, 513 unit tests (5 existing DB-dependent skips),
+    clean web lint, full browser suite 309 passed (29 existing skips plus 12
+    desktop-only zoom cases skipped in the mobile project), root production
+    build and all Lighthouse assertions across nine runs passed. Representative
+    performance: home 96, dashboard 90, detail 96; accessibility 100 throughout.
+    Performance budgets remain unchanged and their tighter targets remain open.
+    Impeccable reported only the two previously documented spring/focus-corner
+    advisories in globals.css; the new declaration adds no detector finding.
+    Manual second-pass review checked selector scope, native focus scrolling,
+    disposable-profile cleanup and actual zoom assertions. Graph coverage marked
+    changed metadata/new test source; the relevant source was read directly.
+    Removed the completed zoom item from the ignored local queue. No API,
+    permission, dependency or user-data changes.
+
+
+- **Dashboard Profile, saved listings, provider access and hydration repair (owner-requested).**
+  Removed the redundant dashboard breadcrumb/toolbar frame; workspace search
+  remains a content control with its Ctrl/Cmd+K shortcut. The shared desktop
+  dropdown and phone menu no longer contain Profile. Dashboard navigation and
+  quick actions now label the existing Settings/account-security destination
+  Profile, preserving its identity, password and creator-profile controls.
+  `AGENTS.md` allows explicitly authorized sequential queue work and documents
+  the root header's hydration ownership. No permission prompt or global config
+  change was needed during this task.
+  - DC05: added `/dashboard/library/saved`, library collection links and a quick
+    action. It resolves at most 12 public details per page, cancels stale reads,
+    isolates unavailable listings and per-item failures, retries, removes saved
+    items and clamps pagination after removals or a shrinking refreshed list.
+    Successful removals update existing hearts; failed removals preserve state.
+    Shared `apps/web/lib/api.ts` only adds optional AbortSignal parameters.
+  - Authorized API scope: `apps/api/src/controllers/marketplaceController.ts`
+    now deletes the current reader's saved relation by slug even when the listing
+    is unavailable. The previous published-only lookup silently retained those
+    records. No product details are returned; no schema or permission change.
+    Regression coverage asserts reader scoping and idempotent 204 behavior.
+  - DC07: extracted existing GitHub/npm controls into `ProviderConnections`, used
+    by Profile for eligible creators and by listing releases. Creators need no
+    listings to connect. Provider failures and retries are independent of release
+    history; permissions/revocation guidance remains. Submission clears token
+    fields after success or failure. Tests use synthetic credentials exclusively.
+    Corrected the inherited phone grid/input overflow and long identity wrapping.
+    Long saved titles wrap at 320px; listing prose detects its own text direction
+    inside Persian pages. Eight additional EN/FA long-content captures fit at
+    320/1280px, including 80-character titles and provider identities.
+  - HQ01: reproduced the intermittent hydration warning in a route-logged
+    production capture, then obtained its exact development HTML diff. A fast
+    session response changed the separately suspended Header from a Sign-in
+    anchor to AccountMenu before hydration. Removed that unnecessary root
+    Suspense boundary; the root already awaits request headers. The isolated
+    development reproduction then passed 72 navigations, and the production
+    112-capture EN/FA, light/dark, 320/768/1280 plus landscape matrix had no page
+    errors or horizontal overflow. Added fast-session browser regressions covering
+    72 additional navigations. No warning suppression or authentication bypass.
+  - Removed DC05, DC07, HQ01 and their completed execution block from ignored
+    `ramtin-pending.md`; retained unfinished browser-zoom, physical-device,
+    Persian, live-provider/domain and owner/deployment acceptance, plus the
+    explicitly other-maintainer-owned shared backlog snapshot.
+  - Verification: root typecheck, all 513 unit tests (5 existing DB-dependent
+    skips), clean web lint, full browser suite 297 passed/29 existing skips,
+    root production build and all Lighthouse assertions across nine runs passed.
+    Representative performance: home 96, dashboard 91, detail 96; accessibility
+    100 throughout. LCP 2.79/3.47/2.79 s, TBT 32/18/37 ms. Budgets are unchanged;
+    tighter LCP/performance targets and CI-runner work remain in the shared queue.
+    The final normal production build also passed eight long-content captures.
+    Actual browser zoom remains open: the headless shortcut did not change DPR
+    or the viewport, so it was not counted as 200% acceptance. Impeccable's
+    initial and follow-up detectors returned no findings. Evidence is local in
+    `maintenance/dashboard-queue-20261019/` (including the preserved failing
+    hydration capture and development diff).
+    Manual second-pass review covered callers, cancellation, reader scoping,
+    token clearing, role gates and state recovery. Graph coverage flagged changed
+    metadata and partial test mock syntax; relevant source was read directly.
+    No dependencies, migrations, real-provider actions or user data changes.
+
+- **One global main-site/dashboard navigation and layout (owner-requested).**
+  The root `apps/web/app/layout.tsx` now renders the existing shared header
+  once for public and dashboard routes. Removed its 11 page/loading callers.
+  The nested dashboard layout retains the reader gate, sidebar/mobile tabs,
+  breadcrumb and search; account, theme, locale and global links have one owner.
+  Uses native Next.js layout nesting; no route overlay, new dependency or API.
+  - The root localized skip link is the first keyboard stop, targeting a
+    focusable `main#content` on each route. Browser verification caught and
+    repaired the initial product skip-link ordering regression. Sticky sidebar
+    and focus offsets use the measured header height. Persistent mobile menus
+    close on route changes and history, scroll in landscape, and layer above
+    fixed dashboard tabs. Search shortcuts and unsaved-draft guards remain.
+  - The inherited header closes DC06: moderators/administrators can reach
+    moderation from the dashboard, in EN/FA and desktop/mobile; readers and
+    ordinary creators see no staff link. Existing API role enforcement remains
+    authoritative. Removed DC06 from the local queue after role-aware browser
+    checks; DC05 and DC07 remain open.
+  - Inspected the owner's local AgentSkills, Task Observer, CodeBaseMemory,
+    Graphify and Ponytail references. `AGENTS.md` documents when to use each,
+    prioritizes installed/shared skills over stale mirror instructions, and
+    assigns global versus nested-layout ownership. No tool installation or
+    global configuration change. Graphify builds and Task Observer reviews
+    were not requested by this documentation task and were not run.
+  - `ramtin-pending.md` now contains unfinished work and necessary operating
+    notes: removed the completed UI01–UI03 section, DC01–DC04 completion notes,
+    historical completion/review blocks, checked tasks, this navigation plan,
+    DC06 and empty audit headings. Outcomes remain in this changelog and local
+    evidence. Preserved owner-deferred email/provider work, physical-device,
+    language and deployment acceptance, and the shared backlog snapshot.
+    `AGENTS.md` now requires removing verified-complete local task sections
+    rather than retaining a second changelog. The local queue remains ignored.
+  - Verification: root typecheck, 501 unit tests (5 database-dependent skips),
+    web lint, regular root production build, 277 Chrome tests (29 conditional
+    skips, four workers) and all nine Lighthouse runs passed existing gates.
+    Representative home/dashboard/detail scores: 96/93/95, accessibility 100.
+    One hundred EN/FA/light/dark captures cover eight routes at 320/768/1280px
+    plus landscape menus; an explicit four-case landscape repeat passed too.
+    Eighty additional route-logged navigations passed. Verified one global
+    header, content focus, no overflow, measured offsets and sidebar/menu hits.
+    Impeccable returned six advisory findings, no blocking findings; the
+    established font, compact metadata, focus-corner and feedback-easing
+    exceptions remain intentional. Reviewed representative renders and the
+    connected source/diff; graph freshness flags were checked through source.
+  - Known follow-up: the initial capture emitted one React hydration warning
+    (#418) without route context. It did not recur in the final matrix or
+    targeted repetitions; no cause or fix is claimed. HQ01 in the local queue
+    retains this observation and its evidence. No real accounts, credentials,
+    listings, provider connections or email changed. Real devices, actual 200%
+    browser zoom, native Persian wording, live providers and CI were not tested.
+  - Shared surfaces: owner-requested `AGENTS.md` workflow/layout rules and this
+    `changelog.md` entry. Evidence: `maintenance/shared-navigation-20261019/`
+    (ignored), with the earlier failed checks preserved. Public footer placement
+    and the separately deployed Blog remain independent of the global web nav.
+
+- **Main-site/dashboard design consistency (owner-requested highest priority).**
+  Added the P0 plan to ignored `ramtin-pending.md` and completed UI01–UI03 as
+  this session's implementation phase. `AGENTS.md` now requires the installed
+  Impeccable skill for design planning, creation, changes and review throughout
+  the project, with rendered theme/locale/responsive verification.
+  - Extended the established Datasheet identity through shared web foundations:
+    Geist/Estedad headings, square radius tokens, ink-filled primary actions,
+    plain outlined badges and ruled listing frames. Shared fields use readable
+    16px text. Header/footer, homepage sections, search suggestions, menus,
+    dialogs, moderation labels and loading placeholders now use that vocabulary.
+    Retained familiar avatar/switch geometry, state labels, focus and role gates.
+  - Removed decorative gradients, blur, shadows, lift, scroll entrances,
+    Newsreader requests and typed-placeholder timers. Search submission, scope,
+    suggestions and recent history remain. Removed unused effect definitions
+    and reconciled DESIGN.md, the landing surface brief and design-system
+    showroom with the actual shipped composition. Blog remains its separate
+    editorial app; the project-wide design workflow requirement applies to it.
+  - Added browser regressions across public/account/dashboard/community routes
+    in EN/FA and both themes. Updated the retired reveal and different-English-
+    weight assertions to require immediately visible sections and shared heading
+    weight with Persian's looser leading. The first run caught an English font
+    fallback mismatch; fixed the shared heading declaration and reran the suite.
+  - Verification: root typecheck, 500 unit tests (5 database-dependent skips),
+    web lint, regular root production build, 247 Chrome tests (29 conditional
+    skips, four workers), and all nine Lighthouse runs passed unchanged gates.
+    Representative home/dashboard/detail performance scores: 96/91/95;
+    accessibility 100 throughout. Existing tighter LCP/JS/CI targets stay open.
+    Sixty before and sixty after captures at 320/768/1280px cover home,
+    dashboard, explore, detail and account in both themes/locales, with no
+    horizontal overflow or page errors. Reviewed representative renders at
+    desktop/tablet/phone sizes. The Impeccable detector had 13 advisory findings,
+    no blocking findings; intentional typography/focus/feedback dispositions
+    are documented. Manual connected-source/diff review found no unresolved
+    functional issue; graph freshness warnings were checked through source.
+  - Shared surfaces: owner-authorized `AGENTS.md` design policy and this
+    `changelog.md` entry. No API/schema/authentication/provider/email change.
+    Local evidence: `maintenance/design-consistency-20261019/` (ignored).
+    DC05–DC07 and the remaining backlog are still open under the one-phase
+    rule. Physical devices, actual 200% browser zoom, native Persian wording,
+    live providers and CI acceptance were not performed.
+
+- **Shared rate-limit store, non-revealing signup, Google wording (phase 4;
+  `readiness.md` S2 and S10).** Shared surfaces and outside the web lane:
+  `docker-compose.yml`, `apps/web/lib/api.ts`, `apps/web/lib/i18n/common.ts`,
+  `apps/api` and its dependencies.
+  - Redis: new `redis` compose service (no persistence, 64 MB, internal only);
+    every API limiter counts there through `limiter()` in
+    `middleware/security.ts`, so limits hold across replicas and restarts. New
+    dependencies `rate-limit-redis` (the store express-rate-limit documents for
+    Redis) and `ioredis` (its client). The API refuses to start in production
+    without `REDIS_URL`; if Redis goes down requests pass uncounted. Unset
+    `REDIS_URL` keeps in-memory counters for local work and tests.
+  - Signup: `POST /api/readers/register` returns `202 {accepted:true}` for a new
+    and a taken email and sets no cookie; the web form then shows "check your
+    inbox" and switches to sign-in. The `EMAIL_ALREADY_REGISTERED` string and
+    branch are gone. A taken email gets no email.
+  - Google: sign-up already worked on both apps (an unknown verified Google
+    email creates the account). The register tab's button now says "Sign up with
+    Google" (`text` prop, remounted per tab).
+  - Verified: typecheck, `npm test` (web with
+    `NODE_OPTIONS=--no-experimental-webstorage`), web lint, build, e2e (237
+    passed; the two signup specs were rewritten for the new flow), compose
+    config; the Redis store against a live `redis-server` and with Redis
+    unreachable. Not run: the two API integration test files (no database
+    here); their register helpers were updated and CI runs them. Run
+    `TEST_REDIS_URL=redis://127.0.0.1:6379 npx vitest run security.redis` in
+    `apps/api` for the shared-store test.
+
+- **Security hardening, phase 3: `readiness.md` S1-S12.** Outside the web lane:
+  `apps/api`, `docker-compose.yml`, the `/backend` handlers, and the explore and
+  community pages' search calls (`lib/api.ts` is a shared surface).
+  - Rate limits: separate per-IP limiters for reader login, admin login,
+    register, Google sign-in and password change; a 30/min search limiter on
+    products, community pages and articles; the web search pages forward the
+    visitor's `X-Forwarded-For` (searches only, so the 30 s catalogue cache is
+    untouched) via `lib/clientIp.ts`.
+  - Login timing: a real bcrypt compare runs for unknown users (`lib/passwordCompare.ts`).
+  - Boot: `assertProductionConfig()` (database placeholder, `CORS_ORIGINS`, email
+    secret, provider token key, no `LOCAL_AUTO_VERIFY_EMAIL`); the bypass is also
+    off in production in code; crash handlers for unhandled rejections;
+    compose requires `MARKETPLACE_PROVIDER_TOKEN_KEY` for the API.
+  - Load: relevance ranking capped at 2000 matches; article page size max 50
+    (the blog pages by 50); Prisma `connection_limit` per compose service.
+  - Proxy: `/backend` strips stale encoding headers and rejects bodies over
+    12 MB with a 413.
+  - Not changed, with reasons in `readiness.md`: S2 (no shared store yet), S6
+    (those lists are admin-curated or per-user), S10 enumeration on register
+    (product decision), S11 and S12 (not exploitable in the current builds).
+  - Verified: typecheck, `npm test` (web with
+    `NODE_OPTIONS=--no-experimental-webstorage`), web lint, build, e2e (237
+    passed), `docker compose config`. Not run: the two API integration test files
+    (need a database), lhci (no page changed visually). New tests:
+    `passwordCompare`, `productionConfig`, extended `security` and
+    `emailVerification`.
+
+- **Pre-deploy blockers, phase 2 of 2: policies, headers, footer (B4, B5, B8 in
+  `readiness.md`).** Touches `apps/web` and `apps/blog` presentation plus a shared
+  surface: `apps/web/lib/i18n/common.ts` (footer labels).
+  - Pages: `/privacy`, `/terms`, `/content-policy` in English and Persian, from
+    `lib/legal.ts` through `components/legal/legal-page.tsx`; in the sitemap; the
+    web footer has a Legal column; the blog footer links to them on the main
+    site (`NEXT_PUBLIC_WEB_URL`, build arg in `Dockerfile.blog`). The text is a
+    draft written from what the code does and has had no legal review. Contact
+    and entity come from runtime `LEGAL_CONTACT_EMAIL` (required by compose)
+    and `LEGAL_ENTITY_NAME`.
+  - Headers (web and blog `next.config`): HSTS, nosniff, Referrer-Policy,
+    Permissions-Policy, X-Frame-Options and an enforced CSP of frame-ancestors,
+    base-uri, object-src and form-action. `script-src` is report-only until
+    nonces are in place. `poweredByHeader` is off.
+  - Footer: the Creator guide, Quality standards and About links (all pointing
+    at `/design-system`) and their "Create" column are removed; the home page's
+    quality-standard link goes to `/content-policy`; `/design-system` is a 404
+    in production and `noindex`.
+  - Verified: typecheck, `npm test` (web with
+    `NODE_OPTIONS=--no-experimental-webstorage`), web lint, build,
+    `npm run e2e -w apps/web` (237 passed, 29 skipped; run with `WEB_PORT=3110
+    MOCK_API_PORT=4110` because something else holds 3100), `npm run lhci -w
+    apps/web` (assertions pass), `docker compose config`. New test:
+    `lib/legal.test.ts`.
+  - Follow-ups: legal review of the text; a consent line on sign-up; enforce
+    `script-src`; "Support" in the web footer still links to `/account`.
+
+- **Pre-deploy blockers, phase 1 of 2: API and compose (B1, B2, B3, B6, B7 in
+  `readiness.md`).** Work outside the web-presentation lane: `apps/api`,
+  `docker/`, `docker-compose.yml` and the `/backend` handlers in `apps/web` and
+  `apps/blog`.
+  - Rate limit: server-rendered API calls (no `X-Forwarded-For`) no longer count
+    against the shared global bucket when `TRUST_PROXY` is on; both `/backend`
+    handlers always send the header so browser traffic stays counted.
+  - Shutdown and migrations: new one-shot `migrate` compose service; `api` runs
+    `node dist/index.js` as PID 1 and waits for it; the three worker loops use
+    `init: true`.
+  - 500 responses show `err.message` only when `NODE_ENV=development`.
+  - `Dockerfile.blog` takes `NEXT_PUBLIC_SITE_URL`; compose requires
+    `WEB_PUBLIC_URL`, `BLOG_SITE_URL` and `MEDIA_PUBLIC_URL` instead of
+    defaulting them to localhost.
+  - Seed rejects `change-this*` admin passwords; the API refuses to start in
+    production with a placeholder in `DATABASE_URL`.
+  - Verified: `npm run typecheck`, `npm test` (web run with
+    `NODE_OPTIONS=--no-experimental-webstorage`: Node 26 breaks jsdom's
+    `localStorage`, 19 web tests fail without it, unrelated to this change),
+    `npm run lint -w apps/web`, `npm run build`, `docker compose config`. New
+    tests: `errorHandler.test.ts`, `security.test.ts`. Not run: e2e, lhci (no UI
+    change).
+  - Follow-up for the edge proxy (not code): set or append `X-Forwarded-For`
+    with the real client address. Phase 2 (B4, B5, B8) is separate.
+
+- **Moderation moves into the dashboard and leads with risk (owner-requested,
+  `/impeccable critique` of the moderator page, 16/40).**
+  - Routes: `/dashboard/moderation` and `/dashboard/moderation/listings/[id]`
+    inside the dashboard shell (sidebar and tab bar entry for moderators, the
+    top bar names it, titles per page). `/moderation` and
+    `/moderation/listings/[id]` now `permanentRedirect` to them, keeping `/fa`.
+    The site header link points at the new route. The marketing banner and
+    footer no longer wrap a staff tool.
+  - Queue: ruled dashboard rows, one link per listing (its name), filters, search
+    and page in the URL (reload, back and shared links keep them; the preview's
+    Back returns to them through a whitelisted `from` parameter). Each row shows
+    the declared capabilities with a "Needs a closer look" marker for secret
+    access, process execution, file writes and network access. That list is a
+    heuristic that steers attention and blocks nothing (`capabilities.ts`). The
+    green "Passed / Passed" is replaced by plain Source and Ownership facts;
+    pending ones are marked. The three summary tiles are a compact strip on
+    phones.
+  - Preview: opens with "What it touches" (each capability with scope, purpose,
+    destinations, required or optional, flagged, and marked New or Changed
+    against the approved version), then source and checks (source and
+    ownership are now separate results, plus integrity and snapshot digests),
+    install steps and requirements as readable text, screenshots as text (never
+    links), communities, and the raw JSON folded away. A listing with nothing
+    pending shows its live approved version instead of empty fields. The
+    Quiet-Notes-style overflow at 390px is gone.
+  - Decision: no preselected action; radio choices each state their effect; the
+    button names the action and is red for reject, suspend and archive; a
+    confirm step restates the listing, release and (for approve and publish)
+    the declared access before anything is recorded; Enter in a field can no
+    longer commit; the result appears inside the decision panel and names what
+    was recorded; the public reason enforces the server's 10-character minimum
+    in the browser; the review Hide minimum is stated. The audit trail uses
+    plain action, actor and state words.
+  - Persian: state, audit, placement, source and install labels, digits and
+    dates, left-to-right handles and the install steps' direction.
+  - **Site-wide, announced:** `globals.css` now defines `@custom-variant dark`
+    so `dark:` follows the theme switch, not the OS. It had followed
+    `prefers-color-scheme`, which put dark colours on the wrong ground whenever
+    the two disagreed (measured 2.46:1 and 3.48:1 on the moderation status
+    colours; 1.5:1 the other way). Seven files use `dark:`.
+  - **Cross-lane, announced:** the API's moderation queue now returns each
+    listing's declared `capabilities` (read from the stored manifest, malformed
+    entries skipped), with a test. Read-only; no schema or migration change.
+    Shared surfaces touched: `lib/types.ts`, `lib/i18n/` (moderation) and
+    `changelog.md`.
+  - Code review before push (`/code-review high`, 10 findings), all handled:
+    fixed — the queue showed "Declares no permissions" for published and
+    suspended listings because only the pending revision was read (it now
+    falls back to the approved version, fetched only for rows without a
+    pending one); a failed refresh after saving left a stale decision form
+    beside "Recorded" (decisions are disabled with a retry until it
+    refreshes); the reason code was rewritten on commit but not shown in the
+    confirmation (normalised up front and shown); an unknown `?state=` got a
+    retry that could never work and the real error was hidden (whitelisted,
+    API message shown); a failed review hide said the list could not load;
+    the legacy redirects dropped the query string; destinations order no
+    longer reads as a change; one shared `isRecord`; the Publish slot of the
+    phone tab bar is a fixed 52px so "Moderation" no longer spills into its
+    neighbours. Dismissed — the queue reads each row's manifest JSON for its
+    permissions (bounded by the manifest limits, 24 rows a page, and the
+    approved manifest is fetched only when nothing is pending; a stored
+    column is the upgrade if manifests grow); the capability parsing exists
+    once in the API and once in the web app (the apps share no code today;
+    each side has a test); key order in section diffs (JSONB stores a
+    canonical key order for both snapshots).
+  - Not done: reason codes stay free text. There is no policy list in the repo
+    and inventing one is the maintainers' call. No moderation e2e exists (the
+    mock API has no moderator persona); coverage is unit tests plus a browser
+    pass against local data. A second-moderator or attestation rule for
+    high-risk capabilities is a product decision, left open.
+  - Verification: root typecheck, web lint, 287 web tests (new
+    `moderation-preview.test.tsx`, rewritten queue test), 213 API tests (5
+    database-dependent skips), web build, 237 browser tests (29 conditional
+    skips) and all nine Lighthouse runs pass. Browser checks on local fixtures
+    at 1440 and 390 in English and `/fa`, dark and light, with the
+    confirmation step opened and cancelled (no decision recorded). Local
+    fixtures remain in the dev database: four `critique-*-c1226@example.com`
+    accounts, two submitted listings and one published listing with a review.
+- **Landing hero fits the first screen (owner-requested).** From tablet width
+  (`md`) and 600px viewport height up, the hero is at least
+  `100svh` minus the header (`--header-chrome`, which tracks the dismissible
+  announcement strip through `:has([data-announcement])`). Free height is
+  shared by flex spacers: gaps grow to 48px / 80px caps, the rest centres the
+  block. Under 720px of height the headline, card padding and card copy
+  tighten (`fit` / `fit-short` custom variants in `globals.css`). Phones keep
+  natural flow. A min-height, so content that still cannot fit (Persian at
+  800×600) moves the fold instead of overlapping.
+- **Product card critique fixes (owner-requested, `/impeccable critique`, 20/36).**
+  - The trust strip on `ProductCard` is now a labelled `dl`: Review,
+    Permissions, Licence at full weight; values wrap instead of truncating;
+    undeclared permissions are a red bordered "Not declared" mark. The
+    landing's `CompactProductCard` keeps its one-line compact strip.
+  - One link per card: the title is stretched over the card and "View details"
+    is gone (3 tab stops to 2). The article is named by its title; no lift or
+    shadow on hover; "Trending" is neutral so amber only means "not reviewed".
+  - RTL: the date is no longer forced `dir="ltr"` (it rendered reversed),
+    rating and review count follow the locale's digits, "+N" keeps its plus in
+    front, the creator badge label is localized and has `role="img"`.
+  - **Copy, owner decision:** "Safety reviewed" is now "Reviewed" site-wide
+    (EN and FA, filter chip, title block, OG image, landing copy). "Verified"
+    stays reserved for creator identity.
+  - Not done: the card stays in the live serif/rounded look (owner decision;
+    `DESIGN.md` still describes the removed datasheet hero and is stale).
+- **Follow-ups (not fixed here):** the seed's `license: "1 user · commercial
+  use"` and `refundPolicy` (`apps/api/prisma/seed.ts:660`) break the
+  free-only rule. API lane. `DESIGN.md` needs re-documenting for the current
+  hero.
+  - Shared surfaces: `apps/web/lib/i18n/` (catalog, home-sections,
+    product-page) and `changelog.md`.
+  - Verification: root typecheck, web lint, web build, 270 web unit tests,
+    237 browser tests (29 conditional skips) and all nine Lighthouse runs pass.
+    Browser checks at 1280×600 to 2560×1300, 390×844 and `/fa`. Environment
+    notes: on Node 26 the unit tests need
+    `NODE_OPTIONS=--no-experimental-webstorage` (Node's built-in
+    `localStorage` shadows jsdom's; 19 failures otherwise). E2E needed
+    `WEB_PORT=3200` (the Docker web container holds 3100) and
+    `PW_CHANNEL=chrome` (the bumped Playwright's browser is not downloaded).
+    The Persian `account-security` tab-bar test failed once and passed on
+    rerun.
+
+## 2026-10-18
+
+- **Dashboard acquired library (DC04, owner-requested).**
+  Added `/dashboard/library`, reachable through the sidebar, mobile tabs and
+  overview quick actions, with a localized breadcrumb and page title. Readers
+  do not need a creator role. The five-slot mobile bar reuses the existing
+  accessible icon-only Publish control and keeps all navigation targets usable.
+  - Extracted `SignedInAccount`'s library into shared
+    `features/library/acquired-library.tsx`; `/account` retains its account,
+    sign-out and authentication behavior and renders the same library as an
+    embedded section. The shared view uses the dashboard's ruled, square
+    vocabulary and workspace-local EN/FA copy, without global locale growth.
+  - Pagination now lives in the URL, preserves unrelated parameters and works
+    through history/reload. A past-end page returns to the last real page;
+    stale requests are aborted/ignored. Loading, empty and error/Retry states
+    remain distinct, and changing pages hides the previous page's rows.
+    Pinned version labels and unavailable/legacy installation states remain
+    intact. The existing installation endpoint already resolves the acquired
+    release; browser checks prove the retained product link opens v1.0.0
+    without an acquisition POST. No backend, schema, role or email change.
+  - A 320px capture exposed an unbroken-name overflow. Explicit flex-item width
+    limits and wrapping now constrain names/versions; both locales have a
+    browser regression. Keyboard pagination clears the fixed tab bar.
+  - Shared surface: `changelog.md` records this owner-assigned web refactor.
+    Removed DC04 from the ignored local `ramtin-pending.md`; three dashboard
+    capability tasks remain. The localhost email pause is still enabled.
+  - Verification: root typecheck, 500 unit tests (5 database-dependent skips),
+    web lint, regular production build, 237 browser tests (29 conditional
+    skips; 4 Chrome workers) and all nine Lighthouse runs passed existing gates.
+    Twenty-four EN/FA/theme/viewport captures at 320/768/1280px, 12 native
+    keyboard/navigation hit-test journeys and four error/Retry/empty/loading
+    journeys passed without overflow or page errors. The design detector found
+    no issue. Manual connected-source/diff review found no unresolved issue.
+    Evidence: `maintenance/dashboard-library-20261018/` (ignored), including the
+    initial overflow capture. No real acquisition changed. Physical devices,
+    live acquisition/provider checks, CI and native Persian wording review
+    remain untested; existing tighter performance targets remain open.
+
+- **Studio archive and restore controls (DC03, owner-requested).**
+  Creators can archive eligible owned listings and restore recoverable creator
+  archives through the existing lifecycle endpoint. EN/FA confirmations explain
+  visibility and review-queue changes, preserve saved work/releases/acquisitions,
+  and describe the exact prior state before restoration. Suspended listings have
+  no archive control; staff archives and missing restore points have no creator
+  restore control. Cancellation sends nothing and returns keyboard focus.
+  - `apps/api/src/controllers/marketplaceCreatorController.ts` now selects the
+    saved resume fields and queries the latest archive actor for archived items
+    on the owner-scoped page. It exposes only a nullable restore target; actor
+    identities and raw lifecycle fields remain private. The lookup is separate
+    from the recent-activity window, so later non-archive events cannot hide it.
+    `marketplaceLifecycleController.ts` uses the same deterministic timestamp/id
+    ordering for the authoritative archive-actor check. Both backend touches are
+    needed for this owner-assigned dashboard capability; no migration or role,
+    moderation, source-verification or legacy-source exception was changed.
+  - Shared surface: `apps/web/lib/types.ts` gains the additive owner-only restore
+    target. Studio reuses one lifecycle transport/checkpoint, consumes returned
+    visibility/version, refreshes listings/counts, blocks duplicate mutations and
+    requires a successful refresh after conflicts. Source blockers explain the
+    approved-release restriction and link to release status/staff assistance.
+    Copy remains workspace-only; fixtures match the full lifecycle response.
+    No deletion or publication/moderation override was added.
+  - Removed DC03 from the ignored local `ramtin-pending.md`; four dashboard
+    capability tasks remain. Shared `changelog.md` records the cross-lane scope.
+    Restarted the owned local API to load the additive response; API/database
+    health and Studio return 200. The localhost email pause remains enabled.
+  - Verification: root typecheck, 488 unit tests (5 database-dependent skips),
+    web lint, regular production build, 213 browser tests (29 conditional skips;
+    4 local Chrome workers) and all nine Lighthouse runs passed existing gates.
+    Both locales/themes at 320/768/1280px passed 44 captures, 24 native-keyboard
+    hit-test/cancel journeys and four source/conflict/retry recoveries, with no
+    overflow or page errors. The design detector found no issue. An initial
+    English browser assertion matched both the Published badge and history;
+    scoped it to the badge and reran the full suite. Failure evidence remains
+    under `maintenance/dashboard-archive-20261018/` (ignored). Manual connected
+    source/diff review found no unresolved issue. No real listing changed;
+    live mutations/provider checks, physical devices, CI and native Persian
+    wording review were not tested. Tighter performance targets remain open.
+
+- **Studio withdrawal from review (DC02, owner-requested).**
+  Connected the existing creator `WITHDRAW` lifecycle action to submitted
+  listing controls. Inline EN/FA confirmation explains the return to Draft,
+  preservation of saved work and continued visibility of any existing public
+  version. Cancellation sends no request. Success uses the returned lifecycle
+  version and refreshes listing/summary data; errors keep the saved listing,
+  while stale-version/invalid-transition responses require a successful refresh.
+  Duplicate actions and pagination during mutation are disabled. The disclosure
+  keeps its keyboard-focused trigger, and controls clear fixed navigation.
+  - Reused the Studio lifecycle transport and review checkpoint. Copy stays in
+    workspace-only `workspace-copy.ts`; no new dependency or API runtime change.
+    Added an API lifecycle regression test for snapshot/publication preservation
+    and invalid source states; ownership, moderation, source checks and the
+    localhost email-verification pause remain intact.
+  - Shared surface: `changelog.md` records this owner-assigned web capability;
+    the API test is touched only to pin the existing withdrawal contract.
+    Removed DC02 from the ignored local `ramtin-pending.md`; five capability
+    tasks remain. That local file and verification artifacts are not committed.
+  - Verification: root typecheck, 464 unit tests (5 database-dependent skips),
+    web lint, regular production build, 199 Chrome browser tests (29 conditional
+    skips; 4 local workers) and all nine Lighthouse runs passed existing gates.
+    Both locales/themes at 320/768/1280px passed 32 visual captures, 12 keyboard
+    hit-test/cancellation journeys and four failure/conflict/refresh recoveries,
+    with no overflow or page errors. The design detector returned no findings.
+    Manual connected-source/diff review found no unresolved issue. Artifacts:
+    `maintenance/dashboard-withdraw-20261018/` (ignored). Physical devices,
+    live database mutations, CI and native Persian copy review were not tested;
+    no real listing changed. Existing tighter performance targets remain open.
+
+- **Dashboard capability audit and Settings account security (owner-requested).**
+  Compared marketplace/reader routes with dashboard, creator, account and
+  moderation callers. Recorded seven confirmed dashboard gaps in the ignored
+  `ramtin-pending.md`: security, withdrawal, archive/restore, library access,
+  saved listings, staff moderation access and account-wide provider controls.
+  The existing `/account` library and creator/release features were explicitly
+  distinguished from missing functionality. Completed DC01 and removed that
+  task; the other six remain, with backend evidence and acceptance criteria.
+  - Settings now reads the authenticated reader profile and supports the
+    existing current-password change endpoint. It shows membership date and
+    sign-in method, validates confirmation, bounds inputs, disables duplicate
+    submissions, handles failure/retry and clears fields after success.
+    Google-only/no-password accounts keep their backend reauthentication
+    restriction; no password-setup or email-verification bypass was added.
+  - Added the reader-profile type and API helpers in shared `lib/types.ts` and
+    `lib/api.ts` for this owner-assigned backend-to-dashboard connection.
+    Security copy is local to Settings, keeping it out of public-page chunks.
+    Backend auth, roles, schemas, providers and database records are unchanged.
+  - Production hit tests caught the fixed tab bar covering a keyboard-focused
+    password action. New controls reserve scroll margin, and the dashboard
+    temporarily uses immediate focus scrolling, restoring the prior document
+    scroll preference on exit. Native-keyboard regressions cover EN/FA at the
+    tablet breakpoint; the cleanup behavior has its own unit check.
+  - Verification: root typecheck, 449 unit tests (5 database-dependent skips),
+    web lint, regular production build and all nine Lighthouse runs passed
+    existing gates. Full Chrome suite: 195 passed / 29 conditional skips with
+    4 local workers and no retries. A default 10-worker attempt exhausted
+    browser/server memory; concurrency was reduced only for this invocation,
+    with configuration, assertions and budgets unchanged. An earlier inherited
+    pagination timeout passed ten focused repetitions and the final full run.
+  - Eight before captures and 20 final EN/FA, light/dark, phone/tablet/desktop
+    captures were reviewed/sampled. Final checks included 12 keyboard/button
+    hit-test journeys, four profile Retry journeys, no document overflow or
+    page errors, and no mechanical design-detector findings. Real anonymous
+    GET/PUT calls through the web proxy to the new UI's endpoints returned
+    401; authenticated password flows used fixtures and no real credentials
+    changed. Physical devices, real account changes and CI execution remain
+    unverified. Local email pause is preserved. No push. Evidence and logs:
+    `maintenance/dashboard-capabilities-20261018/`.
+
+- **Homepage catalogue failures show Retry, without sample listings.**
+  Completed the next owner-assigned shared/local pending item after reconciling
+  both redesign pulls. `apps/web/app/page.tsx` now represents an unavailable
+  catalogue as null: the featured shelf shows the existing localized Retry
+  notice, the total link disappears, and type shortcuts omit counts. Search
+  and static page content stay available. Healthy empty catalogues retain their
+  separate empty state; explicit mock preview mode is preserved. Updated the
+  shared EN/FA notice in `apps/web/lib/i18n/home.ts` to describe the outage.
+  Removed the completed entry from `pending.md` and the ignored local checklist.
+  - Five server-render regression tests cover EN/FA failure responses, healthy,
+    empty and explicit mock states. Before the fix, both failure cases exposed
+    three sample cards. Existing notice tests retain the Retry action check.
+  - Final verification: root typecheck, 436 unit tests (5 database-dependent
+    skips), web lint, regular production build, full Chrome suite at default
+    10 workers (179 passed / 29 conditional skips) and all nine Lighthouse
+    runs passed without budget changes. Eight runtime journeys on a non-mock
+    production web build simulated a failing API and recovered through Retry;
+    32 captures covered home, Explore and product in EN/FA, light/dark and
+    320/1280px, with no horizontal overflow or page errors. The mechanical
+    design detector returned no findings on the changed page surfaces.
+  - Reviewed the final changes manually. No dependencies, database records,
+    migrations or provider settings changed. Temporary test servers/Chrome
+    were stopped; the real local API/web stay available and the localhost email
+    pause is preserved. CI performance, physical devices and maintainer Persian
+    wording review remain pending. Evidence: `maintenance/redesign-merge-20261018/`.
+
+- **Fresh redesign pull reconciled (owner-requested second pull, `b04c5f1`).**
+  Imported the newer Persian product-direction changes. Its only conflict was
+  in this log; both branches' entries are preserved. No unresolved index
+  conflicts remain. The combined working tree passed root typecheck, 436 unit
+  tests (5 database-dependent skips), web lint, the regular production build,
+  179 browser tests (29 conditional skips) and all nine final Lighthouse runs
+  at existing budgets. Thirty-two EN/FA, light/dark, 320/1280px captures had no
+  document overflow or page errors. The local API was restarted to load the
+  new release endpoint; health returned 200 and that endpoint returned its
+  expected release-specific 404 for an absent version. The local email pause
+  is preserved. No push. Logs: `maintenance/redesign-merge-20261018/`.
+
+- **Reconcile the first redesign merge (owner-requested integration).**
+  Preserved redesign's product-release selection, simplified homepage and
+  Explore controls, plus ramtin's declared-access filter, real pagination links,
+  product HTTP status checks and temporary localhost email pause. Resolved all
+  five conflicted files by combining their behavior and tests; restored the
+  locale lookup needed by redesigned Explore redirects and included declared
+  access in removable chips and the mobile drawer count. Both branches' prior
+  changelog entries are retained. Shared API/types/i18n changes belong to the
+  requested incoming redesign merge. Updated inherited browser checks to follow
+  the renamed drawer action, the card reveal wrapper and the static hero
+  heading now that cards sit inside the hero. Root typecheck, 431 unit tests
+  (5 database-dependent skips), web lint and all workspace builds passed.
+  Full Chrome suite: 179 passed / 29 conditional skips at default 10 workers.
+  All nine Lighthouse runs passed existing gates. Recovery snapshot and logs:
+  `maintenance/redesign-merge-20261018/`.
+
+- **Product HTTP status correction (owner-assigned next local checklist step).**
+  - Removed `apps/web/app/products/[slug]/loading.tsx`, whose early response
+    committed HTTP 200 before the product lookup could report an unavailable
+    listing. The page now resolves that lookup before response streaming; the
+    existing localized branded not-found UI and noindex metadata still render.
+    This follows [Next.js status behavior](https://nextjs.org/docs/app/api-reference/file-conventions/not-found).
+    Product navigation retains the prior page while the lookup is pending.
+  - Added suspended/archived unpublished entries to the isolated browser fixture
+    catalogue and asserted public API exclusion, real HTML 404 status, branded
+    heading, noindex, EN/FA language/direction, and absence of private fixture
+    content. Successful product responses stay 200; upstream failures return
+    500 with the existing Retry UI. Backend visibility and auth were not changed.
+  - Verification: reproduced the prior 200 status in desktop/mobile;
+    20 targeted browser checks passed; full suite at the default 10 workers
+    passed 166 / 28 conditional skips, including product morph, layout and JS
+    budgets. Root typecheck, 404 unit tests / 5 database-dependent skips and
+    web lint and the regular production build passed. All nine Lighthouse runs
+    passed existing gates. Actual localhost responses were 404/noindex in EN/FA
+    and 200 for a published product; API health was 200. Eight visual captures
+    across EN/FA, light/dark and 320/1280px had no overflow or page errors.
+    Reviewed the final diff manually; no budget changes or new dependencies.
+  - Removed the completed HTTP-status task from both pending files.
+  - Shared `pending.md` and this log are in scope because the owner requested
+    continuation of the mirrored local task. Earlier uncommitted work and the
+    temporary localhost email pause are preserved. No commit/push. Local
+    evidence: `maintenance/product-status-20261018/`.
+
+- **Default-worker browser stability (owner-assigned next local checklist step).**
+  - Removed redundant hoisted pagination head hints from
+    `apps/web/app/explore/page.tsx`, which duplicated during hydration. The
+    existing server-rendered Previous/Next anchors retain their `href` and
+    `rel` attributes, locale, filters and client navigation. This follows
+    [Google's pagination guidance](https://developers.google.com/search/docs/specialty/ecommerce/pagination-and-incremental-page-loading):
+    discovery uses real anchor URLs and Google no longer uses head next/prev hints.
+  - Browser regressions check first/last/back navigation, absence of stale head
+    hints, and actual crawler HTML with Persian paths and permission filters.
+    Current hero motion and card morphing passed ten repetitions at default
+    concurrency; no production animation code or worker/retry settings changed.
+  - `apps/web/e2e/dashboard-repairs.spec.ts` waits for intercepted route handlers
+    before teardown; the reproduced background refresh no longer throws
+    `route.fetch: Test ended`. Web ESLint ignores only generated Playwright and
+    Lighthouse output directories, preventing a reproduced artifact-deletion race
+    during simultaneous lint/browser runs; source rules remain enforced.
+  - Removed the completed entry from both `ramtin-pending.md` and `pending.md`.
+    These shared checklist/log edits are authorized by the owner's continuation
+    request. Preserved the prior uncommitted work and temporary local email pause.
+  - Verification: focused stress run 90 passed / 10 conditional skips across ten
+    repetitions; complete suite twice, 308 passed / 56 conditional skips with
+    the default 10 workers and zero retries. Root typecheck, 404 unit tests
+    passed / 5 database-dependent skips, web lint and the root production build
+    passed. Actual localhost Explore navigation passed with zero pagination head
+    hints; API health returned 200. Only the regular API/web processes remain.
+    Lighthouse was not rerun: production changes are confined to Explore
+    metadata, with no home/dashboard/product render or style changes.
+    No usage meter available;
+    manual second-pass review. No commit/push while the inherited dirty work
+    remains uncommitted. Evidence: `maintenance/browser-stability-20261018/`.
+
+- **Owner follow-up: pause local email verification and continue the pending repairs.**
+  - Enabled the existing loopback-only `LOCAL_AUTO_VERIFY_EMAIL` switch in the
+    ignored API configuration until a sending domain is ready. Existing sessions
+    skip the gate without changing their stored verification timestamps; new
+    local signup keeps the existing auto-verification behavior. Password/session
+    authentication and creator/moderator role checks still apply. Restore the
+    flag to false and restart the API before real-email acceptance.
+  - Signup redirects from the API verification result. Accepted sessions visiting
+    the verification page go to the dashboard without displaying the inbox box.
+    Token verification and resend behavior remain covered when the switch is off.
+  - Added the deferred Explore declared-access filter for all 12 manifest
+    capabilities, with EN/FA labels, URL persistence, pagination/reset handling
+    and mobile controls. The API validates canonical keys and matches only the
+    approved listing snapshot's release permissions, including optional access.
+    Legacy listings without declarations are excluded from capability matches.
+  - Fixed the process step list's minimum width (343px document at a 320px
+    viewport before the fix); added 320px EN/FA browser coverage. English first
+    paint now preloads Geist only; the Newsreader face remains available in CSS.
+    Catalogue text matching escapes SQL wildcard and escape characters across
+    public metadata while relevance ranking retains the literal search terms.
+  - Removed each verified task from `ramtin-pending.md`; reconciled the three
+    shared bug entries in `pending.md`. These API/search edits and shared
+    `apps/web/lib/api.ts`, `apps/web/lib/types.ts`, `pending.md`, and this log
+    are explicitly assigned by the owner's request to continue the local list.
+  - Verification: root typecheck, 404 unit tests passed / 5 database-dependent
+    skips, web lint, root production build, and Chrome e2e 152 passed / 28
+    conditional skips with 2 workers, including unchanged JS budgets. Real
+    PostgreSQL checks confirmed literal %, underscore and backslash matching
+    for browse/relevance, exclusion of undeclared legacy releases, and local
+    session/signup behavior without email delivery. Synthetic fixtures were
+    removed; snapshot audit protection was checked enabled after cleanup.
+    All nine Lighthouse runs passed existing gates (home/dashboard/detail
+    performance 93/91/92, accessibility 100 throughout; dashboard CLS 0.0206).
+    Eight Explore theme/locale/viewport captures and four 320px homepage captures
+    have no document overflow or uncaught page errors; visual inspection passed.
+    Rebuilt the regular bundle with the real API, restarted the API and web dev
+    server, and verified an actual unverified local browser session leaves the
+    inbox page for the dashboard without changing its stored timestamp. Home,
+    API health and all 19 referenced JS assets return 200. Fixture/Chrome
+    processes were stopped; only the regular local stack remains.
+  - Existing uncommitted work is preserved. No commit or push; real email,
+    Google, physical devices, maintainer wording review and other open backlog
+    items remain pending. Local evidence: `maintenance/email-pause-20261018/`.
+
+- **Dashboard repair phase (D00?D23, `ramtin`, owner-assigned local checklist).**
+  - Continued the existing creator submission edits: review checkpoint, current
+    lifecycle version, source/conflict recovery and in-review feedback; creators
+    only submit for moderation. New-listing copy no longer promises publication.
+  - Editor actions clear mobile tabs and safe areas. Internal links and Cancel
+    prompt before discarding dirty input; full-page exits retain the unload guard.
+    Load failures have context, Retry and Back. Labelled declaration rows replace
+    pipe syntax, retain literal punctuation and serialize the existing manifest.
+    Section links, required-field hints and a declarations preview aid review.
+  - Settings separates loading, absent profile and failure, offers retry and a
+    profile-editor link that waits for listing layout to settle. Latin identity
+    and rating fractions are isolated in Persian. Verification identifies the
+    account and offers sign-out; authentication requirements remain intact.
+  - Mobile search, shorter breadcrumbs, larger account targets, compact studio
+    metrics, readable listing names, shared lifecycle styles, KPI context and
+    content-sized overview panels address the remaining dashboard review items.
+    Provider token help links official GitHub/npm docs; source failures give
+    correction/retry instructions with diagnostic codes kept secondary.
+  - Recorded the dashboard Operate brief before migrating its surfaces to the
+    existing Datasheet language. Kept workspace-only translation payloads out of
+    public catalog bundles; all original creator keys are retained in EN/FA.
+    No dependencies, database schema, provider credentials or auth bypass added.
+  - Verification: root typecheck; 396 unit tests passed / 5 database-dependent
+    skips; web lint; root production build and final fixture web build; full
+    Chrome e2e 147 passed / 27 conditional skips with 2 workers, including JS
+    budgets. Thirty fresh EN/FA, theme and viewport captures have no document
+    overflow or uncaught page errors. Editor hit tests also cover 375x350 and
+    landscape, and browser tests exercise all nine listing-type field groups.
+    Final dashboard/budget checks passed 38 / 18 skips. All nine Lighthouse
+    runs passed existing gates; dashboard CLS 0.0206, performance 90 and
+    accessibility 100. The first run exposed metric-placeholder height drift
+    (CLS 0.072); reserved matching label/context space and verified the repair.
+    No budgets were raised. Detector findings are confined to
+    existing global font/token rules; the pinned fonts were retained.
+  - Shared surfaces: `apps/web/lib/i18n/creator.ts`,
+    `apps/web/lib/i18n/dashboard.ts`, `changelog.md`; retained the pre-existing
+    `apps/web/lib/api.ts` request export used by the submission helper. Other
+    initial dirty/untracked files were preserved. Manual second-pass diff review;
+    no usage meter available. Changes remain uncommitted because the initial
+    submission/helper edits were already uncommitted and their ownership has not
+    been confirmed; no other agent's changes were staged or pushed.
+  - Removed completed local checklist entries as verified. Commented out the
+    owner's deferred signup/login verification-code and live-email phase until
+    an email service is available. Real providers/devices, browser 200% zoom,
+    assistive technology and maintainer review of Persian copy remain open.
+    Rebuilt the regular local web bundle after fixture testing; main page and
+    all 19 referenced JS assets returned 200, as did `/api/health` and the type
+    registry. Temporary fixture servers and the disposable Chrome were stopped.
+    Local evidence: `maintenance/dashboard-repairs-20261018/` (ignored).
+
+## 2026-10-17
+
+- Recorded a dashboard visual/usability review in the ignored local
+  `ramtin-pending.md`, with prioritized tasks, reproduction steps and local
+  screenshots. Covered English/Persian, light/dark and desktop/tablet/mobile
+  layouts using the existing Chrome/Playwright fixture setup. Deferred live
+  email/Google verification until the owner resumes after acquiring a domain.
+  No application code changed; local checklist/evidence were not committed
+  or pushed.
+
+- Created the owner's local-only `ramtin-pending.md` checklist, with live email
+  and Google verification first, current session follow-ups, and a complete
+  snapshot of the open shared backlog. Added its root path to `.gitignore`;
+  verified it is ignored and untracked. No runtime code changed or tests needed.
+  These checklist/ignore changes were not committed or pushed, at owner request.
+
+- **Google sign-in wiring and final auth verification (`ramtin`, requested by owner).**
+  - The main site's account page previously had no Google client despite the
+    shared API supporting it. Added the official GIS button, credential POST,
+    the existing session refresh and safe local return path, and visible SDK/API
+    failures. Google signup uses the verified Google identity directly.
+  - Both Next.js builds accept the API's `GOOGLE_CLIENT_ID` and expose only that
+    public ID to the browser. Kept the existing `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
+    frontend fallback. Passed the public ID into the web Docker build, matching
+    the existing blog setup. Added no dependency or secret to tracked files.
+  - Blog Google initialization now uses Next Script `onReady`, which runs again
+    on remount with a cached SDK; added SDK failure feedback, localized button
+    rendering and a width bounded by the account form. Its new Persian error
+    text was written by the assistant and awaits maintainer review.
+  - Added main account/API/SDK and blog handoff regression tests. Verified root
+    typecheck, 384 unit tests, web lint, root production build, Docker Compose
+    config, web e2e 122 passed / 16 conditional skips with 2 workers and budgets.
+    No API/database logic changed in this phase; the previous 5 real PostgreSQL
+    journeys remain the database evidence.
+  - The Windows Lighthouse cleanup issue is avoided by first launching a
+    dedicated headless Chrome with a disposable profile under ignored
+    `maintenance/lhci-chrome` and loopback debugging port 9223, then running
+    `npm run lhci -w apps/web -- --collect.settings.port=9223`. This reuses the
+    already-running test browser instead of Chrome Launcher's failing temporary
+    profile cleanup. All 9 runs and the existing assertions passed, and passed
+    again against the final rebuilt app; no budgets or security settings were
+    weakened. The owner explicitly requested pushing all accumulated `ramtin`
+    changes while the account setup requirements were being checked.
+  - Live provider verification remains blocked: no process/user/machine
+    Cloudflare credentials, usable sender configuration, or Google client ID;
+    no connected browser session for account setup; no authorized test mailbox
+    supplied. Asked the owner for the sending domain, Google project and mailbox.
+    Do not treat the mocked SDK/provider tests as real inbox or Google sign-in
+    proof. The email guide documents the exact configuration and live checks.
+  - Shared surface: `apps/web/lib/api.ts`, `changelog.md`. Cross-lane blog auth
+    files changed because the owner's request explicitly covers Google login.
+    Reviewed the final diff manually; no usage meter available.
+
+- **Authentication and email verification review (`ramtin`, API and account UI).**
+  - Fetched the remote references: local `ramtin` contains `origin/main` and
+    `origin/v.2` (22 and 31 commits ahead respectively); no additional merge needed.
+  - Existing Cloudflare verification/reset delivery retained. Fixed the Windows
+    email-worker entry point, verification resend after the 60-second cooldown,
+    password loss when a verified password account links Google, off-site login
+    return URLs, and favorites failures incorrectly clearing a successful session.
+  - Returning unverified readers can open verification from their account;
+    the dashboard shows verification before mounting creator pages. Removed the
+    corresponding pending dashboard item. Reused existing copy/components.
+  - Added database-backed reader lifecycle tests to the existing CI integration
+    job, browser signup/verification/reset tests, and regressions for Google,
+    worker startup, delivery errors/retry exhaustion, return URLs and session state.
+    Isolated the API tests' login rate-limit keys between cases.
+  - Verification: root typecheck; 376 unit tests; 5 real PostgreSQL integration
+    tests; web lint; root production build; web e2e 122 passed / 16 conditional
+    skips with 2 workers, including JS budgets. Default-worker e2e reproduced
+    the already-recorded duplicate catalogue `rel=next` failure; the new browser
+    fixture's missing favorites response was fixed before the passing rerun.
+    Lighthouse attempted but failed before assertions with the existing Windows
+    Chrome temporary-profile EPERM. No performance budgets changed.
+  - Synced installed dependencies to the pulled lockfile and regenerated Prisma;
+    no dependency or lockfile change shipped. Restarted the local API/web servers.
+  - Local `blog_db` had an unresolved failed `202609240001` migration and two
+    pending migrations. Backed it up to
+    `D:\coding\Projects\TermSpace\backups\termspace-before-auth-20261017.dump`,
+    restored to a fresh disposable database, preserved the single legacy creator
+    owner in `ownerUserId`, cleared the redundant `userId`, marked the failed
+    migration rolled back and deployed all three migrations. Verified account
+    credentials/verification state, creator owners and content/order/review/role
+    counts against the original before repeating on the local database. No email
+    verification state or role grants changed. The legacy owner must verify their
+    email before an operator grants their creator role; do not bypass that gate.
+    The one-off assert-guarded script is in ignored
+    `maintenance/auth-database-recovery.mjs`; backup restoration is the down path.
+  - Remaining setup: Cloudflare account/token and Google client ID are absent;
+    real inbox delivery and live Google OAuth are unverified. Use a real signing
+    secret shared by API and worker in Windows user env; see the updated email
+    guide. No email provider credentials or secrets were written by this change.
+  - Shared surfaces: `changelog.md`, `pending.md` (authorized auth follow-up from
+    the other lane). Reviewed the final diff manually; no usage meter available.
+- **Product page polished (branch `redesign`, `apps/web` presentation lane).** Final pass over the product-page sequence of 2026-10-17/18 (harden, layout, clarify, distill, adapt), made by reading the finished page in English and Persian at 1440 and 375 px and with an earlier version selected. Three defects found and fixed, all in right-to-left rendering: in the key-facts list an English value (platforms, permissions, licence) jumped to the far side of its row, away from its label, because the whole value resolved its own alignment (values are now isolated with `<bdi>` and stay at the start edge); the "Models" line under Platforms inherited the English direction (models are now their own "Models" row); and a version's release note written in English ended up with its full stop at the start (the note now resolves its own direction). English at both sizes and the earlier-version state needed no change. **Critique `2026-10-17T19-24-46Z__app-products-slug-page-tsx.md` is not closed:** its P0 (version picker), both P1s (platform on the first screen, the no-release state) and the first P2 (trust stated four times at the smallest type) are done; the second P2, moving the page to the Datasheet skin, was replaced at the maintainer's request by a simpler layout, so the Datasheet question stays open (see the layout entry). Verified: root typecheck; web lint; web unit tests 177/177; e2e catalog, targets, persian, landing, seo and budget 97 passed, 13 skipped, 0 failed; screenshots read for English desktop, an earlier version, Persian desktop and English phone; not run: `npm run lhci -w apps/web`, and the `apps/api` suite's one existing failure (`registers a password account with an atomic verification outbox record`) is unchanged.
+
+- **Product page adapted: skip link, phone targets, Persian direction, strings moved (branch `redesign`, `apps/web` presentation lane; touches `lib/i18n/`).** From the 2026-10-17 critique of `/products/[slug]` (P2, adapt; step 6 of the product-page sequence). A skip link ("Skip to content" / "رفتن به محتوا", new `components/layout/skip-link.tsx`) is now the first stop on the page and lands on `<main id="content">`; other pages can adopt it. On a phone the tappable controls are 44 px tall: the logo link (`components/layout/logo.tsx`, every page), the version select, the provenance Copy button (`components/patterns/copy-block.tsx`) and the breadcrumb link. Creator-written text (facts values, benefits, use cases, included files, example output, creator bio, review text) now carries `ts-bidi`, so English text in a Persian page, or a value that starts with a digit such as "1 user · commercial use", resolves its own direction instead of inheriting the page's. The page's own string table moved out of `page.tsx` into `lib/i18n/product-page.ts` (server-only, outside the client dictionary, so no JavaScript cost); the strings themselves are unchanged. The 24 px target test (`e2e/targets.spec.ts`) now skips visually hidden (`sr-only`) controls, which grow to full size on focus. **Shared surfaces touched:** `lib/i18n/` (new file only), `changelog.md`. **Not changed, recorded:** the announcement bar's link (32 px) and dismiss button (24 px) and the header's "Explore" link on a phone are below 44 px; the bar's height is animated, so it needs its own pass. The related-listing card titles in Persian measure 43 px (shared `ProductCard`). Footer links are 44 px tall but about 38 px wide. Verified: root typecheck; web lint; web unit tests 177/177 (new: creator values keep their direction); e2e catalog, targets, persian, landing, seo and budget 97 passed, 13 skipped, 0 failed (new: skip link is the first stop, phone controls at least 44 px tall); Persian page read in the browser (rtl, skip link, content anchor, plaintext bidi on the facts); not run: `npm run lhci -w apps/web`.
+
+- **Product page distilled: each fact stated once (branch `redesign`, `apps/web` presentation lane).** From the 2026-10-17 critique of `/products/[slug]` (P2, typeset and distill; step 5 of the product-page sequence). The key-facts list is now the one place a listing's platform, review state, permissions, licence, release, pinned ref and digest appear. The "Manifest" table, which repeated all of them, is now "Details" and lists only what the facts do not say (requirements, updated, package size, update policy); "Source & provenance" no longer repeats the release, ref, digest and licence and keeps the source link, the last source check (now "Check passed" rather than a second "Verified"), the per-permission purpose, scope and destinations, environment variables and the fetch commands; the "Works with" section, which repeated the platform row, is gone. The rounded-card styling of the details, provenance permissions and creator block gives way to hairline rows. The old trust chips (9 and 11 px text) were already unused and are deleted with the manifest table (`components/catalog/trust-chip.tsx`, `manifest-table.tsx`). Header meta uses tabular numerals and the description keeps a 42rem measure; nothing in the product page's own content is under 12 px. **Not changed, recorded:** the related-listing cards (shared `ProductCard`, also used by explore) still set a few labels under 12 px ("Editor’s pick", platform names, the date). The anchors `#manifest`, `#provenance`, `#reviews` became `#details`, `#provenance`, `#reviews`. New Persian strings (details labels, "Check passed") await review. Verified: root typecheck; web lint; web unit tests 176/176 (new: release facts for an earlier release, current-release summaries, undeclared rows, Persian); e2e catalog, targets, persian, landing, seo and budget 93 passed, 13 skipped, 0 failed; section list and font sizes read in the browser on the dev server; not run: `npm run lhci -w apps/web`.
+
+- **Product page copy clarified (branch `redesign`, `apps/web` presentation lane).** From the 2026-10-17 critique of `/products/[slug]` (P1/P2, clarify; step 4 of the product-page sequence). A listing with no approved release no longer shows a disabled purple button reading "No approved release is available yet."; it shows a status note ("No release to add yet. The creator hasn’t published an approved release. You can still preview this listing and save it.") above the working Preview and Save buttons. A failed add now names its reason instead of one generic retry line: the release is no longer available, it is already in the library, the session ended (sign in again), too many requests, or a connection problem. A signed-out visitor is told what signing in is for ("Sign in to add or save this listing.") before they click. The review row says "Safety reviewed" (Persian "ایمنی بررسی‌شده"), the term the explore cards use, instead of "Verified", which the creator badge also uses for a different claim. "1 resources" is singular, the reviews heading carries the review count ("Reviews (184)") instead of a bare rating, the preview excerpt label no longer claims "SKILL.md" for every listing type, and the footnote that repeated the licence under the buttons is gone. **Not changed, recorded:** the related-listing cards' trust strip (shared with explore, `product-parts.tsx` `TrustStrip`) still reads "Licence: Licence not stated" and "Permissions: Permissions not declared" to a screen reader; the seeded dev listing `research-brief-generator` is "Safety reviewed" while having no approved release, which is data, not copy. New Persian strings await review. Verified: root typecheck; web lint; web unit tests 172/172 (new: no-release note, five failure reasons, signed-out note); e2e catalog, targets, persian, landing, seo and budget 93 passed, 13 skipped, 0 failed; the no-release state read in the browser on the dev server; not run: `npm run lhci -w apps/web`.
+
+- **Product page laid out around its facts (branch `redesign`, `apps/web` presentation lane).** From the 2026-10-17 critique of `/products/[slug]` (P1, layout; step 3 of the product-page sequence). The first screen now answers "does it work on my platform and can I trust it" before the long page: a plain header (name, outcome, type, creator, rating, uses), then one quiet list of key facts (platforms, safety review, permissions, licence, release, pinned ref, digest) with hairlines only; whatever a listing leaves undeclared is printed in red ("Not declared", "Not provided by the source"). The release rows (permissions, licence, release, ref, digest) follow the version picked in the rail, so they describe exactly what "Add" will pin; any other release loads on demand, so the page stays inside its first-load budget. The add controls are a bare column (version, Add, Preview, Save) that is sticky from lg, and below lg they follow the header directly so Add sits inside the first screen at 375 px (about y 635 of 812). Sections lose their numbers, frames and shaded bands; related listings lose the "Keep building" kicker, the white example-output card and the coloured left-border use-case cells. A first attempt in the boxed Datasheet treatment (framed title block, numbered sections, ruled bands) was built and then dropped at the maintainer's request in favour of this simpler layout; `DESIGN.md` is unchanged, so the product page does not follow the Datasheet frame and that choice is open. **Still to do (steps 4 to 7):** the Manifest and Source & provenance sections still repeat the facts list and keep their older rounded-card style; copy ("Verified" versus the creator badge, "1 resources", the hard-coded "Excerpt · SKILL.md"), type sizes under 12 px, Persian bidi and the 18 px footer links are untouched. New Persian strings (title-block and release-facts labels) await review. Verified: root typecheck; web lint; web unit tests 167/167; e2e catalog, targets, persian, landing, seo and budget 93 passed, 13 skipped, 0 failed; screenshots read at 1440 and 375; not run: `npm run lhci -w apps/web`.
+
+## 2026-10-17
+
+- **Product page hardened: the version picker now controls what "Add" installs (branch `redesign`; touches `apps/api` and shared surfaces).** From the 2026-10-17 critique of `/products/[slug]` (P0, harden). Before, the picker only swapped the "What changed" text and `acquireProduct` sent no release, so a reader who inspected v2.3.0 and pressed Add received whatever the API treated as current. Now: `GET /api/marketplace/products/:slug/releases/:version` returns the public facts of one published release (source, ref, digest, permissions, licence, `current`; never the creator's installation steps); `POST .../acquire` takes an optional `{ version }`, validated by `marketplaceAcquireSchema`, and pins that release only if it is published, source-verified or stale, and on a trusted host (the same gates as the approved one). Naming a different release than the one a reader already holds answers 409 `ALREADY_IN_LIBRARY`; replaying a key with another version is 409 `IDEMPOTENCY_CONFLICT`; no body keeps the old behaviour. The page keeps the selected version in one context shared by the picker, the "Add vX to library" button and the provenance section, so the facts a reader reads and the release the button sends are the same one; the page's own release is used as rendered, any other loads its facts and the button stays disabled until they arrive or says it could not load them. The Preview and installation dialogs and the other-release view are now loaded on demand, which keeps the page inside its 195 kB first-load budget. **Shared surfaces touched:** `apps/api/src/validation/schemas.ts`, `apps/web/lib/api.ts`, `apps/web/lib/types.ts` (`ProductRelease.current`); no schema change and no migration. **Not changed, recorded for the other maintainer:** a published release can still be added after the fact; there is no per-release withdrawal (a security-pulled old version stays addable while its source checks pass), and the page's current release (newest published) and acquire's default (the approved snapshot's) are still chosen by different rules. The page now always sends the version it shows, so a reader is not affected, but old clients still use the default. Verified: root typecheck; web lint; web unit tests 167/167; API tests 188 pass (new: pinning the named release, refusing unpublished or untrusted versions, held-release conflict, replayed key, malformed bodies, the release endpoint and its 404s) and the same single failure as before this change (`registers a password account with an atomic verification outbox record`); e2e catalog, targets, persian, landing, seo and budget 93 passed, 13 skipped, 0 failed, product page within the 195 kB gate; not run: `npm run lhci -w apps/web`.
+
+- **Explore polished (branch `redesign`, `apps/web` presentation lane).** Final pass over the explore work of this session, from the 2026-10-17 critique. The phone results bar stays on one row when the Filters badge appears (the platform select shrinks instead of the row wrapping). An empty result shows each active filter once, in the empty state, instead of repeating the chip row above it. The type strip is a group of toggle buttons with `aria-pressed`, not `role=tab` without a panel or arrow-key behaviour (the catalog e2e follows). The result count uses Persian digits on the Persian page ("۱۲ منبع"). Checked by eye on desktop, 768px and 375px, in English and Persian, with a filtered result and an empty one; no console errors. The critique snapshot is left open: its P1 card trust block, P2 datasheet migration and P3 first-screen items are not done, and the facet-count work was reverted at the owner's request. Verified: root typecheck (web), web lint, 163 web tests, e2e catalog + targets + persian + landing + budget (74 passed, 8 skipped). Not run: lhci and the `apps/api` suite (no API change).
+
+- **Explore copy clarified (branch `redesign`, `apps/web` presentation lane).** From the 2026-10-17 critique (P2, clarify). The filter that keeps only reviewed listings is now "Safety reviewed only" (Persian "فقط ایمنی بررسی‌شده"), the name the cards use, instead of "Verified only", which read like the creator-identity badge; PRODUCT.md says those are different claims. The facet previously called "Compatibility" is "Platform" ("پلتفرم"), matching PRODUCT.md; the i18n key stays `compatibility`. One result reads "1 resource" (new `discovery.product`), and the drawer button reads "Show results ({count})" so it is right for one. Card dates are labelled "Updated Oct 17" (new `productCard.updated`). The search placeholder is "Search resources or creators…" (Persian "جست‌وجوی منابع یا سازندگان…"), which no longer truncates at 375px. i18n is a shared surface. Not changed, and why: no document defines what a safety review covers, so there is no help text explaining it (needs the owner to say what it asserts); "resources" versus the PRODUCT.md term "listing" is a voice decision for the owner, so the UI still says resources; the repeated title and "View details" links on each card are unchanged. Verified: root typecheck (web), web lint, 163 web tests (1 new), e2e catalog + targets + persian + landing + budget (74 passed, 8 skipped). Not run: lhci and the `apps/api` suite (no API change).
+
+- **Explore hardened: removable filters, honest errors, safe empty state (branch `redesign`, `apps/web` presentation lane).** From the 2026-10-17 critique (P2, harden). Active-filter chips are buttons that remove only their own filter (accessible name "Remove filter: X"), the "Verified" chip is localised (it reuses "Verified only"), and the empty state offers the same per-filter removal; "Clear all" shows only when there is a search or a filter to clear. The empty-state search text is built without `String.replace`, so a query like `## 2026-10-17
+
+` prints literally, and it sits in `<bdi>` so Latin text keeps its direction on the Persian page and a long query wraps. The server page now tells failures apart: a 400 (a link with a filter the API rejects, such as an unknown `?type=`) redirects to the same search without the other params instead of claiming the library is unreachable, a 429 shows the existing rate-limit message, and a `?page=` past the end redirects to the last page. Retry is disabled while it reloads. The grid/list choice is remembered per device (`localStorage` through `useStoredString`). i18n is a shared surface: added `discovery.removeFilter`, removed the unused `heroIntro` and `datasheet.findLabel` strings, which also keeps the product page inside its 195 kB first-load budget (it measured 195.05 kB before this change). Not done: the "drop this filter, get N results" counts (needs API facet counts, which were reverted) and the submit-a-tool link. Community pages share the component but not the page-range redirect. Verified: root typecheck (web), web lint, 162 web tests (4 new), e2e catalog + targets + persian + landing + budget (72 passed, 8 skipped), with the mock API now returning 400 for an unknown type like the real one. Not run: lhci and the `apps/api` suite (no API change).
+
+- **Explore on phones: platform in the bar, first card at y=463, 44px targets (branch `redesign`, `apps/web` presentation lane).** From the 2026-10-17 critique (P1, mobile). Below `lg` the results bar now holds a "Compatibility" select (the platform facet) next to Filters, so platform no longer hides behind the drawer; the sidebar copy stays for `lg`, and the drawer drops it. Below `sm` the grid/list toggle is hidden (both render one column there) and Sort moves into the drawer, which makes the bar one 69px row instead of two. The generic marketplace intro is hidden on phones (community pages keep their own description), and the hero, search, tabs and bar spacing tighten. Filters badge now counts only what the drawer holds. Targets: type tabs, Filters, card title, "View details", drawer radios and the verified switch reach 44px on phones; footer links go from 18px to 44px (still inline text from `md`). On a 375px viewport the first card moved from y=726 to y=463 and targets under 44px fell from 50 to 5 (the header announcement and logo links, the footer logo, and the 38px-wide "About" link; the header is shared and was left alone). No new i18n strings: two added keys pushed the product page 0.1 kB over its 195 kB budget, so the select reuses the existing label. Verified: root typecheck, web lint, 158 web tests (one new for the bar/drawer split), e2e catalog + targets + persian + landing + budget (66 passed, 8 skipped). Not run: lhci, and the `apps/api` suite (no API change; one API test was already failing at the previous push). A tablet (768px) and desktop screenshot check showed no regression.
+
+- **Home: hero title matches the other pages' titles (same branch).** The h1
+  drops its own scale (bold sans, clamp up to 3.2rem) for the shared `editorial`
+  title style: `text-4xl sm:text-5xl`, regular-weight serif, the same as the
+  explore, communities and dashboard titles. The `.ts-hero-title` Persian rule
+  is removed (the shared `.editorial` Persian rule covers it); the Persian
+  display-type e2e drops its English-vs-Persian size comparison, which was only
+  true of the old hero title.
+- **Explore: header centered (same branch).** In
+  `features/discovery/discovery-experience.tsx` the eyebrow, title, intro, search
+  field and type tabs are centered (the tab strip is `w-fit max-w-full`, so it
+  centers when it fits and still scrolls from its first tab when it does not).
+  Community pages share this component and are centered too. The catalog e2e's
+  featured-card locator now uses the labelled region, which my hero change had
+  made ambiguous (two nested `section`s matched).
+- **Home: hero intro paragraph removed, minimal search (same branch,
+  follow-up).** The headline stays; the paragraph under it ("Prompts, skills,
+  agents and MCP servers built by...") is gone to free vertical space. The hero
+  search is a plain pill: no "Find a listing" label cell, a hairline border, a
+  round icon-only submit (still labelled "Search" for assistive tech). The
+  `label` prop on `ConsoleSearch` is removed. `heroIntro` and `findLabel`
+  are now unused i18n strings (shared surface, left for a cleanup pass). A
+  headline-removed variant was built and reverted in the same session.
+  Verified: typecheck, lint, 157 web tests, e2e landing + persian + budget.
+- **Home: landing content centered (same branch, follow-up).** Hero headline,
+  intro, search (max-w-3xl), type chips and featured title center; "View all"
+  moves under the cards. Process title, trust section (now stacked: centered
+  copy and quote above three cards) and the newsletter CTA (stacked, centered)
+  follow. Card text and the pinned process steps stay start-aligned.
+  `console-search.tsx` chips row centers in the hero variant. Verified: root
+  typecheck, lint, 157 web tests, e2e landing + persian + budget (27 passed);
+  checked by geometry in the browser at 1440x800 (hero ends at 796).
+- **Home: featured shelf moves into the first screen; datasheet, "Browse the
+  library" and "Featured creators" removed (branch `redesign`, `apps/web`
+  presentation lane).**
+  - `app/page.tsx`, `components/hero/hero.tsx`: the hero is now headline,
+    search, and the three featured listings directly under it (`Hero` takes
+    `children`). Verified at 1440x800: cards end at y=736 (en) / 756 (fa, RTL),
+    so search and shelf share the first screen. The removed sections took their
+    dead code with them: `components/hero/datasheet.tsx` (also the title block
+    beside the headline, which described the example listing), and
+    `components/sections/browse.tsx` with its test.
+  - `components/marketplace/compact-product-card.tsx` (new): a hero-scale
+    card (type, name, promise, safety line, creator, rating). Permissions,
+    compatibility, communities and usage stay on the full card and the detail
+    page. It is its own file because adding a variant to `ProductCard` pushed
+    the product page to 195.1 kB against its 195 kB budget. `TrustStrip` gained
+    an optional `compact` prop; `ProductGridSkeleton` a matching `compact`.
+  - `footer.tsx`: "Collections" and "Creator guide" pointed at the removed
+    `/#collections` and `/#creators` anchors. They now go to `/communities`
+    and `/design-system` (where the old tile's Creator guide button went).
+  - e2e: removed the datasheet test and the datasheet half of the Persian-digits
+    test; added a first-screen test (shelf bottom < 800 at 1440x800); the
+    featured locator is now the labelled region.
+  - Verified: root typecheck, `npm run lint -w apps/web`, 157 web tests, e2e
+    landing + persian + budget (27 passed, 7 skipped; `PW_CHANNEL=chrome`
+    because the Playwright browser is not installed here). `lhci` not run.
+  - Left in place: the now-unused i18n strings (`homePage.browse*`, shelves,
+    `creatorsEyebrow`/`featuredCreators`, datasheet body copy) and
+    `CategoryGridSkeleton`/`CreatorGridSkeleton`, in the shared i18n surface.
+    Worth a cleanup pass.
+
+- **Navbar: account menu, icon-only language switch, centered links (branch
+  `redesign`, `apps/web` presentation lane).**
+  - `components/layout/account-menu.tsx` (new) and `header.tsx`: a signed-in
+    reader no longer sees their email as the profile button. It is a round user
+    icon beside the theme and language buttons; it opens a panel with the email
+    as a muted label, then Profile (`/account`), Dashboard (`/dashboard`) and
+    Sign out. Dashboard is gone from the nav links. A signed-out visitor still
+    sees "Sign in". The panel is a disclosure (button with `aria-expanded`),
+    closed by Escape, an outside click or focus leaving it; Escape returns focus
+    to the button. The mobile menu lists the same three items.
+  - The language switch is icon-only; the language name is its accessible name
+    and `title`. The mobile menu keeps the text label.
+  - Explore, Share your work and Moderation are centered in the bar with a
+    three-column grid, so they stay centered whatever the logo and actions
+    measure.
+  - New i18n key `profile` in `lib/i18n/common.ts` (en, fa). **The Persian
+    "پروفایل" was written by the assistant and awaits review.**
+  - A Radix dropdown-menu was tried first and removed: it added about 25 kB gz
+    to every page and broke the first-load JS budget (`/` 209.6 kB against 184,
+    product page 211.7 against 195). The disclosure costs 0.2 kB or less.
+  - Tests: `header.test.tsx` covers the visitor and signed-in states, no
+    Dashboard in the nav, the three menu items, sign out, Escape with focus
+    return, outside click, and the icon-only language link. `e2e/dashboard.spec.ts`
+    now expects 2 nav links for a signed-in creator, not 3.
+  - Verified: root `typecheck`, `npm test -w apps/web` (160), `npm run lint -w
+    apps/web`, root `build`, `npm run e2e -w apps/web` (118 passed, 16
+    skipped, including the first-load JS budgets), and by eye in the browser in
+    English, Persian (RTL) and at 375px. **Not verified:** `npm run lhci -w
+    apps/web` could not complete on this Windows machine (Lighthouse fails with
+    EPERM deleting its temporary Chrome profile, before any assertion runs; same
+    result with the temp directory moved). Run it in CI.
+  - Follow-ups: under load, e2e catalog tests that click before hydration
+    (`a filter changes the URL`, `clicking a featured card morphs`, `pages are
+    real links`) failed intermittently with other dev servers running; they pass
+    on a quiet run.
+
 ## 2026-10-16
+
+- **Landing hero rebuilt as a component datasheet (branch `redesign`,
+  `apps/web` presentation lane at the maintainer's request).** Direction chosen
+  by the maintainer from the decision round: The Datasheet, with the site's
+  existing Geist, Geist Mono and Estedad (no new font files). Contract in
+  `.impeccable/surfaces/app-page-tsx.md`.
+  - `components/hero/hero.tsx` (now a server component) and new
+    `components/hero/datasheet.tsx`: headline and subcopy, a title block (from
+    `lg`), the search with a "Find a listing" cell and a quiet "Browse by type"
+    line, and one synthetic example listing set as a part: features, an Absolute
+    Maximum Ratings table (undeclared rows marked in red, not omitted), a plain
+    SVG pin diagram, ordering information with the pinned release and install
+    command, and a footer. Labelled "Example listing" in three places. Static
+    markup, no animation, readable without JavaScript.
+  - Removed: the nebula, the WebGL plasma field, the typed manifest card, the
+    platform ticker, the 3D stage, the scroll-progress hook, the pointer store
+    and their CSS, tests and copy keys (`components/hero/*` old files,
+    `components/motion/marquee.tsx`, `lib/pointer.ts`,
+    `lib/hooks/use-scroll-progress.ts`). "Share your work" left the hero
+    (it stays in the header). `docs/motion.md` rewritten to match.
+  - Copy: the sheet's text is in `lib/i18n/home-sections.ts` (server-only, so it
+    costs the page no JavaScript), English and Persian. **The Persian text was
+    written by the assistant and awaits the maintainer's review.**
+  - `components/sections/console-search.tsx`: the hero variant is a ruled,
+    square field with a visible label cell and underlined type shortcuts (counts
+    now use the locale's digits); search behaviour is unchanged, including the
+    placeholder that types through example intents (the hero's own visuals do
+    not animate, the placeholder is search behaviour; say if you want it
+    static).
+  - Accent: the sketch's blue became the site's existing primary violet (Search
+    and the table header rule) until the system-wide recolour; red marks "not
+    declared"; green stays reserved for review state (the hero prints "Reviewed"
+    in ink, so it uses none).
+  - Finish review (fresh reviewer): disposition fix, seven items, all applied:
+    Persian part-header alignment, an "example" mark on the title block, one
+    block per headline sentence, square search grammar, Persian digits for
+    counts, light-theme capture, and a corrected seed line in the brief (the
+    roll printed no reference; the owner's pick overrode it).
+  - Measured: home first-load JS 181.0 KiB (was 186.9), gate lowered from 190 to
+    184; Lighthouse mobile (mock) perf 0.93, a11y 1.0, CLS 0, TBT 20 to 30 ms
+    (was 40); simulated LCP unchanged at 3.2 s (see `pending.md`).
+  - Verification: typecheck, lint, 157 unit tests, full e2e 118 passed and 16
+    skipped (landing and Persian specs rewritten for the new hero; new checks for
+    the labelled example, an undeclared row marked, search above the fold on a
+    phone, no canvas and no running animation), root build. Not done: a real
+    phone. `DESIGN.md` and `.impeccable/design.json` were regenerated from the
+    built hero (the rest of the site still ships Signal & Void and the document
+    says so).
+- **Design context and hero direction (branch `redesign`, no behaviour change).**
+  - New `apps/web/PRODUCT.md`: users, purpose, positioning (declared permissions
+    and provenance), constraints (free, external sources, untrusted
+    submissions, Persian and English as equals), evidence (all current
+    listings are fixtures) and principles. Written from `docs/product-direction.md`
+    plus three answers from the maintainer.
+  - New `apps/web/DESIGN.md` and `.impeccable/design.json`: the current
+    "Signal & Void" system recorded as a **pre-redesign baseline**; it is
+    replaced when the hero redesign ships.
+  - `apps/web/.impeccable/`: `config.json` (`buildPath: code`), the 2026-10-16
+    critique snapshots for `/`, `/dashboard` and `/explore`, and the decision
+    sketches from the hero direction round. **Direction chosen by the
+    maintainer: The Datasheet** (`model-pick.html`): the hero as a component
+    datasheet, white page, hairline rules, spec blue only on Search. The decision
+    page had first recorded "The Card Catalogue", which was not their choice; they
+    had asked for a minimal hero with little graphics and few colours.
+    `minimal.html` is a plainer reference. The other sketches are references only.
+    Nothing is built.
+    `hook.cache.json`, `live/` and `questions/` are generated and not committed.
+- **Listing cards state what the listing declares (critique-driven `layout`,
+  branch `redesign`).**
+  - `components/marketplace/product-card.tsx` and `product-parts.tsx`: a
+    two-part strip under the outcome on every card (home, explore, related
+    listings): a green shield and "Safety reviewed", or an amber one and "Not
+    yet reviewed", then the licence in mono; below it the declared permissions
+    line, which wraps to two lines before it clips because "no network access"
+    is the part that matters. A listing that declares nothing says so
+    ("Permissions not declared", "Licence not stated") instead of leaving a
+    gap. The strip is data the API already returned (`permissions`, `license`
+    are product columns the list query spreads); `Product` now types them as
+    optional and a new API test pins that the list query keeps them.
+  - The creator-identity tick is no longer the cyan check, which looked like
+    the safety mark and spent Signal on a trust claim DESIGN.md reserves
+    green for: it is a scalloped badge in the brand colour, the shield is
+    green. Two marks, two shapes, two colours, two labels.
+  - `/explore` and community pages: an `sr-only` "Results" `h2` before the
+    cards, so the outline goes h1, h2, h3 instead of skipping a level.
+  - New copy keys in `productCard` and `discovery` (`lib/i18n/catalog.ts`,
+    both locales) and `moderationNav` (`common.ts`); fixtures in
+    `lib/mock-home.ts` carry permissions and licence (one listing is unreviewed
+    with no licence, to exercise the empty states).
+  - **Bundle offset, no gate change.** The additions pushed the product page's
+    first-load JS over its 195 kB ratchet (196.2 KiB). The moderation
+    dictionary (2.6 kB gz, used only on the moderation screens) was shipping to
+    every page inside `copy`. It is now read through
+    `features/moderation/copy.ts` (`useModerationCopy`) by the two moderation
+    screens only, and `lib/i18n/index.ts` no longer spreads it. Product page
+    194.6 KiB (gate 195), home 186.9 (190), dashboard 185.9 (200). The margin on
+    the product page is 0.4 KiB: the next addition there needs another offset.
+  - Verification: typecheck, lint, 169 web unit tests (four new card tests,
+    the queue test now mocks the copy hook), API 177 passed (one new) with
+    `LOCAL_AUTO_VERIFY_EMAIL=false`, full e2e 125 passed (new: every card
+    states its review state, licence and permissions; heading levels never
+    skip). Measured at 390, 768 and 1440 px in English and Persian, dark and
+    light: cards in a row stay level and nothing clips. Not done: the
+    permissions *filter* on `/explore` from the critique (separate item).
+- **Dashboard on a phone (critique-driven `adapt`, branch `redesign`).** From
+  the 2026-10-16 critique of `/`, `/dashboard` and `/explore`.
+  - `features/dashboard/listings-table.tsx`: at 390 px the listing names
+    rendered at 0 px, so each row showed only its type badge (`max-w-0` on the
+    name cell with nothing telling it to take the leftover width, then the badge
+    and a no-wrap status pill taking the rest). The name cell is now
+    `w-full max-w-0` below `sm`, the type badge sits under the name, the status
+    pill may wrap, and the acquisitions header drops its tracking. Names are
+    71 px at 320, 82 to 139 px at 390 (full text, ellipsis only for the longest
+    at 320 and 360), and the page never scrolls sideways.
+  - A listing whose state needs the creator (changes requested, rejected,
+    suspended) gets a second line with the reviewer's message and, where the
+    listing is editable, an "Edit draft" link. Before, the row said "Changes
+    requested" with no reason and linked to releases. `isEditable` is now
+    exported from `features/creator/creator-dashboard.tsx`.
+  - The 10 px type badge and the Ctrl K hint are 11 px (the floor in DESIGN.md).
+  - `features/dashboard/dashboard-nav.tsx`: below `lg` Publish is the last slot
+    of the bottom tab bar instead of a floating button, which sat over the
+    right-aligned acquisitions column of whatever row was scrolled beneath it.
+    Bottom padding of the shell is 24 (was 32) to match.
+  - Verification: typecheck, lint, 165 unit tests (one new: reason and edit link
+    appear for the listing with feedback only), full e2e 123 passed (new phone
+    case: names wider than 60 px, reason and Edit draft visible; the
+    signed-out-then-dashboard case now counts name cells, not table rows).
+    Measured at 320, 390, 768 and 1440 px. Not run: a real phone.
+- **Web audit fixes (branch `redesign`, `apps/web` presentation lane at the
+  maintainer's request).** From a Playwright pass at 735, 768 and 1440 px over
+  the main routes, signed out and as a creator. One bullet per fixed item.
+  - Language switch (`components/layout/header.tsx`): the switch was a client
+    `<Link>`, so `/fa` showed an English, left-to-right page until a reload
+    (the root layout keeps `lang`/`dir` across a soft navigation). It is now a
+    plain anchor. Verification: new `e2e/persian.spec.ts` case round-trips
+    en to fa to en and asserts `lang` and `dir` without a reload.
+  - Persian home page (`app/page.tsx`, `components/sections/process.tsx`,
+    `lib/i18n/home.ts`): the process steps, the trust section, the collection
+    shelves and the newsletter blurb were hard-coded English, so everything
+    below the hero was English inside an RTL page and its full stops landed on
+    the wrong side. All of it now comes from `lib/i18n/home-sections.ts` in
+    both locales (new file in the shared `lib/i18n/`). That file is **not**
+    spread into `copy`: `copy` is imported by client components, so putting
+    about 4 KB of home-only text in it pushed the product page's first-load JS
+    to 196.9 kB gz against its 195 kB ratchet gate. `app/page.tsx` reads it on
+    the server and passes the three process steps to the one client component
+    that needs them as a prop. The process panel's terminal lines are an
+    explicit `dir="ltr"` island and creator bios use `.ts-bidi`.
+    Verification: unit test renders `Process` in `fa`; e2e asserts every
+    `main h2` on `/fa` contains Persian; checked by eye at 768 px.
+  - One creator surface, `/dashboard` (items 5, 6, 7 and 8 of the audit).
+    **Decision (maintainer, 2026-10-16): the creator workspace lives under
+    `/dashboard` only.** This reverses the plan to retire studio in favour of
+    `/creator` and settles the three open questions about that redirect.
+    `/creator` and `/creator/listings/**` moved to
+    `/dashboard/studio` and `/dashboard/studio/listings/**` (new, edit,
+    releases), now inside the dashboard shell; the old addresses 308 to the new
+    ones in both locales (`next.config.ts`). Every link, the header's
+    "Share your work", quick actions and the docs point at the new routes; the
+    transitional `StudioNotice` is gone. The measured layout shift on
+    `/creator` (CLS 0.65 to 1.06, from the marketing footer jumping into
+    place) is gone with the page: 0 on `/dashboard/studio` at 735, 768 and
+    1440. "New listing" no longer wraps. "Design system" is out of the primary
+    nav (the page stays, footer links unchanged).
+    Verification: typecheck, 163 unit tests, lint, e2e `dashboard.spec.ts`
+    (new case: `/creator`, `/creator/listings/new` and `/fa/creator` redirect,
+    and the editor renders without the site footer).
+  - Product page (`app/products/[slug]/page.tsx` and its `loading.tsx`): below
+    `lg` the acquire panel followed every section, about 3,500 px down at 735
+    and 768. The header, the panel and the body are now three grid children, so
+    the panel comes right after the header (y 634 at 768 px). From `lg` the
+    aside spans both rows as before, still sticky. Verification: new e2e case
+    asserts "Add to library" is within 1,800 px of the top at 375, 735, 768 and
+    1440. `e2e/catalog.spec.ts` "renders the listing header" also had a latent
+    flake on a cold server (about 1 run in 4): a streamed page is revealed
+    inside a view transition and React keeps a hidden copy beside the visible
+    one, so strict text locators matched twice. The test now waits for the copy
+    to go; 0 failures in 20 cold starts.
+  - Signed-in header at 735 and 768 px (`components/layout/header.tsx`): with
+    four nav items and the full email, "Design system" wrapped to two lines
+    and "Share your work" to three. Removing Design system (above) leaves
+    three; the nav is also `whitespace-nowrap` with a tighter gap below `lg`,
+    and the account link truncates a long address (full address in `title`).
+    Verification: e2e at 768 px, English and Persian, asserts one-line links
+    and no horizontal scroll; checked by eye at 735 and 768.
+  - Mobile menu (`components/layout/header.tsx`, `components/ui/button.tsx`):
+    Escape now closes it and returns focus to the toggle. `Button` accepts
+    `ref` (typed from `ComponentProps<"button">`). Verification: unit test
+    opens the menu, presses Escape, asserts `aria-expanded` and focus.
+  - Page titles: `/account`, the sign-in redirect and the creator pages had the
+    homepage title; a missing listing was "Resource"; Persian pages said
+    "Explore" and "Skill for Claude" in English. Titles are now built from the
+    dictionaries (new `lib/i18n/titles.ts` for the three strings that had no
+    home, spread in `lib/i18n/index.ts`; everything else reuses existing
+    keys), for explore, communities, product, account, dashboard overview,
+    studio, settings, new listing, edit and releases. A missing listing is
+    "Listing not found" (its HTTP 200 is still open in `pending.md`).
+    Verification: three new e2e cases in `e2e/seo.spec.ts`.
+  - `/explore` search field (`features/discovery/discovery-experience.tsx`) had
+    only a placeholder, so it had no accessible name. It now carries the same
+    text as `aria-label`. Verification: e2e finds it by role and name in both
+    locales.
+  - Category tabs (`styles/globals.css` `.ts-scroll-fade`, used by
+    `features/discovery/discovery-experience.tsx`): the strip scrolls sideways
+    at narrow widths with nothing to say so ("Workflow" was cut off at 735 and
+    768 on the live stack). A CSS-only edge shade now appears on whichever
+    side still has tabs past it; both ends are drawn, so RTL needs nothing
+    extra. Verification: checked by eye at 300 px, English and Persian, at the
+    start and midway; no shade when everything fits (1000 px).
+  - Small click targets (item 14): the announcement link (60x16), card titles
+    (20 px), the trust-section link, "View all N listings", "Previous/Next
+    page", "Browse all communities", "Clear all", the breadcrumb link, the
+    sign-in screen's "Forgot password?" and "Register" buttons, and the
+    dashboard's "View all" and listing links were under 24 px tall. Each now
+    has at least a 24 px target (most 28 to 32) by padding, with negative
+    margins where the layout would otherwise grow. New `e2e/targets.spec.ts`
+    asserts WCAG 2.2 target size on `/`, `/explore`, a product, `/account` and
+    `/dashboard`; a native radio or checkbox counts through its wrapping
+    label. Verified that it fails when the threshold is raised.
+  - Hero terminal card "empty" at 735 and 768 (item 15): not a bug. At those
+    widths the card sits below the fold (top about 810 px of 900), and the
+    sequence deliberately plays only while at least half of it is on screen;
+    scrolled into view it types normally (`--typed` 0 to 53 in about 2 s). The
+    empty frame in the audit was a full-page screenshot. No change.
+  - Hero LCP and the WebGL console note (item 16): no code change. On desktop
+    the LCP candidate moves from the hero paragraph (about 100 ms) to the
+    manifest card's typed text (about 700 ms) because that text first paints
+    when the sequence starts, 600 ms after load; with reduced motion, where the
+    finished frame paints at once, LCP stays at about 150 ms. It is a metric
+    effect of a deliberate decorative animation, well inside the good range.
+    The mobile Lighthouse LCP (3.2 s simulated, Render Delay 86%, FCP 1.1 s)
+    is a different, known problem and stays in `pending.md`. The "GPU stall due
+    to ReadPixels" message is Chrome's software-GL note from headless runs; the
+    app calls `readPixels` nowhere.
+  - Console noise (item 17): every signed-out page view logged a failed request
+    because `GET /api/readers/session` answered 401 for an anonymous caller.
+    It now answers `200 { data: { authenticated: false } }` through a new
+    `optionalReader` middleware (`apps/api`: `middleware/auth.ts`,
+    `routes/readerRoutes.ts`, `controllers/readerController.ts`); protected
+    routes still 401. The web client (`lib/api.ts`, `marketplace-session.tsx`)
+    handles both shapes. The blog's `getReaderSession` is defined but unused,
+    so nothing there changes. The "unexplained" 404 from the audit was
+    `/favicon.ico`: the app had no icon at all (blank tab icon too). Added
+    `app/icon.svg` (a prompt chevron and caret in the brand colours).
+    Verification: new API test (anonymous 200, expired cookie 200, `/profile`
+    still 401); new `e2e/console.spec.ts` asserts no console error or failed
+    request on six signed-out pages (both projects) and that an icon is
+    declared and served; full web e2e 122 passed, 16 skipped; API 176 passed
+    with `LOCAL_AUTO_VERIFY_EMAIL=false`; root typecheck and build pass.
+    **Deploy note:** a web build that handles `authenticated: false` works
+    against the old API (it still sees 401), and the new API works with the old
+    web build only if it tolerates a 200 without `user`: it does not (it would
+    read `session.data.user.email`), so deploy the web build before or with
+    the API.
 
 - CI `verify` now runs `prisma:generate` after `npm ci`. Without it the API
   typecheck saw an empty Prisma client and failed, and the fail-fast matrix

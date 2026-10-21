@@ -38,14 +38,28 @@ function SkeletonGroup({
 }
 
 /** Matches `ProductCard`: badge row, title, two-line outcome, creator, footer. */
-export function ProductCardSkeleton() {
+export function ProductCardSkeleton({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <div
+        aria-hidden
+        className="flex h-[12.5rem] flex-col rounded-lg border border-border-strong bg-background p-4"
+      >
+        <Skeleton className="h-5 w-20 rounded-none" />
+        <Skeleton className="mt-3 h-5 w-3/4" />
+        <Skeleton className="mt-2 h-3.5 w-full" />
+        <Skeleton className="mt-1.5 h-3.5 w-5/6" />
+        <Skeleton className="mt-auto h-7 w-full" />
+      </div>
+    );
+  }
   return (
     <div
       aria-hidden
-      className="flex h-full flex-col rounded-lg border border-border bg-surface p-5"
+      className="flex h-full flex-col rounded-lg border border-border-strong bg-background p-5"
     >
       <div className="flex items-start justify-between gap-3">
-        <Skeleton className="h-5 w-20 rounded-full" />
+        <Skeleton className="h-5 w-20 rounded-none" />
         <Skeleton className="size-6 rounded-full" />
       </div>
       <Skeleton className="mt-4 h-6 w-3/4" />
@@ -58,7 +72,7 @@ export function ProductCardSkeleton() {
         <Skeleton className="h-3.5 w-28" />
       </div>
       <div className="mt-5 flex-1 border-t border-border pt-4">
-        <Skeleton className="h-5 w-40 rounded-full" />
+        <Skeleton className="h-5 w-40 rounded-none" />
         <Skeleton className="mt-3 h-3 w-48" />
         <div className="mt-4 flex justify-end">
           <Skeleton className="h-9 w-28 rounded-md" />
@@ -68,11 +82,19 @@ export function ProductCardSkeleton() {
   );
 }
 
-export function ProductGridSkeleton({ label, count = 3 }: { label: string; count?: number }) {
+export function ProductGridSkeleton({
+  label,
+  count = 3,
+  compact = false,
+}: {
+  label: string;
+  count?: number;
+  compact?: boolean;
+}) {
   return (
-    <SkeletonGroup label={label} className="grid gap-5 md:grid-cols-3">
+    <SkeletonGroup label={label} className={compact ? "grid gap-4 md:grid-cols-3" : "grid gap-5 md:grid-cols-3"}>
       {Array.from({ length: count }, (_, index) => (
-        <ProductCardSkeleton key={index} />
+        <ProductCardSkeleton key={index} compact={compact} />
       ))}
     </SkeletonGroup>
   );

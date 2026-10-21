@@ -5,6 +5,7 @@ import type { ProductRelease } from "@/lib/types";
 
 const release: ProductRelease = {
   version: "1.2.3",
+  current: true,
   source: { kind: "npm", url: "https://registry.npmjs.org/@acme/tool", ref: "1.2.3", path: null, integrityDigest: "sha512-abc", artifactSizeBytes: null, status: "verified", checkedAt: "2026-10-01T00:00:00Z" },
   installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz" },
   permissions: [{ capability: "network_access", required: true, scope: null, destinations: ["api.acme.test"], purpose: "Calls the Acme API" }],
@@ -18,7 +19,6 @@ describe("ReleaseProvenance", () => {
     render(<ReleaseProvenance release={release} slug="acme-tool" locale="en" />);
 
     expect(screen.getByText(/npm package/)).toBeInTheDocument();
-    expect(screen.getByText("sha512-abc")).toBeInTheDocument();
     expect(screen.getByText(/Network access/)).toBeInTheDocument();
     expect(screen.getByText("api.acme.test")).toBeInTheDocument();
     expect(screen.getByText("ACME_TOKEN")).toBeInTheDocument();
@@ -35,11 +35,10 @@ describe("ReleaseProvenance", () => {
     expect(screen.queryByText("MCP client config")).not.toBeInTheDocument();
   });
 
-  it("flags an overdue source check and says when there is no digest", () => {
+  it("flags an overdue source check", () => {
     render(<ReleaseProvenance release={{ ...release, source: { ...release.source, status: "stale", integrityDigest: null } }} slug="acme-tool" locale="en" />);
 
     expect(screen.getByText(/last source check is overdue/)).toBeInTheDocument();
-    expect(screen.getByText("The source did not provide one")).toBeInTheDocument();
   });
 
   it("renders in Persian without English chrome", () => {

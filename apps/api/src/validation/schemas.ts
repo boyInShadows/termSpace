@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { englishDisplayName, marketplaceManifestV1Schema } from "../lib/marketplaceManifest.js";
+import { englishDisplayName, marketplaceManifestV1Schema, permissionCapabilities } from "../lib/marketplaceManifest.js";
 import { MARKETPLACE_PLATFORM_KEYS } from "../lib/marketplacePlatforms.js";
 import { MARKETPLACE_ITEM_TYPES } from "../lib/marketplaceManifest.js";
 
@@ -11,6 +11,9 @@ import { MARKETPLACE_ITEM_TYPES } from "../lib/marketplaceManifest.js";
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const routeIdSchema = z.string().trim().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/, "Invalid resource identifier");
 export const routeSlugSchema = z.string().trim().min(1).max(200).regex(slugPattern, "Invalid slug");
+export const releaseVersionSchema = z.string().trim().min(1).max(64);
+/** Acquire may name the release the reader inspected; without a body it takes the approved one. */
+export const marketplaceAcquireSchema = z.object({ version: releaseVersionSchema.optional() }).strict().optional();
 export const routeTokenSchema = z.string().trim().min(16).max(256).regex(/^[A-Za-z0-9_-]+$/, "Invalid token");
 const allowedImageHosts = new Set(
   (process.env.IMAGE_HOSTS ?? "images.unsplash.com")
@@ -66,7 +69,8 @@ export const updateArticleSchema = z.object({
 
 export const articleQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
-  limit: z.coerce.number().int().min(1).max(200).optional().default(9),
+  // Each row carries its full body (reading time is computed from it), so keep pages small.
+  limit: z.coerce.number().int().min(1).max(50).optional().default(9),
   category: z.string().optional(),
   tag: z.string().optional(),
   series: z.string().optional(),
@@ -151,6 +155,7 @@ export const marketplaceProductQuerySchema = z.object({
   category: z.string().trim().regex(slugPattern).max(160).optional(),
   community: z.string().trim().regex(slugPattern).max(100).optional(),
   platform: z.enum(MARKETPLACE_PLATFORM_KEYS).optional(),
+  permission: z.enum(permissionCapabilities).optional(),
   verified: z.enum(["true", "false"]).optional().transform((value) => value === "true" ? true : undefined),
   minRating: z.coerce.number().min(0).max(5).optional().default(0),
   sort: z.enum(["featured", "rating", "newest", "relevance"]).optional().default("featured"),

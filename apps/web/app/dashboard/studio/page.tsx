@@ -1,13 +1,11 @@
 import { CreatorHub } from "@/features/creator/creator-hub";
-import { StudioNotice } from "./studio-notice";
+import { copy } from "@/lib/i18n";
+import { getLocale } from "@/lib/serverLocale";
 
-export const metadata = { title: "Creator studio" };
+export async function generateMetadata() {
+  return { title: copy[await getLocale()].navStudio };
+}
 
 export default function CreatorStudioPage() {
-  return (
-    <>
-      <StudioNotice />
-      <CreatorHub />
-    </>
-  );
+  return <CreatorHub />;
 }

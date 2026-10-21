@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { pathToFileURL } from "node:url";
 import { Prisma, type TransactionalEmailStatus } from "@prisma/client";
 import { emailConfig, sendPasswordResetEmail, sendVerificationEmail } from "../lib/cloudflareEmail.js";
 import { createEmailVerificationToken, createPasswordResetCode, verificationSecret, verificationUrl } from "../lib/emailVerification.js";
@@ -98,7 +99,7 @@ export async function processTransactionalEmailBatch(limit = Number(process.env.
   return claimed.length;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   processTransactionalEmailBatch()
     .then(async (count) => {
       console.info(JSON.stringify({ event: "transactional_email_batch", processed: count }));

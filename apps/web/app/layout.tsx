@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import "@/styles/globals.css";
 import { preloadedFonts } from "@/lib/fonts";
 import { SITE_URL } from "@/lib/site";
 import { Providers } from "@/components/layout/providers";
+import { Header } from "@/components/layout/header";
+import { SkipLink } from "@/components/layout/skip-link";
 import { getLocale } from "@/lib/serverLocale";
+import { copy } from "@/lib/i18n";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const fa = locale === "fa";
@@ -15,6 +19,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const locale = await getLocale();
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang={locale} dir={locale === "fa" ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
@@ -23,7 +28,11 @@ export default async function RootLayout({
         ))}
       </head>
       <body>
-        <Providers locale={locale}>{children}</Providers>
+        <Providers locale={locale} messages={copy[locale]} nonce={nonce}>
+          <SkipLink locale={locale} />
+          <Header />
+          {children}
+        </Providers>
       </body>
     </html>
   );

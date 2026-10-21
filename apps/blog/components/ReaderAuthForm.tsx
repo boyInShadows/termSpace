@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { syncLocalLibrary } from "@/lib/readerLibrary";
 import { localePath, type Locale } from "@/lib/i18n";
@@ -40,10 +40,8 @@ export function ReaderAuthForm({ locale = "en" }: { locale?: Locale }) {
         catch (err) { setError(err instanceof Error ? err.message : "Google sign-in failed."); setBusy(false); }
       },
     });
-    window.google.accounts.id.renderButton(googleButton.current, { theme: "outline", size: "large", width: 320 });
+    window.google.accounts.id.renderButton(googleButton.current, { theme: "outline", size: "large", locale, width: Math.min(320, googleButton.current.clientWidth || 320) });
   }
-
-  useEffect(renderGoogle, [clientId]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setError("");
@@ -55,7 +53,7 @@ export function ReaderAuthForm({ locale = "en" }: { locale?: Locale }) {
 
   return (
     <>
-      {clientId && <><Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onLoad={renderGoogle} /><div ref={googleButton} className="mt-6 flex justify-center" /></>}
+      {clientId && <><Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onReady={renderGoogle} onError={() => setError(fa ? "ورود با گوگل در دسترس نیست. دوباره تلاش کنید." : "Google sign-in is unavailable. Please try again.")} /><div ref={googleButton} className="mt-6 flex justify-center" inert={busy} aria-busy={busy} /></>}
       {clientId && <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-widest text-ink-muted"><span className="h-px flex-1 bg-line" />{fa ? "یا" : "or"}<span className="h-px flex-1 bg-line" /></div>}
       <form onSubmit={submit} className="space-y-4">
         {error && <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">{error}</p>}

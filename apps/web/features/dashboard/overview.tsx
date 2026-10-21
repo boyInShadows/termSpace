@@ -10,6 +10,7 @@ import type { OverviewState } from "./overview-state";
 import { QuickActions } from "./quick-actions";
 import { StatTile, StatTileSkeleton, type StatDelta } from "./stat-tile";
 import { intlLocale } from "@/lib/format";
+import { CardError } from "./dashboard-card";
 
 /** Fetches the overview once, and again on Retry. */
 export function DashboardOverview() {
@@ -64,13 +65,13 @@ function OverviewLayout({
       {state.status === "loading" && <LoadingStatus />}
       <OverviewHeader state={state} now={now} name={name} />
       <OverviewStats state={state} />
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+      {state.status === "error" ? <div className="space-y-6"><CardError onRetry={onRetry} /><QuickActions /></div> : <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <ListingsTable state={state} now={now} onRetry={onRetry} />
         <div className="space-y-6">
           <ActivityFeed state={state} now={now} onRetry={onRetry} />
           <QuickActions />
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
@@ -114,19 +115,9 @@ function OverviewHeader({ state, now, name }: { state: OverviewState; now: numbe
 
   return (
     <header>
-      <p className="eyebrow flex items-center gap-2 text-muted-foreground">
-        <span aria-hidden className="size-1.5 rounded-full bg-accent" />
-        {copy.eyebrow}
-        {known && (
-          <>
-            {/* A drawn dot, not "·": in Persian digits that glyph reads as a zero. */}
-            <span aria-hidden className="size-0.5 rounded-full bg-muted-foreground" />
-            {new Intl.DateTimeFormat(localeTag, { month: "long", year: "numeric" }).format(now)}
-          </>
-        )}
-      </p>
+      {known && <p className="text-xs text-muted-foreground">{new Intl.DateTimeFormat(localeTag, { month: "long", year: "numeric" }).format(now)}</p>}
       {known ? (
-        <h1 className="editorial mt-2 text-3xl tracking-tight sm:text-4xl">
+        <h1 className="font-semibold mt-2 text-3xl tracking-tight sm:text-2xl">
           {greeting}
           {/* The name is often Latin inside a Persian sentence; isolate it
               so the bidi algorithm cannot carry the punctuation across. */}
@@ -180,6 +171,7 @@ function OverviewStats({ state }: { state: OverviewState }) {
       <StatTile
         label={copy.statRating}
         value={totals?.averageRating != null ? rating.format(totals.averageRating) : "—"}
+        context={totals ? copy.ratingContext.replace("{n}", number.format(totals.ratedReviewCount)) : undefined}
       />
       <StatTile label={copy.statReview} value={show(totals?.inReviewListings)} />
     </dl>

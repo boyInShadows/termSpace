@@ -4,6 +4,13 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Deployment Safety
 
+- Private VPS preview: sending domain/provider credentials, legal/contact email,
+  Google OAuth, public origin, administrator identity, dedicated registry pull
+  credential and external alert destination remain owner decisions.
+  Complete real inbox verification/reset and verified creator/moderator acceptance
+  before public launch. Keep `LOCAL_AUTO_VERIFY_EMAIL` and demo/mock flags off.
+  The blog deploys after web. Track release/restore evidence in `changelog.md`.
+
 - Before applying migration `202609240001_remove_duplicate_creator_ownership`
   to any database that served the retired `/api/community` publishing routes,
   audit `MarketplaceCreator.userId`. If any row is non-null, reconcile it into
@@ -13,47 +20,19 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Web — Homepage Follow-ups
 
-- `/dashboard` tells an unverified creator "your creator workspace isn't set
-  up yet" and offers "Create creator profile". The creator API answers
-  `403 EMAIL_VERIFICATION_REQUIRED` (and `403 MARKETPLACE_ROLE_REQUIRED` for a
-  profile owner without the role), but `lib/dashboard.ts` treats every 403 as
-  "no creator workspace". Distinguish the error codes and show "verify your
-  email" instead. Found in the 2026-09-24 P0 browser pass.
-- Meet the plan's performance budgets, then tighten the ratchet gates in
-  `lighthouserc.cjs` and `apps/web/e2e/budget.spec.ts` to them. Still
-  missing as of 2026-09-24: mobile LCP (`/` 3.16 s vs 2.2 s, `/dashboard`
-  3.62 s vs 2.0 s), `/dashboard` performance (89 vs 92), `/` first-load JS
-  (185 kB vs 170 kB). Expected from plan P2 (motion diet) and P3 (fonts,
-  plasma tiers).
-- Preload the display serif used on the hero headline. This needs the fonts
-  moved from `@fontsource-variable` to `next/font/local`.
-- `/explore` intermittently has two identical `<link rel="next">` tags in
-  `<head>`, so `e2e/catalog.spec.ts:107` fails in strict mode about 35-55% of
-  runs (both on Next 16.3.6 and 16.3.8, measured 2026-10-16). The tags are
-  hoisted from `app/explore/page.tsx:29-30`. Separately, the landing pause test
-  and the card-morph test fail under default parallelism and pass with 2
-  workers. Make the suite pass with default workers.
-- The `lhci` job in "Web e2e and performance" has failed on every push to
-  `main` since at least 2026-10-05: `total-blocking-time` (budget 150 ms) and
-  `max-potential-fid` (130 ms) exceed on GitHub's runners while the same
-  budgets pass locally. Decide between a CI-specific throttling profile and
-  real TBT work; the ratchet rule forbids just raising the budgets.
-- A missing, suspended or archived product renders the branded not-found page
-  with `noindex` but HTTP 200: `app/products/[slug]/loading.tsx` makes the route
-  stream, so `notFound()` arrives after the status is sent. Unknown routes are
-  real 404s.
-- On a failed catalogue load the homepage falls back to `lib/mock-home.ts`
-  (with a notice), so its cards link to listings that do not exist. Decide
-  whether production should show an error state instead.
+- Meet the remaining mobile LCP targets: `/` 2.2 s, `/dashboard` 2.0 s
+  and product detail 2.2 s; dashboard performance must reach 92 before its gate
+  tightens. Profile the remaining shared hydration and mobile rendering cost
+  while preserving the Saved collection's initial-read and mutation ordering.
 
 ## Launch — Owner Decisions
 
-- Privacy policy, terms and content policy pages: none exist. The footer's
-  "About" and "Quality standards" point at `/design-system`, "Support" at
-  `/account`.
-- Seeded listings cannot be acquired (no approved release). Launch empty, with
-  curated real listings, or with the demo seed (`SEED_DEMO=true`) knowing the
-  acquire and review loop is unavailable on those items.
+- Review the existing English/Persian privacy, terms and content policy drafts;
+  supply the legal entity/contact details and complete signup consent before
+  public launch. The pages and footer links are implemented.
+- Decide which curated listings and approved releases to publish for public
+  launch. The private preview intentionally has an empty catalog and no demo
+  data; keep `SEED_DEMO=false`.
 
 ## Marketplace — P0 Discovery and Community
 
@@ -84,9 +63,6 @@ restore. Still open, per ADR 0004:
 
 ## Marketplace — Search
 
-- Escape `%` and `_` in catalogue search terms. Prisma's `contains` does not,
-  so a search for `_` matches every listing. It only widens results, but it is
-  wrong. Found while benchmarking search on 2026-10-08.
 - If a deployment sits behind a CDN, add `Cache-Control: public, s-maxage=30`
   to the public catalogue routes. The API already sends ETags and answers
   conditional requests with 304; nothing is added without knowing the CDN.

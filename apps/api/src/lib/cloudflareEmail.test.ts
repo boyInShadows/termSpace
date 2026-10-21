@@ -41,4 +41,16 @@ describe("Cloudflare transactional email", () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response("{}", { status: 401 }));
     await expect(sendVerificationEmail({ to: "reader@example.com", verificationUrl: "https://example.com/#token=x", correlationId: "correlation-3" }, fetchMock)).resolves.toEqual({ outcome: "failed", statusCode: 401, errorCode: "HTTP_401" });
   });
+
+  it.each([new TypeError("network offline"), new DOMException("timed out", "TimeoutError")])("retries transport failures without logging secrets", async (error) => {
+    const fetchMock = vi.fn().mockRejectedValue(error);
+    const result = await sendVerificationEmail({ to: "reader@example.com", verificationUrl: "https://example.com/#token=secret", correlationId: "transport" }, fetchMock);
+    expect(result).toEqual({ outcome: "retry", errorCode: error.name === "TimeoutError" ? "TIMEOUT" : "NETWORK_ERROR" });
+    expect(console.warn).toHaveBeenCalledWith(expect.not.stringContaining("secret"));
+  });
+
+  it("fails permanent bounces without retrying", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ result: { permanent_bounces: ["reader@example.com"] } }), { status: 200 }));
+    await expect(sendVerificationEmail({ to: "reader@example.com", verificationUrl: "https://example.com/#token=x", correlationId: "bounce" }, fetchMock)).resolves.toEqual({ outcome: "failed", statusCode: 200, errorCode: "PERMANENT_BOUNCE" });
+  });
 });

@@ -31,7 +31,7 @@ function creatorHome(listingCount = 1): DashboardHome {
       },
       listings: Array.from({ length: listingCount }, (_, index) => ({
         id: `listing-${index}`, slug: `listing-${index}`, name: `Conversion Copywriter ${index}`, type: "Skill", typeKey: "skill",
-        state: "changes_requested", lifecycleVersion: 1, published: true, rating: 0, reviewCount: 0,
+        state: "changes_requested", lifecycleVersion: 1, published: true, restoreTarget: null, rating: 0, reviewCount: 0,
         acquisitionCount: 41, currentVersion: "2.4.0", releaseCount: 1, latestRelease: null, moderationFeedback: null,
         recentUpdates: [{ id: `event-${index}`, action: "published", state: "published", message: null, createdAt: "2026-09-20T10:00:00Z" }],
         updatedAt: "2026-09-20T10:00:00Z",
@@ -54,20 +54,39 @@ describe("DashboardOverview", () => {
     const acquisitions = screen.getByText(copy.en.dashboardHome.statAcquisitions7d).parentElement!;
     expect(within(acquisitions).getByText("5")).toBeInTheDocument();
     // Down 3 on the previous week: arrow for sighted readers, a sentence for everyone else.
-    expect(within(acquisitions).getByText("▼ 3").parentElement).toHaveClass("text-destructive");
-    expect(within(acquisitions).getByText("3 fewer than the previous 7 days")).toHaveClass("sr-only");
+    expect(within(acquisitions).getByText("3 fewer than the previous 7 days").parentElement).toHaveClass("text-destructive");
+    expect(within(acquisitions).getByText("3 fewer than the previous 7 days")).not.toHaveClass("sr-only");
 
     const rating = screen.getByText(copy.en.dashboardHome.statRating).parentElement!;
     expect(within(rating).getByText("4.6")).toBeInTheDocument();
+    expect(within(rating).getByText("Across 30 published reviews")).toBeVisible();
 
     const table = screen.getByRole("table");
     const row = within(table).getByRole("link", { name: /Conversion Copywriter 0/ });
-    expect(row).toHaveAttribute("href", "/creator/listings/listing-0/releases");
+    expect(row).toHaveAttribute("href", "/dashboard/studio/listings/listing-0/releases");
     expect(within(table).getByText(copy.en.creatorHub.statusChangesRequested)).toBeInTheDocument();
     expect(within(table).getByText("v2.4.0")).toBeInTheDocument();
 
     const activity = screen.getByRole("region", { name: copy.en.dashboardHome.activityTitle });
     expect(within(activity).getByText(`· ${copy.en.creatorHub.actionPublished}`)).toBeInTheDocument();
+  });
+
+  it("shows the reviewer's reason and an edit action under a listing that needs changes", async () => {
+    const home = creatorHome(2) as Extract<DashboardHome, { kind: "creator" }>;
+    home.dashboard.listings[0].moderationFeedback = {
+      action: "changes_requested", reasonCode: "UNCLEAR_PERMISSIONS", message: "State what the skill reads.", createdAt: "2026-09-21T10:00:00Z",
+    };
+    getHome.mockResolvedValue(home);
+    render(<DashboardOverview />);
+
+    const table = await screen.findByRole("table");
+    expect(within(table).getByText("State what the skill reads.")).toBeInTheDocument();
+    // One reason, for the one listing that has feedback; the other row gets no second line.
+    expect(within(table).getAllByRole("row")).toHaveLength(4); // header + 2 listings + 1 reason
+    expect(within(table).getByRole("link", { name: copy.en.creatorHub.editDraft })).toHaveAttribute(
+      "href",
+      "/dashboard/studio/listings/listing-0/edit",
+    );
   });
 
   it("caps the table at eight listings", async () => {
@@ -83,7 +102,7 @@ describe("DashboardOverview", () => {
     render(<DashboardOverview />);
 
     const cta = await screen.findByRole("link", { name: copy.en.dashboardHome.noProfileCta });
-    expect(cta).toHaveAttribute("href", "/creator");
+    expect(cta).toHaveAttribute("href", "/dashboard/studio");
     expect(screen.getAllByText("—")).toHaveLength(4);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/, kasra\.$/);
     expect(screen.getByText(copy.en.dashboardHome.emptyActivity)).toBeInTheDocument();
@@ -94,7 +113,7 @@ describe("DashboardOverview", () => {
     render(<DashboardOverview />);
 
     const cta = await screen.findByRole("link", { name: copy.en.dashboardHome.emptyListingsCta });
-    expect(cta).toHaveAttribute("href", "/creator/listings/new");
+    expect(cta).toHaveAttribute("href", "/dashboard/studio/listings/new");
     expect(screen.getByText(copy.en.dashboardHome.summaryEmpty)).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
     // Nothing reviewed yet reads as "no rating", never as a score of zero.
@@ -102,16 +121,16 @@ describe("DashboardOverview", () => {
     expect(within(rating).getByText("—")).toBeInTheDocument();
   });
 
-  it("shows an inline error in each data card and recovers on retry", async () => {
+  it("shows one shared error and recovers both data panels on retry", async () => {
     getHome.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(creatorHome());
     vi.spyOn(console, "error").mockImplementation(() => {});
     render(<DashboardOverview />);
 
     const alerts = await screen.findAllByRole("alert");
-    expect(alerts).toHaveLength(2);
+    expect(alerts).toHaveLength(1);
     expect(screen.getByText(copy.en.dashboardHome.summaryError)).toBeInTheDocument();
     // Quick actions do not depend on the fetch and stay usable.
-    expect(screen.getByRole("link", { name: /Publish a new listing/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Create a new listing/ })).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole("button", { name: copy.en.dashboardHome.retry })[0]);
 
