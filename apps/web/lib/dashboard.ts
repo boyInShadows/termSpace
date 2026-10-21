@@ -34,6 +34,29 @@ export async function getDashboardHome(signal?: AbortSignal, headers?: HeadersIn
 
 export type ListingTone = "live" | "review" | "attention" | "draft";
 
+export function isEditable(state: string) {
+  return state === "draft" || state === "changes_requested" || state === "rejected" || state === "published";
+}
+
+export function listingStateLabel(state: string, copy: Record<string, string>) {
+  const labels: Record<string, string> = {
+    draft: copy.statusDraft, submitted: copy.statusSubmitted, changes_requested: copy.statusChangesRequested,
+    approved: copy.statusApproved, published: copy.statusPublished, rejected: copy.statusRejected,
+    suspended: copy.statusSuspended, archived: copy.statusArchived,
+  };
+  return labels[state] ?? state.replaceAll("_", " ");
+}
+
+export function lifecycleActionLabel(action: string, copy: Record<string, string>) {
+  const labels: Record<string, string> = {
+    draft_saved: copy.actionDraftSaved, submitted: copy.actionSubmitted, withdrawn: copy.actionWithdrawn,
+    changes_requested: copy.actionChangesRequested, approved: copy.actionApproved, published: copy.actionPublished,
+    rejected: copy.actionRejected, suspended: copy.actionSuspended, reinstated: copy.actionReinstated,
+    archived: copy.actionArchived, restored: copy.actionRestored,
+  };
+  return labels[action] ?? action.replaceAll("_", " ");
+}
+
 /** Four visual tones for the eight lifecycle states. */
 export function listingTone(state: string): ListingTone {
   if (state === "published") return "live";

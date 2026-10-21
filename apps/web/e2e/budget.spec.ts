@@ -18,9 +18,10 @@ import { expect, test } from "@playwright/test";
 // gate down when a phase meets it, never back up. `/` moved from 190 to 184
 // kB on 2026-10-16. On 2026-10-19 server-supplied locale messages met the
 // home/detail targets, so those gates now enforce 170/180 kB in both locales.
+// Dashboard's Studio helper dependency was removed on 2026-10-21; keep that saving.
 const BUDGETS_KB: Record<string, number> = {
   "/": 170,
-  "/dashboard": 200,
+  "/dashboard": 170,
   "/products/conversion-copywriter": 180,
 };
 

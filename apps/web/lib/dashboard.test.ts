@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api";
+import { copy } from "@/lib/i18n";
 import type { CreatorDashboardListing } from "@/lib/types";
 
 const getProfile = vi.hoisted(() => vi.fn());
@@ -16,6 +17,9 @@ const {
   formatRelative,
   getDashboardHome,
   greetingPeriod,
+  isEditable,
+  lifecycleActionLabel,
+  listingStateLabel,
   listingTone,
   OVERVIEW_LISTING_LIMIT,
 } = await import("./dashboard");
@@ -87,6 +91,23 @@ describe("tones", () => {
     expect(activityTone("rejected")).toBe("attention");
     expect(activityTone("submitted")).toBe("progress");
     expect(activityTone("archived")).toBe("neutral");
+  });
+});
+
+describe("listing lifecycle helpers", () => {
+  it("keeps submitted, approved, suspended and archived listings read-only", () => {
+    for (const state of ["draft", "changes_requested", "rejected", "published"]) expect(isEditable(state)).toBe(true);
+    for (const state of ["submitted", "approved", "suspended", "archived", "unknown"]) expect(isEditable(state)).toBe(false);
+  });
+
+  it.each(["en", "fa"] as const)("keeps %s labels and unknown-value fallbacks", (locale) => {
+    const hub = copy[locale].creatorHub;
+    expect(listingStateLabel("changes_requested", hub)).toBe(hub.statusChangesRequested);
+    expect(listingStateLabel("published", hub)).toBe(hub.statusPublished);
+    expect(lifecycleActionLabel("draft_saved", hub)).toBe(hub.actionDraftSaved);
+    expect(lifecycleActionLabel("restored", hub)).toBe(hub.actionRestored);
+    expect(listingStateLabel("new_state", hub)).toBe("new state");
+    expect(lifecycleActionLabel("new_action", hub)).toBe("new action");
   });
 });
 

@@ -1,7 +1,6 @@
 "use client";
 import { Archive, GitBranch, ShieldCheck, TriangleAlert } from "lucide-react";
-import { lifecycleActionLabel } from "@/features/creator/creator-dashboard";
-import { activityTone, collectActivity, formatRelative, type ActivityTone } from "@/lib/dashboard";
+import { lifecycleActionLabel, activityTone, collectActivity, formatRelative, type ActivityTone } from "@/lib/dashboard";
 import { useLocale } from "@/lib/locale-context";
 import { CardError, DashboardCard, Skeleton } from "./dashboard-card";
 import type { OverviewState } from "./overview-state";

@@ -4,6 +4,30 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-21
 
+- **Remove Studio code from the dashboard overview (sequential local queue,
+  first LCP improvement).** Moved the three existing lifecycle helpers into
+  `lib/dashboard.ts` and updated Studio, overview tables and activity imports.
+  Labels, editability, reader snapshots and Saved ordering are unchanged.
+  Dashboard initial JavaScript falls from 175,544 to 162,878 gzip bytes (7.2%);
+  the bilingual browser budget now ratchets from 200 to 170 kB.
+  - Verification: root typecheck, 538 unit tests (5 database-dependent skips),
+    web lint, root production build, 350 browser passes (44 intentional skips,
+    no retries), and all nine Lighthouse assertions pass. Lifecycle helper
+    checks cover both locales, editability and unknown-value fallbacks. Sixty
+    EN/FA, light/dark, 320/768/1280 captures have no overflow, duplicate shells
+    or page errors; representative dashboard renders were inspected and the
+    Impeccable detector reports no findings. Manual second-pass diff review
+    found no issue; this harness exposes no usage/cost meter.
+  - Local 4x CPU median LCP/performance: home 2631 ms/97, dashboard 2799 ms/96,
+    detail 2777 ms/96; median max-potential-FID 76/80/72 ms. These pass existing
+    gates but miss the stricter 2200/2000/2200 ms targets. Public bundles did
+    not change; timing differences are not claimed as public improvements.
+    The LCP task remains open in both queues. Original reports and CPU-profile
+    evidence are preserved under ignored `maintenance/queue-20261021/`.
+  - Shared surface: `changelog.md`. No API, schema, provider or environment
+    change. Hosted variability, physical phones and native Persian acceptance
+    remain open; the owner-deferred live-provider sequence remains paused.
+
 - **Scope editor labels and trim homepage hydration data (owner-requested next
   performance step).** Root locale messages no longer serialize the draft
   editor's labels on every page. New/edit server pages supply the active

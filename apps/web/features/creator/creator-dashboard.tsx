@@ -12,7 +12,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { intlLocale } from "@/lib/format";
 import { creatorWorkspace } from "./workspace-copy";
-import { listingStatusClass } from "@/lib/dashboard";
+import { isEditable, lifecycleActionLabel, listingStateLabel, listingStatusClass } from "@/lib/dashboard";
 
 const PAGE_SIZE = 12;
 type SubmissionFeedback = { id: string; message: string; sourceRequired?: boolean; refreshRequired?: boolean; success?: boolean } | null;
@@ -288,27 +288,4 @@ function Metric({ label, value, icon }: { label: string; value: string; icon?: R
     <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">{icon && <span aria-hidden="true" className="[&>svg]:size-3.5">{icon}</span>}{label}</dt>
     <dd className="mt-1 font-semibold tabular-nums"><bdi dir="ltr">{value}</bdi></dd>
   </div>;
-}
-
-export function isEditable(state: string) {
-  return state === "draft" || state === "changes_requested" || state === "rejected" || state === "published";
-}
-
-export function listingStateLabel(state: string, copy: Record<string, string>) {
-  const labels: Record<string, string> = {
-    draft: copy.statusDraft, submitted: copy.statusSubmitted, changes_requested: copy.statusChangesRequested,
-    approved: copy.statusApproved, published: copy.statusPublished, rejected: copy.statusRejected,
-    suspended: copy.statusSuspended, archived: copy.statusArchived,
-  };
-  return labels[state] ?? state.replaceAll("_", " ");
-}
-
-export function lifecycleActionLabel(action: string, copy: Record<string, string>) {
-  const labels: Record<string, string> = {
-    draft_saved: copy.actionDraftSaved, submitted: copy.actionSubmitted, withdrawn: copy.actionWithdrawn,
-    changes_requested: copy.actionChangesRequested, approved: copy.actionApproved, published: copy.actionPublished,
-    rejected: copy.actionRejected, suspended: copy.actionSuspended, reinstated: copy.actionReinstated,
-    archived: copy.actionArchived, restored: copy.actionRestored,
-  };
-  return labels[action] ?? action.replaceAll("_", " ");
 }
