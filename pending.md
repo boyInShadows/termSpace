@@ -5,7 +5,8 @@ This file tracks known improvement work that has not been completed yet. When an
 ## Deployment Safety
 
 - Private VPS preview: sending domain/provider credentials, legal/contact email,
-  Google OAuth, public origin and external alert destination remain owner decisions.
+  Google OAuth, public origin, administrator identity, dedicated registry pull
+  credential and external alert destination remain owner decisions.
   Complete real inbox verification/reset and verified creator/moderator acceptance
   before public launch. Keep `LOCAL_AUTO_VERIFY_EMAIL` and demo/mock flags off.
   The blog deploys after web. Track release/restore evidence in `changelog.md`.

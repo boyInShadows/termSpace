@@ -72,7 +72,7 @@ services:
       MEDIA_STORAGE: local
       MEDIA_PUBLIC_URL: ${MEDIA_PUBLIC_URL:?required}
     volumes: [uploads:/app/apps/api/uploads]
-    tmpfs: [/tmp:size=64m,mode=1777]
+    tmpfs: ["/tmp:size=64m,mode=1777"]
     depends_on: { migrate: { condition: service_completed_successfully }, redis: { condition: service_healthy } }
     healthcheck:
       test: [CMD, node, -e, "fetch('http://127.0.0.1:4001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -111,7 +111,7 @@ services:
     mem_limit: 192m
     cpus: 0.15
     environment: *api-env
-    tmpfs: [/tmp:size=16m,mode=1777]
+    tmpfs: ["/tmp:size=16m,mode=1777"]
     depends_on: { api: { condition: service_healthy } }
     healthcheck: { test: [CMD, node, /app/deploy/worker.mjs, --health], interval: 30s, timeout: 5s, retries: 3, start_period: 60s }
 
@@ -127,7 +127,7 @@ services:
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_EMAIL_API_TOKEN: ${CLOUDFLARE_EMAIL_API_TOKEN:-}
       EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-}
-    tmpfs: [/tmp:size=16m,mode=1777]
+    tmpfs: ["/tmp:size=16m,mode=1777"]
     depends_on: { api: { condition: service_healthy } }
     healthcheck: { test: [CMD, node, /app/deploy/worker.mjs, --health], interval: 30s, timeout: 5s, retries: 3, start_period: 60s }
 

@@ -10,8 +10,12 @@ ports 3300/8443. The blog and article scheduler are not deployed.
 - Snapshot and encrypted off-server backup of the existing service before host changes.
 - Docker Engine, Compose v2, Node 22+, age, Nginx and key-based operator access.
   age provides authenticated backup encryption without custom cryptography.
-- A private GHCR pull credential with `read:packages`, provisioned through stdin;
-  never put it in an image, Git, shell arguments or this document.
+- A dedicated read-only GHCR credential, provisioned through stdin. A registry
+  bearer may be scoped to pull only `boyinshadows/termspace-web`,
+  `boyinshadows/termspace-api` and `boyinshadows/termspace-ops`. Keep broader local
+  GitHub OAuth credentials on the development computer. Use a protected temporary
+  `DOCKER_CONFIG` for the pull/release and remove it afterward; never put a
+  credential in an image, Git, shell arguments or this document.
 - A locally trusted `termspace.localhost` certificate. Install mkcert's CA only
   on the development computer; never copy its CA private key to the VPS.
 
@@ -63,7 +67,10 @@ On the development computer, resolve `termspace.localhost` to `127.0.0.1`, trust
 the local certificate and open the tunnel:
 
 ```sh
-ssh -N -L 127.0.0.1:8443:127.0.0.1:8443 termspace-ops@13.140.89.146
+ssh -F /dev/null -i ~/.ssh/termspace-preview -o IdentitiesOnly=yes \
+  -o UserKnownHostsFile=~/.ssh/known_hosts_termspace \
+  -o StrictHostKeyChecking=yes -o ExitOnForwardFailure=yes \
+  -N -L 127.0.0.1:8443:127.0.0.1:8443 termspace-ops@13.140.89.146
 ```
 
 Open `https://termspace.localhost:8443`. Its hostname isolates cookies from
@@ -128,3 +135,13 @@ Inspect failed worker containers and health status: failed batches exit nonzero,
 and worker health requires a successful poll within three minutes. Docker logs
 are capped at three 10 MB files per container. Real external alerting remains
 pending until an owner-provided destination exists.
+
+Install the public local CA certificate (never its private key) at
+`/etc/termspace/tls/rootCA.pem`. Install `termspace-health.service` and
+`termspace-health.timer` after the first successful backup. The five-minute
+check requires healthy containers, verified private HTTPS, root disk below 85%,
+at least 384 MiB available memory and an encrypted backup less than 36 hours old.
+Failures remain visible in the system journal; this is local monitoring until
+an external notification destination is configured. The operator account has
+SSH tunnel access but no sudo or Docker-group membership; administration uses
+an authenticated root SSH session.

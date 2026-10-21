@@ -1,22 +1,33 @@
 # TermSpace pre-deployment readiness review
 
-## Deployment follow-up — 2026-10-20
+## Deployment follow-up — 2026-10-21
+
+Web/API is deployed as a private HTTPS preview at
+`https://termspace.localhost:8443` through an operator SSH tunnel. The VPS has
+2 CPUs, about 4 GB RAM and an expanded 40 GB disk. Existing INSIGHT remains
+active on its original ports, database and Nginx site. TermSpace publishes only
+loopback web 3300/private TLS 8443; external checks reject those ports, API 4001,
+PostgreSQL 5432 and Redis 6379. Blog/email workers and the editorial scheduler
+are deferred; no demo, administrator or bypass account is present.
+
+Hosted run 39424662557 passed all three images for `41a818d`. The preview passed
+6 disposable database/Redis integration tests and live HTTPS session/CSRF and
+unverified-creator checks. Encrypted backups match their off-server copies;
+restore recovered all 30 migrations, 8 categories, 9 platforms, empty readers and
+catalog, and the exact upload marker bytes in disposable resources. Previous
+web image compatibility, stopped-worker detection and API/web restart recovery
+passed. Nightly encrypted backups and five-minute local health checks are active.
+See `changelog.md` and `deploy/README.md` for evidence, image digests and operation.
 
 The original summary/checklist below describe the 2026-10-19 review and contain
 stale unchecked entries. B1–B8 and S1–S10 have later fixes/corrections in their
-detailed sections; the current merged code also has Redis and a shared web skip
-link. The merge passed unit/browser tests and Lighthouse (see `changelog.md`).
-
-Owner decision: web/API first, blog later; fresh isolated database; private HTTPS
-preview through SSH before choosing public DNS/email. VPS upgrade is verified:
-2 CPUs, about 4 GB RAM and an expanded 40 GB disk; existing INSIGHT stays separate.
-Deployment packaging/configuration work is in progress under `deploy/README.md`.
-Do not mark S13–S19 or the deployment complete until hosted image, backup/restore
-and VPS acceptance evidence is recorded. Web CSP nonce enforcement is implemented;
-final deployment evidence will follow below. Blog CSP remains deferred.
-Email delivery, public origin/contact, legal review/consent, Google OAuth and
-external alerting remain pending owner input. Never enable a verification bypass
-to satisfy preview acceptance.
+detailed sections; web CSP is now nonce-enforced. S13–S19 below distinguish the
+current web/API preview from the deferred blog and remaining CI/alerting work.
+Public DNS/TLS, sending domain/provider, legal/contact review and signup consent,
+Google OAuth, administrator identity, real inbox verification/reset and verified
+creator/moderator acceptance remain owner-dependent launch gates. No verification
+bypass is used to satisfy preview acceptance. Private readiness does not approve
+public launch.
 
 Date: 2026-10-19 · Branch: `ramtin` · Scope: `apps/web`, `apps/blog`, `apps/api`, `docker/`, `docker-compose.yml`, `.github/`
 
@@ -70,13 +81,13 @@ Fix: write the real pages or remove the links; remove or gate `/design-system` i
 - **S12. ~~`NEXT_PUBLIC_USE_MOCK=1` serves fixtures~~ LOWER RISK THAN REPORTED, NO CHANGE (phase 3): the Docker builds cannot receive the flag (`Dockerfile.web` has no ARG for it, compose passes none, `.dockerignore` excludes `.env`); only a hand-run host build with it set would. e2e and Lighthouse rely on it in a production build, so a `NODE_ENV` guard would break them.** Original: `NEXT_PUBLIC_USE_MOCK=1` serves fixtures (`apps/web/app/page.tsx:48`), and `lib/mock-home.ts` is bundled. It is build-time inlined, so a wrong build arg ships mock data. Guard on `NODE_ENV !== "production"`.
 
 ### Docker / CI / ops
-- **S13. Base images unpinned** (`node:22-bookworm-slim`, `postgres:16`). Pin versions or digests.
-- **S14. Runtime images ship devDependencies** (`docker/Dockerfile.api:27`, `.web:28`, `.blog:24`: full `node_modules` copied, no prune). Prune after fixing B2.
-- **S15. `.dockerignore:8-9`** omits `.env.*`, `.playwright-mcp`, `.codex`, `**/.impeccable`, `maintenance`, `**/test-results`, `**/playwright-report`.
-- **S16. No HEALTHCHECK for `web`, `blog` or the workers; no resource limits or log rotation.** The scheduler loop (`while true; … sleep 60`) hides job failures. The DB volume is still named `blog_pgdata`.
-- **S17. CI gaps** (`.github/workflows/ci.yml`, `web.yml`): no `npm audit`, dependabot or secret scan; no Docker image build job (so B6 would go unnoticed); no `permissions:` block; no `timeout-minutes`/`concurrency` in `ci.yml`; `apps/api` and `apps/blog` have no `lint` script (`--if-present` skips silently); the integration job runs two named files only.
-- **S18. No rollback, backup/restore, monitoring or error tracking.** No Sentry/OTel/uptime hooks anywhere; README (`:118-215`) has no pre-deploy checklist. Migrations are forward-only, `202609010001_review_hardening` TRUNCATEs `SearchQuery`, `202609240001_remove_duplicate_creator_ownership` aborts if `MarketplaceCreator.userId` has data, and several run data `UPDATE`s. Take and test a `pg_dump` before `migrate deploy`; run the pre-flight query for `202609240001`.
-- **S19. `.gitignore` gaps.** Add `.codex/`, `.playwright-mcp/` (3.5 MB of screenshots/logs), `**/.impeccable/`; 15 `.impeccable` files are already tracked (`git rm -r --cached` if they shouldn't ship). `.env:25-26` repeats `EMAIL_VERIFICATION_SECRET`; `SESSION_COOKIE_DOMAIN` is read by no code.
+- **S13. DONE for the web/API preview.** Node, PostgreSQL and Redis use verified immutable digests; web/API/operations releases are digest-only. Blog and legacy development-stack tags remain outside this deployment.
+- **S14. DONE for web/API runtime.** Standalone web and production-only API dependencies pass hosted image checks; optional Prisma compiler/CLI peers are explicitly excluded from the API runtime. The separate operations image intentionally includes migration/seed/test tools. Blog runtime remains deferred.
+- **S15. DONE.** The Docker build context excludes `.env*`, agent/browser directories, `.impeccable`, maintenance and generated test/report output.
+- **S16. DONE for the preview.** Database/API/web/Redis/worker health checks, worker failure exits, CPU/memory caps, bounded logs and dedicated database/uploads volumes are deployed. Startup caught unquoted comma-separated tmpfs options; quoted strings and an actual Compose-parsing regression test now prevent that defect. No blog or scheduler is deployed.
+- **S17. PARTIAL.** The preview workflow builds/smoke-tests all three images, audits API production dependencies, pins actions and defines permissions/timeouts/concurrency. Six database/Redis cases were verified on disposable VPS containers. Broader legacy CI, Dependabot and secret-scanning coverage remain follow-ups; they are not implied by a passing image workflow.
+- **S18. DONE for private operations; external alerting pending.** Matching encrypted off-server backups, isolated database/uploads restore, previous-web-image compatibility, stopped-worker detection and API/web restart recovery passed. Nightly backup and five-minute health timers are active; local failures reach the journal. External notification destination and long-term off-server automation remain owner decisions. See `deploy/README.md` for protected backup/migration/rollback procedures. No INSIGHT database was used for testing.
+- **S19. PARTIAL / packaging addressed.** `.codex/` and `.playwright-mcp/` are ignored; Docker excludes all agent/design sidecars. Existing tracked design notes and local development `.env` cleanup were not removed as part of deployment. No secret or generated report is staged.
 - **S20. Migration naming.** `20260923202550_new_migration` breaks the `<YYYYMMDD><NNNN>_snake_case` rule. Renaming breaks `_prisma_migrations` if it was ever applied anywhere; rename only if it hasn't been.
 
 ### Performance

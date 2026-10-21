@@ -2,6 +2,56 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-21
+
+- **Private VPS deployment and operations (phase 3).** Owner-approved deployment
+  tooling work; shared surfaces: `changelog.md` and `pending.md`. INSIGHT remains
+  active with its original site, ports, certificate and host PostgreSQL. The
+  upgraded host has 2 CPUs, about 4 GB RAM and 40 GB disk. Key-only operator SSH
+  access has neither sudo nor Docker-group membership. The preview uses only
+  loopback 3300/8443; external checks reject 3300/8443/4001/5432/6379.
+  - All three hosted image checks passed in run 39424662557 (`41a818d`). Deployed
+    web `c5713d5d865320c7f5a2a3337bf92ce812ff7b5c7b07a479a7ec79fd2448beec`,
+    API `044801a52921c909dc65a9dc5f2338cec6700117bf7141183dbfbc901f866b8c`,
+    operations `055a3d7716f0515d47bf9157f15eccbd94b5b50a8fa025b2b517601f7cc567ba`
+    are GHCR sha256 digests under `boyinshadows/termspace-{web,api,ops}`. The
+    previous tested web digest `f46876c35c696c71de963dfef0c6ef866ffa8b6357a3b2e434155a893954dea7`
+    booted against the current API/schema on a separate loopback port; the live
+    frontend was not rolled back. Test container was removed afterward.
+  - Fresh database: all 30 migrations, 8 reference categories and 9 platforms;
+    zero products, readers and administrators after acceptance cleanup. Six real
+    database/Redis integration cases passed in disposable, isolated containers.
+    The test runner needed writable temporary Vite configuration; only that
+    disposable container used the source-file owner. Production runs as node.
+    Live trusted HTTPS passed registration, Secure/HttpOnly/host-only sessions,
+    CSRF rejection, unverified creator rejection and logout. English/Persian
+    page controls/theme switching pass; browser console has no errors.
+  - Startup caught YAML flow-list commas splitting tmpfs mount options. Quoted
+    mount strings fix all three services; the new Compose-parsing test includes
+    the optional email profile and rejects split options/public internal ports.
+    Retry used the required matching off-server encrypted backup.
+  - Encrypted snapshot `20261020T130135Z.tar.age` matches off-server SHA-256
+    `f0e94f289502660203d2c6dd7be93b09d0b49b0627151902d9e4f862a5d56d01`.
+    Isolated restore recovered migration/reference/empty-user counts and exact
+    upload marker hash `f88b266dca5c6bd97d65a18f93b8d2fe86b9f46d96a198cab6943b64ad075f47`.
+    PostgreSQL readiness uses its final TCP listener rather than the temporary
+    initialization socket. Restore containers/volume and the live marker were
+    removed. CA/backup private keys remain on the computer; secrets stay outside
+    Git. The pre-change INSIGHT backup was also encrypted and copied off-server.
+  - Stopped-worker rejection and API/web restart recovery passed. Nightly
+    encrypted backup (03:15 UTC plus up to five minutes) and five-minute local
+    health timers are enabled. Health checks verify containers, TLS, disk,
+    available memory and backup freshness. External alerts remain pending.
+    Automatic review rejected forwarding broad GitHub OAuth access; a separate
+    registry bearer requested only pull scopes for the three images and was
+    removed from the VPS after pulls. Broad OAuth stayed on the computer.
+  - Verification: deployment regression tests, root typecheck/tests/build and web
+    lint; preceding application phase passed 328 browser cases and all nine
+    Lighthouse runs. No UI source changed in this operations phase. Manual
+    deployment/security diff review completed; public launch remains blocked on
+    owner settings and real inbox/Google/verified-role acceptance. Usage/cost
+    meter unavailable.
+
 ## 2026-10-20
 
 - **Enforced web script CSP (deployment phase 2).** The proxy supplies a fresh
