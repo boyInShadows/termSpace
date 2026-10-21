@@ -29,8 +29,16 @@ Project changes completed from `pending.md` should be recorded here with the dat
   - Final local 4x CPU median LCP/performance/FID: home 2631 ms/97/76 ms,
     dashboard 2782 ms/96/74 ms, detail 2782 ms/96/78 ms. Existing assertions,
     network settings and CPU calibration are unchanged; stricter LCP targets
-    remain open. Hosted verification follows the push. Evidence is preserved
-    in ignored `maintenance/queue-20261021/`.
+    remain open. [Hosted application/database CI](https://github.com/boyInShadows/termSpace/actions/runs/39651240026)
+    and [browser/Lighthouse checks](https://github.com/boyInShadows/termSpace/actions/runs/39651240051)
+    pass on `2a1a03e` without rerunning or altering the calibration. Dashboard
+    FID samples are 134/128/104 ms, median 128 versus the prior 135. Individual
+    outliers remain (home reached 272 ms); no guarantee of stable hosted timing
+    is claimed. The investigation/startup-reduction item is removed from the
+    ignored local queue, while strict LCP acceptance stays open. Evidence and
+    original failures are preserved in `maintenance/queue-20261021/`.
+    An additional font-preload priority experiment did not improve LCP and was
+    reverted; its reports are retained there too.
   - Shared surface: `changelog.md`. No API, schema, dependency, provider or
     environment changes; physical-device/native wording acceptance and the
     owner-deferred domain/email/Google sequence remain open.
