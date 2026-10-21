@@ -69,12 +69,11 @@ export function Header() {
 
   useEffect(() => {
     const header = headerRef.current!;
-    const measure = () => document.documentElement.style.setProperty(
-      "--site-header-height", `${header.getBoundingClientRect().height}px`,
-    );
-    const observer = new ResizeObserver(measure);
-    observer.observe(header);
-    measure();
+    const observer = new ResizeObserver(([entry]) => {
+      const height = entry.borderBoxSize?.[0]?.blockSize ?? header.getBoundingClientRect().height;
+      document.documentElement.style.setProperty("--site-header-height", `${height}px`);
+    });
+    observer.observe(header, { box: "border-box" });
     return () => {
       observer.disconnect();
       document.documentElement.style.removeProperty("--site-header-height");
@@ -124,7 +123,7 @@ export function Header() {
       frame = requestAnimationFrame(measure);
     };
 
-    measure();
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     return () => {

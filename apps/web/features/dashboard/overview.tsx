@@ -9,7 +9,8 @@ import { ListingsTable } from "./listings-table";
 import type { OverviewState } from "./overview-state";
 import { QuickActions } from "./quick-actions";
 import { StatTile, StatTileSkeleton, type StatDelta } from "./stat-tile";
-import { intlLocale } from "@/lib/format";
+import { formatNumber, intlLocale } from "@/lib/format";
+import type { Locale } from "@/lib/i18n";
 import { CardError } from "./dashboard-card";
 
 /** Fetches the overview once, and again on Retry. */
@@ -93,7 +94,6 @@ function OverviewHeader({ state, now, name }: { state: OverviewState; now: numbe
   const { locale, t } = useLocale();
   const copy = t.dashboardHome;
   const localeTag = intlLocale(locale);
-  const number = new Intl.NumberFormat(localeTag);
   const known = name !== undefined;
 
   const greeting = {
@@ -110,10 +110,10 @@ function OverviewHeader({ state, now, name }: { state: OverviewState; now: numbe
     summary = totals.totalListings === 0
       ? copy.summaryEmpty
       : copy.summary
-          .replace("{week}", number.format(totals.acquisitionsLast7Days))
-          .replace("{review}", number.format(totals.inReviewListings))
-          .replace("{acquisitions}", number.format(totals.totalAcquisitions))
-          .replace("{listings}", number.format(totals.totalListings));
+          .replace("{week}", formatNumber(totals.acquisitionsLast7Days, locale))
+          .replace("{review}", formatNumber(totals.inReviewListings, locale))
+          .replace("{acquisitions}", formatNumber(totals.totalAcquisitions, locale))
+          .replace("{listings}", formatNumber(totals.totalListings, locale));
   }
 
   return (
@@ -151,12 +151,9 @@ function OverviewStats({ state }: { state: OverviewState }) {
     );
   }
 
-  const localeTag = intlLocale(locale);
-  const number = new Intl.NumberFormat(localeTag);
-  const rating = new Intl.NumberFormat(localeTag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const totals = state.status === "ready" && state.home.kind === "creator" ? state.home.dashboard.summary : null;
   const show = (value: number | null | undefined) =>
-    totals && value !== undefined && value !== null ? number.format(value) : "—";
+    totals && value !== undefined && value !== null ? formatNumber(value, locale) : "—";
 
   return (
     <dl className="grid grid-cols-2 gap-4 xl:grid-cols-4">
@@ -166,15 +163,15 @@ function OverviewStats({ state }: { state: OverviewState }) {
         delta={
           // Both finite, or no badge: an API a deploy behind lacks the fields.
           totals && Number.isFinite(totals.acquisitionsLast7Days) && Number.isFinite(totals.acquisitionsPrevious7Days)
-            ? acquisitionDelta(totals.acquisitionsLast7Days - totals.acquisitionsPrevious7Days, number, copy)
+            ? acquisitionDelta(totals.acquisitionsLast7Days - totals.acquisitionsPrevious7Days, locale, copy)
             : undefined
         }
       />
       <StatTile label={copy.statLive} value={show(totals?.publishedListings)} />
       <StatTile
         label={copy.statRating}
-        value={totals?.averageRating != null ? rating.format(totals.averageRating) : "—"}
-        context={totals ? copy.ratingContext.replace("{n}", number.format(totals.ratedReviewCount)) : undefined}
+        value={totals?.averageRating != null ? formatNumber(totals.averageRating, locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "—"}
+        context={totals ? copy.ratingContext.replace("{n}", formatNumber(totals.ratedReviewCount, locale)) : undefined}
       />
       <StatTile label={copy.statReview} value={show(totals?.inReviewListings)} />
     </dl>
@@ -183,10 +180,10 @@ function OverviewStats({ state }: { state: OverviewState }) {
 
 function acquisitionDelta(
   change: number,
-  number: Intl.NumberFormat,
+  locale: Locale,
   copy: { deltaUp: string; deltaDown: string; deltaFlat: string },
 ): StatDelta {
-  const display = number.format(Math.abs(change));
+  const display = formatNumber(Math.abs(change), locale);
   const template = change > 0 ? copy.deltaUp : change < 0 ? copy.deltaDown : copy.deltaFlat;
   return { value: change, display, description: template.replace("{n}", display) };
 }

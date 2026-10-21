@@ -4,6 +4,37 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-21
 
+- **Reduce dashboard startup formatting and forced layout (sequential queue).**
+  The existing number helper now reuses formatters by resolved locale/options;
+  overview summaries, totals, ratings and listing rows use it. Only formatter
+  objects are cached, never reader values or private responses. The shared
+  header uses ResizeObserver's measured border box, retaining the bounds-read
+  fallback, and schedules initial scroll measurement through its existing
+  animation-frame path. Session snapshots, Saved ordering, wording and styling
+  are unchanged.
+  - Preserved the first queue commit's hosted failure: dashboard FID samples
+    147/135/110 ms, median 135 versus the unchanged 130 ms gate, at benchmark
+    indices 2477-2499 and the existing calibrated 3x profile. Original failed
+    reports and older failures remain intact. A separate diagnostic 6x CPU
+    sample had a 176 ms longest task before these edits; two after samples
+    measured 144/152 ms. This is a small diagnostic comparison, not proof that
+    hosted scheduling variability has disappeared.
+  - Verification: cache regression fails before the fix and passes after it;
+    tests preserve Persian/data digits, rating precision, compact overrides,
+    observer offsets and fallback. Root typecheck, 541 unit tests (5 database
+    skips), web lint, root production build, 350 browser passes (44 intentional
+    skips, no retries), nine local Lighthouse reports and 60 responsive
+    EN/FA/theme captures pass. Representative renders and the manual second
+    diff review pass; Impeccable reports no findings. No usage meter is exposed.
+  - Final local 4x CPU median LCP/performance/FID: home 2631 ms/97/76 ms,
+    dashboard 2782 ms/96/74 ms, detail 2782 ms/96/78 ms. Existing assertions,
+    network settings and CPU calibration are unchanged; stricter LCP targets
+    remain open. Hosted verification follows the push. Evidence is preserved
+    in ignored `maintenance/queue-20261021/`.
+  - Shared surface: `changelog.md`. No API, schema, dependency, provider or
+    environment changes; physical-device/native wording acceptance and the
+    owner-deferred domain/email/Google sequence remain open.
+
 - **Remove Studio code from the dashboard overview (sequential local queue,
   first LCP improvement).** Moved the three existing lifecycle helpers into
   `lib/dashboard.ts` and updated Studio, overview tables and activity imports.
