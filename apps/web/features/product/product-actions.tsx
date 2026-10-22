@@ -1,7 +1,6 @@
 "use client";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import * as Dialog from "@radix-ui/react-dialog";
 import { Download, Eye, Heart, LibraryBig } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { MarketplaceInstallation, ProductDetail } from "@/lib/types";
@@ -48,6 +47,9 @@ export function ProductActions({ product }: { product: ProductDetail }) {
   const [installation, setInstallation] = useState<MarketplaceInstallation | null>(null);
   const [installationBlocked, setInstallationBlocked] = useState(false);
   const [installationOpen, setInstallationOpen] = useState(false);
+  // The triggers stay outside the lazy dialogs; each dialog restores their focus.
+  const previewTrigger = useRef<HTMLButtonElement>(null);
+  const installationTrigger = useRef<HTMLButtonElement>(null);
   const acquisitionKey = useRef<{ version: string | undefined; key: string } | null>(null);
   useEffect(() => {
     if (session.loading || !session.email) return;
@@ -91,24 +93,18 @@ export function ProductActions({ product }: { product: ProductDetail }) {
           <p className="mt-1 leading-6 text-muted-foreground">{copy.noReleaseBody}</p>
         </div>
       ) : (
-        <Button size="lg" className="w-full" disabled={adding || installationBlocked || loadingRelease} onClick={() => void acquire()}>
+        <Button ref={installationTrigger} size="lg" className="w-full" aria-haspopup={session.email ? "dialog" : undefined} aria-expanded={session.email ? installationOpen : undefined} disabled={adding || installationBlocked || loadingRelease} onClick={() => void acquire()}>
           {installation ? <Download size={18} /> : <LibraryBig size={18} />}
           {adding ? copy.adding : installationBlocked ? copy.installUnavailable : loadingRelease ? (status === "error" ? copy.releaseFailed : copy.loadingRelease) : installation ? copy.viewInstall : version ? copy.addVersion.replace("{version}", version) : copy.add}
         </Button>
       )}
-      <Dialog.Root open={installationOpen} onOpenChange={setInstallationOpen}>
-        {installationOpen && installation && <Suspense fallback={null}><InstallDialogContent installation={installation} /></Suspense>}
-      </Dialog.Root>
+      {installationOpen && installation && <Suspense fallback={null}><InstallDialogContent installation={installation} onOpenChange={setInstallationOpen} trigger={installationTrigger} /></Suspense>}
       <div className="grid grid-cols-2 gap-2">
-        <Dialog.Root open={previewOpen} onOpenChange={setPreviewOpen}>
-          <Dialog.Trigger asChild>
-            <Button variant="secondary">
-              <Eye size={17} />
-              {copy.preview}
-            </Button>
-          </Dialog.Trigger>
-          {previewOpen && <Suspense fallback={null}><PreviewDialogContent product={product} /></Suspense>}
-        </Dialog.Root>
+        <Button ref={previewTrigger} variant="secondary" aria-haspopup="dialog" aria-expanded={previewOpen} onClick={() => setPreviewOpen(true)}>
+          <Eye size={17} />
+          {copy.preview}
+        </Button>
+        {previewOpen && <Suspense fallback={null}><PreviewDialogContent product={product} onOpenChange={setPreviewOpen} trigger={previewTrigger} /></Suspense>}
         <Button
           variant="secondary"
           aria-pressed={saved}

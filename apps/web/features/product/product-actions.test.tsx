@@ -59,6 +59,7 @@ describe("ProductActions acquisition flow", () => {
   it("requires sign-in before acquisition", () => {
     session.email = null;
     render(<ProductActions product={acquirable} />);
+    expect(screen.getByRole("button", { name: "Add v1.0.0 to library" })).not.toHaveAttribute("aria-haspopup");
     fireEvent.click(screen.getByRole("button", { name: "Add v1.0.0 to library" }));
     expect(push).toHaveBeenCalledWith(expect.stringMatching(/^\/account\?next=/));
     expect(acquireProduct).not.toHaveBeenCalled();
@@ -125,5 +126,22 @@ describe("ProductActions acquisition flow", () => {
     fireEvent.click(button);
     expect(await screen.findByRole("dialog", { name: "Install acquired release" })).toBeInTheDocument();
     expect(acquireProduct).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(button).toHaveFocus());
+    expect(button).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("opens the lazy preview and returns focus after Escape", async () => {
+    render(<ProductActions product={productDetail} />);
+    const button = screen.getByRole("button", { name: "Preview" });
+    button.focus();
+    fireEvent.click(button);
+    const dialog = await screen.findByRole("dialog", { name: `Inside ${productDetail.name}` });
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    fireEvent.keyDown(dialog, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(button).toHaveFocus());
+    expect(button).toHaveAttribute("aria-expanded", "false");
   });
 });

@@ -2,6 +2,45 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-22
+
+- **Defer the complete product dialog runtime (Ramtin local performance queue).**
+  Preview and installation now load their Radix roots with their existing lazy
+  content. Product actions retain ordinary buttons and explicitly restore focus
+  when a dialog closes. Protected focus, Escape, close controls, acquisition
+  errors and release selection are preserved; signed-out acquisition still
+  redirects to sign-in without advertising a dialog.
+  - Product first-load JavaScript falls from 181,388 to 168,458 gzip bytes
+    (7.1%, 177.1 to 164.5 KiB). The bilingual browser gate ratchets from 180
+    to 165 KiB. Home/dashboard bundles differ only by 25 runtime-map bytes;
+    no public or dashboard timing improvement is claimed for those routes.
+  - Verification: root typecheck, 542 unit tests (5 database-dependent skips),
+    web lint and the normal root production build pass. The full browser suite
+    passes 354 scenarios with 44 intentional skips and no retries; the final
+    signed-out accessibility refinement additionally passes its unit check and
+    35 product/bundle browser scenarios (7 intentional skips). Both locales
+    exercise modal focus containment, Escape, reopening, close buttons and
+    return focus. All nine local Lighthouse reports pass unchanged assertions
+    and 4x CPU/network settings: median LCP/performance/FID is home
+    2649 ms/97/91 ms, dashboard 2644 ms/97/83 ms and detail 2646 ms/97/92 ms;
+    accessibility is 100 throughout. The stricter 2200/2000/2200 ms LCP targets
+    remain unfinished and stay in both queues.
+  - Rendered checks: 84 EN/FA, light/dark, 320/768/1280 captures cover public
+    pages, dashboard and both dialogs, including keyboard focus. No overflow,
+    duplicate shells or page errors; representative dialog renders and a manual
+    second-pass diff review were inspected. Impeccable reports no findings.
+    Existing follow-up: the English sample in the Persian preview inherits
+    RTL; `features/product/preview-dialog.tsx` needs a separate bidi-content
+    review. This phase preserves its existing presentation.
+  - A CSS-inlining trial did not establish a useful gain and was reverted;
+    no experimental configuration is retained. The original failing test
+    assertions, corrected checks, before/after profiles, captures and reports
+    are preserved under ignored `maintenance/queue-20261022/`. No usage/cost
+    meter is exposed by this harness.
+  - Shared surface: `changelog.md`. No API, schema, dependency, provider or
+    environment changes. Physical iOS/Android acceptance, native Persian wording
+    approval and the owner-deferred domain/email/Google sequence remain open.
+
 ## 2026-10-21
 
 - **Reduce dashboard startup formatting and forced layout (sequential queue).**
