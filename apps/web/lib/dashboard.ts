@@ -132,11 +132,16 @@ const RELATIVE_UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ["hour", 3_600],
   ["minute", 60],
 ];
+const relativeFormats = new Map<string, Intl.RelativeTimeFormat>();
 
 /** "3 days ago", "yesterday", "now" — in the reader's locale. */
 export function formatRelative(iso: string, now: number, locale: string): string {
   const seconds = Math.round((Date.parse(iso) - now) / 1000);
-  const format = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+  let format = relativeFormats.get(locale);
+  if (!format) {
+    format = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+    relativeFormats.set(locale, format);
+  }
   for (const [unit, size] of RELATIVE_UNITS) {
     if (Math.abs(seconds) >= size) return format.format(Math.round(seconds / size), unit);
   }

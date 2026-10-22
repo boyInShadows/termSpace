@@ -23,6 +23,21 @@ test.describe("cold dashboard clock", () => {
 
 for (const locale of ["en", "fa"] as const) {
   const prefix = locale === "fa" ? "/fa" : "";
+  const number = new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US");
+  const summary = copy[locale].dashboardHome.summary.replace("{week}", number.format(9)).replace("{review}", number.format(1)).replace("{acquisitions}", number.format(48)).replace("{listings}", number.format(3));
+
+  test(`summary and totals paint before framework JavaScript (${locale})`, async ({ page }) => {
+    await page.route("**/_next/static/**/*.js", (route) => route.abort());
+    await page.goto(`${prefix}/dashboard`);
+    const main = page.getByRole("main");
+    await expect(main.getByText(summary, { exact: true })).toBeVisible();
+    for (const [label, value] of [
+      [copy[locale].dashboardHome.statAcquisitions7d, number.format(9)],
+      [copy[locale].dashboardHome.statRating, number.format(4.6)],
+    ]) {
+      await expect(main.getByText(label, { exact: true }).locator("..").locator("dd > span").first()).toHaveText(value);
+    }
+  });
 
   test(`server identity lets overview load during browser revalidation (${locale})`, async ({ page }) => {
     let release!: () => void;
@@ -45,8 +60,6 @@ for (const locale of ["en", "fa"] as const) {
     expect(creator.headers()["cache-control"]).toContain("no-store");
     const creatorHtml = await creator.text();
     expect(creatorHtml.includes("creator@e2e.test")).toBe(true);
-    const number = new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US");
-    const summary = copy[locale].dashboardHome.summary.replace("{week}", number.format(9)).replace("{review}", number.format(1)).replace("{acquisitions}", number.format(48)).replace("{listings}", number.format(3));
     expect(creatorHtml.includes(summary)).toBe(true);
     const empty = await request.get(`${prefix}/dashboard`, { headers: { Cookie: "e2e_persona=empty" } });
     const emptyHtml = await empty.text();

@@ -4,6 +4,52 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-22
 
+- **Reuse relative-time formatters and retain original CI traces (local queue
+  follow-up).** The shared listing/activity helper reuses one formatter per
+  locale, while recomputing every date/current-time difference. No reader
+  values or private responses are cached. CI now retains the original
+  Lighthouse traces and request logs alongside its existing reports, with
+  the same seven-day retention. Assertions, network settings, local 4x and
+  calibrated hosted 3x CPU profiles are unchanged.
+  - The original [hosted product-dialog run](https://github.com/boyInShadows/termSpace/actions/runs/39752758665)
+    passes browser checks but fails dashboard max-potential-FID: samples
+    238/135/126 ms, median 135 versus 130. Warm dashboard CPU indices are
+    2418.5–2461; the cold home sample has index 1506.5/FID 321 ms. Original
+    reports are preserved without rerunning that build. Hosted variability
+    is retained as unfinished work in the ignored local queue; formatter
+    reuse is not claimed to establish stable hosted timing.
+  - Verification: the corrected cache regression fails before the fix (five
+    constructions for two locales) and passes after it, covering advancing
+    time, future dates and Persian digits. Root typecheck, 543 unit tests
+    (5 database-dependent skips), web lint and the normal production build
+    pass. The full browser suite passes 358 scenarios with 44 intentional
+    skips and no retries. New EN/FA desktop/mobile checks block framework
+    JavaScript and confirm that the server summary and totals remain visible;
+    existing request-scope, expiry and Saved ordering checks still pass.
+  - All nine local Lighthouse reports pass: median LCP/performance/FID is
+    home 2646 ms/97/92 ms, dashboard 2839 ms/96/97 ms and detail
+    2649 ms/97/94 ms, with accessibility 100. Nine trace/request-log pairs
+    were generated and preserved, confirming the CI retention settings.
+    Twelve responsive EN/FA/theme dashboard captures have no overflow,
+    duplicate shells or page errors; representative renders, Impeccable
+    detection and a manual second-pass diff review pass. No usage meter is
+    exposed. The stricter LCP targets remain open.
+  - Separate diagnostic: nine applied-throttling runs (default network
+    parameters, 4x CPU, `throttlingMethod: devtools`) give median LCP
+    1828/1727/1858 ms. In the first home sample, content paints at 1845 ms
+    before the largest framework downloads finish at 2216/2240 ms. This is
+    evidence about that diagnostic profile, not acceptance under the
+    existing simulated gates or on physical phones.
+  - Rejected trials: an extra hydration boundary, a transition, reusing a
+    server readout, and native default number formatting did not establish
+    a useful gain; the server-readout trial regressed dashboard LCP. None is
+    retained. Source snapshots, CPU profiles, original failures, diagnostics
+    and final reports are under ignored `maintenance/queue-20261022/`.
+  - Shared surface: `changelog.md`; `.github/workflows/web.yml` changes only
+    artifact retention. No API, schema, dependency, authentication, provider
+    or environment change. Physical-device/native wording acceptance and
+    the owner-deferred domain/email/Google sequence remain open.
+
 - **Defer the complete product dialog runtime (Ramtin local performance queue).**
   Preview and installation now load their Radix roots with their existing lazy
   content. Product actions retain ordinary buttons and explicitly restore focus

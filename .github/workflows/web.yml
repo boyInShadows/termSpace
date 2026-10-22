@@ -92,13 +92,16 @@ jobs:
         # Reference CPU index ~4500 at 4x; hosted warm indices 2400-3020 at 3x
         # still emulate a slower CPU (800-1007 vs 1125). Network/gates unchanged.
         # shortcut: recalibrate if steady hosted CPU indices leave this range.
-        run: npm run lhci -w apps/web -- --collect.settings.throttling.cpuSlowdownMultiplier=3
+        run: npm run lhci -w apps/web -- --collect.settings.throttling.cpuSlowdownMultiplier=3 --collect.settings.saveAssets=true
 
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-reports
-          path: apps/web/.lighthouseci
+          path: |
+            apps/web/.lighthouseci
+            apps/web/*.trace.json
+            apps/web/*.devtoolslog.json
           include-hidden-files: true
           retention-days: 7

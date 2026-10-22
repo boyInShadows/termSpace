@@ -124,6 +124,24 @@ describe("greetingPeriod", () => {
 describe("formatRelative", () => {
   const now = Date.parse("2026-09-23T12:00:00Z");
 
+  it("reuses locale formatters without caching dates or the current time", async () => {
+    vi.resetModules();
+    const { formatRelative: format } = await import("./dashboard");
+    const RelativeTimeFormat = Intl.RelativeTimeFormat;
+    const construct = vi.spyOn(Intl, "RelativeTimeFormat").mockImplementation(function (locale, options) {
+      return new RelativeTimeFormat(locale, options);
+    });
+    try {
+      expect(format("2026-09-20T12:00:00Z", now, "en-US")).toBe("3 days ago");
+      expect(format("2026-09-20T12:00:00Z", now + 86_400_000, "en-US")).toBe("4 days ago");
+      expect(format("2026-09-24T12:00:00Z", now, "en-US")).toBe("tomorrow");
+      const persian = format("2026-09-20T12:00:00Z", now, "fa-IR");
+      expect(persian).toContain("۳");
+      expect(format("2026-09-20T12:00:00Z", now + 86_400_000, "fa-IR")).toContain("۴");
+      expect(construct).toHaveBeenCalledTimes(2);
+    } finally { construct.mockRestore(); }
+  });
+
   it("picks the largest whole unit", () => {
     expect(formatRelative("2026-09-20T12:00:00Z", now, "en-US")).toBe("3 days ago");
     expect(formatRelative("2026-09-23T09:00:00Z", now, "en-US")).toBe("3 hours ago");
