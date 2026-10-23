@@ -4,6 +4,23 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-23
 
+- **Identify the hosted dashboard startup bottleneck (sequential local queue).**
+  Inspected original reports and the retained traces from `400c2dd` and
+  `1554e45`. The unchanged shared Next App Router/Flight chunk evaluates in
+  36–43 ms tasks on the formatter runner, accounting for its 109/118/134 ms
+  simulated FID samples. The latest runner executes it faster and has higher
+  CPU indices; its passing result is not treated as a runtime fix. Original
+  failure, downloaded artifacts and two local CPU profiles are retained.
+  - `docs/startup-performance.md` records source runs, per-sample indices,
+    task attribution and measurement limits. Removed the completed investigation
+    from the ignored local queue; hosted stability stays open with the remaining
+    LCP work. No runtime, network, throttle or assertion changes were made.
+  - Verification: root typecheck, 557 unit tests (5 database-dependent skips),
+    web lint and root production build. Existing `1554e45` hosted CI/browser/
+    Lighthouse checks pass. No browser suite was repeated for documentation.
+    Manual second-pass review checked task durations against original traces;
+    no usage meter is exposed. Shared surface: `changelog.md`.
+
 - **Complete listing drafts in five resumable steps (Ramtin).** The creator
   editor now shows Basics, Release, Access & license, Type details and Review
   one at a time, with a completion percentage and freely selectable steps.
