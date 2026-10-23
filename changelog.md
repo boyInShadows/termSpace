@@ -4,6 +4,45 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-24
 
+- **Add authenticated listing reports and private staff case triage (sequential
+  queue, reporting stage 1).** Reader reports use bounded reasons/explanations,
+  opaque receipts, one original report per account/open case, a transactionally
+  serialized ten-new-report account quota and a separate IP request limit.
+  Staff can page cases, original evidence and audit history, set severity,
+  investigate or dismiss. Current verified roles, owner/reporter conflicts and
+  optimistic versions protect every staff action. Reports never impose a
+  restriction automatically; original reports and audit events are append-only
+  in PostgreSQL. API contract and deployment notes: `docs/marketplace-reporting.md`.
+  - Owner-assigned API lane: report controller, routes, validation, security
+    limiter, tests and Prisma models. Shared surfaces announced in the phase
+    commit body: `apps/api/prisma/schema.prisma`, additive migration
+    `202610240001_marketplace_report_cases`, `pending.md` and `changelog.md`.
+    No existing data rewrite, dependency, credential or environment change.
+  - Verification: root typecheck, all 588 runnable unit tests (11 database
+    skips), web lint and normal root production build pass. Six additional
+    real-Postgres checks pass in a separately migrated disposable schema:
+    concurrent deduplication/quota, staff conflicts and role revocation,
+    version races, immutable evidence/history, and post-dismissal reports.
+    The schema was dropped after success; the working database was not migrated
+    or reset. Preserved failures caught invalid classification/publication
+    fixtures and a real transaction-admission timeout under concurrent load.
+    Reporting now bounds admission at ten seconds and returns retryable 503
+    rather than an internal error on transaction timeouts.
+  - A running local API held the Windows Prisma DLL open. An initial temporary
+    schema workaround triggered Prisma autoinstall; its package-file changes
+    were restored, original dependencies reconciled, and validation/builds
+    rerun. Client generation succeeded from the API directory into ignored
+    temporary output, copying generated client files while retaining the locked
+    engine. No package change is retained. Manual second-pass review covered
+    privacy, lock ordering, atomic audit writes and closed-case retention; no
+    harness review command is available. No UI changed, so browser/Lighthouse
+    suites were not rerun for this stage.
+  - The unfinished queue now names report/staff interfaces, case-linked scoped
+    enforcement and appeals, reinstatement checks, and additional ADR targets.
+    The parent reporting item remains open. Deploy the additive migration before
+    using these endpoints; privacy-policy retention/anonymization decisions and
+    real-device/native-Persian acceptance remain unresolved.
+
 - **Add public creator profiles and published listing collections (sequential
   queue).** `/creators/[handle]` and its Persian route show the creator's public
   identity and biography, a published-listing total and a paginated catalog grid.

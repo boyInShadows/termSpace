@@ -14,6 +14,23 @@ export const routeSlugSchema = z.string().trim().min(1).max(200).regex(slugPatte
 export const releaseVersionSchema = z.string().trim().min(1).max(64);
 /** Acquire may name the release the reader inspected; without a body it takes the approved one. */
 export const marketplaceAcquireSchema = z.object({ version: releaseVersionSchema.optional() }).strict().optional();
+export const marketplaceReportSchema = z.object({
+  reason: z.enum(["MALICIOUS", "UNDISCLOSED_PERMISSIONS", "SOURCE_COMPROMISE", "IMPERSONATION", "MISLEADING", "BROKEN_OR_ABANDONED", "SPAM_OR_ABUSE", "OTHER"]),
+  explanation: z.string().trim().min(20).max(4000),
+}).strict();
+export const moderationCaseQuerySchema = z.object({
+  state: z.enum(["NEW", "TRIAGED", "INVESTIGATING", "ACTIONED", "DISMISSED"]).optional(),
+  page: z.coerce.number().int().min(1).max(1000000).default(1),
+  limit: z.coerce.number().int().min(1).max(48).default(24),
+}).strict();
+export const moderationCaseTriageSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+  action: z.enum(["TRIAGE", "INVESTIGATE", "DISMISS"]),
+  severity: z.enum(["STANDARD", "HIGH", "CRITICAL"]),
+  reasonCode: z.string().trim().min(2).max(80).regex(/^[A-Z0-9_]+$/),
+  publicReason: z.string().trim().min(10).max(1000),
+  evidenceReference: z.string().trim().min(2).max(200).optional(),
+}).strict();
 export const routeTokenSchema = z.string().trim().min(16).max(256).regex(/^[A-Za-z0-9_-]+$/, "Invalid token");
 const allowedImageHosts = new Set(
   (process.env.IMAGE_HOSTS ?? "images.unsplash.com")

@@ -64,6 +64,14 @@ export const reviewWriteRateLimit = rateLimit({
   message: rateLimitResponse,
 });
 
+export const reportWriteRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: rateLimitResponse,
+});
+
 export const emailVerificationRequestRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 12,

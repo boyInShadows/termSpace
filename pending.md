@@ -29,9 +29,11 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Discovery and Community
 
-- Add reporting controls for unsafe, misleading, abandoned, or malicious items,
-  including case severity, scoped restrictions, appeals, and audit events from
-  ADR 0004.
+- Complete reporting controls for unsafe, misleading, abandoned, or malicious
+  items: connect the listing report and private staff case interfaces to the
+  intake/triage API; add case-linked scoped restrictions, appeals and
+  reinstatement checks/audit events from ADR 0004. Extend reporting to releases,
+  placements and creator profiles; review reporting remains in the ratings queue.
 
 ## Marketplace — P0 Ratings and Reviews
 

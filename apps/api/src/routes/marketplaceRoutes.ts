@@ -6,8 +6,10 @@ import { createOwnedMarketplaceDraft, getOwnedMarketplaceDraft, listMarketplaceD
 import { addMarketplaceModerationNote, getMarketplaceModerationPreview, listMarketplaceModerationQueue, moderateMarketplaceCommunityPlacement } from "../controllers/marketplaceModerationController.js";
 import { connectOwnedProvider, enqueueOwnedSourceCheck, listOwnedProviderConnections, revokeOwnedProvider } from "../controllers/marketplaceSourceController.js";
 import { deleteReview, getMyReview, listProductReviewsForModeration, saveReview, setReviewVisibility } from "../controllers/marketplaceReviewController.js";
+import { getMarketplaceReportCase, listMarketplaceCaseEvents, listMarketplaceCaseReports, listMarketplaceReportCases, reportMarketplaceListing, triageMarketplaceReportCase } from "../controllers/marketplaceReportController.js";
+import { marketplaceReportSchema, moderationCaseQuerySchema, moderationCaseTriageSchema } from "../validation/schemas.js";
 import { requireMarketplaceRole, requireReader, requireVerifiedReader } from "../middleware/auth.js";
-import { reviewWriteRateLimit } from "../middleware/security.js";
+import { reportWriteRateLimit, reviewWriteRateLimit } from "../middleware/security.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
 import { marketplaceCreatorQuerySchema, communityPlacementDecisionSchema, marketplaceAcquireSchema, releaseVersionSchema, reviewVisibilitySchema, reviewWriteSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
 
@@ -41,6 +43,12 @@ router.post("/creator/products/:id/source-check", requireMarketplaceRole("creato
 router.put("/creator/products/:id/draft", requireMarketplaceRole("creator"), validate(creatorDraftUpdateSchema), updateOwnedMarketplaceDraft);
 router.post("/creator/products/:id/lifecycle", requireMarketplaceRole("creator"), validate(creatorListingLifecycleSchema), transitionOwnedMarketplaceListing);
 router.get("/moderation/queue", requireMarketplaceRole("moderator", "administrator"), validate(moderationQueueQuerySchema, "query"), listMarketplaceModerationQueue);
+router.post("/products/:slug/reports", requireReader, reportWriteRateLimit, validate(marketplaceReportSchema), reportMarketplaceListing);
+router.get("/moderation/cases", requireMarketplaceRole("moderator", "administrator"), validate(moderationCaseQuerySchema, "query"), listMarketplaceReportCases);
+router.get("/moderation/cases/:id", requireMarketplaceRole("moderator", "administrator"), getMarketplaceReportCase);
+router.get("/moderation/cases/:id/reports", requireMarketplaceRole("moderator", "administrator"), validate(moderationCaseQuerySchema, "query"), listMarketplaceCaseReports);
+router.get("/moderation/cases/:id/events", requireMarketplaceRole("moderator", "administrator"), validate(moderationCaseQuerySchema, "query"), listMarketplaceCaseEvents);
+router.post("/moderation/cases/:id/triage", requireMarketplaceRole("moderator", "administrator"), validate(moderationCaseTriageSchema), triageMarketplaceReportCase);
 router.get("/moderation/products/:id", requireMarketplaceRole("moderator", "administrator"), getMarketplaceModerationPreview);
 router.post("/moderation/products/:id/notes", requireMarketplaceRole("moderator", "administrator"), validate(moderationNoteSchema), addMarketplaceModerationNote);
 router.post("/moderation/products/:id/community-placements/:communitySlug", requireMarketplaceRole("moderator", "administrator"), validate(communityPlacementDecisionSchema), moderateMarketplaceCommunityPlacement);
