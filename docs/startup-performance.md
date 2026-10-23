@@ -59,3 +59,40 @@ under comparable CPU conditions. The separate mobile LCP targets remain
 home 2200 ms, dashboard 2000 ms and product detail 2200 ms under the existing
 simulated Lighthouse profile. Applied-throttling diagnostics and browser
 viewport checks cannot substitute for those targets or physical phones.
+
+## LCP follow-up trials, 2026-10-24
+
+The retained hosted dashboard's LCP element is the server-rendered summary
+paragraph. In its second sample the observed LCP is approximately 104 ms on
+the unthrottled collection, while the modeled result is 2151 ms. Both Lantern
+estimates end at the shared React chunk's modeled download completion. This
+identifies a transfer constraint in the lab model; it does not invalidate the
+existing acceptance profile or demonstrate real-phone performance.
+
+The normal production build was measured against the mock API before and
+after adding locale-correct font `Link` response headers through the proxy.
+The dashboard originally advertised CSS without its font in the response
+headers; the home page already advertised its font. The trial added the
+missing hint, but the single before/after samples did not establish a useful
+gain: dashboard 2821 → 2791 ms, detail 2628 → 2630 ms, home 2865 → 2635 ms.
+The home change is not attributed to the hint because that hint already
+existed. All application and test changes from this trial were reverted.
+
+An offline Brotli sizing diagnostic reduces first-load JavaScript by about
+16%: home 166604 → 139992 bytes, dashboard 162964 → 136640, detail
+168458 → 141402. Substituting the available core-asset transfer sizes in the
+second hosted dashboard sample leaves its modeled estimate at 2151 ms.
+This limited what-if calculation is not a production delivery measurement;
+it does not justify adding a compression build pipeline or claim Brotli
+cannot improve a deployed site.
+
+Parallelizing the private dashboard reads ahead of identity verification was
+also considered and not implemented. The existing regression contract forbids
+those reads for anonymous or unverified readers. Request-scoped identity,
+cookie binding, no-store behavior and that verification sequence are intact.
+
+The strict LCP targets remain unfinished. The build was restored from the
+unchanged application source. Trial patches, reports, traces and diagnostics
+remain under ignored `maintenance/queue-20261023/`. Physical-device and Persian
+wording acceptance remain human tasks; `owner-review.json` in that directory
+adds the five-step editor's 21 wording choices to the earlier review material.

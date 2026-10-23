@@ -2,6 +2,34 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-24
+
+- **Retain LCP diagnostic results and manual acceptance handoff (sequential
+  local queue).** Continued the next active performance item without closing
+  its 2200/2000/2200 ms targets. The retained dashboard summary is server-rendered;
+  its modeled critical path ends at the shared React chunk's download. Added
+  the measured limits and trial results to `docs/startup-performance.md`.
+  - A locale-correct font response-header trial did not establish a useful
+    gain (dashboard 2821 → 2791 ms; detail 2628 → 2630 ms), and its application
+    and test changes were reverted. A separate Brotli sizing/transfer model
+    is diagnostic, not deployed compression or target acceptance. The existing
+    contract prohibiting private dashboard reads before identity verification
+    is preserved; no speculative parallelization or caching was added.
+  - Verification: the restored normal root production build passes. Application
+    source matches the phase-1 source that passed root typecheck, 557 unit tests
+    (5 database-dependent skips) and lint. No browser rerun is claimed for the
+    reverted trial. Original reports, patches and measurements remain under
+    ignored `maintenance/queue-20261023/`; budgets and throttle settings are
+    unchanged. A manual second-pass review confirms no trial code remains.
+  - The ignored local queue retains strict LCP and hosted input-delay acceptance.
+    Its device/wording items remain open, with 21 additional EN/FA editor choices
+    in `maintenance/queue-20261023/owner-review.json` for a Persian-speaking
+    maintainer. Physical iOS/Android results and native wording approval were
+    requested, not inferred. Owner-deferred email/domain/Google work remains
+    paused; the copied shared backlog remains subject to its ownership notes.
+    Shared surface: `changelog.md`. No runtime, schema, dependency, credential
+    or environment changes. No usage meter is exposed by this harness.
+
 ## 2026-10-23
 
 - **Identify the hosted dashboard startup bottleneck (sequential local queue).**
