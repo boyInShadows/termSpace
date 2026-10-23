@@ -2,6 +2,43 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-23
+
+- **Complete listing drafts in five resumable steps (Ramtin).** The creator
+  editor now shows Basics, Release, Access & license, Type details and Review
+  one at a time, with a completion percentage and freely selectable steps.
+  Required fields determine completion; previewing or saving the complete draft
+  completes Review. Editing clears its review checkpoint. Inactive steps retain
+  their fields, and validation opens and focuses the first invalid step.
+  - Save for later stores partial work and its current step on this browser,
+    scoped to the signed-in account and listing. It does not call the draft API.
+    Restoring rejects malformed data and does not apply a browser copy based on
+    an older account version. Storage failures retain dirty work and its exit
+    guard. A successful account save clears the browser copy and uses the new
+    record as the editor baseline. Complete draft validation, optimistic
+    concurrency, release verification and moderation remain authoritative.
+  - Verification: root typecheck, 557 unit tests (5 database-dependent skips),
+    web lint and the normal root production build pass. The full browser suite
+    passes 362 scenarios with 44 intentional skips, including bilingual resume,
+    accurate progress, hidden-field validation and keyboard navigation. Final
+    editor checks cover both browser projects after the mobile refinement and
+    account-save cleanup assertion. An unrelated product-dialog timeout in the
+    first loaded unit run passes in isolation and in both subsequent full runs;
+    its original failure is retained without changing that code or test.
+  - All nine local Lighthouse reports pass unchanged budgets and settings:
+    representative LCP/performance/FID is home 2631 ms/97/76 ms, dashboard
+    2792 ms/96/80 ms and detail 2629 ms/97/75 ms; accessibility is 100 throughout.
+    Existing stricter LCP targets and hosted timing follow-ups remain open.
+    Sixty EN/FA, light/dark, 320/768/1280 captures cover all five steps with no
+    overflow or page errors. Representative renders, keyboard/short-landscape
+    checks, Impeccable detection and a manual second-pass diff review pass.
+    Physical iOS/Android and native Persian wording approval remain in the
+    ignored local queue. Evidence is under `maintenance/draft-steps-20261023/`.
+    No usage/cost meter is exposed by this harness.
+  - Shared surface: `changelog.md`. The dashboard surface brief documents the
+    new flow. No API, schema, dependency, credential or environment changes;
+    no other maintainer's `pending.md` item was taken or marked complete.
+
 ## 2026-10-22
 
 - **Reuse relative-time formatters and retain original CI traces (local queue

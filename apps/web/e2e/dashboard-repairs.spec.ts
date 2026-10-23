@@ -39,7 +39,7 @@ for (const locale of ["en", "fa"] as const) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
       for (const y of [700, 1500, 10000]) {
         await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), y);
-        for (const control of [page.locator("[data-draft-actions]").getByRole("button"), page.locator("[data-draft-actions]").getByRole("link")]) {
+        for (const control of await page.locator("[data-draft-actions] button:not([disabled]), [data-draft-actions] a").all()) {
           expect(await control.evaluate((element) => {
             const box = element.getBoundingClientRect();
             return box.top >= 0 && box.bottom <= innerHeight && element.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
@@ -93,7 +93,9 @@ test("every listing type exposes its required detail fields", async ({ page }) =
   const types = page.locator('[name="itemType"]');
   await expect(types).toHaveValue("skill");
   for (const type of ["skill", "agent", "mcp_server", "integration", "rule", "prompt", "hook", "template", "workflow"]) {
+    await page.getByRole("button", { name: /^Basics —/ }).click();
     await types.selectOption(type);
+    await page.getByRole("button", { name: /^Type details —/ }).click();
     const section = page.locator("section").filter({ has: page.getByRole("heading", { name: copy.en.creatorDraft.typeDetailsTitle, exact: true }) });
     expect(await section.locator("input:required, textarea:required, select:required").count()).toBeGreaterThan(0);
   }
@@ -124,19 +126,57 @@ test("structured declarations preview and save as the existing manifest", async 
   await editorFixtures(page);
   await page.goto("/dashboard/studio/listings/listing-3/edit");
   await expect(page.locator('[name="slug"]')).toHaveValue("review-skill");
+  await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "80");
+  await page.getByRole("button", { name: /^Access & license —/ }).click();
   await page.getByRole("button", { name: "Add: Environment variables" }).click();
   const group = page.getByRole("group", { name: "Environment variables" });
   await group.getByLabel("Environment variable name").fill("TOOL_TOKEN");
   await group.getByLabel("Purpose").fill("Read | write, carefully");
   await group.getByLabel("Required", { exact: true }).check();
   await group.getByLabel("Sensitive", { exact: true }).check();
+  await page.getByRole("button", { name: creatorWorkspace.en.creatorDraft.saveLater, exact: true }).click();
+  await page.getByRole("button", { name: /^Review —/ }).click();
   await page.getByRole("button", { name: "Preview listing declarations" }).click();
+  await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100");
   await expect(page.getByRole("region", { name: "Preview listing declarations" })).toContainText("Read | write, carefully");
   const saved = page.waitForRequest((request) => request.method() === "PUT" && request.url().endsWith("/listing-3/draft"));
   await page.locator("[data-draft-actions]").getByRole("button", { name: "Save draft" }).click();
   expect((await saved).postDataJSON()).toMatchObject({ expectedVersion: 1, manifest: { release: { requirements: { environmentVariables: [{ name: "TOOL_TOKEN", purpose: "Read | write, carefully", required: true, sensitive: true }] }, compatibility: [{ platform: "codex", models: ["model-agnostic"] }] } } });
   await expect(page.getByText(copy.en.creatorDraft.saved).first()).toBeVisible();
+  expect(await page.evaluate(() => Object.keys(localStorage).some((key) => key.startsWith("termspace:draft:") && key.endsWith(":listing-3")))).toBe(false);
 });
+
+for (const locale of ["en", "fa"] as const) {
+  test(`unfinished steps resume with accurate progress and keyboard navigation (${locale})`, async ({ page }) => {
+    await editorFixtures(page);
+    const text = creatorWorkspace[locale].creatorDraft;
+    const prefix = locale === "fa" ? "/fa" : "";
+    const editor = `${prefix}/dashboard/studio/listings/new`;
+    await page.goto(editor);
+    await page.locator('[name="slug"]').fill("resume-later");
+    await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "0");
+    const steps = page.getByRole("navigation", { name: text.sections });
+    await steps.getByRole("button").nth(1).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#draft-step-heading")).toBeFocused();
+    await expect(page.locator('[name="slug"]')).toBeHidden();
+    await page.locator('[name="releaseVersion"]').fill("1.2.3");
+    await page.getByRole("button", { name: text.saveLater, exact: true }).click();
+    await expect(page.getByText(text.localSaved)).toBeVisible();
+    await page.locator("[data-draft-actions]").getByRole("link").click();
+    await expect(page).toHaveURL(/\/studio$/);
+    await page.goto(editor);
+    await expect(page.getByText(text.localRestored)).toBeVisible();
+    await expect(page.locator('[name="releaseVersion"]')).toHaveValue("1.2.3");
+    await steps.getByRole("button").first().click();
+    await expect(page.locator('[name="slug"]')).toHaveValue("resume-later");
+    await steps.getByRole("button").last().click();
+    await page.getByRole("button", { name: copy[locale].creatorDraft.save, exact: true }).click();
+    await expect(page.locator('[name="nameEn"]')).toBeFocused();
+    await expect(page.locator('[name="nameEn"]')).toBeVisible();
+    await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "0");
+  });
+}
 
 test("submission recovers source blockers and stale versions without publishing", async ({ page }) => {
   let attempt = 0;
