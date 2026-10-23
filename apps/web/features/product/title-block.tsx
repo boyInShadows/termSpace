@@ -1,6 +1,6 @@
 import { CreatorIdentity, Rating } from "@/components/marketplace/product-parts";
 import { formatNumber } from "@/lib/format";
-import type { Locale } from "@/lib/i18n";
+import { localePath, type Locale } from "@/lib/i18n";
 import { listingTransitionName } from "@/lib/listing-transition";
 import type { ProductDetail } from "@/lib/types";
 import { Absent, Fact, ReleaseFacts } from "./release-facts";
@@ -33,7 +33,7 @@ export function ProductHeader({ product, typeLabel, locale }: { product: Product
       <p className="ts-bidi mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{product.outcome}</p>
       <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm tabular-nums text-muted-foreground">
         <span>{typeLabel}</span>
-        <CreatorIdentity creator={product.creator} />
+        <CreatorIdentity creator={product.creator} href={localePath(`/creators/${product.creator.handle}`, locale)} />
         <Rating rating={product.rating} count={product.reviewCount} />
         <span>{formatNumber(product.usageCount, locale)} {t.uses}</span>
       </div>

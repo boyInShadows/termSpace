@@ -76,8 +76,8 @@ for (const locale of ["en", "fa"] as const) {
     expect(writes).toBe(1);
   });
 
-  test(`ordinary readers do not request creator provider connections (${locale})`, async ({ page }) => {
-    await page.route("**/api/readers/session", (route) => route.fulfill({ json: { data: { authenticated: true, user: { email: "reader@e2e.test", emailVerified: true, marketplaceRoles: [] } } } }));
+  test(`ordinary readers do not request creator provider connections (${locale})`, async ({ page, context, baseURL }) => {
+    await context.addCookies([{ name: "e2e_persona", value: "reader", url: baseURL! }]);
     let requests = 0;
     page.on("request", (request) => { if (request.url().endsWith("/api/marketplace/creator/provider-connections")) requests++; });
     await page.goto(`${prefix}/dashboard/settings`);

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, getFavorites, getMarketplaceItemTypes, getProduct, getProducts, loginWithGoogle, subscribe } from "./api";
+import { ApiError, getFavorites, getMarketplaceCreator, getMarketplaceItemTypes, getProduct, getProducts, loginWithGoogle, subscribe } from "./api";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -54,6 +54,14 @@ describe("marketplace API client caching", () => {
     return () => fetchMock.mock.calls[0][1] as RequestInit & { next?: { revalidate: number } };
   }
   const onServer = () => vi.stubGlobal("window", undefined);
+
+  it("caches the public creator collection with bounded, encoded page parameters", async () => {
+    onServer();
+    const fetchMock = vi.fn().mockResolvedValue(ok());
+    vi.stubGlobal("fetch", fetchMock);
+    await getMarketplaceCreator("public-creator", 2);
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("/api/marketplace/creators/public-creator?page=2&limit=12"), expect.objectContaining({ next: { revalidate: 30 } }));
+  });
 
   it("lets the server reuse public catalogue reads for a short while", async () => {
     onServer();

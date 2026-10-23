@@ -167,6 +167,9 @@ export const marketplaceLibraryQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).optional().default(24),
 });
 
+export const marketplaceCreatorQuerySchema = marketplaceProductQuerySchema.pick({ page: true, limit: true })
+  .refine(({ page, limit }) => (page - 1) * limit <= 2_147_483_647, { path: ["page"], message: "Page is too large" });
+
 export const creatorOnboardingSchema = z.object({
   name: englishDisplayName(2, 80),
   handle: z.string().trim().toLowerCase().min(3).max(40).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Handle must use lowercase letters, numbers, and single hyphens"),

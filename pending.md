@@ -29,8 +29,6 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Discovery and Community
 
-- Add creator profile pages and listing collections while excluding drafts and
-  suspended items from public responses.
 - Add reporting controls for unsafe, misleading, abandoned, or malicious items,
   including case severity, scoped restrictions, appeals, and audit events from
   ADR 0004.

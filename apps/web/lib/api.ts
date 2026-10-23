@@ -1,4 +1,4 @@
-import type { MyReviewState, OwnReview, ReviewInput, CreatorDashboardResult, CreatorReleaseHistory, MarketplaceCommunity, MarketplaceCommunityPageResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceInstallation, ProductRelease, MarketplaceItemType, MarketplaceLibraryEntry, MarketplaceModerationPreview, MarketplaceModerationQueueResult, MarketplaceProviderConnection, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult, ReaderProfile } from "./types";
+import type { MarketplaceCreatorPageResult, MyReviewState, OwnReview, ReviewInput, CreatorDashboardResult, CreatorReleaseHistory, MarketplaceCommunity, MarketplaceCommunityPageResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceInstallation, ProductRelease, MarketplaceItemType, MarketplaceLibraryEntry, MarketplaceModerationPreview, MarketplaceModerationQueueResult, MarketplaceProviderConnection, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult, ReaderProfile } from "./types";
 
 type ApiErrorDetail = { path: string; code?: string; message: string };
 type ErrorBody = { error?: { code?: string; message?: string; details?: ApiErrorDetail[]; correlationId?: string } };
@@ -76,6 +76,10 @@ export async function getMarketplaceCommunity(slug: string, filters: ProductFilt
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => { if (key !== "community" && value !== undefined && value !== "" && value !== "All" && value !== false) params.set(key, String(value)); });
   return request<MarketplaceCommunityPageResult>(`/api/marketplace/communities/${encodeURIComponent(slug)}?${params}`, { revalidate: publicRevalidate(filters) });
+}
+export async function getMarketplaceCreator(handle: string, page = 1) {
+  const params = new URLSearchParams({ page: String(page), limit: "12" });
+  return request<MarketplaceCreatorPageResult>(`/api/marketplace/creators/${encodeURIComponent(handle)}?${params}`, { revalidate: PUBLIC_REVALIDATE_SECONDS });
 }
 export async function getProducts(filters: ProductFilters = {}, signal?: AbortSignal) {
   const params = new URLSearchParams();

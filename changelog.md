@@ -4,6 +4,48 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-24
 
+- **Add public creator profiles and published listing collections (sequential
+  queue).** `/creators/[handle]` and its Persian route show the creator's public
+  identity and biography, a published-listing total and a paginated catalog grid.
+  Creator names in catalog cards and product details link to the profile. Unknown
+  creators and creators with no public work return genuine 404s. Recovery text
+  distinguishes unavailable, timed-out, unreachable and rate-limited requests;
+  failures are not indexed. Maximum-length names and biographies wrap on phones.
+  - Owner-assigned API-lane files: `marketplaceController.ts`,
+    `routes/marketplaceRoutes.ts`, `validation/schemas.ts` and their regression
+    coverage add the anonymous, validated creator endpoint. Public fields are
+    selected explicitly; the collection and counts exclude unpublished,
+    suspended and archived listings. Existing published projections survive
+    private draft edits; snapshot/lifecycle identifiers remain hidden. Embedded
+    creator counts in public catalog responses now use the same public filter.
+    No schema, migration, dependency, credential or environment change.
+  - Verification: root typecheck, 569 unit tests (5 database-dependent skips),
+    web lint and the final normal root production build pass. The full browser
+    suite passes 386 scenarios, with 44 intentional skips and no retries. New
+    checks cover anonymous discovery, locale links, pagination/reload, true 404,
+    localized failure/rate-limit recovery, canonical/noindex metadata and 320px
+    long-text bounds. Initial failures are retained: alert assertions were
+    scoped to page content, and an existing ordinary-reader fixture now supplies
+    the same reader role to server and client instead of racing a creator-to-
+    reader identity change. Runtime authorization was not weakened.
+  - All nine local Lighthouse reports pass unchanged budgets: representative
+    LCP/performance/FID is home 2641 ms/97/85 ms, dashboard 2797 ms/96/87 ms,
+    detail 2637 ms/97/83 ms, with accessibility 100. Additional EN/FA profile
+    audits also score accessibility 100. Strict LCP and hosted timing acceptance
+    remain open. Ninety-six captures cover both themes, both locales and
+    320/768/1280 widths, including long text and focused links; 84 geometry
+    checks report no overflow, duplicate main or page error. Impeccable detection
+    has no findings. A fresh finish review matched the inherited design and
+    bounded API privacy; its sole documentation fix was scored resolved. The
+    documenter confirmed the existing system applies without a DESIGN.md change;
+    unrelated pre-existing context metadata/brand-history drift was not repaired.
+  - Removed the completed item from both `pending.md` and the ignored local
+    queue; physical-device and native Persian wording acceptance remain there.
+    Product context, the creator surface brief and onboarding/API documentation
+    describe the delivered feature. Evidence: ignored
+    `maintenance/creator-profiles-20261024/`. Shared surfaces: `apps/web/lib/api.ts`,
+    `apps/web/lib/types.ts`, `pending.md`, `changelog.md`. No usage meter is exposed.
+
 - **Retain LCP diagnostic results and manual acceptance handoff (sequential
   local queue).** Continued the next active performance item without closing
   its 2200/2000/2200 ms targets. The retained dashboard summary is server-rendered;

@@ -180,4 +180,5 @@ export interface MarketplaceTypeCount { type: string; products: number; }
 export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; types: MarketplaceTypeCount[]; platforms: MarketplacePlatform[]; total: number; }
 export interface ProductPageResult { data: Product[]; meta: { page: number; limit: number; total: number; totalPages: number }; }
 export interface MarketplaceCommunityPageResult { data: { community: MarketplaceCommunity; products: Product[] }; meta: ProductPageResult["meta"]; }
+export interface MarketplaceCreatorPageResult { data: { creator: Creator; products: Product[] }; meta: ProductPageResult["meta"]; }
 export interface ProductFilters { q?: string; type?: string; category?: string; community?: string; platform?: string; permission?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }

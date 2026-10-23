@@ -12,7 +12,7 @@
 // No cookie means signed out.
 import { createServer } from "node:http";
 import { mockHome } from "../lib/mock-home.ts";
-import { ITEM_TYPES, PLATFORMS, listProducts, productDetail, releaseOf } from "./mock-catalog.mjs";
+import { CATALOG, ITEM_TYPES, PLATFORMS, listProducts, productDetail, releaseOf } from "./mock-catalog.mjs";
 
 const PORT = Number(process.env.MOCK_API_PORT ?? 4099);
 const COOKIE = "e2e_persona";
@@ -23,6 +23,7 @@ const ago = (ms) => new Date(Date.now() - ms).toISOString();
 const PERSONAS = {
   creator: { email: "creator@e2e.test", listings: 3 },
   empty: { email: "empty@e2e.test", listings: 0 },
+  reader: { email: "reader@e2e.test", listings: 0 },
 };
 
 function profile(persona) {
@@ -119,6 +120,19 @@ async function handle(request, response) {
   if (route === "GET /api/marketplace/home") return send(response, 200, { data: { ...mockHome, platforms: PLATFORMS } });
   if (route === "GET /api/marketplace/item-types") return send(response, 200, { data: ITEM_TYPES });
   if (route === "GET /api/marketplace/communities") return send(response, 200, { data: [] });
+  const creatorRoute = /^GET \/api\/marketplace\/creators\/([^/]+)$/.exec(route);
+  if (creatorRoute) {
+    const handle = decodeURIComponent(creatorRoute[1]);
+    if (handle === "fixture-unavailable") return send(response, 503, error("UNAVAILABLE", "Creator service temporarily unavailable"));
+    if (handle === "fixture-rate-limited") return send(response, 429, error("RATE_LIMITED", "Too many requests"));
+    const isFixture = handle === "fixture-creator" || handle === "fixture-long-creator";
+    const creator = isFixture ? { ...mockHome.creators[0], id: handle, name: handle === "fixture-long-creator" ? "A".repeat(80) : "Fixture Creator", handle, bio: handle === "fixture-long-creator" ? "B".repeat(500) : "Synthetic creator used to verify public profile pagination." } : mockHome.creators.find((item) => item.handle === handle);
+    if (!creator) return send(response, 404, error("CREATOR_NOT_FOUND", "Creator not found"));
+    const items = isFixture ? CATALOG.slice(0, handle === "fixture-creator" ? 13 : 1).map((product, index) => ({ ...product, name: `Creator fixture ${index + 1}`, creator })) : CATALOG.filter((product) => product.creator.handle === handle);
+    const page = Number(searchParams.get("page") ?? 1);
+    const limit = Number(searchParams.get("limit") ?? 12);
+    return send(response, 200, { data: { creator: { ...creator, products: items.length }, products: items.slice((page - 1) * limit, page * limit) }, meta: { page, limit, total: items.length, totalPages: Math.ceil(items.length / limit) } });
+  }
   if (route === "GET /api/marketplace/products") {
     const type = searchParams.get("type");
     if (type && !ITEM_TYPES.some((item) => item.key === type)) return send(response, 400, error("VALIDATION_ERROR", "Invalid request"));
@@ -156,10 +170,12 @@ async function handle(request, response) {
     return send(response, 200, {
       data: {
         authenticated: true,
-        user: { id: `reader-${persona}`, email: PERSONAS[persona].email, emailVerified: true, marketplaceRoles: ["creator"] },
+        user: { id: `reader-${persona}`, email: PERSONAS[persona].email, emailVerified: true, marketplaceRoles: persona === "reader" ? [] : ["creator"] },
       },
     });
   }
+  if (persona === "reader" && route === "GET /api/marketplace/creator/profile") return send(response, 404, error("CREATOR_PROFILE_NOT_FOUND", "Creator profile not found"));
+  if (persona === "reader" && pathname.startsWith("/api/marketplace/creator/")) return send(response, 403, error("FORBIDDEN", "Creator access required"));
   if (route === "GET /api/marketplace/creator/provider-connections") return send(response, 200, { data: [] });
   if (route === "GET /api/marketplace/favorites") return send(response, 200, { data: [] });
   if (route === "GET /api/readers/profile") return send(response, 200, {
