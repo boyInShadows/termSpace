@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { CardError, DashboardCard, Skeleton } from "./dashboard-card";
 import type { OverviewState } from "./overview-state";
 import { formatNumber, intlLocale } from "@/lib/format";
+import { ContextHelp } from "@/components/ui/context-help";
 
 const HEAD_CELL = "py-2 font-normal";
 const ROW_COUNT_WHILE_LOADING = 5;
@@ -25,7 +26,7 @@ export function ListingsTable({ state, now, onRetry }: { state: OverviewState; n
   );
 
   return (
-    <DashboardCard title={copy.listingsTitle} action={viewAll}>
+    <DashboardCard title={copy.listingsTitle} action={<div className="flex items-center gap-2">{viewAll}<ContextHelp label={copy.listingsTitle} topic="publication" /></div>}>
       {state.status === "loading" && <ListingsSkeleton />}
       {state.status === "error" && <CardError onRetry={onRetry} />}
       {state.status === "ready" && state.home.kind === "no-profile" && (

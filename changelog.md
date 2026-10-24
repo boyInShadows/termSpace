@@ -4,6 +4,50 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-24
 
+- **Add contextual help to the dashboard, studio and five-step listing editor
+  (local queue).** One shared 44px question-mark control explains source/release
+  versions, compatibility, permissions, environment variables, licences,
+  communities, type declarations, progress, review and save actions. Twenty-seven
+  concise EN/FA topics include isolated Latin examples. Dashboard collections,
+  publication states, creator handles and provider/release verification use the
+  same control. Required formats and public-secret warnings remain visible.
+  - Hover, keyboard focus and tap open help; Escape, Tab and outside interaction
+    dismiss it. Bubbles remain hoverable, fit the viewport and anchor outside the
+    associated field or complete sticky action bar. Touch-generated focus waits
+    for the click so it cannot intercept the first tap. Help copy loads on demand
+    with loading/failure recovery and a polite screen-reader announcement.
+    Browser-local Save for later, account Save draft and later submission remain
+    distinct. No dependency, API, schema, credential or environment change.
+  - Verification: root typecheck, 609 runnable unit tests (11 database skips),
+    web lint and the normal root production build pass. The isolated help commit
+    passes all 408 browser scenarios with 46 intentional skips and no retries.
+    All six first-load JS budgets pass: representative home/dashboard/detail
+    sizes are 162.5/167.6/164.3 kB gzip. All nine Lighthouse reports pass unchanged
+    budgets, with representative LCP/performance/FID of 2632 ms/97/75 ms,
+    2787 ms/96/75 ms and 2641 ms/97/86 ms; accessibility is 100 throughout.
+    Strict LCP targets and comparable hosted input-delay acceptance stay open.
+  - Render checks cover EN/FA, both themes, 320/768/1280 widths, all editor steps,
+    short landscape, focus, touch, long help text, viewport bounds and sticky
+    action hit tests. Save-help captures have text contrast at least 7.3:1, no
+    overflow, duplicate main or page error. Impeccable detection has no findings;
+    a manual second-pass review covered dismissal, async copy loading, form
+    preservation and Datasheet consistency. No harness review command or usage
+    meter is available. The dashboard surface brief documents the shared pattern.
+  - Original failures are retained: a missing test fixture, Windows text-pipe
+    encoding damage, eager-copy bundle growth, a substring save selector, a real
+    first-tap interception and sticky-help overlap. An isolated browser run also
+    hit Chromium ERR_NO_BUFFER_SPACE on Explore; the final full run passes.
+    An isolated unit assertion and dependency/junction build limitations are
+    retained; final root gates pass in the canonical checkout. Browser and
+    Lighthouse checks used a separate checkout so pre-existing uncommitted
+    reporting work was neither changed nor included in this phase. Its combined
+    checkout's product bundle failure is retained, not attributed to this commit.
+  - Evidence and native wording choices: ignored
+    `maintenance/context-help-20261024/`; the verification checkout is on D:.
+    Removed the implemented help block from the local queue and retained real
+    iOS/Android and Persian-speaking maintainer acceptance. Shared surface:
+    `changelog.md`, announced before editing in the local plan commit.
+
 - **Add authenticated listing reports and private staff case triage (sequential
   queue, reporting stage 1).** Reader reports use bounded reasons/explanations,
   opaque receipts, one original report per account/open case, a transactionally

@@ -43,6 +43,13 @@ the first invalid step. Save for later keeps account-scoped partial work on this
 browser; Save draft stores a complete, validated account draft without publishing.
 Loading, storage failure, empty and ready states remain explicit.
 
+Context help uses the shared square, 44px question-mark control at the logical
+end of relevant field or section labels. Its bordered, opaque bubble opens on
+hover, focus or tap, supports Escape, Tab and outside dismissal, and keeps concise
+EN/FA examples with Latin text isolated. Formats, errors and public-secret warnings
+remain visible beside fields. Help distinguishes browser saves, account drafts,
+source verification, moderation and publication without promising a sandbox.
+
 Verification: both locales and themes at phone, tablet and desktop widths,
 keyboard focus/search, sticky-action hit tests, retry and dirty navigation tests,
 and local before/after captures. Real device keyboards and safe areas, provider

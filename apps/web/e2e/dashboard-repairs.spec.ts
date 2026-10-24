@@ -140,7 +140,7 @@ test("structured declarations preview and save as the existing manifest", async 
   await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100");
   await expect(page.getByRole("region", { name: "Preview listing declarations" })).toContainText("Read | write, carefully");
   const saved = page.waitForRequest((request) => request.method() === "PUT" && request.url().endsWith("/listing-3/draft"));
-  await page.locator("[data-draft-actions]").getByRole("button", { name: "Save draft" }).click();
+  await page.locator("[data-draft-actions]").getByRole("button", { name: "Save draft", exact: true }).click();
   expect((await saved).postDataJSON()).toMatchObject({ expectedVersion: 1, manifest: { release: { requirements: { environmentVariables: [{ name: "TOOL_TOKEN", purpose: "Read | write, carefully", required: true, sensitive: true }] }, compatibility: [{ platform: "codex", models: ["model-agnostic"] }] } } });
   await expect(page.getByText(copy.en.creatorDraft.saved).first()).toBeVisible();
   expect(await page.evaluate(() => Object.keys(localStorage).some((key) => key.startsWith("termspace:draft:") && key.endsWith(":listing-3")))).toBe(false);

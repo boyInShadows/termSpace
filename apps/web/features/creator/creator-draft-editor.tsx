@@ -11,6 +11,9 @@ import { creatorWorkspace } from "./workspace-copy";
 import { localePath, type DraftMessages } from "@/lib/i18n";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ContextHelp } from "@/components/ui/context-help";
+import { helpHints } from "@/components/ui/context-help-hints";
+import type { HelpTopic } from "@/components/ui/context-help-copy";
 import { DeclarationRows } from "./declaration-rows";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { parseDraftCheckpoint, type DraftCheckpoint } from "./draft-checkpoint";
@@ -118,6 +121,7 @@ const permissionCapabilities = ["filesystem_read", "filesystem_write", "process_
 export function CreatorDraftEditor({ productId, messages }: { productId?: string; messages: DraftMessages }) {
   const { locale, t } = useLocale();
   const copy = { ...messages, ...creatorWorkspace[locale].creatorDraft };
+  const hints = helpHints[locale];
   const router = useRouter();
   const { email } = useMarketplaceSession();
   const storageKey = email ? `termspace:draft:${encodeURIComponent(email)}:${productId ?? "new"}` : null;
@@ -343,7 +347,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
     </header>
 
       <div className="mt-6 border-y border-border py-4">
-        <div className="flex items-center justify-between gap-3 text-sm"><span>{copy.progress}</span><span className="font-mono tabular-nums">{formatNumber(percent / 100, locale, { style: "percent" })}</span></div>
+        <div className="flex items-center justify-between gap-3 text-sm"><span className="flex items-center gap-2">{copy.progress}<ContextHelp label={copy.progress} topic="progress" /></span><span className="font-mono tabular-nums">{formatNumber(percent / 100, locale, { style: "percent" })}</span></div>
         <div role="progressbar" aria-label={copy.progress} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent} className="mt-3 h-1 bg-muted"><div className="h-full bg-primary" style={{ width: `${percent}%` }} /></div>
       </div>
       <nav className="mt-4" aria-label={copy.sections}>
@@ -359,8 +363,8 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
       <div data-draft-step="0" hidden={step !== 0} className="space-y-6">
       <FormSection title={copy.identityTitle} intro={copy.identityIntro}>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label={copy.slug}><Input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={stringValue(listing.slug)} dir="ltr" /></Field>
-            <Field label={copy.itemType}><select name="itemType" required value={type} onChange={(event) => setType(event.target.value as MarketplaceItemTypeKey)} className={selectClass}>
+          <Field label={copy.slug} help="slug" hint={hints.slug}><Input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={stringValue(listing.slug)} dir="ltr" /></Field>
+            <Field label={copy.itemType} help="itemType"><select name="itemType" required value={type} onChange={(event) => setType(event.target.value as MarketplaceItemTypeKey)} className={selectClass}>
             {itemTypes.map((item) => <option key={item.key} value={item.key}>{locale === "fa" ? item.fa : item.en}</option>)}
           </select></Field>
           <Field label={copy.nameEn} hint={copy.nameHelp}><Input name="nameEn" required pattern="(?=.*[A-Za-z])[\x20-\x7E]+" defaultValue={localized(listing.name).en} lang="en" dir="ltr" /></Field>
@@ -375,7 +379,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
           <Field label={copy.category}><select name="categorySlug" required defaultValue={stringValue(listing.categorySlug)} className={selectClass}><option value="">{copy.choose}</option>{options.categories.map((category) => <option key={category.slug} value={category.slug}>{category.name}</option>)}</select></Field>
           <Field label={copy.tags} hint={copy.listHint}><Input name="tags" required defaultValue={Array.isArray(listing.tags) ? listing.tags.join(", ") : ""} /></Field>
         </div>
-        <fieldset className="mt-5"><legend className="text-sm font-semibold">{copy.communities}</legend><p className="mt-1 text-xs text-muted-foreground">{copy.communitiesHint}</p><div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <fieldset className="mt-5"><legend className="w-full text-sm font-semibold"><span className="flex items-center justify-between gap-2">{copy.communities}<ContextHelp label={copy.communities} topic="communities" /></span></legend><p className="mt-1 text-xs text-muted-foreground">{copy.communitiesHint}</p><div className="mt-3 grid gap-3 sm:grid-cols-2">
           {options.communities.map((community) => <label key={community.slug} className="flex min-h-11 items-start gap-3 rounded-none border p-3 text-sm"><input className="mt-1" type="checkbox" name="communitySlugs" value={community.slug} defaultChecked={(listing.communitySlugs as string[] | undefined)?.includes(community.slug)} /><span><strong className="block">{locale === "fa" ? community.nameFa ?? community.nameEn : community.nameEn}</strong><span className="text-xs text-muted-foreground">{locale === "fa" ? community.descriptionFa ?? community.descriptionEn : community.descriptionEn}</span></span></label>)}
         </div></fieldset>
       </FormSection>
@@ -388,36 +392,37 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
       </div>
       <div data-draft-step="1" hidden={step !== 1}>
       <FormSection title={copy.releaseTitle} intro={copy.releaseIntro}>
-        <div className="grid gap-5 sm:grid-cols-2"><Field label={copy.version}><Input name="releaseVersion" required defaultValue={stringValue(release.version)} dir="ltr" /></Field><Field label={copy.sourceKind}><select name="sourceKind" value={sourceKind} onChange={(event) => setSourceKind(event.target.value as SourceKind)} className={selectClass}><option value="github_repository">GitHub repository</option><option value="github_release">GitHub release</option><option value="npm">npm</option></select></Field></div>
+        <div className="grid gap-5 sm:grid-cols-2"><Field label={copy.version} help="version" hint={hints.version}><Input name="releaseVersion" required defaultValue={stringValue(release.version)} dir="ltr" /></Field><Field label={copy.sourceKind} help="source"><select name="sourceKind" value={sourceKind} onChange={(event) => setSourceKind(event.target.value as SourceKind)} className={selectClass}><option value="github_repository">GitHub repository</option><option value="github_release">GitHub release</option><option value="npm">npm</option></select></Field></div>
         <SourceFields key={sourceKind} kind={sourceKind} source={source} copy={copy} />
         <div className="mt-5"><Field label={copy.releaseNotes}><Textarea name="releaseNotes" required defaultValue={stringValue(release.releaseNotes)} /></Field></div>
-          <DeclarationRows messages={copy} name="compatibility" label={copy.compatibility} required onChange={markDirty} initialRows={compatibility.map((item) => [item.platform, item.models.join(", "), item.notes ?? ""])} columns={[{ label: copy.platform, options: options.platforms.map((item) => item.key) }, { label: copy.models }, { label: copy.notes, optional: true }]} />
-        <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.installationMethod}><select name="installationMethod" required defaultValue={stringValue(installation.method) || "manual"} className={selectClass}>{["manual", "npm", "git", "download", "container", "hosted"].map((item) => <option key={item}>{item}</option>)}</select></Field><Field label={copy.installationInstructions} hint={copy.lineHint}><Textarea name="installationInstructions" required defaultValue={listValue(installation.instructions)} /></Field></div>
+          <DeclarationRows messages={copy} name="compatibility" label={copy.compatibility} help="compatibility" required onChange={markDirty} initialRows={compatibility.map((item) => [item.platform, item.models.join(", "), item.notes ?? ""])} columns={[{ label: copy.platform, options: options.platforms.map((item) => item.key) }, { label: copy.models }, { label: copy.notes, optional: true }]} />
+        <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.installationMethod} help="installation"><select name="installationMethod" required defaultValue={stringValue(installation.method) || "manual"} className={selectClass}>{["manual", "npm", "git", "download", "container", "hosted"].map((item) => <option key={item}>{item}</option>)}</select></Field><Field label={copy.installationInstructions} help="installation" hint={copy.lineHint}><Textarea name="installationInstructions" required defaultValue={listValue(installation.instructions)} /></Field></div>
       </FormSection>
 
       </div>
       <div data-draft-step="2" hidden={step !== 2} className="space-y-6">
-      <FormSection title={copy.requirementsTitle} intro={copy.requirementsIntro}>
+      <FormSection title={copy.requirementsTitle} help="requirements" intro={copy.requirementsIntro}>
         <div className="grid gap-5 sm:grid-cols-2"><Field label={copy.runtimes} hint={copy.lineHint}><Textarea name="runtimes" defaultValue={listValue(requirements.runtimes)} /></Field><Field label={copy.accounts} hint={copy.lineHint}><Textarea name="accounts" defaultValue={listValue(requirements.accounts)} /></Field><Field label={copy.operatingSystems} hint={copy.lineHint}><Textarea name="operatingSystems" defaultValue={listValue(requirements.operatingSystems)} /></Field><Field label={copy.dependencies} hint={copy.lineHint}><Textarea name="dependencies" defaultValue={listValue(requirements.dependencies)} /></Field></div>
-          <DeclarationRows messages={copy} name="environmentVariables" label={copy.environmentVariables} onChange={markDirty} initialRows={environmentVariables.map((item) => [item.name, item.purpose, String(item.required), String(item.sensitive)])} columns={[{ label: copy.variableName }, { label: copy.purpose }, { label: copy.required, type: "checkbox" }, { label: copy.sensitive, type: "checkbox" }]} />
-          <DeclarationRows messages={copy} name="permissions" label={copy.permissions} onChange={markDirty} initialRows={permissions.map((item) => [item.capability, String(item.required), item.scope ?? "", item.destinations.join(", "), item.purpose])} columns={[{ label: copy.capability, options: permissionCapabilities }, { label: copy.required, type: "checkbox" }, { label: copy.scope, optional: true }, { label: copy.destinations, optional: true }, { label: copy.purpose }]} />
+          <DeclarationRows messages={copy} name="environmentVariables" label={copy.environmentVariables} help="environment" hint={hints.environment} onChange={markDirty} initialRows={environmentVariables.map((item) => [item.name, item.purpose, String(item.required), String(item.sensitive)])} columns={[{ label: copy.variableName }, { label: copy.purpose }, { label: copy.required, type: "checkbox" }, { label: copy.sensitive, type: "checkbox" }]} />
+          <DeclarationRows messages={copy} name="permissions" label={copy.permissions} help="permissions" onChange={markDirty} initialRows={permissions.map((item) => [item.capability, String(item.required), item.scope ?? "", item.destinations.join(", "), item.purpose])} columns={[{ label: copy.capability, options: permissionCapabilities }, { label: copy.required, type: "checkbox" }, { label: copy.scope, optional: true }, { label: copy.destinations, optional: true }, { label: copy.purpose }]} />
       </FormSection>
 
-      <FormSection title={copy.licenseTitle} intro={copy.licenseIntro}>
+      <FormSection title={copy.licenseTitle} help="license" intro={copy.licenseIntro}>
         <label className="flex min-h-11 items-center gap-3 text-sm font-medium"><input type="checkbox" checked={customLicense} onChange={(event) => setCustomLicense(event.target.checked)} />{copy.customLicense}</label>
-        <div className="mt-4"><Field label={customLicense ? copy.customLicenseUrl : copy.licenseIdentifier}><Input key={customLicense ? "custom" : "spdx"} name="license" required defaultValue={customLicense ? stringValue(license.customUrl) : stringValue(license.identifier)} dir="ltr" /></Field></div>
+        <div className="mt-4"><Field label={customLicense ? copy.customLicenseUrl : copy.licenseIdentifier} hint={hints.license}><Input key={customLicense ? "custom" : "spdx"} name="license" required defaultValue={customLicense ? stringValue(license.customUrl) : stringValue(license.identifier)} dir="ltr" /></Field></div>
         <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.releaseDocumentationUrl}><Input name="releaseDocumentationUrl" type="url" defaultValue={stringValue(release.documentationUrl)} dir="ltr" /></Field><Field label={copy.releaseSupportUrl}><Input name="releaseSupportUrl" type="url" defaultValue={stringValue(release.supportUrl)} dir="ltr" /></Field></div>
       </FormSection>
 
       </div>
       <div data-draft-step="3" hidden={step !== 3}>
-      <FormSection title={copy.typeDetailsTitle} intro={copy.typeDetailsIntro}>
-          <div className="grid gap-5 sm:grid-cols-2">{detailFields[type].map((field) => field.kind === "stages" ? <DeclarationRows messages={copy} key={`${type}-${field.key}`} name={`detail_${field.key}`} label={locale === "fa" ? field.fa : field.en} required={field.required} onChange={markDirty} initialRows={Array.isArray(details[field.key]) ? (details[field.key] as Array<{ name: string; description: string; humanApproval: boolean }>).map((stage) => [stage.name, stage.description, String(stage.humanApproval)]) : []} columns={[{ label: copy.stageName }, { label: copy.stageDescription }, { label: copy.humanApproval, type: "checkbox" }]} /> : <DetailInput key={`${type}-${field.key}`} field={field} locale={locale} value={details[field.key]} />)}</div>
+      <FormSection title={copy.typeDetailsTitle} help="details" intro={copy.typeDetailsIntro}>
+          <p className="mb-4 text-sm text-muted-foreground">{hints.public}</p>
+          <div className="grid gap-5 sm:grid-cols-2">{detailFields[type].map((field) => field.kind === "stages" ? <DeclarationRows messages={copy} key={`${type}-${field.key}`} name={`detail_${field.key}`} label={locale === "fa" ? field.fa : field.en} help="stages" required={field.required} onChange={markDirty} initialRows={Array.isArray(details[field.key]) ? (details[field.key] as Array<{ name: string; description: string; humanApproval: boolean }>).map((stage) => [stage.name, stage.description, String(stage.humanApproval)]) : []} columns={[{ label: copy.stageName }, { label: copy.stageDescription }, { label: copy.humanApproval, type: "checkbox" }]} /> : <DetailInput key={`${type}-${field.key}`} field={field} locale={locale} value={details[field.key]} />)}</div>
       </FormSection>
 
       </div>
       <div data-draft-step="4" hidden={step !== 4}>
-        <FormSection title={copy.reviewTitle} intro={copy.reviewIntro}>
+        <FormSection title={copy.reviewTitle} help="review" intro={copy.reviewIntro}>
           <Button type="button" variant="secondary" onClick={(event) => {
             const form = event.currentTarget.form;
             if (!form || !validateDraft(form)) return;
@@ -444,36 +449,39 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
 
         {error && <p id="draft-errors" tabIndex={-1} className="flex scroll-mt-40 items-start gap-2 text-sm text-destructive" role="alert"><AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />{error}</p>}
         {saved && <p className="text-sm text-success" role="status">{copy.saved}</p>}
-        <div data-draft-actions className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center justify-between gap-3 border bg-surface p-3 lg:bottom-4">
+        <div data-draft-actions data-help-anchor className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center justify-between gap-3 border bg-surface p-3 lg:bottom-4">
           <div className="flex gap-2"><Button type="button" variant="secondary" disabled={step === 0 || saving} onClick={() => goToStep(step - 1)}>{copy.previousStep}</Button>{step < 4 && <Button type="button" disabled={saving} onClick={() => goToStep(step + 1)}>{copy.nextStep}</Button>}</div>
-          <div className="flex flex-wrap gap-2"><Link className={buttonVariants({ variant: "ghost" })} href={localePath("/dashboard/studio", locale)}>{copy.cancel}</Link><Button type="button" variant="secondary" disabled={saving || !storageKey} onClick={saveForLater}>{localStatus === copy.localSaved ? <><Check className="size-4" aria-hidden="true" />{copy.savedLater}</> : copy.saveLater}</Button>{step === 4 && <Button disabled={saving}><Save className="size-4" aria-hidden="true" />{saving ? copy.saving : copy.save}</Button>}</div>
+          <div className="flex flex-wrap gap-1"><ContextHelp label={`${copy.saveLater} / ${copy.save}`} topic="saves" /><Link className={buttonVariants({ variant: "ghost" })} href={localePath("/dashboard/studio", locale)}>{copy.cancel}</Link><Button type="button" variant="secondary" disabled={saving || !storageKey} onClick={saveForLater}>{localStatus === copy.localSaved ? <><Check className="size-4" aria-hidden="true" />{copy.savedLater}</> : copy.saveLater}</Button>{step === 4 && <Button disabled={saving}><Save className="size-4" aria-hidden="true" />{saving ? copy.saving : copy.save}</Button>}</div>
       </div>
     </form>
   </div>;
 }
 
 function SourceFields({ kind, source, copy }: { kind: SourceKind; source: Record<string, unknown>; copy: Record<string, string> }) {
-  if (kind === "npm") return <div className="mt-5 grid gap-5 sm:grid-cols-3"><Field label={copy.packageName}><Input name="packageName" required defaultValue={stringValue(source.packageName)} dir="ltr" /></Field><Field label={copy.npmVersion}><Input name="npmVersion" required defaultValue={stringValue(source.version)} dir="ltr" /></Field><Field label={copy.integrity}><Input name="integrity" required defaultValue={stringValue(source.integrity)} dir="ltr" /></Field></div>;
-  return <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.repositoryUrl}><Input name="repositoryUrl" type="url" required defaultValue={stringValue(source.repositoryUrl)} dir="ltr" /></Field>{kind === "github_repository" ? <><Field label={copy.commitSha}><Input name="commitSha" required minLength={40} maxLength={40} defaultValue={stringValue(source.commitSha)} dir="ltr" /></Field><Field label={copy.repositoryPath}><Input name="repositoryPath" defaultValue={stringValue(source.path)} dir="ltr" /></Field></> : <><Field label={copy.releaseTag}><Input name="releaseTag" required defaultValue={stringValue(source.tag)} dir="ltr" /></Field><Field label={copy.releaseCommitSha}><Input name="releaseCommitSha" required minLength={40} maxLength={40} defaultValue={stringValue(source.releaseCommitSha)} dir="ltr" /></Field><Field label={copy.assetName}><Input name="assetName" required defaultValue={stringValue(source.assetName)} dir="ltr" /></Field><Field label={copy.assetDigest}><Input name="assetDigest" defaultValue={stringValue(source.assetDigest)} dir="ltr" /></Field></>}</div>;
+  const { locale } = useLocale();
+  const hints = helpHints[locale];
+  if (kind === "npm") return <div className="mt-5 grid gap-5 sm:grid-cols-3"><Field label={copy.packageName} help="npmRef"><Input name="packageName" required defaultValue={stringValue(source.packageName)} dir="ltr" /></Field><Field label={copy.npmVersion} help="npmRef" hint={hints.npmVersion}><Input name="npmVersion" required defaultValue={stringValue(source.version)} dir="ltr" /></Field><Field label={copy.integrity} help="integrity" hint={hints.integrity}><Input name="integrity" required defaultValue={stringValue(source.integrity)} dir="ltr" /></Field></div>;
+  return <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.repositoryUrl} help="source"><Input name="repositoryUrl" type="url" required defaultValue={stringValue(source.repositoryUrl)} dir="ltr" /></Field>{kind === "github_repository" ? <><Field label={copy.commitSha} help="githubRef" hint={hints.sha}><Input name="commitSha" required minLength={40} maxLength={40} defaultValue={stringValue(source.commitSha)} dir="ltr" /></Field><Field label={copy.repositoryPath} help="repositoryPath"><Input name="repositoryPath" defaultValue={stringValue(source.path)} dir="ltr" /></Field></> : <><Field label={copy.releaseTag} help="githubRef" hint={hints.sha}><Input name="releaseTag" required defaultValue={stringValue(source.tag)} dir="ltr" /></Field><Field label={copy.releaseCommitSha} help="githubRef" hint={hints.sha}><Input name="releaseCommitSha" required minLength={40} maxLength={40} defaultValue={stringValue(source.releaseCommitSha)} dir="ltr" /></Field><Field label={copy.assetName} help="source"><Input name="assetName" required defaultValue={stringValue(source.assetName)} dir="ltr" /></Field><Field label={copy.assetDigest} help="integrity" hint={hints.assetDigest}><Input name="assetDigest" defaultValue={stringValue(source.assetDigest)} dir="ltr" /></Field></>}</div>;
 }
 
 function DetailInput({ field, locale, value }: { field: DetailField; locale: "en" | "fa"; value: unknown }) {
   const label = locale === "fa" ? field.fa : field.en;
+  const help: HelpTopic | undefined = field.key === "entryPath" || field.key === "entryPaths" ? "entryPath" : field.key === "transport" ? "transport" : field.key === "authentication" || field.key === "authenticationMethod" ? "authentication" : undefined;
   if (field.kind === "boolean") return <label className="flex min-h-11 items-center gap-3 self-end rounded-none border px-3 text-sm font-medium"><input name={`detail_${field.key}`} type="checkbox" defaultChecked={Boolean(value)} />{label}</label>;
-  if (field.kind === "select") return <Field label={label}><select name={`detail_${field.key}`} required={field.required} defaultValue={stringValue(value)} className={selectClass}>{field.options?.map((option) => <option key={option}>{option}</option>)}</select></Field>;
+  if (field.kind === "select") return <Field label={label} help={help}><select name={`detail_${field.key}`} required={field.required} defaultValue={stringValue(value)} className={selectClass}>{field.options?.map((option) => <option key={option}>{option}</option>)}</select></Field>;
   const defaultValue = field.kind === "list" ? (Array.isArray(value) ? value.join("\n") : "") : field.kind === "stages" && Array.isArray(value) ? (value as Array<{ name: string; description: string; humanApproval: boolean }>).map((stage) => `${stage.name} | ${stage.description} | ${stage.humanApproval}`).join("\n") : stringValue(value);
-  if (field.kind === "textarea" || field.kind === "list" || field.kind === "stages") return <Field label={label}><Textarea name={`detail_${field.key}`} required={field.required} defaultValue={defaultValue} /></Field>;
-  return <Field label={label}><Input name={`detail_${field.key}`} required={field.required} defaultValue={defaultValue} dir="ltr" /></Field>;
+  if (field.kind === "textarea" || field.kind === "list" || field.kind === "stages") return <Field label={label} help={help}><Textarea name={`detail_${field.key}`} required={field.required} defaultValue={defaultValue} /></Field>;
+  return <Field label={label} help={help}><Input name={`detail_${field.key}`} required={field.required} defaultValue={defaultValue} dir="ltr" /></Field>;
 }
 
-function FormSection({ title, intro, children }: { title: string; intro: string; children: React.ReactNode }) {
-  return <section id={title.replaceAll(" ", "-")} className="scroll-mt-40 border bg-surface p-5 sm:p-7"><h2 className="text-2xl font-semibold">{title}</h2><p className="mt-1 text-sm text-muted-foreground">{intro}</p><div className="mt-6">{children}</div></section>;
+function FormSection({ title, intro, help, children }: { title: string; intro: string; help?: HelpTopic; children: React.ReactNode }) {
+  return <section id={title.replaceAll(" ", "-")} className="scroll-mt-40 border bg-surface p-5 sm:p-7"><div className="flex items-start justify-between gap-3"><h2 className="text-2xl font-semibold">{title}</h2>{help && <ContextHelp label={title} topic={help} />}</div><p className="mt-1 text-sm text-muted-foreground">{intro}</p><div className="mt-6">{children}</div></section>;
 }
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({ label, hint, help, children }: { label: string; hint?: string; help?: HelpTopic; children: React.ReactNode }) {
   const id = useId();
   const field = isValidElement<{ required?: boolean; id?: string; "aria-describedby"?: string }>(children) ? children : null;
-  return <div className="text-sm">
-    <label htmlFor={id} className="block font-medium">{label}{field?.props.required && <span aria-hidden="true"> *</span>}</label>
+  return <div className="text-sm" data-help-anchor>
+    <div className="flex min-h-11 items-center justify-between gap-2"><label htmlFor={id} className="block font-medium">{label}{field?.props.required && <span aria-hidden="true"> *</span>}</label>{help && <ContextHelp label={label} topic={help} />}</div>
     {hint && <p id={`${id}-hint`} className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     <div className="mt-2">{field ? cloneElement(field, { id, "aria-describedby": hint ? `${id}-hint` : undefined }) : children}</div>
   </div>;
