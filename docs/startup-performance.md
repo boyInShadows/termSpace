@@ -148,3 +148,34 @@ eighteen reports, second-sample traces/devtools logs for each route, configurati
 assertions, raw comparisons, critical-path output, reload/navigation observations
 and the rejected patch. The strict 2200/2000/2200 ms LCP targets and comparable
 hosted 130 ms input-delay acceptance remain unfinished.
+
+## Reporting integration bundle regression, 2026-10-24
+
+The reporting UI integrated at `a4935f8` exceeded the existing Persian product
+first-load JavaScript gate: 165.2 kB versus 165 kB. Its case endpoint helpers
+were exported by the shared startup API module. The existing listing-moderation
+helpers had the same coupling. Moving those eleven unchanged endpoint bodies
+into their respective feature modules removes 336 gzip bytes from each measured
+startup route. They continue using the same credentialed, uncached request client;
+timeouts, cancellation, error details and mutation retry behavior are unchanged.
+
+| Route | Before, gzip kB | After, gzip kB | Existing gate, kB |
+| --- | ---: | ---: | ---: |
+| `/` and `/fa` | 163.2 | 162.8 | 170 |
+| `/dashboard` and `/fa/dashboard` | 168.2 | 167.9 | 170 |
+| `/products/conversion-copywriter` | 153.8 | 153.5 | 165 |
+| `/fa/products/conversion-copywriter` | 165.2 | 164.9 | 165 |
+
+Measurements use unique initial non-`nomodule` script tags and gzip the matching
+production assets, exactly as the browser budget test does. The private case
+endpoint path no longer occurs in these initial scripts. This is a small bundle
+regression fix, with little headroom on the Persian detail gate; it does not
+establish an LCP or interaction timing improvement. Strict LCP, comparable hosted
+input delay and physical-device acceptance remain open. Before/after sizes,
+builds and verification evidence live in ignored
+`maintenance/reporting-performance-20261024/`.
+
+All nine follow-up Lighthouse reports pass the existing gates with accessibility
+100. Representative home/dashboard/detail LCP is 2816/2951/2803 ms, performance
+96/95/96 and max-potential-FID 107/88/97 ms. These samples do not meet the stricter
+2200/2000/2200 ms LCP targets or close comparable hosted timing acceptance.

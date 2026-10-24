@@ -4,7 +4,7 @@ import { useId, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
-import { reportListing } from "@/lib/api";
+import { reportListing } from "./reporting-api";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
 import type { ListingReportReason } from "@/lib/types";

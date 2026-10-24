@@ -6,7 +6,7 @@ const getQueue = vi.hoisted(() => vi.fn());
 const session = vi.hoisted(() => ({ loading: false, marketplaceRoles: ["moderator"] as string[] }));
 const navigation = vi.hoisted(() => ({ push: vi.fn(), params: new URLSearchParams() }));
 
-vi.mock("@/lib/api", async (importOriginal) => ({ ...await importOriginal<typeof import("@/lib/api")>(), getModerationQueue: getQueue }));
+vi.mock("./moderation-api", async (importOriginal) => ({ ...await importOriginal<typeof import("./moderation-api")>(), getModerationQueue: getQueue }));
 vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => session }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: navigation.push }),

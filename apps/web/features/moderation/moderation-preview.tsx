@@ -4,7 +4,8 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, RotateCcw, ShieldAlert } from "lucide-react";
-import { addModerationNote, ApiError, getModerationPreview, moderateCommunityPlacement, moderateListing } from "@/lib/api";
+import { ApiError } from "@/lib/api";
+import { addModerationNote, getModerationPreview, moderateCommunityPlacement, moderateListing } from "./moderation-api";
 import type { MarketplaceModerationPreview } from "@/lib/types";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";

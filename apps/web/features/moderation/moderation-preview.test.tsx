@@ -7,7 +7,7 @@ const moderate = vi.hoisted(() => vi.fn());
 const session = vi.hoisted(() => ({ loading: false, marketplaceRoles: ["moderator"] as string[] }));
 const navigation = vi.hoisted(() => ({ params: new URLSearchParams() }));
 
-vi.mock("@/lib/api", async (importOriginal) => ({ ...await importOriginal<typeof import("@/lib/api")>(), getModerationPreview: getPreview, moderateListing: moderate }));
+vi.mock("./moderation-api", async (importOriginal) => ({ ...await importOriginal<typeof import("./moderation-api")>(), getModerationPreview: getPreview, moderateListing: moderate }));
 vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => session }));
 vi.mock("@/features/moderation/moderation-reviews", () => ({ ModerationReviews: () => null }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => navigation.params }));

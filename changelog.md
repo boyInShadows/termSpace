@@ -4,6 +4,43 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-24
 
+- **Restore the product startup JavaScript budget after reporting integration.**
+  Fast-forwarded `ramtin` onto `main` (`3490d23`), retaining the owner's published
+  reporting UI (`a4935f8`). The baseline Persian detail bundle measured 165.2 kB
+  against its existing 165 kB gate. Reporting-only extraction saved 152 gzip
+  bytes but still failed at 165.1 kB; moving the adjacent listing-moderation
+  helpers into their feature module completes the fix. The eleven endpoint
+  bodies are unchanged and share the existing request transport.
+  - Each of six measured startup routes saves 336 gzip bytes: home EN/FA
+    163.2 to 162.8 kB, dashboard EN/FA 168.2 to 167.9 kB, product EN 153.8 to
+    153.5 kB and product FA 165.2 to 164.9 kB. Private case endpoint paths no
+    longer occur in those initial assets. All six existing browser bundle
+    assertions pass. No budget, timing profile, dependency or UI copy changed.
+  - Verification: root typecheck, normal root production build and 664 runnable
+    unit tests pass (12 database/Redis skips). New transport checks preserve credentialed uncached reads,
+    caller cancellation and non-retrying mutations; existing reporting and
+    moderation tests retain role gates, failure recovery and form state. Web
+    lint has no errors and two existing warnings in `context-help.tsx` and
+    `e2e/mock-reports.mjs`. The full browser suite passes 436 scenarios with
+    46 intentional skips and no retries. Twenty-four render checks cover report
+    forms, cases and moderation in both themes, English/Persian RTL and
+    320/1280 widths: no overflow, duplicate main or page error; keyboard-opened
+    disclosure retains visible focus. Impeccable detection has no findings.
+    All nine Lighthouse reports pass unchanged gates, with accessibility 100.
+    Representative home/dashboard/detail LCP is 2816/2951/2803 ms,
+    performance 96/95/96 and max-potential-FID 107/88/97 ms; strict timing
+    acceptance remains unfinished.
+  - Shared surfaces `apps/web/lib/api.ts` and `changelog.md` were announced in
+    the plan commit before editing. A manual second-pass review checked every
+    caller, mock, transport contract and all eleven moved bodies against the
+    published baseline; no harness review command or usage meter is available.
+    No API/schema, migration, seed, provider or deployment changes. The ignored
+    local queue retains strict LCP, comparable hosted timing, physical-device
+    and native Persian wording acceptance, including reporting screens.
+    Measurements and verification evidence: ignored
+    `maintenance/reporting-performance-20261024/`; interpretation and remaining
+    headroom are documented in `docs/startup-performance.md`.
+
 - **Merge `redesign` into `ramtin` at the owner's request.** Integrates
   `fc766ea` with `703f831`, retaining both histories and the seventeen later
   Ramtin commits alongside eight incoming redesign commits. The merged result
