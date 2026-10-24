@@ -284,3 +284,57 @@ Original reports and traces remain under ignored
 `docs/artifacts/startup-delivery-20261024/hosted-40124384917/`. Reproduction
 helpers, all eighteen current/prior critical-path summaries and the nine
 sensitivity results are under `docs/artifacts/startup-followup-20261024/`.
+
+## Initial-chunk and data-font trials, 2026-10-25
+
+Two client-only webpack `maxInitialSize` trials tested whether smaller downloads
+could shorten the remaining shared-script tail. Next's defaults were retained
+for development and server bundles. Both production builds succeeded, but both
+failed three of the six existing bundle tests:
+
+| Initial source-size hint | Dashboard EN/FA, gzip kB | Persian detail, gzip kB |
+| --- | ---: | ---: |
+| Original configuration | 167.9 | 164.9 |
+| 160000 bytes | 173.7 | 170.7 |
+| 400000 bytes | 170.6 | 167.5 |
+| Existing limit | 170 | 165 |
+
+The finer trial increases homepage initial scripts from 13 to 24. The two large
+original assets contain approximately 152 modules and one module respectively;
+the single React DOM module cannot be divided by a chunk-size hint. Webpack
+documents both the [module-size limitation and extra-request tradeoff](https://webpack.js.org/plugins/split-chunks-plugin/#splitchunksmaxsize).
+Both configuration patches were rejected before candidate timing. The original
+configuration passes all six bundle tests after restoration. No limit changed.
+
+A separate experiment preloaded the existing monospace data font earlier. The
+global version's first three-sample homepage LCP median improved from 2487 to
+2280 ms, but product detail increased from 2481 to 2630 ms. A homepage-only
+version used React's supported [page-level link hoisting](https://react.dev/reference/react-dom/components/link#special-rendering-behavior)
+to avoid changing other routes. A fresh baseline and fresh candidate server,
+each with an isolated Chrome profile, then produced:
+
+| Route | Repeat baseline LCP, ms | Homepage-only hint LCP, ms |
+| --- | ---: | ---: |
+| `/` | 2483 | 2476 |
+| `/dashboard` | 2790 | 2789 |
+| Product detail | 2473 | 2478 |
+
+The homepage's baseline samples were 2514/2483/2296 ms and its candidate samples
+2507/2262/2476 ms. The 7 ms median change is within that variation. Homepage FCP
+improved from 1098 to 915 ms, but the apparent LCP gain did not reproduce, so
+both font-hint patches were removed. The baseline's individual 207 ms input-delay
+sample remains in the evidence; no sample was discarded to obtain a result.
+
+All 36 reports use the unchanged mobile profile and have accessibility 100.
+These are small lab samples, not field or physical-device acceptance. No
+application, configuration, dependency or budget change remains from these
+trials. Root typecheck, 685 runnable unit tests (12 database/Redis skips), web
+lint and the normal root production build pass; lint retains two existing
+warnings. The normal production build is restored, with its identity checked.
+Full browser scenarios were not repeated after restoring identical source.
+
+Rejected patches, compiled trial assets, bundle failures and restored checks
+are under ignored `docs/artifacts/chunk-layout-20261025/`. Font trial reports,
+traces, CPU indices, profile assertions and paired comparisons are under
+`docs/artifacts/mono-preload-20261025/`. Strict LCP and comparable hosted startup
+acceptance remain open; these experiments do not justify removing their tasks.

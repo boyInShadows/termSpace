@@ -2,6 +2,35 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-25
+
+- **Test and reject startup chunk/font changes that do not meet acceptance.**
+  Production client-only webpack size hints of 160000 and 400000 bytes both
+  build, but each fails three unchanged bundle tests. Dashboard grows from
+  167.9 to 173.7/170.6 kB and Persian detail from 164.9 to 170.7/167.5 kB.
+  Restoring the original configuration returns all six tests to green.
+  - An earlier monospace font hint initially suggests a homepage LCP gain,
+    while the global version's product median worsens. A homepage-only hint
+    and repeat baseline produce home 2483 to 2476 ms, dashboard 2790 to 2789 ms
+    and detail 2473 to 2478 ms. The homepage's apparent gain does not reproduce
+    beyond sample variation. Its FCP improves, but the requested LCP acceptance
+    remains unmet; both font patches are removed. All 36 retained reports use
+    the original profile and have accessibility 100; the slow baseline sample
+    is retained. No framework, dependency, content, style or budget change.
+  - Verification: root typecheck, all 685 runnable unit tests (12 database/Redis
+    skips), web lint (two existing warnings), normal root production build and
+    six restored bundle gates pass. Final application/configuration diff against
+    the published base is empty; the normal production build is restored and
+    its identity checked. Full E2E is not repeated for identical restored code.
+    A PowerShell warning-handling interruption is retained separately from the
+    successful restored checks. Evidence and trial details are recorded in
+    `docs/startup-performance.md`; generated artifacts stay under ignored
+    `docs/artifacts/`. The local queue retains all unfinished acceptance and
+    contains no new completed-trial narrative.
+  - Shared `changelog.md` edits were announced in local planning commits.
+    Manual Ponytail/code-quality second pass; no harness review command or
+    usage meter is available. No provider, database or deployment actions.
+
 ## 2026-10-24
 
 - **Reconcile Ramtin's local queue and continue startup profiling.** Removed
