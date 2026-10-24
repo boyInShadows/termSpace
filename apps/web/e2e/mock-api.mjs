@@ -13,6 +13,7 @@
 import { createServer } from "node:http";
 import { mockHome } from "../lib/mock-home.ts";
 import { CATALOG, ITEM_TYPES, PLATFORMS, listProducts, productDetail, releaseOf } from "./mock-catalog.mjs";
+import { handleReportFixture } from "./mock-reports.mjs";
 
 const PORT = Number(process.env.MOCK_API_PORT ?? 4099);
 const COOKIE = "e2e_persona";
@@ -24,6 +25,7 @@ const PERSONAS = {
   creator: { email: "creator@e2e.test", listings: 3 },
   empty: { email: "empty@e2e.test", listings: 0 },
   reader: { email: "reader@e2e.test", listings: 0 },
+  staff: { email: "staff@e2e.test", listings: 0 },
 };
 
 function profile(persona) {
@@ -170,10 +172,11 @@ async function handle(request, response) {
     return send(response, 200, {
       data: {
         authenticated: true,
-        user: { id: `reader-${persona}`, email: PERSONAS[persona].email, emailVerified: true, marketplaceRoles: persona === "reader" ? [] : ["creator"] },
+        user: { id: `reader-${persona}`, email: PERSONAS[persona].email, emailVerified: true, marketplaceRoles: persona === "staff" ? ["moderator"] : persona === "reader" ? [] : ["creator"] },
       },
     });
   }
+  if (await handleReportFixture({ request, response, pathname, searchParams, persona, send, readJson })) return;
   if (persona === "reader" && route === "GET /api/marketplace/creator/profile") return send(response, 404, error("CREATOR_PROFILE_NOT_FOUND", "Creator profile not found"));
   if (persona === "reader" && pathname.startsWith("/api/marketplace/creator/")) return send(response, 403, error("FORBIDDEN", "Creator access required"));
   if (route === "GET /api/marketplace/creator/provider-connections") return send(response, 200, { data: [] });

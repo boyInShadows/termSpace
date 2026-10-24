@@ -18,6 +18,7 @@ import { pageAlternates } from "@/lib/alternates";
 import { productPageLabels, type ProductPageLabels } from "@/lib/i18n/product-page";
 import { getLocale } from "@/lib/serverLocale";
 import type { ProductDetail } from "@/lib/types";
+import { ListingReport } from "@/features/reporting/listing-report";
 import { SITE_URL } from "@/lib/site";
 import { formatNumber, intlLocale } from "@/lib/format";
 
@@ -131,6 +132,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 {product.versions.length > 0 && <VersionPicker />}
                 <ProductActions product={product} />
                 <p className="text-xs leading-5 text-muted-foreground">{l.installNote}</p>
+                <ListingReport slug={product.slug} />
               </div>
             </aside>
 

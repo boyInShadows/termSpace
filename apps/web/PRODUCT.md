@@ -40,7 +40,8 @@ Tools are evaluated and installed from terminals and editors. A release resolves
 - Terminology in use: listing, release, community, creator, "Add to library", "safety reviewed".
 - Existing stack (so not recorded as a choice): Next.js 16, Tailwind 4, Express and Postgres API, English and Persian.
 - Public creator profiles show the creator's public identity, biography and a paginated collection of published listings. Creators without public listings are not discoverable; private drafts and suspended listings stay excluded, including counts.
-- Undecided or not built yet: reporting and appeals interface, a permissions filter in discovery, curated/community collections, notifications; launch with the demo seed or with real curated listings; privacy policy, terms and content policy pages (none exist).
+- Signed-in readers can report a listing and receive an opaque receipt. Verified staff can triage private cases, set severity, review paginated evidence/history and dismiss cases; reports alone do not impose restrictions.
+- Undecided or not built yet: case-linked restrictions and appeals, reporting additional targets, a permissions filter in discovery, curated/community collections, notifications; launch with the demo seed or with real curated listings; privacy policy, terms and content policy pages (none exist).
 
 ## Brand Commitments
 

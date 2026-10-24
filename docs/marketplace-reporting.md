@@ -1,9 +1,9 @@
 # Marketplace listing reports
 
 The reporting policy is [ADR 0004](architecture/0004-marketplace-trust-and-moderation.md).
-The first delivery implements authenticated listing-report intake and private
-staff triage. Enforcement, appeals, the reporting interface and additional
-report targets remain in the implementation queue. A report never changes
+Authenticated listing-report intake and private staff triage have API and web
+interfaces. Enforcement, appeals and additional report targets remain in the
+implementation queue. A report never changes
 publication, acquisition, installation or a trust badge automatically.
 
 ## Reader intake
@@ -33,6 +33,14 @@ wait; transaction timeout/admission errors return 503 `REPORT_SERVICE_BUSY`
 with `Retry-After: 1`. A retry does not overwrite evidence or double-charge the
 account quota. There are no provider calls inside these transactions.
 
+On a product page, **Report listing** opens an inline disclosure beside the
+acquisition controls. Form code loads on first opening; closing the disclosure
+retains text. Successful submission shows the receipt; failed requests preserve
+the explanation and distinguish session expiry, unavailable targets, limits,
+network failures, timeout and a busy service. Signing in retains the locale and
+return listing; switching accounts clears the form's private state. Reports are
+not saved in browser storage.
+
 ## Private staff endpoints
 
 Every endpoint below rechecks a verified moderator or administrator role from
@@ -51,6 +59,14 @@ Lists accept `page` (1–1,000,000) and `limit` (1–48, default 24), with total
 page metadata. Reads use `Cache-Control: private, no-store`. Evidence and event
 responses omit reporter account identifiers and emails; raw evidence remains
 staff-only and may itself contain information a reporter supplied.
+
+Staff reach `/moderation/cases` from the submission queue. Filters and case,
+report and event pages use the URL and survive reload. Case pages have section
+jumps to evidence, the decision form and history. A stale write disables further
+submission until explicit reload/review; failed writes keep entered reasons.
+Resolved cases remain readable. Account changes and access-denied responses
+clear loaded private evidence. Case routes use noindex metadata. The same
+workflow supports English/Persian, RTL and both themes.
 
 Triage requires `expectedVersion`, `action` (`TRIAGE`, `INVESTIGATE`, `DISMISS`),
 `severity` (`STANDARD`, `HIGH`, `CRITICAL`), a bounded uppercase `reasonCode`, and
