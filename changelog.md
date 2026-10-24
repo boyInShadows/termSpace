@@ -4,6 +4,37 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-24
 
+- **Measure and reject CSS inlining for the remaining mobile LCP work (local
+  queue).** A clean `e2cefde` checkout and an isolated Next `inlineCss` trial
+  each received three samples on home, dashboard and product detail, using fresh
+  Chrome profiles and the same fixtures. Assertions confirm the existing network,
+  CPU, screen and form-factor profile. Median LCP regressed by 227/150/157 ms;
+  page transfers grew by about 25–28 kB. CPU benchmark medians stayed within
+  roughly 5%, and accessibility was 100 across the eighteen reports.
+  - The fresh dashboard critical path retains the React DOM transfer, its CPU
+    task and root layout/error-script requests. Inlining delays that same modeled
+    tail by about 150 ms. Cold/warm reload probes also show the caching cost:
+    the normal home document is 21,414 encoded body bytes with a separately cached
+    stylesheet, versus 61,332 document bytes on each inline load. Home-to-Explore
+    client navigation remains approximately 5 kB in both cases. Full results,
+    model limits and the official Next reference are in
+    `docs/startup-performance.md`; raw evidence and the rejected patch are under
+    ignored `maintenance/startup-performance-20261024/`.
+  - The single trial flag was reverted, the isolated build restored and its
+    application-source diff checked empty. No runtime, dependency, deployment,
+    credential, schema or environment change is retained. Pre-existing reporting
+    edits remain untouched. Verification: root typecheck, all 609 runnable unit
+    tests (11 database skips), web lint and the normal root production build pass.
+    No full browser or Lighthouse CI rerun is claimed for this documentation-only
+    result; the eighteen Lighthouse probes and reload/navigation assertions are
+    separate evidence. Manual second-pass review checked restored source, profile
+    equivalence, raw medians and the limits of modeled causality. No harness
+    review command or usage meter is available.
+  - Strict 2200/2000/2200 ms LCP and comparable hosted input-delay acceptance
+    remain open in the local queue, along with real devices and native Persian
+    wording. Shared surface: `changelog.md`, announced in the phase plan commit
+    before editing.
+
 - **Add contextual help to the dashboard, studio and five-step listing editor
   (local queue).** One shared 44px question-mark control explains source/release
   versions, compatibility, permissions, environment variables, licences,

@@ -1,6 +1,6 @@
 # Web startup performance investigation
 
-Updated 2026-10-23. These are lab results, not field INP or real-phone acceptance.
+Updated 2026-10-24. These are lab results, not field INP or real-phone acceptance.
 
 ## Hosted dashboard input delay
 
@@ -96,3 +96,55 @@ unchanged application source. Trial patches, reports, traces and diagnostics
 remain under ignored `maintenance/queue-20261023/`. Physical-device and Persian
 wording acceptance remain human tasks; `owner-review.json` in that directory
 adds the five-step editor's 21 wording choices to the earlier review material.
+
+## CSS delivery trial, 2026-10-24
+
+A fresh baseline and a disposable `experimental.inlineCss: true` build each ran
+three Lighthouse samples on home, dashboard and detail. Both used the committed
+`e2cefde` application, the same mock API and signed-in creator fixture, and fresh
+dedicated Chrome profiles. The probe asserted that throttling, screen emulation
+and form factor match the existing Lighthouse profile. No budget or timing
+setting changed. Accessibility was 100 in all eighteen reports.
+
+| Route | Baseline median LCP | Inline CSS median LCP | Additional median page bytes |
+| --- | --- | --- | --- |
+| `/` | 2632 ms | 2859 ms | 24,507 |
+| `/dashboard` | 2792 ms | 2942 ms | 27,631 |
+| `/products/conversion-copywriter` | 2632 ms | 2789 ms | 27,919 |
+
+CPU benchmark medians differ by approximately +0.5%, -1.8% and +4.5%,
+respectively. This bounds an obvious comparison risk; it does not make these
+small lab samples a field-performance result. The trial did not establish a
+gain. Median max-potential-FID remained 76/79/77 ms on the baseline and
+81/79/78 ms with inlining, without establishing a hosted startup fix.
+
+The second dashboard samples give the same modeled critical tail: the shared
+React DOM script's transfer, an approximately 79–80 ms CPU task, then root layout
+and error-script requests. Inlining shifts that large script's modeled start
+from 754 to 904 ms, rather than removing it from the graph. Both optimistic and
+pessimistic estimates regress by about 150 ms. The installed Lantern model
+includes candidate scripts based on completion and evaluation relative to the
+observed paint; a script on this modeled path is not proof that server-rendered
+text semantically requires it.
+
+A separate browser probe measured home reloads and client navigation. The normal
+home document transferred 21,414 encoded body bytes plus a 13,835-byte stylesheet
+transfer on a cold load; that stylesheet transferred zero bytes on the warm
+reload. With inlining, the document transferred 61,332 encoded body bytes on
+both loads. Its decoded body grew from 105,823 to 322,570 bytes. Client navigation
+from home to Explore fetched no additional stylesheet in either build, and the
+RSC transfer was approximately 5 kB in both. These byte observations do not
+measure real-device interaction latency or every navigation path.
+
+Next's [inline CSS documentation](https://nextjs.org/docs/app/api-reference/config/next-config-js/inlineCss)
+describes its experimental status, duplicated initial styles and loss of
+independent stylesheet caching. Those tradeoffs produced no benefit here. The
+single configuration change was reverted, its patch retained, and the restored
+isolated build passes with no application-source diff. No deployment, compression
+pipeline, custom bootstrap loader or private-data fetching change was introduced.
+
+Evidence: ignored `maintenance/startup-performance-20261024/` contains all
+eighteen reports, second-sample traces/devtools logs for each route, configuration
+assertions, raw comparisons, critical-path output, reload/navigation observations
+and the rejected patch. The strict 2200/2000/2200 ms LCP targets and comparable
+hosted 130 ms input-delay acceptance remain unfinished.
