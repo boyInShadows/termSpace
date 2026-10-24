@@ -148,3 +148,193 @@ eighteen reports, second-sample traces/devtools logs for each route, configurati
 assertions, raw comparisons, critical-path output, reload/navigation observations
 and the rejected patch. The strict 2200/2000/2200 ms LCP targets and comparable
 hosted 130 ms input-delay acceptance remain unfinished.
+
+## Reporting integration bundle regression, 2026-10-24
+
+The reporting UI integrated at `a4935f8` exceeded the existing Persian product
+first-load JavaScript gate: 165.2 kB versus 165 kB. Its case endpoint helpers
+were exported by the shared startup API module. The existing listing-moderation
+helpers had the same coupling. Moving those eleven unchanged endpoint bodies
+into their respective feature modules removes 336 gzip bytes from each measured
+startup route. They continue using the same credentialed, uncached request client;
+timeouts, cancellation, error details and mutation retry behavior are unchanged.
+
+| Route | Before, gzip kB | After, gzip kB | Existing gate, kB |
+| --- | ---: | ---: | ---: |
+| `/` and `/fa` | 163.2 | 162.8 | 170 |
+| `/dashboard` and `/fa/dashboard` | 168.2 | 167.9 | 170 |
+| `/products/conversion-copywriter` | 153.8 | 153.5 | 165 |
+| `/fa/products/conversion-copywriter` | 165.2 | 164.9 | 165 |
+
+Measurements use unique initial non-`nomodule` script tags and gzip the matching
+production assets, exactly as the browser budget test does. The private case
+endpoint path no longer occurs in these initial scripts. This is a small bundle
+regression fix, with little headroom on the Persian detail gate; it does not
+establish an LCP or interaction timing improvement. Strict LCP, comparable hosted
+input delay and physical-device acceptance remain open. Before/after sizes,
+builds and verification evidence live in ignored
+`maintenance/reporting-performance-20261024/`.
+
+All nine follow-up Lighthouse reports pass the existing gates with accessibility
+100. Representative home/dashboard/detail LCP is 2816/2951/2803 ms, performance
+96/95/96 and max-potential-FID 107/88/97 ms. These samples do not meet the stricter
+2200/2000/2200 ms LCP targets or close comparable hosted timing acceptance.
+
+## Public startup asset delivery, 2026-10-24
+
+The normal web build now generates Brotli variants of its public JavaScript and
+CSS, verifies every decoded variant against the original bytes and writes a
+manifest of generated asset paths. The existing Next proxy negotiates explicit
+Brotli support; a Route Handler returns only files listed by that build.
+Development, refused encodings, missing variants and range requests retain the
+normal static handler. Queries and English/Persian routing are preserved.
+
+The separate response handler is necessary in the installed Next 16.3.8:
+middleware responses filter `Content-Encoding`, which made a direct rewrite to
+a `.br` file return encoded bytes without their encoding header. That prototype
+was rejected. The retained path uses ordinary Next
+[rewrites](https://nextjs.org/docs/app/api-reference/file-conventions/proxy) and
+a response that owns the encoded body, with the original JavaScript/CSS MIME
+type, `Vary: Accept-Encoding`, immutable public caching and a strong ETag for
+conditional 304 responses. Direct handler rejections and missing files return
+uncached 404 responses.
+
+This applies to the self-hosted Next server used by the current Docker and CI
+packaging. Retain `.next/static` and `.next/compressed-assets.json` together.
+Builds without the compression manifest or an available variant fall back to
+normal asset delivery. No dependencies, private-response caching, authentication
+sequence, page content or timing budgets change.
+
+A preliminary Turbopack build succeeded but exceeded the 165 kB product budget
+in both locales (165.3 kB each). Its three timing samples did not establish an
+LCP improvement, so the web build retains webpack. An offscreen-layout
+inspection measured peak layout tasks of approximately 16/22/17 ms on
+home/dashboard/detail; no rendering-containment change was retained.
+
+Evidence, including rejected prototypes, raw encoding checks, traces, reports
+and render captures, lives under ignored
+`docs/artifacts/startup-delivery-20261024/`. New regression tests live under
+`apps/web/tests/`; the existing test directories remain supported. The transport
+project writes failure evidence under `docs/artifacts/playwright-transport/`.
+Strict LCP, comparable hosted input delay, physical-device and native Persian
+wording acceptance remain unfinished.
+
+The final stock LHCI run passes all nine reports with accessibility 100. The
+comparison below uses numeric medians of three reports per route before and
+after, with identical throttling, screen emulation and form factor. The baseline
+is the prior reporting-budget phase; all CPU indices and individual reports are
+retained in the comparison artifact.
+
+| Route | Baseline LCP, ms | Brotli LCP, ms | Baseline transfer, bytes | Brotli transfer, bytes |
+| --- | ---: | ---: | ---: | ---: |
+| `/` | 2816 | 2500 | 321839 | 293489 |
+| `/dashboard` | 2951 | 2803 | 342993 | 312396 |
+| `/products/conversion-copywriter` | 2803 | 2484 | 319407 | 289895 |
+
+Performance scores are 97/96/97, median max-potential-FID 70/77/68 ms, and all
+six gzip JavaScript budgets remain unchanged and passing. These timing samples
+do not meet the stricter LCP targets or establish a comparable hosted startup
+fix. Raw HTTP tests verify JavaScript/CSS decode equality, gzip refusal fallback,
+HEAD, ranges, immutable cache headers and body-free 304 revalidation.
+
+## Hosted follow-up and remaining download cost, 2026-10-24
+
+The [application CI run](https://github.com/boyInShadows/termSpace/actions/runs/40124384845)
+and [web validation run](https://github.com/boyInShadows/termSpace/actions/runs/40124384917)
+both pass at `d5ac348`. Hosted Playwright passes 437 scenarios with 46 existing
+skips and no reported flaky tests. All nine hosted Lighthouse reports pass the
+unchanged gates. Numeric medians of three samples per route are:
+
+| Route | LCP, ms | Max-potential-FID, ms |
+| --- | ---: | ---: |
+| `/` | 2409 | 90 |
+| `/dashboard` | 2278 | 74 |
+| `/products/conversion-copywriter` | 2164 | 83 |
+
+Hosted CPU benchmark indices span 2922.5–3069.5. The original failing dashboard
+reference was 2418.5–2461, so these passing results do not establish comparable
+CPU acceptance. The stricter local targets remain open as recorded above.
+
+Recomputing Lantern from all nine original hosted traces and network logs
+reproduces each recorded LCP within 5 ms. The dashboard's modeled tail still
+ends at a shared Next/React script download, with a subsequent 76 ms CPU task in
+the third sample. Both framework asset hashes are unchanged from `1554e45`;
+compression reduces their download bytes, not their decoded code.
+
+An offline sensitivity check changes only modeled transfer sizes, retaining
+request dependencies, CPU work and the existing profile. Its baseline reproduces
+all nine original results within 0.01 ms. The following dashboard medians are
+counterfactual estimates, not implemented optimizations or acceptance results:
+
+| Transfer-size substitution | Modeled dashboard LCP, ms |
+| --- | ---: |
+| Original captured requests | 2278 |
+| Zero bytes for every script except the two shared framework scripts | 2128 |
+| Zero bytes for fonts | 2128 |
+| Half the bytes for the HTML document | 2128 |
+| Half the bytes for both framework scripts | 1992 |
+
+Even the zero-byte non-core-script diagnostic misses the dashboard target.
+It does not justify deleting application behavior, replacing the framework or
+adding a bootstrap delay. No further runtime change is retained from this
+follow-up. A subsequent delivery or startup experiment must demonstrate an
+actual gain under the existing profile before its task can be removed.
+
+Original reports and traces remain under ignored
+`docs/artifacts/startup-delivery-20261024/hosted-40124384917/`. Reproduction
+helpers, all eighteen current/prior critical-path summaries and the nine
+sensitivity results are under `docs/artifacts/startup-followup-20261024/`.
+
+## Initial-chunk and data-font trials, 2026-10-25
+
+Two client-only webpack `maxInitialSize` trials tested whether smaller downloads
+could shorten the remaining shared-script tail. Next's defaults were retained
+for development and server bundles. Both production builds succeeded, but both
+failed three of the six existing bundle tests:
+
+| Initial source-size hint | Dashboard EN/FA, gzip kB | Persian detail, gzip kB |
+| --- | ---: | ---: |
+| Original configuration | 167.9 | 164.9 |
+| 160000 bytes | 173.7 | 170.7 |
+| 400000 bytes | 170.6 | 167.5 |
+| Existing limit | 170 | 165 |
+
+The finer trial increases homepage initial scripts from 13 to 24. The two large
+original assets contain approximately 152 modules and one module respectively;
+the single React DOM module cannot be divided by a chunk-size hint. Webpack
+documents both the [module-size limitation and extra-request tradeoff](https://webpack.js.org/plugins/split-chunks-plugin/#splitchunksmaxsize).
+Both configuration patches were rejected before candidate timing. The original
+configuration passes all six bundle tests after restoration. No limit changed.
+
+A separate experiment preloaded the existing monospace data font earlier. The
+global version's first three-sample homepage LCP median improved from 2487 to
+2280 ms, but product detail increased from 2481 to 2630 ms. A homepage-only
+version used React's supported [page-level link hoisting](https://react.dev/reference/react-dom/components/link#special-rendering-behavior)
+to avoid changing other routes. A fresh baseline and fresh candidate server,
+each with an isolated Chrome profile, then produced:
+
+| Route | Repeat baseline LCP, ms | Homepage-only hint LCP, ms |
+| --- | ---: | ---: |
+| `/` | 2483 | 2476 |
+| `/dashboard` | 2790 | 2789 |
+| Product detail | 2473 | 2478 |
+
+The homepage's baseline samples were 2514/2483/2296 ms and its candidate samples
+2507/2262/2476 ms. The 7 ms median change is within that variation. Homepage FCP
+improved from 1098 to 915 ms, but the apparent LCP gain did not reproduce, so
+both font-hint patches were removed. The baseline's individual 207 ms input-delay
+sample remains in the evidence; no sample was discarded to obtain a result.
+
+All 36 reports use the unchanged mobile profile and have accessibility 100.
+These are small lab samples, not field or physical-device acceptance. No
+application, configuration, dependency or budget change remains from these
+trials. Root typecheck, 685 runnable unit tests (12 database/Redis skips), web
+lint and the normal root production build pass; lint retains two existing
+warnings. The normal production build is restored, with its identity checked.
+Full browser scenarios were not repeated after restoring identical source.
+
+Rejected patches, compiled trial assets, bundle failures and restored checks
+are under ignored `docs/artifacts/chunk-layout-20261025/`. Font trial reports,
+traces, CPU indices, profile assertions and paired comparisons are under
+`docs/artifacts/mono-preload-20261025/`. Strict LCP and comparable hosted startup
+acceptance remain open; these experiments do not justify removing their tasks.

@@ -2,7 +2,140 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-25
+
+- **Test and reject startup chunk/font changes that do not meet acceptance.**
+  Production client-only webpack size hints of 160000 and 400000 bytes both
+  build, but each fails three unchanged bundle tests. Dashboard grows from
+  167.9 to 173.7/170.6 kB and Persian detail from 164.9 to 170.7/167.5 kB.
+  Restoring the original configuration returns all six tests to green.
+  - An earlier monospace font hint initially suggests a homepage LCP gain,
+    while the global version's product median worsens. A homepage-only hint
+    and repeat baseline produce home 2483 to 2476 ms, dashboard 2790 to 2789 ms
+    and detail 2473 to 2478 ms. The homepage's apparent gain does not reproduce
+    beyond sample variation. Its FCP improves, but the requested LCP acceptance
+    remains unmet; both font patches are removed. All 36 retained reports use
+    the original profile and have accessibility 100; the slow baseline sample
+    is retained. No framework, dependency, content, style or budget change.
+  - Verification: root typecheck, all 685 runnable unit tests (12 database/Redis
+    skips), web lint (two existing warnings), normal root production build and
+    six restored bundle gates pass. Final application/configuration diff against
+    the published base is empty; the normal production build is restored and
+    its identity checked. Full E2E is not repeated for identical restored code.
+    A PowerShell warning-handling interruption is retained separately from the
+    successful restored checks. Evidence and trial details are recorded in
+    `docs/startup-performance.md`; generated artifacts stay under ignored
+    `docs/artifacts/`. The local queue retains all unfinished acceptance and
+    contains no new completed-trial narrative.
+  - Shared `changelog.md` edits were announced in local planning commits.
+    Manual Ponytail/code-quality second pass; no harness review command or
+    usage meter is available. No provider, database or deployment actions.
+
 ## 2026-10-24
+
+- **Reconcile Ramtin's local queue and continue startup profiling.** Removed
+  completed-trial narrative and replaced its duplicated shared backlog with a
+  reference to the authoritative `pending.md`; no unfinished shared task was
+  marked complete. Strict LCP, comparable hosted input delay, physical-device
+  checks, native Persian approval and owner-deferred provider work remain open.
+  The local queue stays ignored and is not part of the commit.
+  - Confirmed all six hosted checks pass at `d5ac348`, including API integration,
+    437 Playwright passes (46 existing skips, no reported flaky tests) and nine
+    Lighthouse reports. Hosted median LCP is 2409/2278/2164 ms and input delay
+    90/74/83 ms; faster CPU indices still prevent closing the original timing
+    risk. Retained failures and the strict targets are unchanged.
+  - Recomputed eighteen current/prior critical paths and reproduced all nine
+    current baselines. Offline transfer-size sensitivity still estimates a
+    2128 ms dashboard median with every script except the two shared framework
+    scripts reduced to zero transfer bytes. This is a
+    diagnostic, not a shipped gain. No unproven runtime optimization was added;
+    details and evidence paths are in `docs/startup-performance.md`.
+  - Verification: model baseline assertions, hosted check/head verification,
+    queue ownership/deferred-work review and `git diff --check`. Application,
+    tests and configuration are unchanged; reuse the preceding phase's root
+    typecheck, unit tests, lint, production build, full E2E and LHCI results.
+    Manual second-pass review used Ponytail and the code-review workflow;
+    no harness review command or usage meter is available. Shared-surface
+    `changelog.md` was announced in a local planning commit before editing.
+
+- **Reduce public startup transfer with negotiated Brotli assets.** The web build
+  precompresses its JavaScript/CSS and verifies every decoded variant against the
+  original. The proxy and a small Route Handler serve only files in the build's
+  generated allowlist. Missing variants, refused encodings, development and
+  range requests retain normal delivery. Compressed responses keep the original
+  MIME type, immutable public caching, `Vary: Accept-Encoding` and strong ETags
+  with body-free conditional 304s. Private API data, session snapshots, Saved
+  ordering, content and styling are unchanged.
+  - Median local mobile LCP improves home 2816 to 2500 ms, dashboard 2951 to
+    2803 ms and detail 2803 to 2484 ms. Median page transfer drops by
+    28350/30597/29512 bytes respectively. All nine stock Lighthouse reports pass
+    unchanged gates with accessibility 100; performance is 97/96/97 and median
+    max-potential-FID 70/77/68 ms. All six gzip JavaScript budgets pass. The
+    strict 2200/2000/2200 ms targets, comparable hosted timing and physical/native
+    acceptance remain open; no budget or throttling setting was changed.
+  - Verification: root typecheck, normal root production build and 685 runnable
+    unit tests pass (12 database/Redis skips); web lint has no errors and the same
+    two existing warnings.
+    Full serial Playwright validation passes 437 scenarios with 46 existing
+    skips. The earlier two-worker run's one Chrome `ERR_NO_BUFFER_SPACE` failure
+    is retained with its trace: a chunk request failed before an HTTP response.
+    Serial validation uses browser temporary files on D:. No test was removed,
+    weakened or given retries. Thirty-six render checks cover English/Persian
+    RTL, light/dark and 320/768/1280 widths, first keyboard focus and one main,
+    with no overflow or page error. Impeccable detection has no findings.
+  - Manual second-pass review tightened artifact allowlisting and negative-cache
+    behavior, and caught the missing revalidation metadata before completion.
+    The raw transport regression verifies actual encoded bytes and HTTP behavior,
+    beyond mocked headers. Next strips encoding headers from proxy responses;
+    the discarded direct rewrite is retained for evidence. A Turbopack pilot was
+    rejected at 165.3 kB on both product locales; webpack remains in use. No
+    dependency, API/schema, migration, provider or deployment changes.
+  - Owner folder conventions apply to this new work: tests are under
+    `apps/web/tests/`, generated evidence under ignored
+    `docs/artifacts/startup-delivery-20261024/`, and the transport project's
+    failure artifacts under `docs/artifacts/playwright-transport/`. Existing
+    test directories remain supported; CI uploads the new failure location.
+    Config/shared files were announced before editing: `changelog.md`,
+    `.gitignore`, web test configs and the web workflow artifact path. No harness
+    review command or usage meter is available. Further measurements and
+    self-hosted packaging notes are in `docs/startup-performance.md`.
+
+- **Restore the product startup JavaScript budget after reporting integration.**
+  Fast-forwarded `ramtin` onto `main` (`3490d23`), retaining the owner's published
+  reporting UI (`a4935f8`). The baseline Persian detail bundle measured 165.2 kB
+  against its existing 165 kB gate. Reporting-only extraction saved 152 gzip
+  bytes but still failed at 165.1 kB; moving the adjacent listing-moderation
+  helpers into their feature module completes the fix. The eleven endpoint
+  bodies are unchanged and share the existing request transport.
+  - Each of six measured startup routes saves 336 gzip bytes: home EN/FA
+    163.2 to 162.8 kB, dashboard EN/FA 168.2 to 167.9 kB, product EN 153.8 to
+    153.5 kB and product FA 165.2 to 164.9 kB. Private case endpoint paths no
+    longer occur in those initial assets. All six existing browser bundle
+    assertions pass. No budget, timing profile, dependency or UI copy changed.
+  - Verification: root typecheck, normal root production build and 664 runnable
+    unit tests pass (12 database/Redis skips). New transport checks preserve credentialed uncached reads,
+    caller cancellation and non-retrying mutations; existing reporting and
+    moderation tests retain role gates, failure recovery and form state. Web
+    lint has no errors and two existing warnings in `context-help.tsx` and
+    `e2e/mock-reports.mjs`. The full browser suite passes 436 scenarios with
+    46 intentional skips and no retries. Twenty-four render checks cover report
+    forms, cases and moderation in both themes, English/Persian RTL and
+    320/1280 widths: no overflow, duplicate main or page error; keyboard-opened
+    disclosure retains visible focus. Impeccable detection has no findings.
+    All nine Lighthouse reports pass unchanged gates, with accessibility 100.
+    Representative home/dashboard/detail LCP is 2816/2951/2803 ms,
+    performance 96/95/96 and max-potential-FID 107/88/97 ms; strict timing
+    acceptance remains unfinished.
+  - Shared surfaces `apps/web/lib/api.ts` and `changelog.md` were announced in
+    the plan commit before editing. A manual second-pass review checked every
+    caller, mock, transport contract and all eleven moved bodies against the
+    published baseline; no harness review command or usage meter is available.
+    No API/schema, migration, seed, provider or deployment changes. The ignored
+    local queue retains strict LCP, comparable hosted timing, physical-device
+    and native Persian wording acceptance, including reporting screens.
+    Measurements and verification evidence: ignored
+    `maintenance/reporting-performance-20261024/`; interpretation and remaining
+    headroom are documented in `docs/startup-performance.md`.
 
 - **Merge `redesign` into `ramtin` at the owner's request.** Integrates
   `fc766ea` with `703f831`, retaining both histories and the seventeen later

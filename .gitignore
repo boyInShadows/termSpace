@@ -45,6 +45,7 @@ dashboardPlan.md
 
 # maintenance screenshots and notes (session scratch, not project docs)
 maintenance/
+/docs/artifacts/
 
 # local tooling and agent harness state
 .cursor/
