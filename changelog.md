@@ -4,6 +4,31 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-24
 
+- **Reconcile Ramtin's local queue and continue startup profiling.** Removed
+  completed-trial narrative and replaced its duplicated shared backlog with a
+  reference to the authoritative `pending.md`; no unfinished shared task was
+  marked complete. Strict LCP, comparable hosted input delay, physical-device
+  checks, native Persian approval and owner-deferred provider work remain open.
+  The local queue stays ignored and is not part of the commit.
+  - Confirmed all six hosted checks pass at `d5ac348`, including API integration,
+    437 Playwright passes (46 existing skips, no reported flaky tests) and nine
+    Lighthouse reports. Hosted median LCP is 2409/2278/2164 ms and input delay
+    90/74/83 ms; faster CPU indices still prevent closing the original timing
+    risk. Retained failures and the strict targets are unchanged.
+  - Recomputed eighteen current/prior critical paths and reproduced all nine
+    current baselines. Offline transfer-size sensitivity still estimates a
+    2128 ms dashboard median with every script except the two shared framework
+    scripts reduced to zero transfer bytes. This is a
+    diagnostic, not a shipped gain. No unproven runtime optimization was added;
+    details and evidence paths are in `docs/startup-performance.md`.
+  - Verification: model baseline assertions, hosted check/head verification,
+    queue ownership/deferred-work review and `git diff --check`. Application,
+    tests and configuration are unchanged; reuse the preceding phase's root
+    typecheck, unit tests, lint, production build, full E2E and LHCI results.
+    Manual second-pass review used Ponytail and the code-review workflow;
+    no harness review command or usage meter is available. Shared-surface
+    `changelog.md` was announced in a local planning commit before editing.
+
 - **Reduce public startup transfer with negotiated Brotli assets.** The web build
   precompresses its JavaScript/CSS and verifies every decoded variant against the
   original. The proxy and a small Route Handler serve only files in the build's

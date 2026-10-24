@@ -236,3 +236,51 @@ six gzip JavaScript budgets remain unchanged and passing. These timing samples
 do not meet the stricter LCP targets or establish a comparable hosted startup
 fix. Raw HTTP tests verify JavaScript/CSS decode equality, gzip refusal fallback,
 HEAD, ranges, immutable cache headers and body-free 304 revalidation.
+
+## Hosted follow-up and remaining download cost, 2026-10-24
+
+The [application CI run](https://github.com/boyInShadows/termSpace/actions/runs/40124384845)
+and [web validation run](https://github.com/boyInShadows/termSpace/actions/runs/40124384917)
+both pass at `d5ac348`. Hosted Playwright passes 437 scenarios with 46 existing
+skips and no reported flaky tests. All nine hosted Lighthouse reports pass the
+unchanged gates. Numeric medians of three samples per route are:
+
+| Route | LCP, ms | Max-potential-FID, ms |
+| --- | ---: | ---: |
+| `/` | 2409 | 90 |
+| `/dashboard` | 2278 | 74 |
+| `/products/conversion-copywriter` | 2164 | 83 |
+
+Hosted CPU benchmark indices span 2922.5–3069.5. The original failing dashboard
+reference was 2418.5–2461, so these passing results do not establish comparable
+CPU acceptance. The stricter local targets remain open as recorded above.
+
+Recomputing Lantern from all nine original hosted traces and network logs
+reproduces each recorded LCP within 5 ms. The dashboard's modeled tail still
+ends at a shared Next/React script download, with a subsequent 76 ms CPU task in
+the third sample. Both framework asset hashes are unchanged from `1554e45`;
+compression reduces their download bytes, not their decoded code.
+
+An offline sensitivity check changes only modeled transfer sizes, retaining
+request dependencies, CPU work and the existing profile. Its baseline reproduces
+all nine original results within 0.01 ms. The following dashboard medians are
+counterfactual estimates, not implemented optimizations or acceptance results:
+
+| Transfer-size substitution | Modeled dashboard LCP, ms |
+| --- | ---: |
+| Original captured requests | 2278 |
+| Zero bytes for every script except the two shared framework scripts | 2128 |
+| Zero bytes for fonts | 2128 |
+| Half the bytes for the HTML document | 2128 |
+| Half the bytes for both framework scripts | 1992 |
+
+Even the zero-byte non-core-script diagnostic misses the dashboard target.
+It does not justify deleting application behavior, replacing the framework or
+adding a bootstrap delay. No further runtime change is retained from this
+follow-up. A subsequent delivery or startup experiment must demonstrate an
+actual gain under the existing profile before its task can be removed.
+
+Original reports and traces remain under ignored
+`docs/artifacts/startup-delivery-20261024/hosted-40124384917/`. Reproduction
+helpers, all eighteen current/prior critical-path summaries and the nine
+sensitivity results are under `docs/artifacts/startup-followup-20261024/`.
