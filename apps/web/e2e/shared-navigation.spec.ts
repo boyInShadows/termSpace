@@ -61,7 +61,7 @@ for (const locale of ["en", "fa"] as const) {
 
   test(`the root skip link focuses content across sections (${locale})`, async ({ page, context, baseURL }) => {
     await context.addCookies([{ name: "e2e_persona", value: "creator", url: baseURL! }]);
-    for (const path of ["/", "/dashboard", "/explore", "/products/conversion-copywriter", "/account"]) {
+    for (const path of ["/", "/dashboard", "/explore", "/products/conversion-copywriter", "/account", "/privacy", "/terms", "/content-policy"]) {
       await page.goto(`${prefix}${path === "/" ? "" : path}`);
       await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
       await page.keyboard.press("Tab");
@@ -85,7 +85,7 @@ for (const locale of ["en", "fa"] as const) {
       const moderation = navigation.getByRole("link", { name: copy[locale].moderationNav, exact: true });
       if (role === "moderator" || role === "administrator") {
         await expect(moderation).toBeVisible();
-        await expect(moderation).toHaveAttribute("href", `${prefix}/moderation`);
+        await expect(moderation).toHaveAttribute("href", `${prefix}/dashboard/moderation`);
       } else await expect(moderation).toHaveCount(0);
       await page.unrouteAll({ behavior: "wait" });
     });

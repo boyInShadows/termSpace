@@ -6,6 +6,7 @@ import { getMarketplaceCommunities, getMarketplaceCommunity, getMarketplaceHome,
 import type { ProductFilters } from "@/lib/types";
 import { filtersFromParams } from "@/lib/discovery-url";
 import { pageAlternates } from "@/lib/alternates";
+import { visitorHeaders } from "@/lib/clientIp";
 import { getLocale } from "@/lib/serverLocale";
 import { copy } from "@/lib/i18n";
 
@@ -28,7 +29,7 @@ export default async function CommunityPage({ params, searchParams }: {
   // The community is the route, not a filter a URL can override.
   const filters: ProductFilters = { ...filtersFromParams(raw), community: slug };
   const [result, home, communities, itemTypes] = await Promise.all([
-    getMarketplaceCommunity(slug, filters).catch((error: { status?: number }) => error?.status === 404 ? null : Promise.reject(error)),
+    getMarketplaceCommunity(slug, filters, filters.q ? await visitorHeaders() : undefined).catch((error: { status?: number }) => error?.status === 404 ? null : Promise.reject(error)),
     getMarketplaceHome().catch(() => null),
     getMarketplaceCommunities().catch(() => []),
     getMarketplaceItemTypes().catch(() => []),

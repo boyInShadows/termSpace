@@ -1,6 +1,24 @@
 @import "tailwindcss";
 @import "./tokens.css";
 
+/* `dark:` follows the site's theme switch (next-themes puts `.dark` on <html>),
+   not the operating system: without this, Tailwind's default variant reads
+   `prefers-color-scheme`, and a dark site on a light OS (or the reverse)
+   rendered `dark:` colours on the wrong ground. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* The landing hero fills the first screen from tablet width up. Under 600px
+   of viewport height (a phone on its side) nothing fits, so it flows instead. */
+@custom-variant fit (@media (min-width: 48rem) and (min-height: 37.5rem));
+/* 1366×768 and 1280×720 laptops and landscape tablets, once browser chrome is
+   taken: the hero tightens its spacing and card copy to stay on one screen. */
+@custom-variant fit-short (@media (min-width: 48rem) and (min-height: 37.5rem) and (max-height: 45rem));
+
+/* What the header takes above the hero: the 64px bar and its 1px border, plus
+   the 36px announcement strip while it is shown. */
+:root { --header-chrome: 4.0625rem; }
+:root:has([data-announcement]) { --header-chrome: 6.3125rem; }
+
 .dashboard-operate :is(button, input, select, textarea, a) {
   border-radius: 0;
   /* Native focus scrolling must clear the fixed dashboard tabs. */

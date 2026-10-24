@@ -2,6 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { BadgeCheck, ShieldAlert, ShieldCheck, Star } from "lucide-react";
+import { formatNumber } from "@/lib/format";
+import type { Locale } from "@/lib/i18n";
 import type { Compatibility, Creator, ProductType } from "@/lib/types";
 /** `label` is the localized name; server callers without a locale fall back to the type key. */
 export function ProductTypeBadge({ type, label }: { type: ProductType; label?: string }) {
@@ -11,10 +13,12 @@ export function CreatorIdentity({
   creator,
   compact = false,
   href,
+  verifiedLabel = "Verified creator",
 }: {
   creator: Creator;
   compact?: boolean;
   href?: string;
+  verifiedLabel?: string;
 }) {
   return (
     <div className="flex min-w-0 items-center gap-2">
@@ -29,19 +33,21 @@ export function CreatorIdentity({
         <BadgeCheck
           size={15}
           className="shrink-0 text-primary"
-          aria-label="Verified creator"
+          role="img"
+          aria-label={verifiedLabel}
         />
       )}
     </div>
   );
 }
-export function Rating({ rating, count }: { rating: number; count?: number }) {
+/** With a `locale`, the digits follow it; server callers without one keep Latin digits. */
+export function Rating({ rating, count, locale = "en" }: { rating: number; count?: number; locale?: Locale }) {
   return (
     <span className="inline-flex items-center gap-1 text-xs font-medium">
-      <Star size={14} className="fill-warning text-warning" />
-      <span>{rating.toFixed(1)}</span>
+      <Star size={14} aria-hidden className="fill-warning text-warning" />
+      <span>{formatNumber(rating, locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
       {count !== undefined && (
-        <span className="text-muted-foreground">({count})</span>
+        <span className="text-muted-foreground">({formatNumber(count, locale)})</span>
       )}
     </span>
   );
@@ -62,7 +68,9 @@ export function CompatibilityBadges({
       ))}
       {compatibility.platforms.length > limit && (
         <Badge variant="outline">
-          +{compatibility.platforms.length - limit}
+          {/* A Latin island like the platform names beside it, so the plus
+              stays in front of the number in a right-to-left row. */}
+          <bdi dir="ltr">+{compatibility.platforms.length - limit}</bdi>
         </Badge>
       )}
     </div>
@@ -82,20 +90,41 @@ export function TrustStatus({
 }
 
 export type TrustStripLabels = {
+  reviewLabel: string;
   safetyReviewed: string;
   notReviewed: string;
   permissionsLabel: string;
-  permissionsNone: string;
   licenceLabel: string;
   licenceNone: string;
+  notDeclared: string;
+  notStated: string;
 };
 
+function ReviewState({ verified, labels }: { verified: boolean; labels: TrustStripLabels }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold">
+      {verified ? (
+        <ShieldCheck size={14} aria-hidden className="shrink-0 text-verified" />
+      ) : (
+        <ShieldAlert size={14} aria-hidden className="shrink-0 text-warning" />
+      )}
+      <span className={verified ? "text-foreground" : "text-muted-foreground"}>
+        {verified ? labels.safetyReviewed : labels.notReviewed}
+      </span>
+    </span>
+  );
+}
+
 /**
- * What a listing declares about itself, scannable from the card: whether its
- * safety was reviewed, its licence, and what it touches. The permissions line
- * wraps to two lines before it clips, because its tail ("no network access")
- * is the part that matters. A listing that declares nothing says so instead of
- * leaving a gap that reads like "nothing to declare".
+ * What a listing declares about itself, where the decision to trust it is
+ * made: its review state, what it touches and its licence, each a labelled
+ * row read at full weight. Values wrap rather than clip, because a trust
+ * value you cannot read in full is worse than none. Undeclared access is the
+ * one red mark on the card (red means absent, never error), so a reviewed
+ * listing that declares nothing cannot pass for a safe one.
+ *
+ * `compact` is the single line the landing shelf has room for: review state
+ * and licence only.
  */
 export function TrustStrip({
   verified,
@@ -110,17 +139,10 @@ export function TrustStrip({
   labels: TrustStripLabels;
   compact?: boolean;
 }) {
-  return (
-    <div className="mt-3 space-y-0.5 text-xs leading-5">
-      <p className="flex min-w-0 items-center gap-1.5">
-        {verified ? (
-          <ShieldCheck size={14} aria-hidden className="shrink-0 text-verified" />
-        ) : (
-          <ShieldAlert size={14} aria-hidden className="shrink-0 text-warning" />
-        )}
-        <span className={verified ? "font-semibold text-foreground" : "font-semibold text-muted-foreground"}>
-          {verified ? labels.safetyReviewed : labels.notReviewed}
-        </span>
+  if (compact) {
+    return (
+      <p className="mt-3 flex min-w-0 items-center gap-1.5 text-xs leading-5">
+        <ReviewState verified={verified} labels={labels} />
         <span aria-hidden className="text-border-strong">·</span>
         <span className="sr-only">{labels.licenceLabel}: </span>
         {license ? (
@@ -129,12 +151,33 @@ export function TrustStrip({
           <span className="truncate text-muted-foreground">{labels.licenceNone}</span>
         )}
       </p>
-      {!compact && (
-        <p className="ts-bidi line-clamp-2 text-muted-foreground" title={permissions ?? undefined}>
-          <span className="sr-only">{labels.permissionsLabel}: </span>
-          {permissions ?? labels.permissionsNone}
-        </p>
-      )}
-    </div>
+    );
+  }
+
+  return (
+    <dl className="mt-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 border-t border-border pt-3 text-xs leading-5">
+      <dt className="text-muted-foreground">{labels.reviewLabel}</dt>
+      <dd>
+        <ReviewState verified={verified} labels={labels} />
+      </dd>
+
+      <dt className="text-muted-foreground">{labels.permissionsLabel}</dt>
+      <dd className="ts-bidi text-foreground">
+        {permissions ?? (
+          <span className="inline-block rounded-sm border border-destructive/60 px-1.5 font-semibold text-destructive">
+            {labels.notDeclared}
+          </span>
+        )}
+      </dd>
+
+      <dt className="text-muted-foreground">{labels.licenceLabel}</dt>
+      <dd className="ts-bidi">
+        {license ? (
+          <bdi dir="ltr" className="font-mono text-foreground">{license}</bdi>
+        ) : (
+          <span className="text-muted-foreground">{labels.notStated}</span>
+        )}
+      </dd>
+    </dl>
   );
 }

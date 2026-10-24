@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Footer } from "@/components/layout/footer";
 import { Logo } from "@/components/layout/logo";
 import { Showroom } from "./showroom";
-export const metadata: Metadata = { title: "Design system" };
+export const metadata: Metadata = { title: "Design system", robots: { index: false } };
 const colors = [
   ["Void", "bg-background", "oklch(14.5% .022 286)"],
   ["Surface", "bg-surface", "oklch(18.5% .026 286)"],
@@ -28,6 +29,8 @@ const checks = [
   "Readiness to continue",
 ];
 export default function DesignSystemPage() {
+  // A dev showroom: not part of the shipped site.
+  if (process.env.NODE_ENV === "production") notFound();
   return (
     <>
       <main id="content" tabIndex={-1}>

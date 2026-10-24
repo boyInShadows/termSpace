@@ -254,6 +254,8 @@ async function rankMatchedProducts(ids: string[], terms: string[], offset: numbe
 }
 
 /** One page of listings plus the total, shared by the catalogue and community lists. */
+const MAX_RELEVANCE_MATCHES = 2000;
+
 async function findProductPage(where: Prisma.MarketplaceProductWhereInput, filters: { q?: string; sort: string; page: number; limit: number }) {
   const { q, sort, page, limit } = filters;
   const terms = searchTerms(q);
@@ -269,7 +271,8 @@ async function findProductPage(where: Prisma.MarketplaceProductWhereInput, filte
   // the total. Every match id is held and ranked, which measured fine for
   // thousands of matches over 20k listings (a text search is ~100 ms there);
   // past tens of thousands of matches, move to pg_trgm/tsvector instead.
-  const matches = await prisma.marketplaceProduct.findMany({ where, select: { id: true } });
+  // Capped so a broad term cannot make one request rank the whole catalogue.
+  const matches = await prisma.marketplaceProduct.findMany({ where, select: { id: true }, take: MAX_RELEVANCE_MATCHES });
   const total = matches.length;
   const pageIds = total ? await rankMatchedProducts(matches.map((match) => match.id), terms, (page - 1) * limit, limit) : [];
   const rows = pageIds.length ? await prisma.marketplaceProduct.findMany({ where: { id: { in: pageIds } }, include: productInclude }) : [];

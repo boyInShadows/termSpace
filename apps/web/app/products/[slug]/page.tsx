@@ -235,7 +235,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
                 <Section title={l.creator}>
                   <div>
-                    <CreatorIdentity creator={product.creator} href={localePath(`/creators/${product.creator.handle}`, locale)} />
+                    <CreatorIdentity creator={product.creator} href={localePath(`/creators/${product.creator.handle}`, locale)} verifiedLabel={copy[locale].productCard.verifiedCreator} />
                     <p className="ts-bidi mt-4 max-w-2xl">{product.creator.bio}</p>
                     <p className="mt-4 text-xs font-semibold text-foreground">
                       {product.creator.products} {product.creator.products === 1 ? l.resource : l.resources} · {formatNumber(product.creator.followers, locale)} {l.followers}

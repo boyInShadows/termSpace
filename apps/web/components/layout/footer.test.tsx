@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { copy, footerLabels, type Locale } from "@/lib/i18n";
+import { legalLabels } from "@/lib/legal";
 import { Footer } from "./footer";
 
 const state = vi.hoisted(() => ({ locale: "en" as Locale }));
@@ -13,5 +14,8 @@ describe("server-rendered footer", () => {
     expect(screen.getByText(copy[locale].footer)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: footerLabels[locale].explore })).toHaveAttribute("href", locale === "fa" ? "/fa/explore" : "/explore");
     expect(screen.getByRole("link", { name: footerLabels[locale].support })).toHaveAttribute("href", locale === "fa" ? "/fa/account" : "/account");
+    for (const slug of ["privacy", "terms", "content-policy"] as const) {
+      expect(screen.getByRole("link", { name: legalLabels[locale][slug] })).toHaveAttribute("href", `${locale === "fa" ? "/fa" : ""}/${slug}`);
+    }
   });
 });

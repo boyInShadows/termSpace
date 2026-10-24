@@ -1,6 +1,6 @@
 import { CreatorIdentity, Rating } from "@/components/marketplace/product-parts";
 import { formatNumber } from "@/lib/format";
-import { localePath, type Locale } from "@/lib/i18n";
+import { copy, localePath, type Locale } from "@/lib/i18n";
 import { listingTransitionName } from "@/lib/listing-transition";
 import type { ProductDetail } from "@/lib/types";
 import { Absent, Fact, ReleaseFacts } from "./release-facts";
@@ -8,11 +8,11 @@ import { SelectedRelease } from "./release-selection";
 
 const text = {
   en: {
-    uses: "uses", platforms: "Platforms", models: "Models", review: "Review", reviewed: "Safety reviewed",
+    uses: "uses", platforms: "Platforms", models: "Models", review: "Review", reviewed: "Reviewed",
     notReviewed: "Not yet reviewed", notStated: "Not stated", noRelease: "No approved release", release: "Release", keyFacts: "Key facts",
   },
   fa: {
-    uses: "استفاده", platforms: "پلتفرم‌ها", models: "مدل‌ها", review: "بررسی", reviewed: "ایمنی بررسی‌شده",
+    uses: "استفاده", platforms: "پلتفرم‌ها", models: "مدل‌ها", review: "بررسی", reviewed: "بررسی‌شده",
     notReviewed: "هنوز بررسی نشده", notStated: "ذکر نشده", noRelease: "نسخهٔ تأییدشده‌ای نیست", release: "نسخه", keyFacts: "اطلاعات کلیدی",
   },
 };
@@ -33,7 +33,7 @@ export function ProductHeader({ product, typeLabel, locale }: { product: Product
       <p className="ts-bidi mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{product.outcome}</p>
       <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm tabular-nums text-muted-foreground">
         <span>{typeLabel}</span>
-        <CreatorIdentity creator={product.creator} href={localePath(`/creators/${product.creator.handle}`, locale)} />
+        <CreatorIdentity creator={product.creator} href={localePath(`/creators/${product.creator.handle}`, locale)} verifiedLabel={copy[locale].productCard.verifiedCreator} />
         <Rating rating={product.rating} count={product.reviewCount} />
         <span>{formatNumber(product.usageCount, locale)} {t.uses}</span>
       </div>

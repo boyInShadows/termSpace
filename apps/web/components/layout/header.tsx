@@ -51,7 +51,7 @@ export function Header() {
   const NAV = [
     { href: "/explore", label: t.explore },
     { href: "/dashboard/studio", label: t.shareWork },
-    ...(canModerate ? [{ href: "/moderation", label: t.moderationNav }] : []),
+    ...(canModerate ? [{ href: "/dashboard/moderation", label: t.moderationNav }] : []),
   ];
   const [isCondensed, setIsCondensed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -138,6 +138,7 @@ export function Header() {
       {/* --- announcement strip, retracts on scroll, dismissible ---------- */}
       {isAnnouncementVisible && (
         <div
+          data-announcement
           className={cn(
             "overflow-hidden border-b border-border bg-background transition-[height,opacity] duration-200",
             isCondensed ? "h-0 opacity-0" : "h-9 opacity-100",

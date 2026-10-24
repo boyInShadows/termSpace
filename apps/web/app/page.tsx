@@ -139,7 +139,7 @@ export default async function Home() {
               {t.featuredTitle}
             </h2>
 
-            <div className="mt-4">
+            <div className="mt-4 fit:mt-[clamp(0.5rem,6svh_-_1.75rem,1.75rem)]">
               <Suspense
                 fallback={
                   <ProductGridSkeleton label={t.homePage.loadingFeatured} compact />
@@ -176,7 +176,7 @@ export default async function Home() {
                   {sections.trustQuote}
                   <footer className="mt-4 font-sans text-sm not-italic text-muted-foreground">
                     <Link
-                      href={localePath("/design-system", locale)}
+                      href={localePath("/content-policy", locale)}
                       className="-my-1.5 inline-block py-1.5 transition-colors hover:text-primary"
                     >
                       {sections.trustQuoteLink}

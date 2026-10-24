@@ -72,19 +72,19 @@ const publicRevalidate = (filters: ProductFilters) => (filters.q?.trim() ? undef
 export async function getMarketplaceHome() { return (await request<{ data: MarketplaceHome }>("/api/marketplace/home", { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
 export async function getMarketplaceItemTypes() { return (await request<{ data: MarketplaceItemType[] }>("/api/marketplace/item-types", { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
 export async function getMarketplaceCommunities() { return (await request<{ data: MarketplaceCommunity[] }>("/api/marketplace/communities", { revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
-export async function getMarketplaceCommunity(slug: string, filters: ProductFilters = {}) {
+export async function getMarketplaceCommunity(slug: string, filters: ProductFilters = {}, forward?: Record<string, string>) {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => { if (key !== "community" && value !== undefined && value !== "" && value !== "All" && value !== false) params.set(key, String(value)); });
-  return request<MarketplaceCommunityPageResult>(`/api/marketplace/communities/${encodeURIComponent(slug)}?${params}`, { revalidate: publicRevalidate(filters) });
+  return request<MarketplaceCommunityPageResult>(`/api/marketplace/communities/${encodeURIComponent(slug)}?${params}`, { headers: forward, revalidate: publicRevalidate(filters) });
 }
 export async function getMarketplaceCreator(handle: string, page = 1) {
   const params = new URLSearchParams({ page: String(page), limit: "12" });
   return request<MarketplaceCreatorPageResult>(`/api/marketplace/creators/${encodeURIComponent(handle)}?${params}`, { revalidate: PUBLIC_REVALIDATE_SECONDS });
 }
-export async function getProducts(filters: ProductFilters = {}, signal?: AbortSignal) {
+export async function getProducts(filters: ProductFilters = {}, signal?: AbortSignal, forward?: Record<string, string>) {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== "" && value !== "All" && value !== false) params.set(key, String(value)); });
-  return request<ProductPageResult>(`/api/marketplace/products?${params}`, { signal, revalidate: publicRevalidate(filters) });
+  return request<ProductPageResult>(`/api/marketplace/products?${params}`, { signal, headers: forward, revalidate: publicRevalidate(filters) });
 }
 export async function getProduct(slug: string, signal?: AbortSignal) { return (await request<{ data: ProductDetail }>(`/api/marketplace/products/${encodeURIComponent(slug)}`, { signal, revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
 export async function getProductRelease(slug: string, version: string, signal?: AbortSignal) { return (await request<{ data: ProductRelease }>(`/api/marketplace/products/${encodeURIComponent(slug)}/releases/${encodeURIComponent(version)}`, { signal })).data; }
@@ -93,7 +93,7 @@ export type ReaderSession = { authenticated: true; user: { id: string; email: st
 export async function getSession(init?: RequestInit) { return request<{ data: ReaderSession }>("/api/readers/session", init); }
 export async function login(email: string, password: string) { return request("/api/readers/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function loginWithGoogle(credential: string) { return request("/api/readers/google", { method: "POST", body: JSON.stringify({ credential }) }); }
-export async function register(email: string, password: string) { return request<{ data: { user: { emailVerified: boolean } } }>("/api/readers/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
+export async function register(email: string, password: string) { return request<{ data: { accepted: true } }>("/api/readers/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function requestPasswordReset(email: string) { return request<{ data: { accepted: true } }>("/api/readers/password-reset/request", { method: "POST", body: JSON.stringify({ email }) }); }
 export async function confirmPasswordReset(email: string, code: string, newPassword: string) { return request<{ data: { reset: true } }>("/api/readers/password-reset/confirm", { method: "POST", body: JSON.stringify({ email, code, newPassword }) }); }
 export async function logout() { return request("/api/readers/logout", { method: "POST" }); }

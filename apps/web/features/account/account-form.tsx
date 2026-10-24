@@ -59,18 +59,19 @@ export function AccountForm() {
         setError(t.passwordMismatch);
         return;
       }
-      let verificationRequired = false;
       if (mode === "register") {
-        const result = await register(email, password);
-        verificationRequired = !result.data.user.emailVerified;
-      } else {
-        await login(email, password);
+        // The API answers the same whether or not the email was already registered, and
+        // starts no session, so the form cannot reveal who has an account.
+        await register(email, password);
+        setMode("login");
+        setStatus(t.registerAccepted);
+        return;
       }
-      await finishSignIn(verificationRequired);
+      await login(email, password);
+      await finishSignIn();
     } catch (cause) {
       if (!(cause instanceof ApiError)) setError(t.serviceError);
       else if (cause.code === "INVALID_CREDENTIALS") setError(t.invalidCredentials);
-      else if (cause.code === "EMAIL_ALREADY_REGISTERED") setError(t.emailAlreadyRegistered);
       else if (cause.code === "INVALID_OR_EXPIRED_OTP") setError(t.resetCodeInvalid);
       else if (cause.code === "PASSWORD_UNCHANGED") setError(t.passwordUnchanged);
       else setError(cause.message);
@@ -80,7 +81,7 @@ export function AccountForm() {
   return <div className="mx-auto max-w-md rounded-xl border bg-surface p-7">
     <h1 className="editorial text-4xl">{mode === "login" ? t.signIn : mode === "register" ? t.createAccount : mode === "forgot" ? t.forgotPassword : t.enterResetCode}</h1>
     <p className="mt-2 text-sm text-muted-foreground">{mode === "forgot" ? t.forgotPasswordIntro : mode === "reset" ? t.resetCodeIntro : t.accountIntro}</p>
-    {(mode === "login" || mode === "register") && <GoogleSignIn locale={locale} disabled={submitting} onCredential={signInWithGoogle} onUnavailable={() => setError(t.serviceError)} />}
+    {(mode === "login" || mode === "register") && <GoogleSignIn key={mode} text={mode === "register" ? "signup_with" : "signin_with"} locale={locale} disabled={submitting} onCredential={signInWithGoogle} onUnavailable={() => setError(t.serviceError)} />}
     <form className="mt-7 space-y-4" onSubmit={submit}>
       <label className="block text-sm font-medium">{t.email}<Input name="email" type="email" required autoComplete="email" defaultValue={mode === "reset" ? resetEmail : ""} className="mt-2" /></label>
       {mode === "reset" && <label className="block text-sm font-medium">{t.resetCode}<Input name="code" type="text" inputMode="numeric" pattern="[0-9]{6}" minLength={6} maxLength={6} required autoComplete="one-time-code" className="mt-2" /></label>}

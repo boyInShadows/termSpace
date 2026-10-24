@@ -108,7 +108,7 @@ describe("DiscoveryExperience states", () => {
       <DiscoveryExperience initial={emptyResult} categories={[]} platforms={[]} communities={[]} itemTypes={[{ key: "skill", en: "Skills", fa: "مهارت‌ها", definition: "" }]} initialFilters={{ type: "skill", verified: true, minRating: 4.5 }} />,
     );
 
-    const chips = screen.getAllByRole("button", { name: "Remove filter: Safety reviewed only" });
+    const chips = screen.getAllByRole("button", { name: "Remove filter: Reviewed only" });
     expect(chips.length).toBeGreaterThan(0);
     fireEvent.click(chips[0]);
     expect(replace).toHaveBeenCalledWith("/explore", { scroll: false });

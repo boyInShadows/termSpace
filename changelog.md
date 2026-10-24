@@ -4,6 +4,58 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-24
 
+- **Merge `redesign` into `ramtin` at the owner's request.** Integrates
+  `fc766ea` with `703f831`, retaining both histories and the seventeen later
+  Ramtin commits alongside eight incoming redesign commits. The merged result
+  includes the shared Redis rate-limit support, auth/search/startup hardening,
+  legal pages/security headers, dashboard moderation and revised trust rows.
+  Creator profiles, reporting API/cases, contextual help and request-scoped
+  dashboard behavior remain available.
+  - Six text conflicts resolved: reporting gets its own `report-write` Redis
+    namespace alongside review limits; routes keep creator discovery and search
+    protection; creator identities retain their public links and localized badge
+    names; the API keeps creator reads and forwarded search headers; both dated
+    changelog histories are preserved. Detail-header/sidebar badges use the same
+    localized labels. Regression coverage protects report/review budget separation
+    and the Persian creator-link/badge combination. Reconciled `pending.md` and
+    the ignored local snapshot with the delivered policy pages, retaining owner
+    approval and unresolved footer destinations.
+  - Owner-authorized cross-app integration includes the API controllers, routes,
+    security, validation, startup helpers and seed changes, blog proxy/footer/
+    configuration, dependency lock and deployment definitions from redesign.
+    Shared surfaces were named in the merge-message draft before editing:
+    `apps/web/lib/api.ts`, `apps/web/lib/types.ts`, affected `lib/i18n/` files,
+    `changelog.md`, then `pending.md` before its handoff correction. No database
+    migration, seed, deployment, credential or live-provider operation was run.
+  - Verification: root typecheck, 646 runnable unit tests (12 database/Redis
+    skips), web lint and normal root production build pass. Unit tests use
+    `NODE_OPTIONS=--no-experimental-webstorage` on local Node 24.11. The full web
+    browser suite passes 408 scenarios with 46 intentional skips and no retries.
+    All six JavaScript budgets and nine Lighthouse reports pass unchanged gates;
+    representative LCP/performance/FID is home 2785 ms/96/78 ms, dashboard
+    2946 ms/95/83 ms and detail 2791 ms/96/86 ms; accessibility is 100. Strict
+    LCP/hosted timing targets and physical-device/native-wording acceptance stay
+    open. Eighty-four final render captures plus twelve staff-ready checks cover
+    both themes/locales and 320/768/1280 widths, with no horizontal overflow,
+    duplicate main or page error. Impeccable detection has no findings.
+  - Manual second-pass review covered conflict semantics, authorization boundaries,
+    route compatibility and Datasheet consistency; no harness review command or
+    usage meter is available. Stale generated Next route types were backed up and
+    regenerated. Required dependencies were installed without lifecycle scripts;
+    npm's unrelated lock metadata rewrites were discarded, retaining the incoming
+    lockfile and versions. Manual API integration edits in
+    `apps/api/src/middleware/security.ts`, its test and
+    `apps/api/src/routes/marketplaceRoutes.ts` retain the reporting and incoming
+    shared-limit/search contracts. Pre-existing reporting UI work was protected
+    in a separate 17-file backup and named stash, then restored without including
+    it in this merge commit. Its replay conflict keeps the legacy moderation
+    redirect and places its report-case navigation in the dashboard moderation
+    page as an uncommitted edit. All ten originally untracked files match the
+    backup apart from line endings; the combined working tree passes typecheck,
+    the reporting module's 16 unit tests and all 28 focused browser scenarios.
+    The backup and stash are retained. Evidence: ignored
+    `maintenance/merge-redesign-20261024/`.
+
 - **Measure and reject CSS inlining for the remaining mobile LCP work (local
   queue).** A clean `e2cefde` checkout and an isolated Next `inlineCss` trial
   each received three samples on home, dashboard and product detail, using fresh
@@ -502,6 +554,31 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-20
 
+- **Merge `ramtin` into `redesign`.** Combines `ea26053` and `9326134` with
+  both histories retained. Resolutions preserve the risk-first moderation flow,
+  legacy redirects, trust rows, legal footer links and production showroom
+  restriction alongside the shared root navigation, server-rendered footer,
+  Profile/Saved dashboard and performance improvements. The obsolete dashboard
+  topbar stays removed; role-aware moderation remains in dashboard navigation.
+  Shared surfaces merged: `AGENTS.md`, `pending.md`, `changelog.md` and
+  `apps/web/lib/api.ts`. No pending queue item was implemented in this phase.
+  Integration fixes also adapt the two moderation test providers to explicit
+  messages, remove the legal pages' duplicate header and make their skip target
+  focusable. Footer tests retain legal destinations in both languages; shared
+  navigation browser checks cover legal skip targets and the moderation route.
+  - Verified: root typecheck; root unit suite (571 passed, 6 database/Redis
+    dependent skips, with `NODE_OPTIONS=--no-experimental-webstorage`); web lint;
+    root production build (all three apps); full web e2e with local Chrome
+    (324 passed, 44 intentional skips, no retries); Lighthouse (all budgets
+    across 9 runs at the unchanged local settings); design detector (no findings).
+    Twelve desktop/mobile captures cover English/Persian and both themes;
+    visual review, geometry, single-header/main and page-error checks pass.
+    Logs and captures are under `/tmp/termspace-merge-*`; generated reports
+    remain ignored. Manual integration diff/security review found no remaining
+    issue. Graph metadata was stale, so relevant source was inspected directly.
+    Impeccable's existing stale design sidecar remains unchanged; `DESIGN.md`
+    remains authoritative. Usage/cost meter unavailable in this harness.
+
 - **README refresh (owner-requested).** Updated the shipped feature summary for
   community browsing, dashboard/Saved/library/Studio and acquisition-backed
   reviews. Documented root/app environment setup, mismatched example database
@@ -833,6 +910,232 @@ Project changes completed from `pending.md` should be recorded here with the dat
     DC05–DC07 and the remaining backlog are still open under the one-phase
     rule. Physical devices, actual 200% browser zoom, native Persian wording,
     live providers and CI acceptance were not performed.
+
+- **Shared rate-limit store, non-revealing signup, Google wording (phase 4;
+  `readiness.md` S2 and S10).** Shared surfaces and outside the web lane:
+  `docker-compose.yml`, `apps/web/lib/api.ts`, `apps/web/lib/i18n/common.ts`,
+  `apps/api` and its dependencies.
+  - Redis: new `redis` compose service (no persistence, 64 MB, internal only);
+    every API limiter counts there through `limiter()` in
+    `middleware/security.ts`, so limits hold across replicas and restarts. New
+    dependencies `rate-limit-redis` (the store express-rate-limit documents for
+    Redis) and `ioredis` (its client). The API refuses to start in production
+    without `REDIS_URL`; if Redis goes down requests pass uncounted. Unset
+    `REDIS_URL` keeps in-memory counters for local work and tests.
+  - Signup: `POST /api/readers/register` returns `202 {accepted:true}` for a new
+    and a taken email and sets no cookie; the web form then shows "check your
+    inbox" and switches to sign-in. The `EMAIL_ALREADY_REGISTERED` string and
+    branch are gone. A taken email gets no email.
+  - Google: sign-up already worked on both apps (an unknown verified Google
+    email creates the account). The register tab's button now says "Sign up with
+    Google" (`text` prop, remounted per tab).
+  - Verified: typecheck, `npm test` (web with
+    `NODE_OPTIONS=--no-experimental-webstorage`), web lint, build, e2e (237
+    passed; the two signup specs were rewritten for the new flow), compose
+    config; the Redis store against a live `redis-server` and with Redis
+    unreachable. Not run: the two API integration test files (no database
+    here); their register helpers were updated and CI runs them. Run
+    `TEST_REDIS_URL=redis://127.0.0.1:6379 npx vitest run security.redis` in
+    `apps/api` for the shared-store test.
+
+- **Security hardening, phase 3: `readiness.md` S1-S12.** Outside the web lane:
+  `apps/api`, `docker-compose.yml`, the `/backend` handlers, and the explore and
+  community pages' search calls (`lib/api.ts` is a shared surface).
+  - Rate limits: separate per-IP limiters for reader login, admin login,
+    register, Google sign-in and password change; a 30/min search limiter on
+    products, community pages and articles; the web search pages forward the
+    visitor's `X-Forwarded-For` (searches only, so the 30 s catalogue cache is
+    untouched) via `lib/clientIp.ts`.
+  - Login timing: a real bcrypt compare runs for unknown users (`lib/passwordCompare.ts`).
+  - Boot: `assertProductionConfig()` (database placeholder, `CORS_ORIGINS`, email
+    secret, provider token key, no `LOCAL_AUTO_VERIFY_EMAIL`); the bypass is also
+    off in production in code; crash handlers for unhandled rejections;
+    compose requires `MARKETPLACE_PROVIDER_TOKEN_KEY` for the API.
+  - Load: relevance ranking capped at 2000 matches; article page size max 50
+    (the blog pages by 50); Prisma `connection_limit` per compose service.
+  - Proxy: `/backend` strips stale encoding headers and rejects bodies over
+    12 MB with a 413.
+  - Not changed, with reasons in `readiness.md`: S2 (no shared store yet), S6
+    (those lists are admin-curated or per-user), S10 enumeration on register
+    (product decision), S11 and S12 (not exploitable in the current builds).
+  - Verified: typecheck, `npm test` (web with
+    `NODE_OPTIONS=--no-experimental-webstorage`), web lint, build, e2e (237
+    passed), `docker compose config`. Not run: the two API integration test files
+    (need a database), lhci (no page changed visually). New tests:
+    `passwordCompare`, `productionConfig`, extended `security` and
+    `emailVerification`.
+
+- **Pre-deploy blockers, phase 2 of 2: policies, headers, footer (B4, B5, B8 in
+  `readiness.md`).** Touches `apps/web` and `apps/blog` presentation plus a shared
+  surface: `apps/web/lib/i18n/common.ts` (footer labels).
+  - Pages: `/privacy`, `/terms`, `/content-policy` in English and Persian, from
+    `lib/legal.ts` through `components/legal/legal-page.tsx`; in the sitemap; the
+    web footer has a Legal column; the blog footer links to them on the main
+    site (`NEXT_PUBLIC_WEB_URL`, build arg in `Dockerfile.blog`). The text is a
+    draft written from what the code does and has had no legal review. Contact
+    and entity come from runtime `LEGAL_CONTACT_EMAIL` (required by compose)
+    and `LEGAL_ENTITY_NAME`.
+  - Headers (web and blog `next.config`): HSTS, nosniff, Referrer-Policy,
+    Permissions-Policy, X-Frame-Options and an enforced CSP of frame-ancestors,
+    base-uri, object-src and form-action. `script-src` is report-only until
+    nonces are in place. `poweredByHeader` is off.
+  - Footer: the Creator guide, Quality standards and About links (all pointing
+    at `/design-system`) and their "Create" column are removed; the home page's
+    quality-standard link goes to `/content-policy`; `/design-system` is a 404
+    in production and `noindex`.
+  - Verified: typecheck, `npm test` (web with
+    `NODE_OPTIONS=--no-experimental-webstorage`), web lint, build,
+    `npm run e2e -w apps/web` (237 passed, 29 skipped; run with `WEB_PORT=3110
+    MOCK_API_PORT=4110` because something else holds 3100), `npm run lhci -w
+    apps/web` (assertions pass), `docker compose config`. New test:
+    `lib/legal.test.ts`.
+  - Follow-ups: legal review of the text; a consent line on sign-up; enforce
+    `script-src`; "Support" in the web footer still links to `/account`.
+
+- **Pre-deploy blockers, phase 1 of 2: API and compose (B1, B2, B3, B6, B7 in
+  `readiness.md`).** Work outside the web-presentation lane: `apps/api`,
+  `docker/`, `docker-compose.yml` and the `/backend` handlers in `apps/web` and
+  `apps/blog`.
+  - Rate limit: server-rendered API calls (no `X-Forwarded-For`) no longer count
+    against the shared global bucket when `TRUST_PROXY` is on; both `/backend`
+    handlers always send the header so browser traffic stays counted.
+  - Shutdown and migrations: new one-shot `migrate` compose service; `api` runs
+    `node dist/index.js` as PID 1 and waits for it; the three worker loops use
+    `init: true`.
+  - 500 responses show `err.message` only when `NODE_ENV=development`.
+  - `Dockerfile.blog` takes `NEXT_PUBLIC_SITE_URL`; compose requires
+    `WEB_PUBLIC_URL`, `BLOG_SITE_URL` and `MEDIA_PUBLIC_URL` instead of
+    defaulting them to localhost.
+  - Seed rejects `change-this*` admin passwords; the API refuses to start in
+    production with a placeholder in `DATABASE_URL`.
+  - Verified: `npm run typecheck`, `npm test` (web run with
+    `NODE_OPTIONS=--no-experimental-webstorage`: Node 26 breaks jsdom's
+    `localStorage`, 19 web tests fail without it, unrelated to this change),
+    `npm run lint -w apps/web`, `npm run build`, `docker compose config`. New
+    tests: `errorHandler.test.ts`, `security.test.ts`. Not run: e2e, lhci (no UI
+    change).
+  - Follow-up for the edge proxy (not code): set or append `X-Forwarded-For`
+    with the real client address. Phase 2 (B4, B5, B8) is separate.
+
+- **Moderation moves into the dashboard and leads with risk (owner-requested,
+  `/impeccable critique` of the moderator page, 16/40).**
+  - Routes: `/dashboard/moderation` and `/dashboard/moderation/listings/[id]`
+    inside the dashboard shell (sidebar and tab bar entry for moderators, the
+    top bar names it, titles per page). `/moderation` and
+    `/moderation/listings/[id]` now `permanentRedirect` to them, keeping `/fa`.
+    The site header link points at the new route. The marketing banner and
+    footer no longer wrap a staff tool.
+  - Queue: ruled dashboard rows, one link per listing (its name), filters, search
+    and page in the URL (reload, back and shared links keep them; the preview's
+    Back returns to them through a whitelisted `from` parameter). Each row shows
+    the declared capabilities with a "Needs a closer look" marker for secret
+    access, process execution, file writes and network access. That list is a
+    heuristic that steers attention and blocks nothing (`capabilities.ts`). The
+    green "Passed / Passed" is replaced by plain Source and Ownership facts;
+    pending ones are marked. The three summary tiles are a compact strip on
+    phones.
+  - Preview: opens with "What it touches" (each capability with scope, purpose,
+    destinations, required or optional, flagged, and marked New or Changed
+    against the approved version), then source and checks (source and
+    ownership are now separate results, plus integrity and snapshot digests),
+    install steps and requirements as readable text, screenshots as text (never
+    links), communities, and the raw JSON folded away. A listing with nothing
+    pending shows its live approved version instead of empty fields. The
+    Quiet-Notes-style overflow at 390px is gone.
+  - Decision: no preselected action; radio choices each state their effect; the
+    button names the action and is red for reject, suspend and archive; a
+    confirm step restates the listing, release and (for approve and publish)
+    the declared access before anything is recorded; Enter in a field can no
+    longer commit; the result appears inside the decision panel and names what
+    was recorded; the public reason enforces the server's 10-character minimum
+    in the browser; the review Hide minimum is stated. The audit trail uses
+    plain action, actor and state words.
+  - Persian: state, audit, placement, source and install labels, digits and
+    dates, left-to-right handles and the install steps' direction.
+  - **Site-wide, announced:** `globals.css` now defines `@custom-variant dark`
+    so `dark:` follows the theme switch, not the OS. It had followed
+    `prefers-color-scheme`, which put dark colours on the wrong ground whenever
+    the two disagreed (measured 2.46:1 and 3.48:1 on the moderation status
+    colours; 1.5:1 the other way). Seven files use `dark:`.
+  - **Cross-lane, announced:** the API's moderation queue now returns each
+    listing's declared `capabilities` (read from the stored manifest, malformed
+    entries skipped), with a test. Read-only; no schema or migration change.
+    Shared surfaces touched: `lib/types.ts`, `lib/i18n/` (moderation) and
+    `changelog.md`.
+  - Code review before push (`/code-review high`, 10 findings), all handled:
+    fixed — the queue showed "Declares no permissions" for published and
+    suspended listings because only the pending revision was read (it now
+    falls back to the approved version, fetched only for rows without a
+    pending one); a failed refresh after saving left a stale decision form
+    beside "Recorded" (decisions are disabled with a retry until it
+    refreshes); the reason code was rewritten on commit but not shown in the
+    confirmation (normalised up front and shown); an unknown `?state=` got a
+    retry that could never work and the real error was hidden (whitelisted,
+    API message shown); a failed review hide said the list could not load;
+    the legacy redirects dropped the query string; destinations order no
+    longer reads as a change; one shared `isRecord`; the Publish slot of the
+    phone tab bar is a fixed 52px so "Moderation" no longer spills into its
+    neighbours. Dismissed — the queue reads each row's manifest JSON for its
+    permissions (bounded by the manifest limits, 24 rows a page, and the
+    approved manifest is fetched only when nothing is pending; a stored
+    column is the upgrade if manifests grow); the capability parsing exists
+    once in the API and once in the web app (the apps share no code today;
+    each side has a test); key order in section diffs (JSONB stores a
+    canonical key order for both snapshots).
+  - Not done: reason codes stay free text. There is no policy list in the repo
+    and inventing one is the maintainers' call. No moderation e2e exists (the
+    mock API has no moderator persona); coverage is unit tests plus a browser
+    pass against local data. A second-moderator or attestation rule for
+    high-risk capabilities is a product decision, left open.
+  - Verification: root typecheck, web lint, 287 web tests (new
+    `moderation-preview.test.tsx`, rewritten queue test), 213 API tests (5
+    database-dependent skips), web build, 237 browser tests (29 conditional
+    skips) and all nine Lighthouse runs pass. Browser checks on local fixtures
+    at 1440 and 390 in English and `/fa`, dark and light, with the
+    confirmation step opened and cancelled (no decision recorded). Local
+    fixtures remain in the dev database: four `critique-*-c1226@example.com`
+    accounts, two submitted listings and one published listing with a review.
+- **Landing hero fits the first screen (owner-requested).** From tablet width
+  (`md`) and 600px viewport height up, the hero is at least
+  `100svh` minus the header (`--header-chrome`, which tracks the dismissible
+  announcement strip through `:has([data-announcement])`). Free height is
+  shared by flex spacers: gaps grow to 48px / 80px caps, the rest centres the
+  block. Under 720px of height the headline, card padding and card copy
+  tighten (`fit` / `fit-short` custom variants in `globals.css`). Phones keep
+  natural flow. A min-height, so content that still cannot fit (Persian at
+  800×600) moves the fold instead of overlapping.
+- **Product card critique fixes (owner-requested, `/impeccable critique`, 20/36).**
+  - The trust strip on `ProductCard` is now a labelled `dl`: Review,
+    Permissions, Licence at full weight; values wrap instead of truncating;
+    undeclared permissions are a red bordered "Not declared" mark. The
+    landing's `CompactProductCard` keeps its one-line compact strip.
+  - One link per card: the title is stretched over the card and "View details"
+    is gone (3 tab stops to 2). The article is named by its title; no lift or
+    shadow on hover; "Trending" is neutral so amber only means "not reviewed".
+  - RTL: the date is no longer forced `dir="ltr"` (it rendered reversed),
+    rating and review count follow the locale's digits, "+N" keeps its plus in
+    front, the creator badge label is localized and has `role="img"`.
+  - **Copy, owner decision:** "Safety reviewed" is now "Reviewed" site-wide
+    (EN and FA, filter chip, title block, OG image, landing copy). "Verified"
+    stays reserved for creator identity.
+  - Not done: the card stays in the live serif/rounded look (owner decision;
+    `DESIGN.md` still describes the removed datasheet hero and is stale).
+- **Follow-ups (not fixed here):** the seed's `license: "1 user · commercial
+  use"` and `refundPolicy` (`apps/api/prisma/seed.ts:660`) break the
+  free-only rule. API lane. `DESIGN.md` needs re-documenting for the current
+  hero.
+  - Shared surfaces: `apps/web/lib/i18n/` (catalog, home-sections,
+    product-page) and `changelog.md`.
+  - Verification: root typecheck, web lint, web build, 270 web unit tests,
+    237 browser tests (29 conditional skips) and all nine Lighthouse runs pass.
+    Browser checks at 1280×600 to 2560×1300, 390×844 and `/fa`. Environment
+    notes: on Node 26 the unit tests need
+    `NODE_OPTIONS=--no-experimental-webstorage` (Node's built-in
+    `localStorage` shadows jsdom's; 19 failures otherwise). E2E needed
+    `WEB_PORT=3200` (the Docker web container holds 3100) and
+    `PW_CHANNEL=chrome` (the bumped Playwright's browser is not downloaded).
+    The Persian `account-security` tab-bar test failed once and passed on
+    rerun.
 
 ## 2026-10-18
 

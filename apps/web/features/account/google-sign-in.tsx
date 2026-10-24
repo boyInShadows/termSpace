@@ -11,8 +11,10 @@ declare global {
   }
 }
 
-export function GoogleSignIn({ locale, disabled, onCredential, onUnavailable }: {
+export function GoogleSignIn({ locale, text = "signin_with", disabled, onCredential, onUnavailable }: {
   locale: string;
+  /** Google's own wording for the button: "Sign in with Google" or "Sign up with Google". */
+  text?: "signin_with" | "signup_with";
   disabled: boolean;
   onCredential: (credential: string) => Promise<void>;
   onUnavailable: () => void;
@@ -25,7 +27,7 @@ export function GoogleSignIn({ locale, disabled, onCredential, onUnavailable }: 
     if (!window.google || !button.current) { onUnavailable(); return; }
     button.current.replaceChildren();
     window.google.accounts.id.initialize({ client_id: clientId!, callback: ({ credential }) => { void onCredential(credential); } });
-    window.google.accounts.id.renderButton(button.current, { theme: "outline", size: "large", locale, width: Math.min(320, button.current.clientWidth || 320) });
+    window.google.accounts.id.renderButton(button.current, { theme: "outline", size: "large", text, locale, width: Math.min(320, button.current.clientWidth || 320) });
   }
 
   return <>

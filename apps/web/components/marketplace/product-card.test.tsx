@@ -21,12 +21,12 @@ describe("ProductCard", () => {
     ).toBeInTheDocument();
   });
 
-  it("links to the product detail page from a labelled call to action", () => {
+  it("links to the listing once, from its title, and names the card after it", () => {
     render(<ProductCard product={products[0]} />);
-    const cta = screen.getByRole("link", {
-      name: /view details: conversion copywriter/i,
-    });
-    expect(cta).toHaveAttribute("href", "/products/conversion-copywriter");
+    const links = screen.getAllByRole("link", { name: /conversion copywriter/i });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", "/products/conversion-copywriter");
+    expect(screen.getByRole("article", { name: "Conversion Copywriter" })).toBeInTheDocument();
   });
 
   it("shows the outcome as the only body copy, never the long description", () => {
@@ -43,7 +43,7 @@ describe("ProductCard", () => {
   it("links approved community context without changing the canonical listing link", () => {
     render(<ProductCard product={{ ...products[0], communities: [{ slug: "codex", nameEn: "Codex", nameFa: "کودکس", primaryPlatform: "codex" }] }} />);
     expect(screen.getByRole("link", { name: "Codex" })).toHaveAttribute("href", "/communities/codex");
-    // The title and the "View details" button both link to the listing; neither may pick up community context.
+    // The title is the listing link; it must not pick up community context.
     for (const link of screen.getAllByRole("link", { name: /Conversion Copywriter/ })) {
       expect(link).toHaveAttribute("href", "/products/conversion-copywriter");
     }
@@ -67,19 +67,21 @@ describe("ProductCard", () => {
     expect(screen.getByRole("link", { name: "Codex" })).toBeInTheDocument();
   });
 
-  it("states what the listing declares: review state, licence and permissions", () => {
+  it("states what the listing declares as labelled rows: review state, permissions and licence", () => {
     render(<ProductCard product={{ ...products[0], verified: true, license: "MIT", permissions: "Reads the current selection · no network access" }} />);
-    expect(screen.getByText("Safety reviewed")).toBeInTheDocument();
+    const terms = screen.getAllByRole("term").map((term) => term.textContent);
+    expect(terms).toEqual(["Review", "Permissions", "Licence"]);
+    expect(screen.getByText("Reviewed")).toBeInTheDocument();
     expect(screen.getByText("MIT")).toHaveAttribute("dir", "ltr");
     expect(screen.getByText("Reads the current selection · no network access")).toBeInTheDocument();
   });
 
-  it("says so when a listing is unreviewed or declares nothing, instead of leaving a gap", () => {
+  it("says so when a listing is unreviewed or declares nothing, and marks undeclared access in red", () => {
     render(<ProductCard product={{ ...products[0], verified: false, license: null, permissions: null }} />);
     expect(screen.getByText("Not yet reviewed")).toBeInTheDocument();
-    expect(screen.getByText("Licence not stated")).toBeInTheDocument();
-    expect(screen.getByText("Permissions not declared")).toBeInTheDocument();
-    expect(screen.queryByText("Safety reviewed")).not.toBeInTheDocument();
+    expect(screen.getByText("Not stated")).toBeInTheDocument();
+    expect(screen.getByText("Not declared")).toHaveClass("text-destructive");
+    expect(screen.queryByText("Reviewed")).not.toBeInTheDocument();
   });
 
   it("marks creator identity differently from safety review", () => {
@@ -90,9 +92,11 @@ describe("ProductCard", () => {
     expect(identity).not.toHaveClass("text-verified");
   });
 
-  it("labels the strip in Persian", () => {
-    render(<LocaleProvider locale="fa" messages={copy.fa}><ProductCard product={{ ...products[0], verified: true }} /></LocaleProvider>);
-    expect(screen.getByText("ایمنی بررسی شده")).toBeInTheDocument();
-    expect(screen.getByText("مجوزها اعلام نشده")).toBeInTheDocument();
+  it("labels the strip and the creator badge in Persian", () => {
+    render(<LocaleProvider locale="fa" messages={copy.fa}><ProductCard product={{ ...products[0], verified: true, permissions: null, creator: { ...products[0].creator, verified: true } }} /></LocaleProvider>);
+    expect(screen.getByText("بررسی‌شده")).toBeInTheDocument();
+    expect(screen.getByText("اعلام نشده")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "سازندهٔ تأییدشده" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: products[0].creator.name })).toHaveAttribute("href", `/fa/creators/${products[0].creator.handle}`);
   });
 });

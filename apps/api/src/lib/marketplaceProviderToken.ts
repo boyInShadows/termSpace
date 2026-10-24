@@ -6,7 +6,7 @@ type EncryptedProviderToken = {
   tokenTag: string;
 };
 
-function providerTokenKey(): Buffer {
+export function providerTokenKey(): Buffer {
   const encoded = process.env.MARKETPLACE_PROVIDER_TOKEN_KEY;
   if (!encoded) throw new Error("MARKETPLACE_PROVIDER_TOKEN_KEY is not configured");
   const key = Buffer.from(encoded, "base64");

@@ -1,12 +1,13 @@
 "use client";
+import { useId } from "react";
 import Link from "next/link";
 import { ListingLink } from "@/components/catalog/listing-link";
 import { listingTransitionName } from "@/lib/listing-transition";
-import { ArrowUpRight, Clock3, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { formatNumber, intlLocale } from "@/lib/format";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocale } from "@/lib/locale-context";
 import {
@@ -27,6 +28,10 @@ import { localePath } from "@/lib/i18n";
  * detail page, not here; rendering both made every card carry two competing
  * paragraphs of different lengths, which is what threw the grid out of
  * alignment.
+ *
+ * The title is the card's one link to the listing, stretched over the whole
+ * card, so a keyboard reaches each listing once and the whole card answers a
+ * click. The favourite and community links sit above that layer.
  */
 export function ProductCard({
   product,
@@ -37,6 +42,7 @@ export function ProductCard({
 }) {
   const { t, fa, locale } = useLocale();
   const { isFavorite, toggleFavorite } = useMarketplaceSession();
+  const titleId = useId();
   const saved = isFavorite(product.slug);
   const card = t.productCard;
   const href = localePath(`/products/${product.slug}`, locale);
@@ -44,6 +50,7 @@ export function ProductCard({
 
   return (
     <article
+      aria-labelledby={titleId}
       className={cn(
           "group relative flex h-full min-w-0 flex-col border border-border-strong bg-background p-5 transition-colors duration-200",
           "hover:border-foreground/60 focus-within:border-primary",
@@ -56,12 +63,13 @@ export function ProductCard({
           <div className="flex flex-wrap gap-2">
             <ProductTypeBadge type={product.type} label={card.types[product.type]} />
             {product.featured && <Badge variant="primary">{card.editorsPick}</Badge>}
-            {product.trending && <Badge variant="warning">{card.trending}</Badge>}
+            {/* Neutral, not amber: amber is the "not yet reviewed" caution. */}
+            {product.trending && <Badge>{card.trending}</Badge>}
           </div>
           <Button
             variant="ghost"
             size="icon"
-            className="-me-2 -mt-2 shrink-0"
+            className="relative z-10 -me-2 -mt-2 shrink-0"
             aria-label={`${saved ? card.removeFavorite : card.addFavorite}: ${product.name}`}
             aria-pressed={saved}
             onClick={() => void toggleFavorite(product.slug)}
@@ -78,20 +86,21 @@ export function ProductCard({
         {/* Named like the detail page header: on navigation the title
             travels from here into it (listing-link.tsx, docs/motion.md). */}
         <h3
+          id={titleId}
           className="ts-listing-title ts-bidi editorial mt-4 text-xl font-semibold leading-snug"
           style={{ viewTransitionName: listingTransitionName(product.id) }}
         >
           <ListingLink
             href={href}
             listingId={product.id}
-            className="-my-2 inline-block rounded-sm py-2 group-hover:text-primary focus-visible:outline-none focus-visible:underline sm:-my-1 sm:py-1"
+            className="inline-block rounded-sm transition-colors group-hover:text-primary after:absolute after:inset-0 after:rounded-lg after:content-['']"
           >
             {product.name}
           </ListingLink>
         </h3>
 
         {/* The single description. Clamped and floor-height so that every card
-            in a row reaches its divider at the same y-position. */}
+            in a row reaches its trust block at the same y-position. */}
         <p className="ts-bidi mt-2 line-clamp-2 min-h-12 text-sm leading-6 text-muted-foreground">
           {product.outcome}
         </p>
@@ -104,12 +113,16 @@ export function ProductCard({
         />
 
         <div className="mt-4">
-          <CreatorIdentity creator={product.creator} compact href={localePath(`/creators/${product.creator.handle}`, locale)} />
+          <CreatorIdentity creator={product.creator} compact href={localePath(`/creators/${product.creator.handle}`, locale)} verifiedLabel={card.verifiedCreator} />
         </div>
         {product.communities.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2" aria-label={card.communities}>
             {product.communities.slice(0, 3).map((community) => (
-                <Link key={community.slug} href={localePath(`/communities/${community.slug}`, locale)} className="rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <Link
+                key={community.slug}
+                href={localePath(`/communities/${community.slug}`, locale)}
+                className="relative z-10 inline-flex min-h-6 items-center rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
                 <Badge variant="outline">{fa ? community.nameFa ?? community.nameEn : community.nameEn}</Badge>
               </Link>
             ))}
@@ -127,28 +140,13 @@ export function ProductCard({
       >
         <CompatibilityBadges compatibility={product.compatibility} />
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-          <Rating rating={product.rating} count={product.reviewCount} />
-          <span className="inline-flex items-center gap-1">
-            <Clock3 size={12} />
+          <Rating rating={product.rating} count={product.reviewCount} locale={locale} />
+          <span>
             {formatNumber(product.usageCount, locale, { compact: true })} {card.uses}
           </span>
           <span>
-            {card.updated} <bdi dir="ltr">{new Intl.DateTimeFormat(intlLocale(locale), { month: "short", day: "numeric" }).format(new Date(product.updatedAt))}</bdi>
+            {card.updated} <bdi>{new Intl.DateTimeFormat(intlLocale(locale), { month: "short", day: "numeric" }).format(new Date(product.updatedAt))}</bdi>
           </span>
-        </div>
-
-        <div className="mt-4 flex items-center justify-end">
-          <Link
-            href={href}
-            aria-label={`${t.viewDetails}: ${product.name}`}
-            className={cn(
-              buttonVariants({ variant: "secondary", size: "sm" }),
-              "min-h-11 gap-1.5 group-hover:border-primary group-hover:text-primary sm:min-h-9",
-            )}
-          >
-            {t.viewDetails}
-            <ArrowUpRight size={14} className="rtl:-scale-x-100" />
-          </Link>
         </div>
       </div>
     </article>

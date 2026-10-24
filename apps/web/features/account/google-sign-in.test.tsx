@@ -24,6 +24,12 @@ describe("Google sign-in button", () => {
     expect(onCredential).toHaveBeenCalledWith("signed-google-token");
   });
 
+  it.each([["signup_with", "signup_with"], [undefined, "signin_with"]] as const)("asks Google for the %s wording", (text, expected) => {
+    render(<GoogleSignIn locale="en" text={text} disabled={false} onCredential={vi.fn()} onUnavailable={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "SDK ready" }));
+    expect(renderButton).toHaveBeenCalledWith(expect.any(HTMLElement), expect.objectContaining({ text: expected }));
+  });
+
   it("reports a blocked SDK instead of silently leaving an empty sign-in control", () => {
     const onUnavailable = vi.fn();
     render(<GoogleSignIn locale="en" disabled={false} onCredential={vi.fn()} onUnavailable={onUnavailable} />);

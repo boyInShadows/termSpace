@@ -9,7 +9,7 @@ import { deleteReview, getMyReview, listProductReviewsForModeration, saveReview,
 import { getMarketplaceReportCase, listMarketplaceCaseEvents, listMarketplaceCaseReports, listMarketplaceReportCases, reportMarketplaceListing, triageMarketplaceReportCase } from "../controllers/marketplaceReportController.js";
 import { marketplaceReportSchema, moderationCaseQuerySchema, moderationCaseTriageSchema } from "../validation/schemas.js";
 import { requireMarketplaceRole, requireReader, requireVerifiedReader } from "../middleware/auth.js";
-import { reportWriteRateLimit, reviewWriteRateLimit } from "../middleware/security.js";
+import { reportWriteRateLimit, reviewWriteRateLimit, searchRateLimit } from "../middleware/security.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
 import { marketplaceCreatorQuerySchema, communityPlacementDecisionSchema, marketplaceAcquireSchema, releaseVersionSchema, reviewVisibilitySchema, reviewWriteSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
 
@@ -24,9 +24,9 @@ router.get("/home", getMarketplaceHome);
 router.get("/item-types", listMarketplaceItemTypes);
 router.get("/communities", listMarketplaceCommunities);
 router.get("/creators/:handle", validate(marketplaceCreatorQuerySchema, "query"), getMarketplaceCreator);
-router.get("/communities/:slug", validate(marketplaceProductQuerySchema, "query"), getMarketplaceCommunity);
+router.get("/communities/:slug", searchRateLimit, validate(marketplaceProductQuerySchema, "query"), getMarketplaceCommunity);
 router.get("/draft-options", listMarketplaceDraftOptions);
-router.get("/products", validate(marketplaceProductQuerySchema, "query"), listMarketplaceProducts);
+router.get("/products", searchRateLimit, validate(marketplaceProductQuerySchema, "query"), listMarketplaceProducts);
 router.get("/products/:slug", getMarketplaceProduct);
 router.get("/products/:slug/releases/:version", getMarketplaceRelease);
 router.get("/creator/profile", requireReader, getOwnedCreatorProfile);

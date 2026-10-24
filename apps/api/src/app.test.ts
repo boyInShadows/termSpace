@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { hash } from "bcryptjs";
 import request from "supertest";
 import { ipKeyGenerator } from "express-rate-limit";
@@ -50,7 +51,7 @@ process.env.LOCAL_AUTO_VERIFY_EMAIL = "false";
 process.env.GOOGLE_CLIENT_ID = "test-google-client-id";
 process.env.EMAIL_VERIFICATION_SECRET = "test-secret-that-is-definitely-longer-than-32-bytes";
 const { createApp } = await import("./app.js");
-const { loginRateLimit } = await import("./middleware/security.js");
+const { authRateLimiters } = await import("./middleware/security.js");
 const { createEmailVerificationToken, createPasswordResetCode } = await import("./lib/emailVerification.js");
 
 function marketplaceManifestFixture() {
@@ -84,8 +85,10 @@ function marketplaceManifestFixture() {
 describe("API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    loginRateLimit.resetKey(ipKeyGenerator("::ffff:127.0.0.1"));
-    loginRateLimit.resetKey(ipKeyGenerator("127.0.0.1"));
+    for (const limiter of authRateLimiters) {
+      limiter.resetKey(ipKeyGenerator("::ffff:127.0.0.1"));
+      limiter.resetKey(ipKeyGenerator("127.0.0.1"));
+    }
     prismaMock.$transaction.mockResolvedValue([]);
     prismaMock.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     prismaMock.article.updateMany.mockResolvedValue({ count: 0 });
@@ -533,16 +536,15 @@ describe("API", () => {
   });
 
   it("registers a password account with an atomic verification outbox record", async () => {
-    prismaMock.readerUser.create.mockResolvedValue({
-      id: "reader-1", email: "reader@example.com", emailVerifiedAt: null, marketplaceRoleGrants: [],
-    });
+    prismaMock.readerUser.create.mockResolvedValue({ id: "reader-1" });
 
     const response = await request(createApp())
       .post("/api/readers/register")
       .send({ email: "reader@example.com", password: "correct-password" });
 
-    expect(response.status).toBe(200);
-    expect(response.body.data.user.emailVerified).toBe(false);
+    expect(response.status).toBe(202);
+    expect(response.body).toEqual({ data: { accepted: true } });
+    expect(response.headers["set-cookie"]).toBeUndefined();
     expect(prismaMock.readerUser.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         email: "reader@example.com",
@@ -551,22 +553,40 @@ describe("API", () => {
     }));
   });
 
+  it("answers a taken email exactly like a new one, with no session", async () => {
+    const taken = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", { code: "P2002", clientVersion: "test" });
+    prismaMock.readerUser.create.mockRejectedValue(taken);
+
+    const response = await request(createApp())
+      .post("/api/readers/register")
+      .send({ email: "reader@example.com", password: "correct-password" });
+
+    expect(response.status).toBe(202);
+    expect(response.body).toEqual({ data: { accepted: true } });
+    expect(response.headers["set-cookie"]).toBeUndefined();
+  });
+
+  it("still fails loudly on other database errors during registration", async () => {
+    prismaMock.readerUser.create.mockRejectedValue(new Error("connection lost"));
+    const response = await request(createApp())
+      .post("/api/readers/register")
+      .send({ email: "reader@example.com", password: "correct-password" });
+    expect(response.status).toBe(500);
+  });
+
   it("auto-verifies local registrations without creating an email job when explicitly enabled", async () => {
     const previousBypass = process.env.LOCAL_AUTO_VERIFY_EMAIL;
     const previousUrl = process.env.WEB_PUBLIC_URL;
     process.env.LOCAL_AUTO_VERIFY_EMAIL = "true";
     process.env.WEB_PUBLIC_URL = "http://localhost:3100";
-    prismaMock.readerUser.create.mockResolvedValue({
-      id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [],
-    });
+    prismaMock.readerUser.create.mockResolvedValue({ id: "reader-1" });
 
     try {
       const response = await request(createApp())
         .post("/api/readers/register")
         .send({ email: "reader@example.com", password: "correct-password" });
 
-      expect(response.status).toBe(200);
-      expect(response.body.data.user.emailVerified).toBe(true);
+      expect(response.status).toBe(202);
       const createData = prismaMock.readerUser.create.mock.calls[0][0].data;
       expect(createData.emailVerifiedAt).toBeInstanceOf(Date);
       expect(createData.emailVerifications).toBeUndefined();
@@ -1589,8 +1609,18 @@ describe("API", () => {
       creator: { name: "Creator", handle: "creator", ownerUserId: "reader-1" },
       proposedSnapshot: {
         revision: 2, createdAt: new Date("2026-09-17T07:00:00.000Z"), _count: { communityRequests: 1 },
+        content: { release: { permissions: [
+          { capability: "secret_access", purpose: "Reads API keys" },
+          { capability: "network_access", required: false, purpose: "Calls the provider" },
+          { purpose: "Malformed entry without a capability" },
+        ] } },
         releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: null, productVersion: { version: "1.1.0" } },
       },
+    }, {
+      id: "product-2", slug: "legacy-skill", name: "Legacy Skill", itemType: null, type: "Skill",
+      lifecycleState: "APPROVED", lifecycleVersion: 1, published: false, updatedAt: new Date("2026-09-17T09:00:00.000Z"),
+      creator: { name: "Creator", handle: "creator", ownerUserId: "reader-1" },
+      proposedSnapshot: { revision: 1, createdAt: new Date(), _count: { communityRequests: 0 }, content: { schemaVersion: 0, legacy: true }, releaseManifest: null },
     }]);
     prismaMock.marketplaceProduct.count.mockResolvedValueOnce(1).mockResolvedValueOnce(1).mockResolvedValueOnce(0);
 
@@ -1603,10 +1633,35 @@ describe("API", () => {
     expect(response.body.data.listings[0]).toMatchObject({
       id: "product-1", state: "submitted", selfOwned: false, sourceResolved: true,
       ownershipVerified: false, communityRequestCount: 1, releaseVersion: "1.1.0",
+      capabilities: [{ capability: "secret_access", required: true }, { capability: "network_access", required: false }],
     });
+    expect(response.body.data.listings[1].capabilities).toEqual([]);
     expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { lifecycleState: { in: ["SUBMITTED", "APPROVED"] }, NOT: { creator: { ownerUserId: "moderator-1" } } }, skip: 0, take: 24,
     }));
+  });
+
+  it("shows a listing with nothing pending what its approved version declares, not an empty list", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findMany
+      .mockResolvedValueOnce([{
+        id: "product-3", slug: "live-skill", name: "Live Skill", itemType: "SKILL", type: "Skill",
+        lifecycleState: "PUBLISHED", lifecycleVersion: 5, published: true, updatedAt: new Date("2026-09-17T08:00:00.000Z"),
+        creator: { name: "Creator", handle: "creator", ownerUserId: "reader-1" }, proposedSnapshot: null,
+      }])
+      .mockResolvedValueOnce([{ id: "product-3", approvedSnapshot: { content: { release: { version: "2.0.0", permissions: [{ capability: "secret_access", purpose: "Reads keys" }] } } } }]);
+    prismaMock.marketplaceProduct.count.mockResolvedValueOnce(1).mockResolvedValueOnce(0).mockResolvedValueOnce(0);
+
+    const response = await request(createApp())
+      .get("/api/marketplace/moderation/queue?state=published&page=1&limit=24")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.listings[0]).toMatchObject({ id: "product-3", releaseVersion: "2.0.0", capabilities: [{ capability: "secret_access", required: true }] });
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenLastCalledWith(expect.objectContaining({ where: { id: { in: ["product-3"] } } }));
   });
 
   it("does not expose the moderation queue to creators", async () => {

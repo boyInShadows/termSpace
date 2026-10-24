@@ -21,7 +21,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
     pill: product.type,
     chips: [
       product.verified
-        ? { label: "Verified", sub: "safety reviewed", tone: "verified" }
+        ? { label: "Reviewed", sub: "listing review", tone: "verified" }
         : { label: "Not yet reviewed", sub: "review pending", tone: "muted" },
       { label: clip(product.permissions ?? "Not declared"), sub: "permission scope", tone: "accent" },
       { label: clip(product.license ?? "Not stated"), sub: "licence", tone: "primary" },

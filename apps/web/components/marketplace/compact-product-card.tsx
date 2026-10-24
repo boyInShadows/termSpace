@@ -28,7 +28,7 @@ export function CompactProductCard({ product }: { product: Product }) {
   const href = localePath(`/products/${product.slug}`, locale);
 
   return (
-    <article className="group relative flex h-full min-w-0 flex-col border border-border-strong bg-background p-4 transition-colors duration-200 hover:border-foreground/60 focus-within:border-primary">
+    <article className="group relative flex h-full min-w-0 flex-col border border-border-strong bg-background p-4 fit-short:p-3 transition-colors duration-200 hover:border-foreground/60 focus-within:border-primary">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <ProductTypeBadge type={product.type} label={card.types[product.type]} />
@@ -62,7 +62,7 @@ export function CompactProductCard({ product }: { product: Product }) {
         </ListingLink>
       </h3>
 
-      <p className="ts-bidi mt-1 line-clamp-2 text-sm leading-5 text-muted-foreground">
+      <p className="ts-bidi mt-1 line-clamp-2 fit-short:line-clamp-1 text-sm leading-5 text-muted-foreground">
         {product.outcome}
       </p>
 
@@ -75,7 +75,7 @@ export function CompactProductCard({ product }: { product: Product }) {
       />
 
       <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3">
-        <CreatorIdentity creator={product.creator} compact />
+        <CreatorIdentity creator={product.creator} compact verifiedLabel={card.verifiedCreator} />
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1 text-xs font-medium">
             <Star size={14} className="fill-warning text-warning" />

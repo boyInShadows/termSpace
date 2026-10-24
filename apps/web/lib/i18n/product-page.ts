@@ -2,7 +2,7 @@
 export function productPageLabels(fa: boolean) {
   return fa
     ? {
-        explore: "کاوش", details: "جزئیات", requirements: "پیش‌نیازها", updated: "به‌روزرسانی", package: "بسته", updatesPolicy: "سیاست به‌روزرسانی", verified: "تأییدشده", notReviewed: "هنوز بررسی نشده", safety: "بررسی ایمنی", pending: "در انتظار بررسی",
+        explore: "کاوش", details: "جزئیات", requirements: "پیش‌نیازها", updated: "به‌روزرسانی", package: "بسته", updatesPolicy: "سیاست به‌روزرسانی", verified: "تأییدشده", notReviewed: "هنوز بررسی نشده", safety: "بررسی‌شده", pending: "در انتظار بررسی",
         notDeclared: "اعلام نشده", scope: "دامنهٔ دسترسی", notStated: "ذکر نشده", licence: "مجوز", uses: "استفاده",
         free: "رایگان برای همه", sharing: "اشتراک‌گذاری جامعه", whatItDoes: "چه می‌کند", manifest: "مانیفست",
         useCases: "کاربردهای مناسب", included: "محتویات", example: "نمونهٔ ورودی و خروجی", input: "ورودی", output: "بخشی از خروجی",
@@ -12,7 +12,7 @@ export function productPageLabels(fa: boolean) {
         installNote: "مراحل دقیق نصب به نسخه‌ای که به کتابخانهٔ خود اضافه می‌کنید متصل است.",
       }
     : {
-        explore: "Explore", details: "Details", requirements: "Requirements", updated: "Updated", package: "Package", updatesPolicy: "Updates", verified: "Verified", notReviewed: "Not yet reviewed", safety: "safety reviewed", pending: "review pending",
+        explore: "Explore", details: "Details", requirements: "Requirements", updated: "Updated", package: "Package", updatesPolicy: "Updates", verified: "Verified", notReviewed: "Not yet reviewed", safety: "reviewed", pending: "review pending",
         notDeclared: "Not declared", scope: "permission scope", notStated: "Not stated", licence: "licence", uses: "uses",
         free: "Free for everyone", sharing: "Community sharing", whatItDoes: "What it does", manifest: "Manifest",
         useCases: "Ideal use cases", included: "What’s included", example: "Example input and output", input: "Input", output: "Output excerpt",

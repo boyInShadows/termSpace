@@ -20,7 +20,8 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Launch — Owner Decisions
 
-- Privacy policy, terms and content policy pages: none exist. The footer's
+- Review and approve the implemented privacy, terms and content-policy pages.
+  The footer's
   "About" and "Quality standards" point at `/design-system`, "Support" at
   `/account`.
 - Seeded listings cannot be acquired (no approved release). Launch empty, with
