@@ -4,6 +4,48 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-24
 
+- **Reduce public startup transfer with negotiated Brotli assets.** The web build
+  precompresses its JavaScript/CSS and verifies every decoded variant against the
+  original. The proxy and a small Route Handler serve only files in the build's
+  generated allowlist. Missing variants, refused encodings, development and
+  range requests retain normal delivery. Compressed responses keep the original
+  MIME type, immutable public caching, `Vary: Accept-Encoding` and strong ETags
+  with body-free conditional 304s. Private API data, session snapshots, Saved
+  ordering, content and styling are unchanged.
+  - Median local mobile LCP improves home 2816 to 2500 ms, dashboard 2951 to
+    2803 ms and detail 2803 to 2484 ms. Median page transfer drops by
+    28350/30597/29512 bytes respectively. All nine stock Lighthouse reports pass
+    unchanged gates with accessibility 100; performance is 97/96/97 and median
+    max-potential-FID 70/77/68 ms. All six gzip JavaScript budgets pass. The
+    strict 2200/2000/2200 ms targets, comparable hosted timing and physical/native
+    acceptance remain open; no budget or throttling setting was changed.
+  - Verification: root typecheck, normal root production build and 685 runnable
+    unit tests pass (12 database/Redis skips); web lint has no errors and the same
+    two existing warnings.
+    Full serial Playwright validation passes 437 scenarios with 46 existing
+    skips. The earlier two-worker run's one Chrome `ERR_NO_BUFFER_SPACE` failure
+    is retained with its trace: a chunk request failed before an HTTP response.
+    Serial validation uses browser temporary files on D:. No test was removed,
+    weakened or given retries. Thirty-six render checks cover English/Persian
+    RTL, light/dark and 320/768/1280 widths, first keyboard focus and one main,
+    with no overflow or page error. Impeccable detection has no findings.
+  - Manual second-pass review tightened artifact allowlisting and negative-cache
+    behavior, and caught the missing revalidation metadata before completion.
+    The raw transport regression verifies actual encoded bytes and HTTP behavior,
+    beyond mocked headers. Next strips encoding headers from proxy responses;
+    the discarded direct rewrite is retained for evidence. A Turbopack pilot was
+    rejected at 165.3 kB on both product locales; webpack remains in use. No
+    dependency, API/schema, migration, provider or deployment changes.
+  - Owner folder conventions apply to this new work: tests are under
+    `apps/web/tests/`, generated evidence under ignored
+    `docs/artifacts/startup-delivery-20261024/`, and the transport project's
+    failure artifacts under `docs/artifacts/playwright-transport/`. Existing
+    test directories remain supported; CI uploads the new failure location.
+    Config/shared files were announced before editing: `changelog.md`,
+    `.gitignore`, web test configs and the web workflow artifact path. No harness
+    review command or usage meter is available. Further measurements and
+    self-hosted packaging notes are in `docs/startup-performance.md`.
+
 - **Restore the product startup JavaScript budget after reporting integration.**
   Fast-forwarded `ramtin` onto `main` (`3490d23`), retaining the owner's published
   reporting UI (`a4935f8`). The baseline Persian detail bundle measured 165.2 kB

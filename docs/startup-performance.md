@@ -179,3 +179,60 @@ All nine follow-up Lighthouse reports pass the existing gates with accessibility
 100. Representative home/dashboard/detail LCP is 2816/2951/2803 ms, performance
 96/95/96 and max-potential-FID 107/88/97 ms. These samples do not meet the stricter
 2200/2000/2200 ms LCP targets or close comparable hosted timing acceptance.
+
+## Public startup asset delivery, 2026-10-24
+
+The normal web build now generates Brotli variants of its public JavaScript and
+CSS, verifies every decoded variant against the original bytes and writes a
+manifest of generated asset paths. The existing Next proxy negotiates explicit
+Brotli support; a Route Handler returns only files listed by that build.
+Development, refused encodings, missing variants and range requests retain the
+normal static handler. Queries and English/Persian routing are preserved.
+
+The separate response handler is necessary in the installed Next 16.3.8:
+middleware responses filter `Content-Encoding`, which made a direct rewrite to
+a `.br` file return encoded bytes without their encoding header. That prototype
+was rejected. The retained path uses ordinary Next
+[rewrites](https://nextjs.org/docs/app/api-reference/file-conventions/proxy) and
+a response that owns the encoded body, with the original JavaScript/CSS MIME
+type, `Vary: Accept-Encoding`, immutable public caching and a strong ETag for
+conditional 304 responses. Direct handler rejections and missing files return
+uncached 404 responses.
+
+This applies to the self-hosted Next server used by the current Docker and CI
+packaging. Retain `.next/static` and `.next/compressed-assets.json` together.
+Builds without the compression manifest or an available variant fall back to
+normal asset delivery. No dependencies, private-response caching, authentication
+sequence, page content or timing budgets change.
+
+A preliminary Turbopack build succeeded but exceeded the 165 kB product budget
+in both locales (165.3 kB each). Its three timing samples did not establish an
+LCP improvement, so the web build retains webpack. An offscreen-layout
+inspection measured peak layout tasks of approximately 16/22/17 ms on
+home/dashboard/detail; no rendering-containment change was retained.
+
+Evidence, including rejected prototypes, raw encoding checks, traces, reports
+and render captures, lives under ignored
+`docs/artifacts/startup-delivery-20261024/`. New regression tests live under
+`apps/web/tests/`; the existing test directories remain supported. The transport
+project writes failure evidence under `docs/artifacts/playwright-transport/`.
+Strict LCP, comparable hosted input delay, physical-device and native Persian
+wording acceptance remain unfinished.
+
+The final stock LHCI run passes all nine reports with accessibility 100. The
+comparison below uses numeric medians of three reports per route before and
+after, with identical throttling, screen emulation and form factor. The baseline
+is the prior reporting-budget phase; all CPU indices and individual reports are
+retained in the comparison artifact.
+
+| Route | Baseline LCP, ms | Brotli LCP, ms | Baseline transfer, bytes | Brotli transfer, bytes |
+| --- | ---: | ---: | ---: | ---: |
+| `/` | 2816 | 2500 | 321839 | 293489 |
+| `/dashboard` | 2951 | 2803 | 342993 | 312396 |
+| `/products/conversion-copywriter` | 2803 | 2484 | 319407 | 289895 |
+
+Performance scores are 97/96/97, median max-potential-FID 70/77/68 ms, and all
+six gzip JavaScript budgets remain unchanged and passing. These timing samples
+do not meet the stricter LCP targets or establish a comparable hosted startup
+fix. Raw HTTP tests verify JavaScript/CSS decode equality, gzip refusal fallback,
+HEAD, ranges, immutable cache headers and body-free 304 revalidation.
