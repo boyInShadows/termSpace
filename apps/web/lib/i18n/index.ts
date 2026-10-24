@@ -5,11 +5,12 @@
  * file and spread it here. Both locales must carry the same keys.
  */
 import { common } from "./common";
+import type { Locale } from "./common";
 import { dashboard } from "./dashboard";
 import { catalog } from "./catalog";
 import { creator } from "./creator";
-import { moderation } from "./moderation";
 import { home } from "./home";
+import { titles } from "./titles";
 
 export { footerLabels, localePath, type Locale } from "./common";
 
@@ -19,15 +20,23 @@ export const copy = {
     ...dashboard.en,
     ...catalog.en,
     ...creator.en,
-    ...moderation.en,
     ...home.en,
+    ...titles.en,
   },
   fa: {
     ...common.fa,
     ...dashboard.fa,
     ...catalog.fa,
     ...creator.fa,
-    ...moderation.fa,
     ...home.fa,
+    ...titles.fa,
   },
 } as const;
+
+/** Keep editor-only labels off every page's root hydration payload. */
+export function sharedMessages(locale: Locale) {
+  const { creatorDraft, ...messages } = copy[locale];
+  return { ...messages, creatorDraft: { versionConflict: creatorDraft.versionConflict } };
+}
+
+export type DraftMessages = (typeof creator)[Locale]["creatorDraft"];

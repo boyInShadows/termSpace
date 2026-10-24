@@ -3,7 +3,11 @@ import "@/styles/globals.css";
 import { preloadedFonts } from "@/lib/fonts";
 import { SITE_URL } from "@/lib/site";
 import { Providers } from "@/components/layout/providers";
+import { Header } from "@/components/layout/header";
+import { SkipLink } from "@/components/layout/skip-link";
 import { getLocale } from "@/lib/serverLocale";
+import { sharedMessages } from "@/lib/i18n";
+import { getServerSession } from "@/lib/server-session";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const fa = locale === "fa";
@@ -14,7 +18,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const locale = await getLocale();
+  const [locale, initialSession] = await Promise.all([getLocale(), getServerSession()]);
   return (
     <html lang={locale} dir={locale === "fa" ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
@@ -23,7 +27,11 @@ export default async function RootLayout({
         ))}
       </head>
       <body>
-        <Providers locale={locale}>{children}</Providers>
+        <Providers locale={locale} messages={sharedMessages(locale)} initialSession={initialSession}>
+          <SkipLink locale={locale} />
+          <Header />
+          {children}
+        </Providers>
       </body>
     </html>
   );

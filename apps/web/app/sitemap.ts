@@ -3,7 +3,8 @@ import { getMarketplaceCommunities, getProducts } from "@/lib/api";
 import { SITE_URL } from "@/lib/site";
 import type { Product } from "@/lib/types";
 
-export const revalidate = 3600;
+// A build may have no API; do not cache its fallback as the live sitemap.
+export const revalidate = 0;
 
 const PAGE_SIZE = 48;
 /** A ceiling on listing pages walked per build of the sitemap. */
@@ -48,6 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     entry("/", { changeFrequency: "daily", priority: 1 }),
     entry("/explore", { changeFrequency: "daily", priority: 0.9 }),
+    ...(["/privacy", "/terms", "/content-policy"] as const).map((path) => entry(path, { changeFrequency: "yearly", priority: 0.2 })),
     entry("/communities", { changeFrequency: "weekly", priority: 0.6 }),
     ...communities.map((community) => entry(`/communities/${community.slug}`, { changeFrequency: "weekly", priority: 0.6 })),
     ...listings.map((listing) =>

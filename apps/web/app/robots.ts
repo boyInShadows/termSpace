@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 
 /** Personal and staff surfaces are private; the catalogue is what search should see. */
-const PRIVATE = ["/dashboard", "/account", "/creator", "/moderation", "/backend", "/design-system"];
+const PRIVATE = ["/dashboard", "/account", "/moderation", "/backend", "/design-system"];
 
 export default function robots(): MetadataRoute.Robots {
   return {

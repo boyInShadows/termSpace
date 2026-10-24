@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Menu, X, ArrowRight, Globe } from "lucide-react";
+import { AccountMenu, useSignOut } from "./account-menu";
 import { Logo } from "./logo";
 import { ThemeToggle } from "../ui/theme-toggle";
 import { Button, buttonVariants } from "../ui/button";
@@ -43,20 +44,21 @@ export function Header() {
   const query = searchParams.toString();
   const switchHref = `${locale === "fa" ? currentPath : localePath(currentPath, "fa")}${query ? `?${query}` : ""}`;
   const session = useMarketplaceSession();
+  const signOut = useSignOut();
   const canModerate =
     session.marketplaceRoles.includes("moderator") ||
     session.marketplaceRoles.includes("administrator");
   const NAV = [
     { href: "/explore", label: t.explore },
-    { href: "/design-system", label: t.designSystem },
-    { href: "/creator", label: t.shareWork },
-    ...(canModerate ? [{ href: "/moderation", label: t.moderation.nav }] : []),
-    ...(session.email ? [{ href: "/dashboard", label: t.dashboard }] : []),
+    { href: "/dashboard/studio", label: t.shareWork },
+    ...(canModerate ? [{ href: "/dashboard/moderation", label: t.moderationNav }] : []),
   ];
   const [isCondensed, setIsCondensed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [dismissed, setDismissed] = useStoredString(ANNOUNCEMENT_KEY);
   const progressRef = useRef<HTMLDivElement | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const isAnnouncementVisible = dismissed !== ANNOUNCEMENT_ID;
 
@@ -64,6 +66,38 @@ export function Header() {
   // sibling routes, but `/` must not match everything.
   const isCurrent = (href: string) =>
     href === "/" ? currentPath === "/" : currentPath.startsWith(href);
+
+  useEffect(() => {
+    const header = headerRef.current!;
+    const observer = new ResizeObserver(([entry]) => {
+      const height = entry.borderBoxSize?.[0]?.blockSize ?? header.getBoundingClientRect().height;
+      document.documentElement.style.setProperty("--site-header-height", `${height}px`);
+    });
+    observer.observe(header, { box: "border-box" });
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty("--site-header-height");
+    };
+  }, []);
+
+  // Escape closes the open menu and hands focus back to the button that opened
+  // it, so a keyboard user is not left on a control that has just disappeared.
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setIsMenuOpen(false);
+      menuButtonRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    // The root header survives navigation, but an open disclosure must not.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     let queued = false;
@@ -89,7 +123,7 @@ export function Header() {
       frame = requestAnimationFrame(measure);
     };
 
-    measure();
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     return () => {
@@ -100,27 +134,25 @@ export function Header() {
   }, []);
 
   return (
-    /* One landmark. The announcement strip and the mobile menu used to sit
-       outside <header> as siblings, which left banner content in no landmark
-       at all. The bar inside stays sticky; the wrapper does not need to be. */
-    <header>
+    <header ref={headerRef} data-site-header className="sticky top-0 z-50 bg-background">
       {/* --- announcement strip, retracts on scroll, dismissible ---------- */}
       {isAnnouncementVisible && (
         <div
+          data-announcement
           className={cn(
-            "overflow-hidden border-b border-border/60 bg-surface/60 backdrop-blur transition-[height,opacity] duration-500",
+            "overflow-hidden border-b border-border bg-background transition-[height,opacity] duration-200",
             isCondensed ? "h-0 opacity-0" : "h-9 opacity-100",
           )}
         >
           <div className="container-page flex h-9 items-center gap-2">
             <p className="flex min-w-0 flex-1 items-center justify-center gap-2 text-center text-xs">
-              <span className="size-1.5 shrink-0 rounded-full bg-accent" />
               <span className="truncate text-muted-foreground">
                 {t.announcement}
               </span>
               <Link
                 href={localePath("/explore", locale)}
-                className="group inline-flex shrink-0 items-center gap-1 font-semibold text-primary"
+                // -my/py: a 32px hit area inside the 36px strip, without growing it.
+                className="group -my-2 inline-flex shrink-0 items-center gap-1 py-2 font-semibold text-primary"
               >
                 {t.explore}
                 <ArrowRight
@@ -133,7 +165,7 @@ export function Header() {
               type="button"
               onClick={() => setDismissed(ANNOUNCEMENT_ID)}
               aria-label={t.homePage.dismissAnnouncement}
-              className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground transition-colors hover:text-foreground"
+              className="grid size-6 shrink-0 place-items-center rounded-none text-muted-foreground transition-colors hover:text-foreground"
             >
               <X size={13} aria-hidden />
             </button>
@@ -141,17 +173,19 @@ export function Header() {
         </div>
       )}
 
-      <div className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+      <div className="relative border-b border-border-strong bg-background">
         <div
           className={cn(
-            "container-page flex items-center justify-between transition-[height] duration-500",
+            "container-page grid grid-cols-[1fr_auto] items-center transition-[height] duration-500 md:grid-cols-[1fr_auto_1fr]",
             isCondensed ? "h-14" : "h-16",
           )}
         >
-          <Logo />
+          <div className="justify-self-start">
+            <Logo />
+          </div>
 
           <nav
-            className="hidden items-center gap-8 text-sm md:flex"
+            className="hidden items-center justify-self-center gap-5 whitespace-nowrap text-sm md:flex lg:gap-8"
             aria-label={t.primary}
           >
             {NAV.map((item) => {
@@ -181,32 +215,39 @@ export function Header() {
             })}
           </nav>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 justify-self-end">
             <ThemeToggle />
-            {/* A real button, not 11px of low-contrast text pushed against the
-                window edge. Same padding as Sign in, and a globe so it reads
-                as a language switch before you can read the script. */}
-            <Link
+            {/* Icon-only, like the theme toggle beside it. The language name
+                lives in the accessible name and `title`, not on screen. */}
+            {/* A plain anchor on purpose: the two locales are two root
+                layouts' worth of `lang`/`dir` (proxy.ts rewrites /fa onto the
+                same routes), and a client-side <Link> keeps the old root
+                layout, so the URL changed while the page stayed in the old
+                language and direction until a reload. */}
+            <a
               href={switchHref}
               lang={locale === "fa" ? "en" : "fa"}
+              aria-label={t.language}
+              title={t.language}
               className={cn(
-                buttonVariants({ variant: "ghost" }),
-                "hidden gap-1.5 sm:inline-flex",
-              )}
-            >
-              <Globe size={15} aria-hidden />
-              {t.language}
-            </Link>
-            <Link
-              href={localePath("/account", locale)}
-              className={cn(
-                buttonVariants({ variant: "ghost" }),
+                buttonVariants({ variant: "ghost", size: "icon" }),
                 "hidden sm:inline-flex",
               )}
             >
-              {session.email ?? t.signIn}
-            </Link>
+              <Globe size={18} aria-hidden />
+            </a>
+            {session.email ? (
+              <AccountMenu email={session.email} />
+            ) : (
+              <Link
+                href={localePath("/account", locale)}
+                className={cn(buttonVariants({ variant: "ghost" }), "hidden sm:inline-flex")}
+              >
+                {t.signIn}
+              </Link>
+            )}
             <Button
+              ref={menuButtonRef}
               variant="ghost"
               size="icon"
               className="md:hidden"
@@ -230,7 +271,7 @@ export function Header() {
 
       {/* --- mobile menu -------------------------------------------------- */}
       {isMenuOpen && (
-        <div className="sticky top-14 z-30 border-b border-border bg-background/95 backdrop-blur-xl md:hidden">
+        <div className="max-h-[calc(100dvh-6.25rem)] overflow-y-auto border-b border-border bg-background md:hidden">
           <nav className="container-page flex flex-col py-3" aria-label={t.mobile}>
             {NAV.map((item) => (
               <Link
@@ -246,25 +287,52 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            {/* Sign in and the language switch are hidden below `sm` in the
-                bar itself, so without these two the mobile menu is the only
-                place they exist — and they were missing from it. */}
-            <Link
-              href={localePath("/account", locale)}
-              onClick={() => setIsMenuOpen(false)}
-              className="border-t border-border/60 py-3 text-sm font-semibold"
-            >
-              {session.email ?? t.signIn}
-            </Link>
-            <Link
+            {/* The account control and the language switch are hidden below
+                `sm` in the bar itself, so the mobile menu is the only place
+                they exist. */}
+            {session.email ? (
+              <>
+                <p
+                  dir="auto"
+                  className="truncate border-t border-border/60 py-3 text-xs text-muted-foreground"
+                >
+                  {session.email}
+                </p>
+                <Link
+                  href={localePath("/dashboard", locale)}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="border-t border-border/60 py-3 text-sm"
+                >
+                  {t.dashboard}
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    void signOut();
+                  }}
+                  className="border-t border-border/60 py-3 text-start text-sm"
+                >
+                  {t.signOut}
+                </button>
+              </>
+            ) : (
+              <Link
+                href={localePath("/account", locale)}
+                onClick={() => setIsMenuOpen(false)}
+                className="border-t border-border/60 py-3 text-sm font-semibold"
+              >
+                {t.signIn}
+              </Link>
+            )}
+            <a
               href={switchHref}
               lang={locale === "fa" ? "en" : "fa"}
-              onClick={() => setIsMenuOpen(false)}
               className="inline-flex items-center gap-2 border-t border-border/60 py-3 text-sm"
             >
               <Globe size={15} aria-hidden />
               {t.language}
-            </Link>
+            </a>
           </nav>
         </div>
       )}

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMock = vi.hoisted(() => ({
   readerSession: { findFirst: vi.fn() },
@@ -7,7 +7,7 @@ const prismaMock = vi.hoisted(() => ({
 
 vi.mock("../lib/prisma.js", () => ({ prisma: prismaMock }));
 
-const { requireMarketplaceRole } = await import("./auth.js");
+const { requireMarketplaceRole, optionalReader } = await import("./auth.js");
 
 function requestWithSessionCookie() {
   return {
@@ -29,8 +29,10 @@ function responseStub() {
 }
 
 describe("marketplace role authorization", () => {
+  afterEach(() => vi.unstubAllEnvs());
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("LOCAL_AUTO_VERIFY_EMAIL", "false");
   });
 
   it("requires a reader session", async () => {
@@ -130,5 +132,27 @@ describe("marketplace role authorization", () => {
       emailVerified: true,
       marketplaceRoles: ["moderator"],
     });
+  });
+
+  it("temporarily accepts existing localhost sessions without granting roles or changing verification records", async () => {
+    vi.stubEnv("LOCAL_AUTO_VERIFY_EMAIL", "true");
+    vi.stubEnv("WEB_PUBLIC_URL", "http://localhost:3000");
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: null, marketplaceRoleGrants: [] },
+    });
+    const response = responseStub();
+    const next = vi.fn();
+    await optionalReader(requestWithSessionCookie(), response, next);
+    expect(next).toHaveBeenCalledOnce();
+    expect(response.locals.reader.emailVerified).toBe(true);
+    expect(response.locals.reader.marketplaceRoles).toEqual([]);
+
+    await requireMarketplaceRole("creator")(requestWithSessionCookie(), response, vi.fn());
+    expect(response.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.objectContaining({ code: "MARKETPLACE_ROLE_REQUIRED" }) }));
+
+    vi.stubEnv("LOCAL_AUTO_VERIFY_EMAIL", "false");
+    await optionalReader(requestWithSessionCookie(), response, vi.fn());
+    expect(response.locals.reader.emailVerified).toBe(false);
   });
 });

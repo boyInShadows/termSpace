@@ -1,7 +1,12 @@
 import { DashboardOverview } from "@/features/dashboard/overview";
+import { copy } from "@/lib/i18n";
+import { getLocale } from "@/lib/serverLocale";
+import { getServerDashboardHome } from "@/lib/server-session";
 
-export const metadata = { title: "Overview" };
+export async function generateMetadata() {
+  return { title: copy[await getLocale()].navOverview };
+}
 
-export default function DashboardPage() {
-  return <DashboardOverview />;
+export default async function DashboardPage() {
+  return <DashboardOverview initialHome={await getServerDashboardHome()} />;
 }

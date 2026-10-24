@@ -1,16 +1,16 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowUpRight } from "lucide-react";
-import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { getMarketplaceCommunities } from "@/lib/api";
 import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
 import { intlLocale } from "@/lib/format";
-import { localePath } from "@/lib/i18n";
+import { copy, localePath } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: "Communities", alternates: pageAlternates("/communities", await getLocale()) };
+  const locale = await getLocale();
+  return { title: copy[locale].productCard.communities, alternates: pageAlternates("/communities", locale) };
 }
 export const dynamic = "force-dynamic";
 
@@ -21,8 +21,7 @@ export default async function CommunitiesPage() {
   ]);
   const fa = locale === "fa";
   return <>
-    <Header />
-    <main className="container-page py-12 sm:py-16">
+    <main id="content" tabIndex={-1} className="container-page py-12 sm:py-16">
       <div className="max-w-3xl">
         <p className="eyebrow">{fa ? "جامعه‌های ترم‌اسپیس" : "TermSpace communities"}</p>
         <h1 className="editorial mt-3 text-5xl">{fa ? "ابزارها را در بستر مناسب پیدا کنید" : "Find tools in their working context"}</h1>

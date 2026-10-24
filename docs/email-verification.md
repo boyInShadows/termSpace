@@ -25,12 +25,78 @@ all remaining links atomically.
    `EMAIL_FROM_NAME`.
 6. Deploy the migration, API, and `email-worker` service together.
 
+No additional Node email package is needed: `cloudflareEmail.ts` sends through
+Cloudflare's REST API using built-in `fetch`. An SMTP package such as Nodemailer
+would still require an SMTP provider, credentials, and a configured sender.
+
+For local development, run the API and worker with the same real signing secret
+and provider configuration. On Windows, keep secrets in user environment
+variables and open a new terminal after configuring them. `dotenv` loads
+`apps/api/.env` for workspace scripts; the root Compose `.env` is not loaded by
+`npm run dev:api` or the standalone worker.
+
+```sh
+npm run dev:api
+# In another terminal with the same environment:
+npm run email:worker -w apps/api
+```
+
+The standalone command processes one batch and exits; keep invoking it in the
+local runner while testing. Docker Compose runs the worker every 30 seconds by
+default. Missing provider credentials or an invalid signing secret must make the
+worker exit with an error before it claims queued messages.
+
+To check the whole account lifecycle against a disposable, migrated PostgreSQL,
+set `INTEGRATION_DATABASE_URL` in the process environment and run:
+
+```sh
+npm test -w apps/api -- src/readerFlow.integration.test.ts
+```
+
+This covers registration, duplicate accounts, login/logout, the outbox and
+provider request, one-use verification, resend cooldowns, reset codes, attempt
+limits, and session revocation. Provider responses are simulated: a real inbox
+delivery check still requires working Cloudflare credentials and a verified
+sender. Do not point integration tests at a production database.
+
 The sender includes text and HTML bodies, a 10-second timeout, and a correlation
 ID. It retries only network failures, timeouts, HTTP 429, and HTTP 5xx responses,
 with bounded exponential backoff and at most five attempts. HTTP 4xx responses
 and permanent bounces fail terminally. Logs include outcome, provider status,
 latency, and correlation ID but never recipient addresses, tokens, credentials,
 or provider response bodies.
+
+## Google sign-in configuration
+
+Both the main site's account page and the blog use Google Identity Services and
+the shared `/api/readers/google` endpoint. Create a **Web application** OAuth
+client in the project's Google Auth Platform console and configure its branding
+and audience. Use only the default authentication scopes (email, profile,
+openid); the application does not need a Google client secret for this flow.
+
+Add the exact frontend origins to **Authorized JavaScript origins**, including
+`http://localhost`, `http://localhost:3000`, and `http://localhost:3001` for local
+development, plus each actual HTTPS production origin. Add development test users
+if the OAuth audience is still in testing. The JavaScript popup flow posts the
+credential to the API; it does not use a redirect callback URL.
+
+Set `GOOGLE_CLIENT_ID` in the API and frontend build environment. The two Next.js
+configs expose that public identifier as `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, with
+the existing `NEXT_PUBLIC_GOOGLE_CLIENT_ID` supported as a frontend fallback.
+Docker Compose passes the same ID into both frontend builds. Rebuild the
+frontends whenever it changes; changing runtime environment alone cannot replace
+an identifier already inlined into browser JavaScript.
+
+Reference: [Google's setup guide](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)
+and [JavaScript button API](https://developers.google.com/identity/gsi/web/reference/js-reference).
+
+To verify the real integration, complete Google sign-in with an authorized test
+user on each frontend, confirm the shared session response reports
+`emailVerified: true`, and confirm sign-out clears that frontend's host-only
+cookie. For email, register a new password account with an authorized test
+mailbox, run the worker, open the received verification link, and confirm the
+account's verified state; then request and use the emailed password-reset code.
+Mocked credentials and accepted provider responses do not prove these live checks.
 
 ## Operations and recovery
 
@@ -61,6 +127,9 @@ LOCAL_AUTO_VERIFY_EMAIL=true
 New password accounts are then stored as verified immediately and no verification
 record or email outbox job is created. An older unverified local account is also
 marked verified on its next successful password login.
+Existing signed-in local sessions skip the verification gate while the flag is
+enabled, without changing their stored verification timestamp. Signup follows
+the API result and skips the verification page when the account is accepted.
 
 The bypass refuses to activate unless `WEB_PUBLIC_URL` uses the exact loopback
 hostname `localhost`, `127.0.0.1`, or `[::1]`. Keep the flag unset or `false` in

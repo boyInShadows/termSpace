@@ -11,9 +11,10 @@ roles never grant Blog publishing access. See
 [Product Direction](docs/product-direction.md) for the durable product
 boundaries and core user journeys.
 
-## Current product foundation
+## What works today
 
-- A localized English/Persian community library with public catalog and item pages.
+- An English/Persian community library with RTL support, light/dark themes,
+  public catalog search and filters, community browsing, and item pages.
 - Reader authentication, verified accounts, marketplace role grants, and
   creator profiles.
 - An owner-scoped creator dashboard and structured drafts for all nine item
@@ -26,13 +27,18 @@ boundaries and core user journeys.
   platform compatibility.
 - Idempotent free-resource acquisition, an account library, and entitlement-
   gated installation details pinned to the exact verified release acquired.
+- A reader dashboard with saved items, an acquired library, and creator Studio
+  controls for drafts, releases, submission withdrawal, archival, and restoration.
+- Acquisition-backed ratings and reviews from verified readers, with editing,
+  withdrawal, server-calculated aggregates, and staff hide/restore controls.
 
 The first community-library milestone is external-source-first: submissions reference
 GitHub or npm artifacts instead of uploading executable packages to TermSpace.
 Authenticated GitHub/npm source ingestion, creator-controlled immutable release
-management, and free add/install flows are implemented. Public community
-browsing and authenticated ratings/reviews remain active roadmap work tracked in
-[pending.md](pending.md).
+management, and free add/install flows are implemented. All published resources
+are free; there is no paid checkout or creator payout flow. Reporting, creator
+responses to reviews, public creator pages, and remaining launch work are tracked
+in [pending.md](pending.md). See [changelog.md](changelog.md) for completed work.
 
 ## Repository layout
 
@@ -46,27 +52,72 @@ docs/    Product, architecture, and operational documentation
 
 ## Local development
 
-Prerequisites are Node.js 22 or newer, npm, Docker, and Docker Compose.
+Prerequisites are Node.js 22 or newer, npm, Docker, and Docker Compose. Run the
+following commands from the repository root.
 
 Install all workspace dependencies from the repository root:
 
 ```bash
-npm install
+npm ci
+npm run prisma:generate
 ```
 
-Copy each application's `.env.example` to `.env` in the same directory. Start
-PostgreSQL, apply the migrations, and run each application in its own terminal:
+Copy the root and each application's environment template before starting:
+
+```sh
+cp .env.example .env
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+cp apps/blog/.env.example apps/blog/.env
+```
+
+In PowerShell, use `Copy-Item` in place of `cp` if needed. Keep local `.env`
+files out of Git. On Windows, keep real secrets in user environment variables
+and open a new terminal after configuring them.
+
+Set the database credentials used by Compose, and make the API's `DATABASE_URL`
+match `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, and `DB_HOST_PORT`.
+The example passwords differ, so copying the templates alone is not sufficient.
+The default database port is `5433`; change both `DB_HOST_PORT` and
+`DATABASE_URL` if it is occupied. Set a real `EMAIL_VERIFICATION_SECRET` and a
+valid `MARKETPLACE_PROVIDER_TOKEN_KEY` before using account/source workflows.
+The root environment is used by Compose; npm workspace commands load the API's
+own environment and do not inherit the root `.env` file.
+
+Start PostgreSQL and apply the migrations:
 
 ```bash
 npm run db:up
 npm run prisma:deploy
+```
+
+Run each application in its own terminal:
+
+```sh
 npm run dev:api
 npm run dev:web
 npm run dev:blog
 ```
 
 Run `npm run seed` when you explicitly want development seed data. A clean
-database is intentionally not seeded during normal startup.
+database is intentionally not seeded during normal startup. Demo listings do
+not have approved releases and cannot exercise acquisition or review flows;
+use a source-verified, approved release for those journeys. In production, seed
+only administrator/reference data; `SEED_DEMO=true` is for a demo environment.
+
+The default local URLs are:
+
+| Service | URL |
+| --- | --- |
+| Community library | <http://localhost:3000> |
+| Blog | <http://localhost:3001> |
+| API health | <http://localhost:4001/api/health> |
+
+The main site uses `/explore`, `/communities`, `/account`, `/dashboard`,
+`/dashboard/library`, and `/dashboard/studio`; marketplace staff use
+`/moderation`. Persian routes use the `/fa` prefix, for example `/fa/explore`.
+
+### Accounts and background workers
 
 For local browser testing without an email provider, set
 `LOCAL_AUTO_VERIFY_EMAIL=true` and keep `WEB_PUBLIC_URL` on a loopback hostname.
@@ -80,23 +131,48 @@ the source worker alongside the API:
 
 ```bash
 openssl rand -base64 32
-npm run marketplace:source-worker:watch --workspace @termspace/api
+npm run marketplace:source-worker --workspace @termspace/api
 ```
 
-Set the generated value as `MARKETPLACE_PROVIDER_TOKEN_KEY` in
-`apps/api/.env`. In the creator release workspace, connect a fine-grained
-GitHub token with access to the submitted public repository or an npm token for
-the submitted package, then queue the source check. GitHub requires admin or
-maintain repository permission; npm requires authenticated write collaborator
-access. Tokens are encrypted at rest and never returned by the API.
+Set the generated value as `MARKETPLACE_PROVIDER_TOKEN_KEY` in the environment
+of both the API and source worker. In the creator release workspace, connect a
+fine-grained GitHub token with access to the submitted public repository or an
+npm token for the submitted package, then queue the source check. GitHub requires
+admin or maintain repository permission; npm requires authenticated write
+collaborator access. Tokens are encrypted at rest and never returned by the API.
 
-Run all repository checks from the root with:
+The standalone source command processes one batch; rerun it for queued checks
+and reconciliation. The `marketplace:source-worker:watch` script repeats it in
+a POSIX shell. Compose runs the recurring worker automatically. For real email
+delivery, configure the email provider and run `npm run email:worker -w apps/api`
+for each batch. Scheduled Blog publication uses
+`npm run publish:scheduled -w apps/api`. Compose runs both on a schedule.
+
+### Verification
+
+Run the repository checks from the root:
 
 ```bash
 npm run typecheck
 npm test
+npm run lint -w apps/web
 npm run build
 ```
+
+For web behavior and performance checks:
+
+```sh
+npm exec -w apps/web playwright install chromium
+npm run e2e -w apps/web
+npm run lhci -w apps/web
+```
+
+Playwright builds against the mock API and does not need PostgreSQL. Lighthouse
+also uses the mock fixture build; see [the web CI workflow](.github/workflows/web.yml)
+for the build environment and sequence. Unit tests skip database-dependent
+integration cases unless `INTEGRATION_DATABASE_URL` points to a disposable,
+migrated database; [the CI workflow](.github/workflows/ci.yml) runs those cases
+against PostgreSQL. See [Contributing](docs/CONTRIBUTING.md) for review guidance.
 
 Marketplace roles are assigned independently from Blog administration. See
 [Marketplace Role Operations](docs/marketplace-roles.md) for verified-account
@@ -117,7 +193,8 @@ the marketplace source reconciliation worker,
 the community library, and the Blog:
 
 ```bash
-cp .env.example .env # required; replace the example database/admin passwords
+cp .env.example .env
+# Configure database/admin passwords, signing secret, and provider-token key first.
 npm run docker:up
 ```
 
@@ -125,8 +202,10 @@ The API applies every committed Prisma migration before it starts. The other
 services wait for the API health check, so a migration failure prevents a
 partially working stack from coming online.
 
-After configuring Cloudflare Email Service, start the transactional email worker
-with `docker compose --profile email up --build -d`.
+The transactional email worker starts with the full stack and requires configured
+Cloudflare Email Service credentials. Configure them before testing verification
+or password-reset delivery; the local verification bypass does not provide email
+delivery. See [Email Verification Operations](docs/email-verification.md).
 
 With the example host ports, the loopback-only services are available at:
 
@@ -195,6 +274,11 @@ example `https://www.example.com,https://blog.example.com`). Keep
 `NEXT_PUBLIC_API_URL=/backend` in both frontends so browser calls remain
 same-origin and preserve the shared cookie.
 
+Set the public web origin (`WEB_PUBLIC_URL` in Compose,
+`NEXT_PUBLIC_SITE_URL` for the web app) before building so canonical links,
+sitemaps, and social metadata use the deployed domain. Keep
+`LOCAL_AUTO_VERIFY_EMAIL=false` outside loopback development.
+
 ## Existing database migration
 
 The monorepo adds the previously missing initial content migration. Before the
@@ -208,3 +292,8 @@ npm run prisma:deploy
 
 Do not run `resolve` on a new database; `prisma migrate deploy` must create the
 initial tables there.
+
+Before migrating an older database that used the retired `/api/community`
+publishing routes, complete the creator-ownership audit in
+[Deployment Safety](pending.md#deployment-safety). The ownership migration
+intentionally aborts rather than discard unreconciled ownership data.

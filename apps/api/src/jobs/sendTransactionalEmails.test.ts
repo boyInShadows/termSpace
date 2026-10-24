@@ -72,6 +72,13 @@ describe("transactional email worker", () => {
     expect(prismaMock.transactionalEmailOutbox.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "CANCELLED" }) }));
   });
 
+  it("stops retrying after the final delivery attempt", async () => {
+    prismaMock.$queryRaw.mockResolvedValueOnce([{ id: "outbox-1", verificationId: "verification-1", passwordResetId: null, correlationId: "correlation-1", attempts: 5 }]);
+    sendVerificationEmail.mockResolvedValue({ outcome: "retry", statusCode: 503, errorCode: "HTTP_503" });
+    await processTransactionalEmailBatch();
+    expect(prismaMock.transactionalEmailOutbox.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "FAILED" }) }));
+  });
+
   it("delivers active password reset jobs through the shared outbox", async () => {
     prismaMock.$queryRaw.mockResolvedValueOnce([{ id: "outbox-reset", verificationId: null, passwordResetId: "reset-1", correlationId: "correlation-reset", attempts: 1 }]);
     prismaMock.readerPasswordReset.findUnique.mockResolvedValue({

@@ -1,10 +1,22 @@
 import "dotenv/config";
 import { createApp } from "./app.js";
+import { assertProductionConfig } from "./lib/productionConfig.js";
 import { prisma } from "./lib/prisma.js";
+import { redis } from "./lib/redis.js";
 
 const port = Number(process.env.PORT ?? 4001);
 
+// Crash on a stray rejection or exception instead of limping on in an unknown state;
+// the container restarts the API. Log the message only, never request data.
+for (const event of ["unhandledRejection", "uncaughtException"] as const) {
+  process.on(event, (reason) => {
+    console.error(`${event}:`, reason instanceof Error ? reason.stack : reason);
+    process.exit(1);
+  });
+}
+
 async function main() {
+  assertProductionConfig();
   const app = createApp();
 
   // Verify the database connection before serving.
@@ -30,6 +42,7 @@ async function main() {
       server.close((error) => (error ? reject(error) : resolve()));
     });
     await prisma.$disconnect();
+    redis?.disconnect();
     clearTimeout(forceExit);
     console.log("Shutting down...");
     process.exit(0);

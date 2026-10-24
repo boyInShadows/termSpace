@@ -23,7 +23,9 @@ Tool-agnostic rules first; Claude Code specifics are in their own section at the
    for your phase. Nothing else up front.
 2. Plan before touching more than one app or any shared surface. Write the plan into the
    session (or `plan.md`) with: goal, files, acceptance, verification.
-3. Implement one phase. Don't start the next phase in the same session.
+3. Implement one phase at a time. When the owner explicitly requests sequential
+   queue execution, continue with the next actionable item after verification;
+   keep each item independently reviewable and retain owner-dependent work.
 4. Verification gate before commit (existing rule, unchanged): root typecheck, the affected
    app's tests, lint (`npm run lint -w apps/web` — only `apps/web` has a lint script),
    production build. Web UI changes additionally: `npm run e2e -w apps/web`
@@ -37,7 +39,7 @@ Tool-agnostic rules first; Claude Code specifics are in their own section at the
   output is a list of paths — never dump file contents into the main context.
 - Don't paste logs. Grep them for the error, quote ≤ 10 lines.
 - Don't re-read a file you just edited. The edit result is the state.
-- One phase per session. When the phase is committed, end the session or clear.
+- One phase at a time; explicit owner-authorized queue runs may continue sequentially.
 - Prefer editing an existing plan/checklist to re-explaining state in prose.
 - Never commit `.env*`, `node_modules`, Playwright traces, or Lighthouse reports.
 
@@ -48,6 +50,51 @@ Tool-agnostic rules first; Claude Code specifics are in their own section at the
   catalog or installed plugin cache; do not pin a versioned cache path in project instructions.
 - Apply its smallest-change/YAGNI guidance without weakening validation, authentication,
   authorization, security, accessibility, migrations, or the verification gates in this file.
+
+## Design consistency — Impeccable required
+
+- Use the installed `impeccable` skill for every design-related task: planning, creating,
+  changing or reviewing UI/UX, layout, typography, color, components, states and motion.
+  Read its project context, `DESIGN.md` and the applicable surface brief before deciding.
+- Keep the whole project visually consistent. The main site and dashboard share the
+  Datasheet identity, existing theme tokens, typography and control vocabulary; adapt
+  density and hierarchy to the task without introducing a competing visual system.
+- Build with Impeccable's guidance and check the rendered result with it before completion:
+  both themes, English/Persian RTL, responsive widths, keyboard focus and relevant states.
+  Record verification and unresolved acceptance in the changelog and pending list.
+
+## Engineering tools and skills
+
+Resolve skills from the active catalog and the shared installation in
+`D:\tools\agents-shared\skills`; the repositories below are local references,
+not instructions to reinstall tools or load every skill for every task.
+
+| Tool | Local reference | When and how to use it |
+| --- | --- | --- |
+| AgentSkills | `D:\coding\tools\AgentSkills\agent-skills` | Select the relevant installed engineering workflow for planning, implementation, debugging, review or shipping. Read its `SKILL.md` and needed references; preserve this repository's ownership and verification rules. |
+| CodeBaseMemory | `D:\coding\tools\CodeBaseMemory\codebase-memory-mcp` | Default for structural code exploration and caller/impact checks. Use the installed `codebase-memory` skill, refresh the index when needed, query/trace/snippet first, then check coverage and read any missing or stale source. |
+| Graphify | `D:\coding\tools\Graphify\graphify` | Use the installed `graphify` skill when explicitly asked to build/query a Graphify graph, especially across code and documents. Prefer CodeBaseMemory for routine code queries; a documentation mention does not request a full graph rebuild. |
+| Task Observer | `D:\coding\tools\Task Observer\one-skill-to-rule-them-all` | Use the installed `task-observer` skill when the owner activates observations or requests skill improvement. Follow its existing shared log location and review workflow; do not silently install proposed skill changes. |
+| Ponytail | `D:\coding\tools\Ponytail\ponytail` | Use the installed Ponytail skill in full mode for implementation and review, as required above. Reuse existing code and delete duplication while preserving validation, accessibility and the verification gates. |
+
+### Shared application layouts
+
+- `apps/web/app/layout.tsx` owns the main site's global navigation once, including
+  dashboard routes. Pages and loading boundaries must not import/render another
+  `Header`. Put truly global interface elements in that layout.
+- Keep the header in the root hydration tree. A separate Suspense boundary can
+  hydrate its anonymous HTML after the session provider has already signed in,
+  producing a recoverable HTML mismatch. The root already awaits request headers.
+- The root skip link must remain the first keyboard stop. Each rendered route
+  supplies one focusable `<main id="content" tabIndex={-1}>` as its target.
+- Nested layouts own section-specific structure. The dashboard keeps its session
+  gate, sidebar/mobile tabs and workspace search; it reuses the global header's
+  navigation, account, language and theme controls. Do not copy these controls.
+- Use Next.js layouts for persistent page structure. Reserve overlays for menus
+  or dialogs that actually need temporary disclosure or protected focus.
+- Blog is a separate application/deployment with its own root layout. Share
+  documented identity and conventions without coupling its editorial permissions
+  or providers to marketplace access.
 
 ## Claude Code session commands
 
@@ -335,3 +382,10 @@ Rules that follow from the table:
 not pick items from it; it records follow-ups from its own work in `changelog.md`.
 
 At the start of each task, check `pending.md` for relevant outstanding improvements before planning or editing. If a task completes an item from `pending.md`, remove that item from `pending.md` in the same change and add a dated entry to `changelog.md` describing what was completed and how it was verified. Keep `pending.md` limited to unfinished work; do not leave completed items there.
+
+`ramtin-pending.md` is Ramtin's local, Git-ignored queue. Apply the same cleanup:
+after verifying a task or whole section is complete, remove its task block and
+completion narrative rather than leaving checked boxes or a second changelog.
+Record outcomes/evidence in `changelog.md`. Keep unfinished acceptance, owner
+decisions, deferred work and necessary operating notes until actually resolved.
+Never stage or push the local queue.

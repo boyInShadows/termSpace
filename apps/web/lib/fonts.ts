@@ -13,15 +13,13 @@
 
 const FONT_DIR = "/fonts";
 
-const NEWSREADER = `${FONT_DIR}/newsreader-latin-wght-v5.3.0.woff2`;
 const GEIST = `${FONT_DIR}/geist-latin-wght-v5.3.0.woff2`;
 const ESTEDAD = `${FONT_DIR}/estedad-arabic-wght-v5.3.0.woff2`;
 
 /**
- * What each locale's first paint needs. English: the headline serif (the
- * LCP element) and the body sans. Persian sets its headline and body in
- * Estedad, and keeps Geist for the Latin inside it.
+ * English uses Geist above the fold. Persian uses Estedad and keeps Geist
+ * for Latin text. All headings share the same sans family as the dashboard.
  */
 export function preloadedFonts(locale: string): readonly string[] {
-  return locale === "fa" ? [ESTEDAD, GEIST] : [NEWSREADER, GEIST];
+  return locale === "fa" ? [ESTEDAD, GEIST] : [GEIST];
 }

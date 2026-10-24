@@ -12,7 +12,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   return (
     <html lang={fa ? "fa" : "en"} dir={fa ? "rtl" : "ltr"}>
       <body>
-        <main>
+        <main id="content" tabIndex={-1}>
           <ErrorView error={error} reset={reset} fa={fa} />
         </main>
       </body>

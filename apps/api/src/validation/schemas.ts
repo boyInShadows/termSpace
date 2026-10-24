@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { englishDisplayName, marketplaceManifestV1Schema } from "../lib/marketplaceManifest.js";
+import { englishDisplayName, marketplaceManifestV1Schema, permissionCapabilities } from "../lib/marketplaceManifest.js";
 import { MARKETPLACE_PLATFORM_KEYS } from "../lib/marketplacePlatforms.js";
 import { MARKETPLACE_ITEM_TYPES } from "../lib/marketplaceManifest.js";
 
@@ -11,6 +11,26 @@ import { MARKETPLACE_ITEM_TYPES } from "../lib/marketplaceManifest.js";
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const routeIdSchema = z.string().trim().min(1).max(128).regex(/^[A-Za-z0-9_-]+$/, "Invalid resource identifier");
 export const routeSlugSchema = z.string().trim().min(1).max(200).regex(slugPattern, "Invalid slug");
+export const releaseVersionSchema = z.string().trim().min(1).max(64);
+/** Acquire may name the release the reader inspected; without a body it takes the approved one. */
+export const marketplaceAcquireSchema = z.object({ version: releaseVersionSchema.optional() }).strict().optional();
+export const marketplaceReportSchema = z.object({
+  reason: z.enum(["MALICIOUS", "UNDISCLOSED_PERMISSIONS", "SOURCE_COMPROMISE", "IMPERSONATION", "MISLEADING", "BROKEN_OR_ABANDONED", "SPAM_OR_ABUSE", "OTHER"]),
+  explanation: z.string().trim().min(20).max(4000),
+}).strict();
+export const moderationCaseQuerySchema = z.object({
+  state: z.enum(["NEW", "TRIAGED", "INVESTIGATING", "ACTIONED", "DISMISSED"]).optional(),
+  page: z.coerce.number().int().min(1).max(1000000).default(1),
+  limit: z.coerce.number().int().min(1).max(48).default(24),
+}).strict();
+export const moderationCaseTriageSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+  action: z.enum(["TRIAGE", "INVESTIGATE", "DISMISS"]),
+  severity: z.enum(["STANDARD", "HIGH", "CRITICAL"]),
+  reasonCode: z.string().trim().min(2).max(80).regex(/^[A-Z0-9_]+$/),
+  publicReason: z.string().trim().min(10).max(1000),
+  evidenceReference: z.string().trim().min(2).max(200).optional(),
+}).strict();
 export const routeTokenSchema = z.string().trim().min(16).max(256).regex(/^[A-Za-z0-9_-]+$/, "Invalid token");
 const allowedImageHosts = new Set(
   (process.env.IMAGE_HOSTS ?? "images.unsplash.com")
@@ -66,7 +86,8 @@ export const updateArticleSchema = z.object({
 
 export const articleQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
-  limit: z.coerce.number().int().min(1).max(200).optional().default(9),
+  // Each row carries its full body (reading time is computed from it), so keep pages small.
+  limit: z.coerce.number().int().min(1).max(50).optional().default(9),
   category: z.string().optional(),
   tag: z.string().optional(),
   series: z.string().optional(),
@@ -151,6 +172,7 @@ export const marketplaceProductQuerySchema = z.object({
   category: z.string().trim().regex(slugPattern).max(160).optional(),
   community: z.string().trim().regex(slugPattern).max(100).optional(),
   platform: z.enum(MARKETPLACE_PLATFORM_KEYS).optional(),
+  permission: z.enum(permissionCapabilities).optional(),
   verified: z.enum(["true", "false"]).optional().transform((value) => value === "true" ? true : undefined),
   minRating: z.coerce.number().min(0).max(5).optional().default(0),
   sort: z.enum(["featured", "rating", "newest", "relevance"]).optional().default("featured"),
@@ -162,6 +184,9 @@ export const marketplaceLibraryQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(50).optional().default(24),
 });
+
+export const marketplaceCreatorQuerySchema = marketplaceProductQuerySchema.pick({ page: true, limit: true })
+  .refine(({ page, limit }) => (page - 1) * limit <= 2_147_483_647, { path: ["page"], message: "Page is too large" });
 
 export const creatorOnboardingSchema = z.object({
   name: englishDisplayName(2, 80),

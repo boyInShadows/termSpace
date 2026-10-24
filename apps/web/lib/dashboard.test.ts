@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api";
+import { copy } from "@/lib/i18n";
 import type { CreatorDashboardListing } from "@/lib/types";
 
 const getProfile = vi.hoisted(() => vi.fn());
@@ -16,6 +17,9 @@ const {
   formatRelative,
   getDashboardHome,
   greetingPeriod,
+  isEditable,
+  lifecycleActionLabel,
+  listingStateLabel,
   listingTone,
   OVERVIEW_LISTING_LIMIT,
 } = await import("./dashboard");
@@ -23,7 +27,7 @@ const {
 function listing(id: string, events: Array<[string, string]>): CreatorDashboardListing {
   return {
     id, slug: id, name: `Listing ${id}`, type: "Skill", typeKey: "skill", state: "published",
-    lifecycleVersion: 1, published: true, rating: 0, reviewCount: 0, acquisitionCount: 0,
+    lifecycleVersion: 1, published: true, restoreTarget: null, rating: 0, reviewCount: 0, acquisitionCount: 0,
     currentVersion: "1.0.0", releaseCount: 1, latestRelease: null, moderationFeedback: null,
     recentUpdates: events.map(([eventId, createdAt]) => ({ id: eventId, action: "published", state: "published", message: null, createdAt })),
     updatedAt: "2026-09-20T00:00:00.000Z",
@@ -40,7 +44,7 @@ describe("getDashboardHome", () => {
     getDashboard.mockResolvedValue({ data, meta: {} });
 
     await expect(getDashboardHome()).resolves.toEqual({ kind: "creator", profile, dashboard: data });
-    expect(getDashboard).toHaveBeenCalledWith(1, OVERVIEW_LISTING_LIMIT, undefined);
+    expect(getDashboard).toHaveBeenCalledWith(1, OVERVIEW_LISTING_LIMIT, undefined, undefined);
   });
 
   it.each([403, 404])("treats a %i as a reader without a creator workspace", async (status) => {
@@ -90,6 +94,23 @@ describe("tones", () => {
   });
 });
 
+describe("listing lifecycle helpers", () => {
+  it("keeps submitted, approved, suspended and archived listings read-only", () => {
+    for (const state of ["draft", "changes_requested", "rejected", "published"]) expect(isEditable(state)).toBe(true);
+    for (const state of ["submitted", "approved", "suspended", "archived", "unknown"]) expect(isEditable(state)).toBe(false);
+  });
+
+  it.each(["en", "fa"] as const)("keeps %s labels and unknown-value fallbacks", (locale) => {
+    const hub = copy[locale].creatorHub;
+    expect(listingStateLabel("changes_requested", hub)).toBe(hub.statusChangesRequested);
+    expect(listingStateLabel("published", hub)).toBe(hub.statusPublished);
+    expect(lifecycleActionLabel("draft_saved", hub)).toBe(hub.actionDraftSaved);
+    expect(lifecycleActionLabel("restored", hub)).toBe(hub.actionRestored);
+    expect(listingStateLabel("new_state", hub)).toBe("new state");
+    expect(lifecycleActionLabel("new_action", hub)).toBe("new action");
+  });
+});
+
 describe("greetingPeriod", () => {
   it("splits the day at noon and 6pm", () => {
     expect(greetingPeriod(0)).toBe("morning");
@@ -102,6 +123,24 @@ describe("greetingPeriod", () => {
 
 describe("formatRelative", () => {
   const now = Date.parse("2026-09-23T12:00:00Z");
+
+  it("reuses locale formatters without caching dates or the current time", async () => {
+    vi.resetModules();
+    const { formatRelative: format } = await import("./dashboard");
+    const RelativeTimeFormat = Intl.RelativeTimeFormat;
+    const construct = vi.spyOn(Intl, "RelativeTimeFormat").mockImplementation(function (locale, options) {
+      return new RelativeTimeFormat(locale, options);
+    });
+    try {
+      expect(format("2026-09-20T12:00:00Z", now, "en-US")).toBe("3 days ago");
+      expect(format("2026-09-20T12:00:00Z", now + 86_400_000, "en-US")).toBe("4 days ago");
+      expect(format("2026-09-24T12:00:00Z", now, "en-US")).toBe("tomorrow");
+      const persian = format("2026-09-20T12:00:00Z", now, "fa-IR");
+      expect(persian).toContain("۳");
+      expect(format("2026-09-20T12:00:00Z", now + 86_400_000, "fa-IR")).toContain("۴");
+      expect(construct).toHaveBeenCalledTimes(2);
+    } finally { construct.mockRestore(); }
+  });
 
   it("picks the largest whole unit", () => {
     expect(formatRelative("2026-09-20T12:00:00Z", now, "en-US")).toBe("3 days ago");

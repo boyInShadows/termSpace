@@ -16,6 +16,33 @@ services:
       timeout: 5s
       retries: 10
 
+  # Shared rate-limit counters (see apps/api/src/lib/redis.ts). Disposable: nothing here is worth persisting.
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "64mb", "--maxmemory-policy", "volatile-ttl"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One-shot: applies pending migrations and exits. Take a database backup first;
+  # migrations are forward-only. Keeping it out of the API start command stops
+  # replicas racing each other and lets node run as PID 1 to receive SIGTERM.
+  migrate:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    restart: "no"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public&connection_limit=1
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["npm", "run", "prisma:deploy", "--workspace", "@termspace/api"]
+
   api:
     build:
       context: .
@@ -24,8 +51,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4001
-      DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public&connection_limit=10
       TRUST_PROXY: ${TRUST_PROXY:-1}
+      REDIS_URL: redis://redis:6379
       # Also the CSRF allow-list: writes from any other Origin are rejected.
       CORS_ORIGINS: ${CORS_ORIGINS:?Set CORS_ORIGINS to the public web and blog origins in .env}
       ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}
@@ -33,24 +61,25 @@ services:
       READER_SESSION_DAYS: ${READER_SESSION_DAYS:-30}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET:?Set EMAIL_VERIFICATION_SECRET in .env}
-      WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
+      WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?Set WEB_PUBLIC_URL to the public web origin in .env}
       LOCAL_AUTO_VERIFY_EMAIL: ${LOCAL_AUTO_VERIFY_EMAIL:-false}
-      MARKETPLACE_PROVIDER_TOKEN_KEY: ${MARKETPLACE_PROVIDER_TOKEN_KEY:-}
+      MARKETPLACE_PROVIDER_TOKEN_KEY: ${MARKETPLACE_PROVIDER_TOKEN_KEY:?Set MARKETPLACE_PROVIDER_TOKEN_KEY in .env}
       MEDIA_STORAGE: ${MEDIA_STORAGE:-local}
-      MEDIA_PUBLIC_URL: ${MEDIA_PUBLIC_URL:-http://localhost:4001/media}
+      MEDIA_PUBLIC_URL: ${MEDIA_PUBLIC_URL:?Set MEDIA_PUBLIC_URL to the public media origin in .env}
       IMAGE_HOSTS: ${IMAGE_HOSTS:-images.unsplash.com}
       R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
       R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
       R2_BUCKET: ${R2_BUCKET:-}
     depends_on:
-      db:
+      migrate:
+        condition: service_completed_successfully
+      redis:
         condition: service_healthy
     ports:
       - "127.0.0.1:${API_HOST_PORT:-4001}:4001"
     volumes:
       - api_uploads:/app/apps/api/uploads
-    command: ["sh", "-c", "npm run prisma:deploy --workspace @termspace/api && npm run start --workspace @termspace/api"]
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:4001/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 10s
@@ -63,16 +92,20 @@ services:
       dockerfile: docker/Dockerfile.web
       args:
         API_URL: ${WEB_BUILD_API_URL:-http://api:4001}
-        NEXT_PUBLIC_BLOG_URL: ${BLOG_SITE_URL:-http://localhost:3001}
+        NEXT_PUBLIC_BLOG_URL: ${BLOG_SITE_URL:?Set BLOG_SITE_URL to the public blog origin in .env}
         # Inlined at build time: canonicals, sitemap, robots and social cards.
-        NEXT_PUBLIC_SITE_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
+        NEXT_PUBLIC_SITE_URL: ${WEB_PUBLIC_URL:?Set WEB_PUBLIC_URL to the public web origin in .env}
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     restart: unless-stopped
     environment:
       NODE_ENV: production
       API_URL: http://api:4001
       NEXT_PUBLIC_API_URL: /backend
-      NEXT_PUBLIC_BLOG_URL: ${BLOG_SITE_URL:-http://localhost:3001}
-      NEXT_PUBLIC_SITE_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
+      NEXT_PUBLIC_BLOG_URL: ${BLOG_SITE_URL:?Set BLOG_SITE_URL to the public blog origin in .env}
+      NEXT_PUBLIC_SITE_URL: ${WEB_PUBLIC_URL:?Set WEB_PUBLIC_URL to the public web origin in .env}
+      # Policy pages: the entity and contact shown on /privacy, /terms and /content-policy.
+      LEGAL_ENTITY_NAME: ${LEGAL_ENTITY_NAME:-TermSpace}
+      LEGAL_CONTACT_EMAIL: ${LEGAL_CONTACT_EMAIL:?Set LEGAL_CONTACT_EMAIL (privacy and takedown contact) in .env}
     depends_on:
       api:
         condition: service_healthy
@@ -85,6 +118,8 @@ services:
       dockerfile: docker/Dockerfile.blog
       args:
         API_URL: ${BLOG_BUILD_API_URL:-http://api:4001}
+        NEXT_PUBLIC_SITE_URL: ${BLOG_SITE_URL:?Set BLOG_SITE_URL to the public blog origin in .env}
+        NEXT_PUBLIC_WEB_URL: ${WEB_PUBLIC_URL:?Set WEB_PUBLIC_URL to the public web origin in .env}
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
         NEXT_PUBLIC_IMAGE_HOSTS: ${IMAGE_HOSTS:-images.unsplash.com}
     restart: unless-stopped
@@ -92,7 +127,7 @@ services:
       NODE_ENV: production
       API_URL: http://api:4001
       NEXT_PUBLIC_API_URL: /backend
-      NEXT_PUBLIC_SITE_URL: ${BLOG_SITE_URL:-http://localhost:3001}
+      NEXT_PUBLIC_SITE_URL: ${BLOG_SITE_URL:?Set BLOG_SITE_URL to the public blog origin in .env}
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     depends_on:
       api:
@@ -104,10 +139,11 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.api
+    init: true
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public&connection_limit=2
     depends_on:
       api:
         condition: service_healthy
@@ -119,12 +155,13 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.api
+    init: true
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public&connection_limit=2
       EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET:?Set EMAIL_VERIFICATION_SECRET in .env}
-      WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:3000}
+      WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?Set WEB_PUBLIC_URL to the public web origin in .env}
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       CLOUDFLARE_EMAIL_API_TOKEN: ${CLOUDFLARE_EMAIL_API_TOKEN:-}
       EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-}
@@ -139,10 +176,11 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.api
+    init: true
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}?schema=public&connection_limit=2
       MARKETPLACE_PROVIDER_TOKEN_KEY: ${MARKETPLACE_PROVIDER_TOKEN_KEY:?Set MARKETPLACE_PROVIDER_TOKEN_KEY in .env}
       MARKETPLACE_SOURCE_WORKER_BATCH_SIZE: ${MARKETPLACE_SOURCE_WORKER_BATCH_SIZE:-10}
     depends_on:

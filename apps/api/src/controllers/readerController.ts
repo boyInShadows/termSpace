@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { compare, hash } from "bcryptjs";
+import { comparePassword } from "../lib/passwordCompare.js";
 import { OAuth2Client } from "google-auth-library";
 import { Prisma, type MarketplaceRole } from "@prisma/client";
 import type { Request, Response } from "express";
@@ -69,7 +70,9 @@ export async function loginReader(req: Request, res: Response) {
     where: { email },
     include: { marketplaceRoleGrants: activeMarketplaceRoles },
   });
-  if (!user?.passwordHash || !(await compare(String(req.body.password), user.passwordHash))) {
+  // Compare even when there is no user, so response time does not reveal which emails exist.
+  const passwordMatches = await comparePassword(String(req.body.password), user?.passwordHash);
+  if (!user || !passwordMatches) {
     res.status(401).json({ error: { code: "INVALID_CREDENTIALS", message: "Invalid email or password" } });
     return;
   }
@@ -85,24 +88,24 @@ export async function loginReader(req: Request, res: Response) {
 
 export async function registerReader(req: Request, res: Response) {
   const email = String(req.body.email).trim().toLowerCase();
+  // Hash before touching the database so a taken email costs the same as a new one.
   const passwordHash = await hash(String(req.body.password), 12);
   const autoVerify = localEmailVerificationBypassEnabled();
 
   try {
-    const user = await prisma.readerUser.create({
+    await prisma.readerUser.create({
       data: autoVerify
         ? { email, passwordHash, emailVerifiedAt: new Date() }
         : { email, passwordHash, emailVerifications: { create: newVerificationData() } },
-      select: { id: true, email: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
+      select: { id: true },
     });
-    await createSession(res, user);
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      res.status(409).json({ error: { code: "EMAIL_ALREADY_REGISTERED", message: "An account with this email already exists" } });
-      return;
-    }
-    throw error;
+    // A taken email gets the same answer as a new one, so this endpoint cannot be used to
+    // find out who has an account. The owner still has sign-in and password reset.
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")) throw error;
   }
+  // No session either: the caller signs in once they know the password works.
+  res.status(202).json({ data: { accepted: true } });
 }
 
 export async function requestReaderEmailVerification(req: Request, res: Response) {
@@ -297,7 +300,8 @@ export async function loginReaderWithGoogle(req: Request, res: Response) {
         const [linkedUser] = await prisma.$transaction([
           prisma.readerUser.update({
             where: { id: user.id },
-            data: { googleSubject: payload.sub, emailVerifiedAt: new Date(), passwordHash: null },
+            // Discard an unverified signup's password when its real email owner claims it.
+            data: { googleSubject: payload.sub, emailVerifiedAt: new Date(), ...(!user.emailVerifiedAt ? { passwordHash: null } : {}) },
             select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
           }),
           prisma.readerSession.deleteMany({ where: { userId: user.id } }),
@@ -336,6 +340,11 @@ export async function logoutReader(req: Request, res: Response) {
 }
 
 export function getReaderSession(_req: Request, res: Response) {
+  // Answers 200 for an anonymous caller (see optionalReader).
+  if (!res.locals.reader) {
+    res.json({ data: { authenticated: false } });
+    return;
+  }
   res.json({ data: { authenticated: true, user: res.locals.reader } });
 }
 

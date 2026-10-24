@@ -270,6 +270,8 @@ model ReaderUser {
   communityPlacementsModerated MarketplaceCommunityPlacement[]      @relation("CommunityPlacementModerator")
   communityPlacementEvents     MarketplaceCommunityPlacementEvent[] @relation("CommunityPlacementEventActor")
   requestedSourceChecks  MarketplaceSourceCheckJob[]
+  marketplaceReports     MarketplaceReport[]
+  moderationCaseEvents   MarketplaceModerationCaseEvent[]
 }
 
 enum TransactionalEmailStatus {
@@ -539,6 +541,7 @@ model MarketplaceProduct {
   communityRequests        MarketplaceCommunityPlacementRequest[]
   communityPlacements      MarketplaceCommunityPlacement[]
   compatibility            MarketplaceProductCompatibility[]
+  moderationCases          MarketplaceModerationCase[]
 
   @@index([published, featured, usageCount])
   @@index([published, type])
@@ -1122,6 +1125,91 @@ model MarketplaceReview {
 
   @@unique([userId, productId])
   @@index([productId, published, createdAt])
+}
+
+enum MarketplaceReportReason {
+  MALICIOUS
+  UNDISCLOSED_PERMISSIONS
+  SOURCE_COMPROMISE
+  IMPERSONATION
+  MISLEADING
+  BROKEN_OR_ABANDONED
+  SPAM_OR_ABUSE
+  OTHER
+}
+
+enum MarketplaceModerationCaseState {
+  NEW
+  TRIAGED
+  INVESTIGATING
+  ACTIONED
+  DISMISSED
+}
+
+enum MarketplaceModerationSeverity {
+  STANDARD
+  HIGH
+  CRITICAL
+}
+
+enum MarketplaceModerationCaseActor {
+  READER
+  MODERATOR
+  ADMINISTRATOR
+}
+
+model MarketplaceModerationCase {
+  id           String                         @id @default(cuid())
+  productId    String
+  reason       MarketplaceReportReason
+  // Only open cases have a key, so later evidence can start a new case after resolution.
+  openKey      String?                        @unique
+  state        MarketplaceModerationCaseState @default(NEW)
+  severity     MarketplaceModerationSeverity  @default(STANDARD)
+  version      Int                            @default(0)
+  publicReason String?
+  createdAt    DateTime                       @default(now())
+  updatedAt    DateTime                       @updatedAt
+  product      MarketplaceProduct             @relation(fields: [productId], references: [id], onDelete: Restrict)
+  reports      MarketplaceReport[]
+  events       MarketplaceModerationCaseEvent[]
+
+  @@index([state, severity, createdAt])
+  @@index([productId, createdAt])
+}
+
+model MarketplaceReport {
+  id           String                    @id @default(cuid())
+  caseId       String
+  reporterId   String
+  explanation  String
+  createdAt    DateTime                  @default(now())
+  case         MarketplaceModerationCase @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  reporter     ReaderUser                @relation(fields: [reporterId], references: [id], onDelete: Restrict)
+
+  @@unique([caseId, reporterId])
+  @@index([reporterId, createdAt])
+}
+
+model MarketplaceModerationCaseEvent {
+  id                String                          @id @default(cuid())
+  caseId            String
+  actorUserId       String
+  actorType         MarketplaceModerationCaseActor
+  action            String
+  previousState     MarketplaceModerationCaseState?
+  resultingState    MarketplaceModerationCaseState
+  previousSeverity  MarketplaceModerationSeverity?
+  resultingSeverity MarketplaceModerationSeverity
+  reasonCode        String
+  publicReason      String?
+  evidenceReference String?
+  correlationId     String                          @unique
+  createdAt         DateTime                        @default(now())
+  case              MarketplaceModerationCase        @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  actor             ReaderUser                      @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([caseId, createdAt])
 }
 
 model MarketplaceFavorite {

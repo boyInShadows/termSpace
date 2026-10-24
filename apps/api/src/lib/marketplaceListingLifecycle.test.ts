@@ -26,6 +26,15 @@ describe("marketplace listing lifecycle", () => {
     expect(resolveMarketplaceListingTransition(submitted, "REQUEST_CHANGES", "MODERATOR").published).toBe(true);
   });
 
+  it.each([false, true])("withdraws only submitted listings, preserving snapshots and published=%s", (published) => {
+    expect(resolveMarketplaceListingTransition(context({ state: "SUBMITTED", published, hasApprovedSnapshot: published }), "WITHDRAW", "CREATOR"))
+      .toMatchObject({ state: "DRAFT", published, approvedSnapshot: "keep", proposedSnapshot: "keep", eventAction: "WITHDRAWN" });
+    for (const state of ["DRAFT", "APPROVED", "PUBLISHED", "CHANGES_REQUESTED", "REJECTED", "SUSPENDED", "ARCHIVED"] as const) {
+      expect(() => resolveMarketplaceListingTransition(context({ state, published }), "WITHDRAW", "CREATOR"))
+        .toThrowError(expect.objectContaining({ code: "INVALID_LISTING_TRANSITION" }));
+    }
+  });
+
   it("round-trips suspension without losing the active review state", () => {
     const suspended = resolveMarketplaceListingTransition(context({ state: "SUBMITTED", published: true, hasApprovedSnapshot: true }), "SUSPEND", "ADMINISTRATOR");
     expect(suspended).toEqual(expect.objectContaining({ state: "SUSPENDED", published: false, resumeState: "SUBMITTED", resumePublished: true }));

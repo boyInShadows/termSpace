@@ -35,7 +35,29 @@ test.describe("persian", () => {
     });
   }
 
-  test("display type runs smaller, looser and lighter than the English", async ({ page }) => {
+  test("every section heading on /fa is in Persian", async ({ page }) => {
+    await page.goto("/fa");
+    await expect(page.locator("h1").first()).toBeVisible();
+    const headings = await page.locator("main h2").allTextContents();
+    expect(headings.length).toBeGreaterThanOrEqual(3);
+    expect(headings.filter((text) => !/[؀-ۿ]/.test(text))).toEqual([]);
+  });
+
+  test("the language switch changes lang and dir without a manual reload", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/products/conversion-copywriter");
+    await page.locator('header a[lang="fa"]').click();
+    await expect(page).toHaveURL(/\/fa\/products\/conversion-copywriter$/);
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await expect(page.locator("html")).toHaveAttribute("lang", "fa");
+
+    await page.locator('header a[lang="en"]').click();
+    await expect(page).toHaveURL(/\/products\/conversion-copywriter$/);
+    await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  });
+
+  test("Persian headings keep looser leading with the shared heading weight", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     const measure = () =>
       page.locator("h1").evaluate((node) => {
@@ -47,26 +69,14 @@ test.describe("persian", () => {
     await page.goto("/fa");
     const persian = await measure();
 
-    expect(persian.size).toBeLessThan(english.size);
+    expect(english.weight).toBe("600");
+    expect(persian.leading).toBeGreaterThan(english.leading);
     expect(persian.leading).toBeCloseTo(1.35, 2);
     expect(persian.weight).toBe("600");
   });
 
-  test("the ticker runs mirrored, towards the reading end", async ({ page }) => {
+  test("prose counts use Persian digits", async ({ page }) => {
     await page.goto("/fa");
-    const track = page.locator(".animate-marquee");
-    await expect(track).toHaveCSS("animation-name", "ts-marquee-rtl");
-    const x = () => track.evaluate((node) => node.getBoundingClientRect().left);
-    const before = await x();
-    await page.waitForTimeout(800);
-    expect(await x()).toBeGreaterThan(before);
-  });
-
-  test("prose counts use Persian digits; the terminal card keeps Latin ones", async ({ page }) => {
-    await page.goto("/fa");
-    const featured = page.locator("article").first();
-    await expect(featured).toContainText(PERSIAN_DIGITS);
-    await expect(page.locator(".ts-seq")).toHaveAttribute("dir", "ltr");
-    await expect(page.locator(".ts-seq")).not.toContainText(PERSIAN_DIGITS);
+    await expect(page.locator("main article").first()).toContainText(PERSIAN_DIGITS);
   });
 });

@@ -1,15 +1,15 @@
 "use client";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ApiError, confirmPasswordReset, getMarketplaceLibrary, login, logout, register, requestPasswordReset } from "@/lib/api";
-import type { MarketplaceLibraryEntry } from "@/lib/types";
+import { ApiError, confirmPasswordReset, login, loginWithGoogle, logout, register, requestPasswordReset } from "@/lib/api";
 import { useMarketplaceSession } from "./marketplace-session";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
-import { intlLocale } from "@/lib/format";
+import { AcquiredLibrary } from "@/features/library/acquired-library";
+import { GoogleSignIn } from "./google-sign-in";
 
 export function AccountForm() {
   const { locale, t } = useLocale();
@@ -20,6 +20,22 @@ export function AccountForm() {
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter(); const params = useSearchParams(); const session = useMarketplaceSession();
   if (session.email) return <SignedInAccount email={session.email} />;
+
+  async function finishSignIn(verificationRequired = false) {
+    await session.refresh();
+    const next = params.get("next");
+    const destination = next?.startsWith("/") && URL.canParse(next, window.location.origin) ? new URL(next, window.location.origin) : null;
+    router.replace(verificationRequired ? localePath("/account/verify-email", locale) : destination?.origin === window.location.origin ? `${destination.pathname}${destination.search}${destination.hash}` : localePath("/", locale));
+    router.refresh();
+  }
+
+  async function signInWithGoogle(credential: string) {
+    setSubmitting(true); setError(null); setStatus(null);
+    try { await loginWithGoogle(credential); await finishSignIn(); }
+    catch (cause) { setError(cause instanceof ApiError ? cause.message : t.serviceError); }
+    finally { setSubmitting(false); }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSubmitting(true); setError(null); setStatus(null);
     const data = new FormData(event.currentTarget);
@@ -43,15 +59,19 @@ export function AccountForm() {
         setError(t.passwordMismatch);
         return;
       }
-      await (mode === "login" ? login(email, password) : register(email, password));
-      await session.refresh();
-      const next = params.get("next");
-      router.replace(mode === "register" ? localePath("/account/verify-email", locale) : next?.startsWith("/") && !next.startsWith("//") ? next : localePath("/", locale));
-      router.refresh();
+      if (mode === "register") {
+        // The API answers the same whether or not the email was already registered, and
+        // starts no session, so the form cannot reveal who has an account.
+        await register(email, password);
+        setMode("login");
+        setStatus(t.registerAccepted);
+        return;
+      }
+      await login(email, password);
+      await finishSignIn();
     } catch (cause) {
       if (!(cause instanceof ApiError)) setError(t.serviceError);
       else if (cause.code === "INVALID_CREDENTIALS") setError(t.invalidCredentials);
-      else if (cause.code === "EMAIL_ALREADY_REGISTERED") setError(t.emailAlreadyRegistered);
       else if (cause.code === "INVALID_OR_EXPIRED_OTP") setError(t.resetCodeInvalid);
       else if (cause.code === "PASSWORD_UNCHANGED") setError(t.passwordUnchanged);
       else setError(cause.message);
@@ -61,6 +81,7 @@ export function AccountForm() {
   return <div className="mx-auto max-w-md rounded-xl border bg-surface p-7">
     <h1 className="editorial text-4xl">{mode === "login" ? t.signIn : mode === "register" ? t.createAccount : mode === "forgot" ? t.forgotPassword : t.enterResetCode}</h1>
     <p className="mt-2 text-sm text-muted-foreground">{mode === "forgot" ? t.forgotPasswordIntro : mode === "reset" ? t.resetCodeIntro : t.accountIntro}</p>
+    {(mode === "login" || mode === "register") && <GoogleSignIn key={mode} text={mode === "register" ? "signup_with" : "signin_with"} locale={locale} disabled={submitting} onCredential={signInWithGoogle} onUnavailable={() => setError(t.serviceError)} />}
     <form className="mt-7 space-y-4" onSubmit={submit}>
       <label className="block text-sm font-medium">{t.email}<Input name="email" type="email" required autoComplete="email" defaultValue={mode === "reset" ? resetEmail : ""} className="mt-2" /></label>
       {mode === "reset" && <label className="block text-sm font-medium">{t.resetCode}<Input name="code" type="text" inputMode="numeric" pattern="[0-9]{6}" minLength={6} maxLength={6} required autoComplete="one-time-code" className="mt-2" /></label>}
@@ -71,8 +92,8 @@ export function AccountForm() {
       <Button className="w-full" disabled={submitting}>{submitting ? t.wait : mode === "login" ? t.signIn : mode === "register" ? t.createAccount : mode === "forgot" ? t.sendResetCode : t.resetPassword}</Button>
     </form>
     <div className="mt-5 flex flex-col items-start gap-3">
-      {mode === "login" && <button type="button" className="text-sm font-semibold text-primary" onClick={() => { setMode("forgot"); setError(null); setStatus(null); }}>{t.forgotPassword}</button>}
-      <button type="button" className="text-sm font-semibold text-primary" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(null); setStatus(null); }}>
+      {mode === "login" && <button type="button" className="inline-flex min-h-8 items-center text-sm font-semibold text-primary" onClick={() => { setMode("forgot"); setError(null); setStatus(null); }}>{t.forgotPassword}</button>}
+      <button type="button" className="inline-flex min-h-8 items-center text-sm font-semibold text-primary" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(null); setStatus(null); }}>
         {mode === "login" ? t.needAccount : mode === "register" ? t.registered : t.backToSignIn}
       </button>
     </div>
@@ -83,30 +104,10 @@ function SignedInAccount({ email }: { email: string }) {
   const { locale, t } = useLocale();
   const router = useRouter();
   const session = useMarketplaceSession();
-  const [entries, setEntries] = useState<MarketplaceLibraryEntry[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const fa = locale === "fa";
-  useEffect(() => {
-    const controller = new AbortController();
-    void getMarketplaceLibrary(page, 24, controller.signal)
-      .then((result) => { setEntries(result.data); setTotalPages(result.meta.totalPages); setError(false); })
-      .catch(() => { if (!controller.signal.aborted) setError(true); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [page]);
   return <div className="mx-auto max-w-4xl space-y-6">
     <header className="rounded-xl border bg-surface p-7 sm:flex sm:items-end sm:justify-between sm:gap-6"><div><p className="eyebrow">{fa ? "حساب خواننده" : "Reader account"}</p><h1 className="editorial mt-2 text-4xl">{t.account}</h1><p className="mt-3 text-muted-foreground">{t.signedInAs} {email}</p></div><Button className="mt-6 sm:mt-0" variant="secondary" onClick={async () => { await logout(); await session.refresh(); router.replace(localePath("/", locale)); router.refresh(); }}>{t.signOut}</Button></header>
-    <section className="rounded-xl border bg-surface p-7" aria-labelledby="account-library-title">
-      <h2 id="account-library-title" className="editorial text-3xl">{fa ? "کتابخانهٔ شما" : "Your library"}</h2>
-      <p className="mt-2 text-sm text-muted-foreground">{fa ? "منابع رایگانی که دریافت کرده‌اید و نسخهٔ دقیق متصل به هر دریافت." : "Free resources you acquired and the exact release pinned to each acquisition."}</p>
-      {loading && <p className="mt-6 text-sm text-muted-foreground" role="status">{fa ? "در حال بارگذاری کتابخانه…" : "Loading library…"}</p>}
-      {error && <p className="mt-6 text-sm text-destructive" role="alert">{fa ? "بارگذاری کتابخانه انجام نشد." : "The library could not be loaded."}</p>}
-      {!loading && !error && entries.length === 0 && <p className="mt-6 rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">{fa ? "هنوز منبعی به کتابخانه اضافه نکرده‌اید." : "You have not added any resources yet."}</p>}
-      {entries.length > 0 && <ul className="mt-6 space-y-3">{entries.map((entry) => <li className="rounded-lg border p-4 sm:flex sm:items-center sm:justify-between sm:gap-5" key={entry.acquisitionId}><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">{entry.product.name}</h3><span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground" dir="ltr">{entry.release ? `v${entry.release.version}` : fa ? "نسخهٔ قدیمی" : "Legacy release"}</span></div><p className="mt-1 text-sm text-muted-foreground">{entry.product.outcome}</p><p className="mt-2 text-xs text-muted-foreground">@{entry.product.creator.handle} · {new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" }).format(new Date(entry.acquiredAt))}</p></div>{entry.installationAvailable ? <Link className={`${buttonVariants({ size: "sm", variant: "secondary" })} mt-4 sm:mt-0`} href={localePath(`/products/${entry.product.slug}`, locale)}>{fa ? "مشاهدهٔ نصب" : "View installation"}</Link> : <span className="mt-4 text-xs font-semibold text-amber-800 dark:text-amber-300 sm:mt-0">{fa ? "نصب در دسترس نیست" : "Installation unavailable"}</span>}</li>)}</ul>}
-      {totalPages > 1 && <nav className="mt-6 flex items-center justify-between" aria-label={fa ? "صفحه‌های کتابخانه" : "Library pages"}><Button variant="secondary" size="sm" disabled={page <= 1 || loading} onClick={() => { setLoading(true); setPage((value) => value - 1); }}>{fa ? "قبلی" : "Previous"}</Button><span className="text-xs text-muted-foreground">{fa ? `صفحهٔ ${page} از ${totalPages}` : `Page ${page} of ${totalPages}`}</span><Button variant="secondary" size="sm" disabled={page >= totalPages || loading} onClick={() => { setLoading(true); setPage((value) => value + 1); }}>{fa ? "بعدی" : "Next"}</Button></nav>}
-    </section>
+    {!session.emailVerified && <section className="rounded-xl border bg-surface p-7"><p className="text-muted-foreground">{t.verificationInstructions}</p><Link className={`${buttonVariants()} mt-4`} href={localePath("/account/verify-email", locale)}>{t.verifyEmail}</Link></section>}
+    <AcquiredLibrary embedded />
   </div>;
 }

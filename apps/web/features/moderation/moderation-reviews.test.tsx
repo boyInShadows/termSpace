@@ -65,6 +65,14 @@ describe("ModerationReviews", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Staff cannot moderate a listing they own");
   });
 
+  it("says the change failed, not that the list failed to load, when hiding fails offline", async () => {
+    setReviewVisibility.mockRejectedValue(new Error("offline"));
+    render(<ModerationReviews productId="p1" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Restore" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("The change could not be saved");
+  });
+
   it("says so when the list cannot load", async () => {
     listReviewsForModeration.mockRejectedValue(new ApiError(0, "NETWORK_ERROR", "x"));
     render(<ModerationReviews productId="p1" />);

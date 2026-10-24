@@ -76,6 +76,8 @@ type Seed = {
   featured: boolean;
   trending?: boolean;
   verified: boolean;
+  permissions: string;
+  license: string | null;
   tags: string[];
   platforms: Product["compatibility"]["platforms"];
 };
@@ -94,6 +96,8 @@ const seeds: Seed[] = [
     usageCount: 3200,
     featured: true,
     verified: true,
+    permissions: "Reads the current selection · no network access",
+    license: "MIT",
     tags: ["copywriting", "research"],
     platforms: ["Claude", "ChatGPT", "Cursor"],
   },
@@ -111,6 +115,8 @@ const seeds: Seed[] = [
     featured: true,
     trending: true,
     verified: true,
+    permissions: "Reads the diff under review · no network access",
+    license: "Apache-2.0",
     tags: ["code-review", "quality"],
     platforms: ["Claude", "Cursor", "VS Code"],
   },
@@ -127,6 +133,8 @@ const seeds: Seed[] = [
     usageCount: 2600,
     featured: true,
     verified: true,
+    permissions: "Reads files you open · calls api.crossref.org",
+    license: "MIT",
     tags: ["research", "citations"],
     platforms: ["Claude", "Codex", "API"],
   },
@@ -143,6 +151,8 @@ const seeds: Seed[] = [
     usageCount: 1900,
     featured: false,
     verified: true,
+    permissions: "Reads migration files · no network access",
+    license: "MIT",
     tags: ["database", "migrations"],
     platforms: ["Claude", "Cursor"],
   },
@@ -159,6 +169,8 @@ const seeds: Seed[] = [
     usageCount: 1400,
     featured: false,
     verified: false,
+    permissions: "Reads git history · no network access",
+    license: null,
     tags: ["writing", "changelog"],
     platforms: ["ChatGPT", "Claude"],
   },
@@ -176,6 +188,8 @@ const seeds: Seed[] = [
     featured: false,
     trending: true,
     verified: true,
+    permissions: "Reads components in the working tree · no network access",
+    license: "Apache-2.0",
     tags: ["accessibility", "frontend"],
     platforms: ["Cursor", "VS Code", "Claude"],
   },
@@ -205,6 +219,8 @@ const products: Product[] = seeds.map((seed, index) => ({
   featured: seed.featured,
   trending: seed.trending,
   verified: seed.verified,
+  permissions: seed.permissions,
+  license: seed.license,
   tags: seed.tags,
 }));
 

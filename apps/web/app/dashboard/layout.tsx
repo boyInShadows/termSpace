@@ -1,8 +1,7 @@
 import { DashboardShell } from "@/features/dashboard/dashboard-shell";
 
 /**
- * The dashboard is a workbench, not a page of the marketing site: it trades
- * the site header and footer for its own top bar and sidebar.
+ * Add workspace navigation and the session gate below the root site's header.
  */
 export default function DashboardLayout({
   children,

@@ -111,6 +111,8 @@ describe("content validation", () => {
     expect(marketplaceProductQuerySchema.safeParse({ type: "Prompt pack" }).success).toBe(false);
     expect(marketplaceProductQuerySchema.safeParse({ category: "Developer tools" }).success).toBe(false);
     expect(marketplaceProductQuerySchema.safeParse({ platform: "Codex" }).success).toBe(false);
+    expect(marketplaceProductQuerySchema.safeParse({ permission: "filesystem_read" }).success).toBe(true);
+    expect(marketplaceProductQuerySchema.safeParse({ permission: "FILESYSTEM_READ" }).success).toBe(false);
   });
 
   it("validates complete creator draft writes and optimistic concurrency", () => {

@@ -5,6 +5,9 @@ export type Platform = "API" | "ChatGPT" | "Claude" | "Claude Code" | "Codex" | 
 export type AIModel = "GPT-5" | "Claude 4" | "Gemini 2.5" | "Model agnostic";
 export interface Creator { id: string; name: string; handle: string; initials: string; verified: boolean; bio: string; products: number; followers: number; }
 export interface OwnedCreatorProfile extends Creator { createdAt: string; updatedAt: string; accessActive: boolean; }
+export interface ReaderProfile {
+  email: string; createdAt: string; hasPassword: boolean; connectedGoogle: boolean; emailVerified: boolean;
+}
 export interface CreatorDashboardEvent {
   id: string; action: string; state: string; message: string | null; createdAt: string;
 }
@@ -14,6 +17,7 @@ export interface CreatorModerationFeedback {
 export interface CreatorDashboardListing {
   id: string; slug: string; name: string; type: ProductType; typeKey: MarketplaceItemTypeKey | null;
   state: string; lifecycleVersion: number; published: boolean; rating: number; reviewCount: number;
+  restoreTarget: { state: string; published: boolean } | null;
   acquisitionCount: number; currentVersion: string; releaseCount: number;
   latestRelease: { version: string; releasedAt: string } | null;
   moderationFeedback: CreatorModerationFeedback | null; recentUpdates: CreatorDashboardEvent[]; updatedAt: string;
@@ -65,6 +69,8 @@ export interface MarketplaceModerationQueueListing {
   state: string; version: number; published: boolean; creator: { name: string; handle: string }; selfOwned: boolean;
   proposedRevision: number | null; releaseVersion: string | null; sourceResolved: boolean; ownershipVerified: boolean;
   communityRequestCount: number; updatedAt: string;
+  /** What the proposed release declares it touches, so the queue can show risk before the preview is opened. */
+  capabilities: Array<{ capability: string; required: boolean }>;
 }
 export interface MarketplaceModerationQueueResult {
   data: {
@@ -108,6 +114,8 @@ export interface Product {
   creator: Creator; pricing: Pricing; compatibility: Compatibility; category: string; rating: number;
   reviewCount: number; usageCount: number; purchaseCount: number; updatedAt: string; version: string;
   featured?: boolean; trending?: boolean; verified: boolean; tags: string[];
+  /** One-line summaries the listing declares; list endpoints carry them, a listing may declare neither. */
+  permissions?: string | null; license?: string | null;
   communities: Array<{ slug: string; nameEn: string; nameFa: string | null; primaryPlatform: string }>;
 }
 export type ReviewEligibility = "eligible" | "not_acquired" | "own_listing";
@@ -120,6 +128,8 @@ export interface MyReviewState { eligibility: ReviewEligibility; review: OwnRevi
 export interface ReviewInput { rating: number; displayName: string; body: string }
 export interface ProductRelease {
   version: string;
+  /** False for an earlier release shown from the version picker. */
+  current: boolean;
   source: MarketplaceInstallation["release"]["source"];
   installation: { method: string; url: string };
   permissions: Array<{ capability: string; required: boolean; scope: string | null; destinations: string[]; purpose: string }>;
@@ -172,4 +182,27 @@ export interface MarketplaceTypeCount { type: string; products: number; }
 export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; types: MarketplaceTypeCount[]; platforms: MarketplacePlatform[]; total: number; }
 export interface ProductPageResult { data: Product[]; meta: { page: number; limit: number; total: number; totalPages: number }; }
 export interface MarketplaceCommunityPageResult { data: { community: MarketplaceCommunity; products: Product[] }; meta: ProductPageResult["meta"]; }
-export interface ProductFilters { q?: string; type?: string; category?: string; community?: string; platform?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }
+export interface MarketplaceCreatorPageResult { data: { creator: Creator; products: Product[] }; meta: ProductPageResult["meta"]; }
+
+export type ListingReportReason = "MALICIOUS" | "UNDISCLOSED_PERMISSIONS" | "SOURCE_COMPROMISE" | "IMPERSONATION" | "MISLEADING" | "BROKEN_OR_ABANDONED" | "SPAM_OR_ABUSE" | "OTHER";
+export type ModerationCaseState = "NEW" | "TRIAGED" | "INVESTIGATING" | "ACTIONED" | "DISMISSED";
+export type ModerationCaseSeverity = "STANDARD" | "HIGH" | "CRITICAL";
+export interface ModerationCaseSummary {
+  id: string; productId: string; reason: ListingReportReason; state: ModerationCaseState;
+  severity: ModerationCaseSeverity; version: number; publicReason: string | null;
+  createdAt: string; updatedAt: string; product: { name: string; slug: string }; _count: { reports: number };
+}
+export interface ModerationCaseEvent {
+  id: string; action: string; actorType: "READER" | "MODERATOR" | "ADMINISTRATOR";
+  previousState: ModerationCaseState | null; resultingState: ModerationCaseState;
+  previousSeverity: ModerationCaseSeverity | null; resultingSeverity: ModerationCaseSeverity;
+  reasonCode: string; publicReason: string | null; evidenceReference: string | null;
+  correlationId: string; createdAt: string;
+}
+export interface ModerationCaseReport { id: string; explanation: string; createdAt: string; }
+export interface ModerationCasePage<T> { data: T[]; meta: ProductPageResult["meta"]; }
+export interface ModerationCaseTriage {
+  expectedVersion: number; action: "TRIAGE" | "INVESTIGATE" | "DISMISS";
+  severity: ModerationCaseSeverity; reasonCode: string; publicReason: string; evidenceReference?: string;
+}
+export interface ProductFilters { q?: string; type?: string; category?: string; community?: string; platform?: string; permission?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }

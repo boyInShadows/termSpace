@@ -3,12 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Compass, FileCheck2, Download, ShieldCheck, Lock, Boxes } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { HomeSections } from "@/lib/i18n/home-sections";
 
 type Step = {
   id: string;
   icon: typeof Compass;
-  title: string;
-  copy: string;
   /** Terminal lines shown in the pinned panel while this step is active. */
   lines: ReadonlyArray<{ label: string; value: string; tone?: "verified" | "accent" }>;
 };
@@ -17,8 +16,6 @@ const STEPS: readonly Step[] = [
   {
     id: "discover",
     icon: Compass,
-    title: "Search by outcome",
-    copy: "Describe the job, not the file format. Results rank on whether the thing actually does what you asked, and compare across platforms and models before you commit.",
     lines: [
       { label: "query", value: "review my PR like a staff engineer" },
       { label: "matches", value: "34 across 6 platforms", tone: "accent" },
@@ -28,20 +25,16 @@ const STEPS: readonly Step[] = [
   {
     id: "inspect",
     icon: FileCheck2,
-    title: "Read what it touches",
-    copy: "Contents, permissions, requirements, licence and update history are separate fields on every listing — not paragraphs in a README you have to trust.",
     lines: [
       { label: "reads", value: "current selection only" },
       { label: "network", value: "none requested", tone: "verified" },
       { label: "licence", value: "MIT" },
-      { label: "safety", value: "reviewed 2 days ago", tone: "verified" },
+      { label: "status", value: "reviewed 2 days ago", tone: "verified" },
     ],
   },
   {
     id: "install",
     icon: Download,
-    title: "Put it to work",
-    copy: "One command, the exact version you inspected, and updates that arrive with notes from the person who wrote them.",
     lines: [
       // Version-pinned on purpose: the step's whole claim is that you install
       // the exact thing you just read, so the command has to show the pin.
@@ -67,7 +60,7 @@ const PANEL_ICONS = [Boxes, Lock, ShieldCheck] as const;
  * The panel is decorative reinforcement: each step's full text is already in
  * the scrolling column, so nothing is lost if the observer never fires.
  */
-export function Process() {
+export function Process({ copy }: { copy: Pick<HomeSections, "processEyebrow" | "processTitle" | "processSteps"> }) {
   const [active, setActive] = useState(0);
   const stepRefs = useRef<Array<HTMLDivElement | null>>([]);
 
@@ -117,18 +110,17 @@ export function Process() {
   const current = STEPS[active];
 
   return (
-    <section className="border-y border-border bg-surface/40">
+    <section className="border-y border-border bg-background">
       <div className="container-page section-y">
-        <div className="max-w-2xl">
-          <p className="eyebrow">How it works</p>
+        <div className="mx-auto max-w-2xl text-center">
           <h2 className="editorial mt-3 text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]">
-            From need to useful, without the leap of faith.
+            {copy.processTitle}
           </h2>
         </div>
 
         <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
           {/* --- scrolling steps ------------------------------------------ */}
-          <ol className="relative">
+          <ol className="relative min-w-0">
             {/* The rail the active marker travels down. */}
             <span
               aria-hidden
@@ -136,6 +128,7 @@ export function Process() {
             />
             {STEPS.map((step, index) => {
               const Icon = step.icon;
+              const text = copy.processSteps[index];
               const isActive = index === active;
               return (
                 <li key={step.id}>
@@ -148,9 +141,9 @@ export function Process() {
                     <span
                       aria-hidden
                       className={cn(
-                        "absolute start-0 top-8 grid size-8 place-items-center rounded-full border transition-all duration-500 lg:top-12",
+                        "absolute start-0 top-8 grid size-8 place-items-center rounded-none border transition-all duration-200 lg:top-12",
                         isActive
-                          ? "border-primary bg-primary text-primary-foreground shadow-plasma"
+                          ? "border-foreground bg-foreground text-background"
                           : "border-border bg-background text-muted-foreground",
                       )}
                     >
@@ -159,7 +152,7 @@ export function Process() {
 
                     <p
                       className={cn(
-                        "font-mono text-xs transition-colors duration-500",
+                        "font-mono text-xs transition-colors duration-200",
                         isActive ? "text-primary" : "text-muted-foreground",
                       )}
                     >
@@ -167,14 +160,14 @@ export function Process() {
                     </p>
                     <h3
                       className={cn(
-                        "editorial mt-2 text-2xl transition-colors duration-500 sm:text-3xl",
+                        "editorial mt-2 text-2xl transition-colors duration-200 sm:text-3xl",
                         isActive ? "text-foreground" : "text-muted-foreground",
                       )}
                     >
-                      {step.title}
+                      {text.title}
                     </h3>
                     <p className="mt-3 max-w-md leading-7 text-muted-foreground">
-                      {step.copy}
+                      {text.copy}
                     </p>
 
                     {/* Below lg there is no column to pin a panel in, so each
@@ -220,8 +213,8 @@ export function Process() {
 function StepPanel({ step, index }: { step: Step; index: number }) {
   const PanelIcon = PANEL_ICONS[index];
   return (
-    <div className="panel overflow-hidden rounded-2xl shadow-lift">
-      <div className="flex items-center gap-2.5 border-b border-border/80 bg-surface-raised/60 px-4 py-3">
+    <div className="panel overflow-hidden rounded-2xl">
+      <div className="flex items-center gap-2.5 border-b border-border/80 bg-muted px-4 py-3">
         <PanelIcon size={14} className="text-primary" />
         <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           {step.id}
@@ -231,7 +224,7 @@ function StepPanel({ step, index }: { step: Step; index: number }) {
             <span
               key={candidate.id}
               className={cn(
-                "h-1 rounded-full transition-[width,background-color] duration-(--duration-chip) ease-(--ease-spring)",
+                "h-1 rounded-none transition-[width,background-color] duration-(--duration-chip) ease-(--ease-spring)",
                 position === index ? "w-6 bg-primary" : "w-1.5 bg-border-strong",
               )}
             />
@@ -239,7 +232,9 @@ function StepPanel({ step, index }: { step: Step; index: number }) {
         </span>
       </div>
 
-      <div className="p-5 font-mono text-[13px] leading-7 lg:min-h-56">
+      {/* A Latin data island, like the hero's terminal card: in an RTL page
+          the lines would otherwise reorder ("across 6 platforms 34"). */}
+      <div dir="ltr" className="p-5 font-mono text-[13px] leading-7 lg:min-h-56">
         {step.lines.map((line, position) => (
           <div
             key={line.label + line.value}
@@ -260,7 +255,6 @@ function StepPanel({ step, index }: { step: Step; index: number }) {
             </span>
           </div>
         ))}
-        <span className="mt-2 inline-block h-4 w-2 animate-pulse bg-accent align-middle" />
       </div>
     </div>
   );

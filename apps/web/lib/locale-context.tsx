@@ -1,8 +1,14 @@
 "use client";
 import { createContext, useContext } from "react";
-import type { Locale } from "./i18n";
-import { copy } from "./i18n";
+import type { Locale, sharedMessages } from "./i18n";
 
-const LocaleContext = createContext<Locale>("en");
-export function LocaleProvider({ locale, children }: { locale: Locale; children: React.ReactNode }) { return <LocaleContext.Provider value={locale}>{children}</LocaleContext.Provider>; }
-export function useLocale() { const locale = useContext(LocaleContext); return { locale, fa: locale === "fa", t: copy[locale] }; }
+export type Messages = ReturnType<typeof sharedMessages>;
+const LocaleContext = createContext<{ locale: Locale; messages: Messages } | null>(null);
+export function LocaleProvider({ locale, messages, children }: { locale: Locale; messages: Messages; children: React.ReactNode }) {
+  return <LocaleContext.Provider value={{ locale, messages }}>{children}</LocaleContext.Provider>;
+}
+export function useLocale() {
+  const context = useContext(LocaleContext);
+  if (!context) throw new Error("useLocale requires LocaleProvider");
+  return { locale: context.locale, fa: context.locale === "fa", t: context.messages };
+}

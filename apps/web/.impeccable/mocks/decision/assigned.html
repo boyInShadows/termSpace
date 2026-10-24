@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>termspace - the card catalogue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Cutive+Mono&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{--green:#17352D;--drawer:#1C4036;--drawer2:#122A23;--card:#EEF0EA;--stock:#D6DBD0;--brass:#B58F3E;--violet:#4B2A8C;--red:#B3342B;--ink:#1d2622;--ghost:#737c73}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{margin:0;background:var(--green)}
+.root{position:relative;width:1440px;height:900px;overflow:hidden;margin:0;background:var(--green);color:var(--card);font-family:"Archivo",system-ui,sans-serif}
+.bar{position:absolute;left:64px;right:64px;top:0;height:64px;display:flex;align-items:center;justify-content:space-between;z-index:9}
+.bar b{font-size:24px;font-weight:800;font-stretch:90%;letter-spacing:-.01em}
+.bar nav{display:flex;gap:36px;font-size:15px;font-weight:500}
+.bar a{color:var(--card);text-decoration:none;opacity:.86}
+h1{position:absolute;left:64px;top:88px;width:600px;font-size:78px;line-height:.93;font-weight:800;font-stretch:80%;letter-spacing:-.015em;z-index:2}
+h1 span{display:block}
+h1 span+span{margin-top:0}
+.sub{position:absolute;left:64px;top:392px;width:490px;font-size:17px;line-height:1.55;color:#c9d3cb;z-index:2}
+.stack{position:absolute;left:40px;right:40px;top:566px;height:80px;background:var(--stock);border-top:1px solid #bfc5b9;box-shadow:inset 0 -14px 0 #c3c9bc}
+.tab{position:absolute;top:-34px;height:35px;padding:0 16px;display:flex;align-items:center;background:var(--stock);border:2px solid var(--brass);border-bottom:0;border-radius:5px 5px 0 0;font:600 14px "Archivo";font-stretch:90%;color:var(--ink);white-space:nowrap}
+.rod{position:absolute;left:28px;right:28px;top:604px;height:9px;background:var(--brass);border-radius:5px;box-shadow:inset 0 3px 0 #d3b26a,inset 0 -3px 0 #8d6d2a}
+.card{position:absolute;left:620px;top:110px;width:540px;height:560px;background:var(--card);color:var(--ink);border-radius:3px 3px 0 0;padding:22px 30px;box-shadow:0 0 0 1px #c5cabf,0 18px 28px rgba(0,0,0,.35);font-family:"Cutive Mono",monospace;z-index:4}
+.hole{position:absolute;left:50%;top:480px;width:26px;height:26px;margin-left:-13px;border-radius:50%;background:var(--green);box-shadow:inset 0 0 0 2px #c5cabf}
+.hole:after{content:"";position:absolute;left:-14px;right:-14px;top:9px;height:8px;background:var(--brass);box-shadow:inset 0 2px 0 #d3b26a}
+.head{display:flex;justify-content:space-between;align-items:center;height:28px;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.head em{font-style:normal;border:1.5px dashed var(--ink);padding:2px 8px;letter-spacing:.1em}
+.title{margin-top:8px;height:44px;font:400 34px/44px "Special Elite",monospace;letter-spacing:-.01em;border-bottom:2px solid var(--ink)}
+.fields{margin-top:12px}
+.f{display:flex;align-items:flex-end;height:32px;font-size:17px;padding-bottom:5px;white-space:nowrap}
+.f i{flex:1;margin:0 8px 5px;border-bottom:2px dotted #8b948b}
+.f.ghost{color:var(--ghost)}
+.f.ghost i{border-color:#c0c6bd}
+.f s{color:var(--red);font-size:12px;margin-left:8px;align-self:center;text-decoration-thickness:1.5px}
+.stamp{position:absolute;right:34px;top:394px;transform:rotate(-7deg);padding:6px 16px 5px;border:4px double var(--violet);border-radius:6px;color:var(--violet);font:900 25px/1 "Archivo";font-stretch:85%;letter-spacing:.08em;opacity:.93}
+.note{position:absolute;left:1212px;width:190px;font:400 13px/1.35 "Cutive Mono",monospace;color:#d9e0d6;z-index:5}
+.lead{position:absolute;left:1140px;width:68px;height:1px;background:var(--brass);z-index:6}
+.lead:before{content:"";position:absolute;left:-3px;top:-3px;width:7px;height:7px;border-radius:50%;background:var(--brass)}
+.front{position:absolute;left:0;right:0;top:640px;bottom:0;background:var(--drawer);border-top:12px solid #27523f;z-index:7;box-shadow:0 -6px 14px rgba(0,0,0,.25)}
+.front:after{content:"";position:absolute;left:24px;right:24px;top:14px;bottom:-4px;border:1px solid #31604d;border-radius:4px}
+.holder{position:absolute;left:64px;top:42px;width:660px;height:96px;padding:10px;background:var(--brass);border-radius:5px;box-shadow:inset 0 0 0 2px #d3b26a,inset 0 0 0 5px #8d6d2a,0 4px 0 #6f5420;z-index:2}
+.holder form{display:flex;height:100%;gap:10px}
+.holder input{flex:1;min-width:0;border:0;background:var(--card);padding:0 20px;font:400 21px "Special Elite",monospace;color:var(--ink);border-radius:2px;box-shadow:inset 0 2px 5px rgba(0,0,0,.25);outline-offset:3px}
+.holder input::placeholder{color:#4a554f;opacity:1}
+.holder button{width:128px;border:0;background:var(--violet);color:#f1eefb;font:700 19px "Archivo";font-stretch:90%;letter-spacing:.02em;border-radius:3px;box-shadow:0 3px 0 #2d1a58;cursor:pointer}
+.holder button:focus-visible{outline:3px solid var(--card)}
+.cats{position:absolute;left:68px;top:156px;font-size:15px;letter-spacing:.02em;color:#a9b8ae;z-index:2}
+.pull{position:absolute;left:940px;top:46px;width:260px;height:68px;border-radius:34px 34px 8px 8px;background:var(--drawer2);box-shadow:inset 0 0 0 4px var(--brass),inset 0 0 0 7px #8d6d2a;z-index:2}
+.pull:after{content:"";position:absolute;left:30px;right:30px;top:26px;height:16px;border-radius:8px;background:var(--brass);box-shadow:inset 0 3px 0 #d3b26a,0 3px 0 #6f5420}
+.screw{position:absolute;top:34px;width:12px;height:12px;border-radius:50%;background:var(--brass);box-shadow:inset 0 0 0 3px #8d6d2a}
+</style>
+</head>
+<body>
+<div class="root">
+  <header class="bar"><b>termspace</b><nav><a href="#">Explore</a><a href="#">Share your work</a><a href="#">Sign in</a></nav></header>
+  <h1><span>Stop prompting</span><span>from scratch.</span><span>Start from</span><span>what works.</span></h1>
+  <p class="sub">Prompts, skills, agents and MCP servers built by people who already got the model to behave, each one listed with its permissions, compatibility and safety review in plain sight.</p>
+
+  <div class="stack">
+    <span class="tab" style="left:24px">Skills</span><span class="tab" style="left:134px">Agents</span><span class="tab" style="left:250px">MCP servers</span>
+    <span class="tab" style="left:1150px">Prompts</span><span class="tab" style="left:1262px">Rules</span>
+  </div>
+  <div class="rod"></div>
+
+  <article class="card" aria-label="Example listing: Staff Engineer Review">
+    <div class="head"><span>Skill</span><em>Example listing</em></div>
+    <div class="title">Staff Engineer Review</div>
+    <div class="fields">
+      <div class="f">Version<i></i>v2.4.0</div>
+      <div class="f">Author<i></i>Ellis North</div>
+      <div class="f">Licence<i></i>MIT</div>
+      <div class="f">Reads<i></i>the diff under review</div>
+      <div class="f ghost">Writes<i></i>not declared<s>assumed safe</s></div>
+      <div class="f">Network<i></i>none</div>
+      <div class="f">Works with<i></i>Claude, Cursor, VS Code</div>
+      <div class="f">Pinned release<i></i>0123abc</div>
+    </div>
+    <div class="stamp">SAFETY REVIEWED</div>
+    <div class="hole"></div>
+  </article>
+
+  <i class="lead" style="top:246px"></i><p class="note" style="top:230px">Version is pinned. The release cannot change after publishing.</p>
+  <i class="lead" style="top:342px"></i><p class="note" style="top:326px">Reads: declared scope.<br>Nothing implied.</p>
+  <i class="lead" style="top:470px"></i><p class="note" style="top:454px">Pinned to release 0123abc.<br>Install what was reviewed.</p>
+
+  <div class="front">
+    <div class="holder"><form role="search" action="#">
+      <input type="search" name="q" placeholder="review my pull request like a staff engineer" aria-label="Search the library">
+      <button type="submit">Search</button></form></div>
+    <p class="cats">Skills &middot; Agents &middot; MCP servers &middot; Prompts &middot; Rules</p>
+    <div class="pull"></div>
+    <span class="screw" style="left:850px"></span><span class="screw" style="left:1250px"></span>
+  </div>
+</div>
+</body>
+</html>

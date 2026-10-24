@@ -1,11 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, getFavorites, getMarketplaceItemTypes, getProduct, getProducts, subscribe } from "./api";
+import { ApiError, getFavorites, getMarketplaceCreator, getMarketplaceItemTypes, getProduct, getProducts, loginWithGoogle, subscribe } from "./api";
 
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
 describe("marketplace API client reliability", () => {
+  it("submits Google credentials once to the shared reader endpoint", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: { authenticated: true } }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await loginWithGoogle("signed-google-token");
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("/api/readers/google"), expect.objectContaining({ method: "POST", credentials: "include", body: JSON.stringify({ credential: "signed-google-token" }) }));
+  });
   it("retries one transient GET failure", async () => {
     const transientResponse = new Response(JSON.stringify({ error: { code: "UNAVAILABLE" } }), { status: 503, headers: { "Content-Type": "application/json" } });
     const cancel = vi.spyOn(transientResponse.body!, "cancel");
@@ -47,6 +54,14 @@ describe("marketplace API client caching", () => {
     return () => fetchMock.mock.calls[0][1] as RequestInit & { next?: { revalidate: number } };
   }
   const onServer = () => vi.stubGlobal("window", undefined);
+
+  it("caches the public creator collection with bounded, encoded page parameters", async () => {
+    onServer();
+    const fetchMock = vi.fn().mockResolvedValue(ok());
+    vi.stubGlobal("fetch", fetchMock);
+    await getMarketplaceCreator("public-creator", 2);
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("/api/marketplace/creators/public-creator?page=2&limit=12"), expect.objectContaining({ next: { revalidate: 30 } }));
+  });
 
   it("lets the server reuse public catalogue reads for a short while", async () => {
     onServer();

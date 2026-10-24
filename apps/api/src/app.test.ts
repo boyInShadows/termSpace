@@ -1,5 +1,7 @@
+import { Prisma } from "@prisma/client";
 import { hash } from "bcryptjs";
 import request from "supertest";
+import { ipKeyGenerator } from "express-rate-limit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const verifyGoogleIdToken = vi.hoisted(() => vi.fn());
@@ -45,9 +47,11 @@ vi.mock("google-auth-library", () => ({
 }));
 
 process.env.NODE_ENV = "test";
+process.env.LOCAL_AUTO_VERIFY_EMAIL = "false";
 process.env.GOOGLE_CLIENT_ID = "test-google-client-id";
 process.env.EMAIL_VERIFICATION_SECRET = "test-secret-that-is-definitely-longer-than-32-bytes";
 const { createApp } = await import("./app.js");
+const { authRateLimiters } = await import("./middleware/security.js");
 const { createEmailVerificationToken, createPasswordResetCode } = await import("./lib/emailVerification.js");
 
 function marketplaceManifestFixture() {
@@ -81,6 +85,10 @@ function marketplaceManifestFixture() {
 describe("API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    for (const limiter of authRateLimiters) {
+      limiter.resetKey(ipKeyGenerator("::ffff:127.0.0.1"));
+      limiter.resetKey(ipKeyGenerator("127.0.0.1"));
+    }
     prismaMock.$transaction.mockResolvedValue([]);
     prismaMock.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     prismaMock.article.updateMany.mockResolvedValue({ count: 0 });
@@ -148,6 +156,26 @@ describe("API", () => {
     expect(response.body.data.products[0]).not.toHaveProperty("approvedSnapshotId");
   });
 
+  it("keeps the declared permissions summary, licence and review state on catalogue list items", async () => {
+    // The listing card shows these; they are product columns, so the list query must not narrow them away.
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([{
+      id: "product-1", slug: "example-skill", name: "Example Skill", type: "Skill", itemType: "SKILL",
+      classificationRequired: false, rating: 4.5, priceMinor: 0, currency: "USD", pricingModel: "free",
+      platforms: ["Codex"], models: [], categoryId: "category-1", category: { name: "Developer tools" },
+      creatorId: "creator-1", creator: null, verified: true,
+      permissions: "Reads the current selection · no network access", license: "MIT",
+    }]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(1);
+
+    const response = await request(createApp()).get("/api/marketplace/products");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data[0]).toEqual(expect.objectContaining({
+      verified: true, permissions: "Reads the current selection · no network access", license: "MIT",
+    }));
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenLastCalledWith(expect.not.objectContaining({ select: expect.anything() }));
+  });
+
   it("filters only by canonical item-type keys", async () => {
     prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
     prismaMock.marketplaceProduct.count.mockResolvedValue(0);
@@ -198,6 +226,30 @@ describe("API", () => {
       { compatibility: { some: { OR: expect.any(Array) } } },
       { communityPlacements: { some: expect.objectContaining({ state: "APPROVED", community: expect.objectContaining({ state: "ACTIVE" }) }) } },
     ]));
+  });
+
+  it("filters declared access on the approved public release rather than drafts or old versions", async () => {
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+    const response = await request(createApp()).get("/api/marketplace/products?permission=network_access");
+    expect(response.status).toBe(200);
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        published: true,
+        approvedSnapshot: { releaseManifest: { permissions: { some: { capability: "NETWORK_ACCESS" } } } },
+      }),
+    }));
+    expect((await request(createApp()).get("/api/marketplace/products?permission=unknown")).status).toBe(400);
+  });
+
+  it("treats SQL wildcard and escape characters as literal search text", async () => {
+    prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(0);
+    await request(createApp()).get("/api/marketplace/products").query({ q: "a_%\\b" });
+    const branches = prismaMock.marketplaceProduct.findMany.mock.calls.at(-1)?.[0].where.AND[0].OR;
+    expect(branches).toContainEqual({ name: { contains: "a\\_\\%\\\\b", mode: "insensitive" } });
+    expect(branches).toContainEqual({ models: { has: "a_%\\b" } });
+    expect(branches).toContainEqual({ creator: { OR: expect.arrayContaining([{ handle: { contains: "a\\_\\%\\\\b", mode: "insensitive" } }]) } });
   });
 
   it.each([
@@ -484,16 +536,15 @@ describe("API", () => {
   });
 
   it("registers a password account with an atomic verification outbox record", async () => {
-    prismaMock.readerUser.create.mockResolvedValue({
-      id: "reader-1", email: "reader@example.com", emailVerifiedAt: null, marketplaceRoleGrants: [],
-    });
+    prismaMock.readerUser.create.mockResolvedValue({ id: "reader-1" });
 
     const response = await request(createApp())
       .post("/api/readers/register")
       .send({ email: "reader@example.com", password: "correct-password" });
 
-    expect(response.status).toBe(200);
-    expect(response.body.data.user.emailVerified).toBe(false);
+    expect(response.status).toBe(202);
+    expect(response.body).toEqual({ data: { accepted: true } });
+    expect(response.headers["set-cookie"]).toBeUndefined();
     expect(prismaMock.readerUser.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         email: "reader@example.com",
@@ -502,22 +553,40 @@ describe("API", () => {
     }));
   });
 
+  it("answers a taken email exactly like a new one, with no session", async () => {
+    const taken = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", { code: "P2002", clientVersion: "test" });
+    prismaMock.readerUser.create.mockRejectedValue(taken);
+
+    const response = await request(createApp())
+      .post("/api/readers/register")
+      .send({ email: "reader@example.com", password: "correct-password" });
+
+    expect(response.status).toBe(202);
+    expect(response.body).toEqual({ data: { accepted: true } });
+    expect(response.headers["set-cookie"]).toBeUndefined();
+  });
+
+  it("still fails loudly on other database errors during registration", async () => {
+    prismaMock.readerUser.create.mockRejectedValue(new Error("connection lost"));
+    const response = await request(createApp())
+      .post("/api/readers/register")
+      .send({ email: "reader@example.com", password: "correct-password" });
+    expect(response.status).toBe(500);
+  });
+
   it("auto-verifies local registrations without creating an email job when explicitly enabled", async () => {
     const previousBypass = process.env.LOCAL_AUTO_VERIFY_EMAIL;
     const previousUrl = process.env.WEB_PUBLIC_URL;
     process.env.LOCAL_AUTO_VERIFY_EMAIL = "true";
     process.env.WEB_PUBLIC_URL = "http://localhost:3100";
-    prismaMock.readerUser.create.mockResolvedValue({
-      id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [],
-    });
+    prismaMock.readerUser.create.mockResolvedValue({ id: "reader-1" });
 
     try {
       const response = await request(createApp())
         .post("/api/readers/register")
         .send({ email: "reader@example.com", password: "correct-password" });
 
-      expect(response.status).toBe(200);
-      expect(response.body.data.user.emailVerified).toBe(true);
+      expect(response.status).toBe(202);
       const createData = prismaMock.readerUser.create.mock.calls[0][0].data;
       expect(createData.emailVerifiedAt).toBeInstanceOf(Date);
       expect(createData.emailVerifications).toBeUndefined();
@@ -660,6 +729,22 @@ describe("API", () => {
       emailVerified: true,
       marketplaceRoles: ["creator"],
     });
+  });
+
+  it("answers an anonymous session check with 200 and authenticated false, not 401", async () => {
+    const withoutCookie = await request(createApp()).get("/api/readers/session");
+    expect(withoutCookie.status).toBe(200);
+    expect(withoutCookie.body).toEqual({ data: { authenticated: false } });
+
+    prismaMock.readerSession.findFirst.mockResolvedValue(null);
+    const expired = await request(createApp())
+      .get("/api/readers/session")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+    expect(expired.status).toBe(200);
+    expect(expired.body.data.authenticated).toBe(false);
+
+    // Protected reader routes still refuse an anonymous caller.
+    expect((await request(createApp()).get("/api/readers/profile")).status).toBe(401);
   });
 
   it("rejects creator onboarding until the reader email is verified", async () => {
@@ -824,6 +909,47 @@ describe("API", () => {
     }) });
   });
 
+  it.each([
+    { action: "ARCHIVE", state: "PUBLISHED", next: "ARCHIVED", visible: false },
+    { action: "RESTORE", state: "ARCHIVED", next: "PUBLISHED", visible: true },
+    { action: "RESTORE", state: "ARCHIVED", next: "SUBMITTED", visible: false, resume: "SUBMITTED", resumePublished: false },
+    { action: "RESTORE", state: "ARCHIVED", code: "SOURCE_VERIFICATION_REQUIRED", verified: false },
+    { action: "RESTORE", state: "ARCHIVED", code: "INVALID_LISTING_TRANSITION", actor: "MODERATOR" },
+    { action: "RESTORE", state: "ARCHIVED", code: "LISTING_VERSION_CONFLICT", version: 3 },
+    { action: "RESTORE", state: "ARCHIVED", code: "RESUME_STATE_REQUIRED", resume: null, resumePublished: false },
+    { action: "ARCHIVE", state: "SUSPENDED", code: "INVALID_LISTING_TRANSITION" },
+    { action: "ARCHIVE", state: "PUBLISHED", code: "LISTING_NOT_FOUND", owner: "other-reader" },
+  ])("enforces creator $action for $state ($code)", async (scenario) => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1", user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    const product = {
+      id: "product-1", slug: "owned-skill", published: scenario.state === "PUBLISHED", lifecycleState: scenario.state, lifecycleVersion: 4,
+      lifecycleResumeState: scenario.resume === undefined ? "PUBLISHED" : scenario.resume, lifecycleResumePublished: scenario.resumePublished ?? true,
+      approvedSnapshotId: "approved-1", proposedSnapshotId: "proposed-1", proposedSnapshot: null,
+      approvedSnapshot: { schemaVersion: 1, releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date(), sourceCheckStatus: scenario.verified === false ? "FAILED" : "VERIFIED" } },
+      lifecycleEvents: [{ actorType: scenario.actor ?? "CREATOR" }], creator: { ownerUserId: scenario.owner ?? "reader-1" },
+    };
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue(product);
+    prismaMock.marketplaceProduct.update.mockResolvedValue({ ...product, lifecycleState: scenario.next, lifecycleVersion: 5, published: scenario.visible });
+    prismaMock.marketplaceListingLifecycleEvent.create.mockResolvedValue({});
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+    const response = await request(createApp()).post("/api/marketplace/creator/products/product-1/lifecycle")
+      .set("Origin", "http://localhost:3000").set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ action: scenario.action, expectedVersion: scenario.version ?? 4 });
+    if (scenario.code) {
+      expect(response.status).toBe(scenario.code === "LISTING_NOT_FOUND" ? 404 : 409);
+      expect(response.body.error.code).toBe(scenario.code);
+      expect(prismaMock.marketplaceProduct.update).not.toHaveBeenCalled();
+      expect(prismaMock.marketplaceListingLifecycleEvent.create).not.toHaveBeenCalled();
+    } else {
+      expect(response.status).toBe(200);
+      expect(response.body.data).toMatchObject({ state: scenario.next!.toLowerCase(), version: 5, published: scenario.visible, approvedSnapshotId: "approved-1", proposedSnapshotId: "proposed-1" });
+      expect(prismaMock.marketplaceProduct.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ lifecycleState: scenario.next, published: scenario.visible, approvedSnapshotId: "approved-1", proposedSnapshotId: "proposed-1" }) }));
+    }
+  });
+
   it("restores a creator-archived legacy publication without inventing modern source verification", async () => {
     prismaMock.readerSession.findFirst.mockResolvedValue({
       id: "session-1",
@@ -973,6 +1099,40 @@ describe("API", () => {
       where: { creator: { ownerUserId: "reader-1" }, reviewCount: { gt: 0 } },
       select: { rating: true, reviewCount: true },
     });
+  });
+
+  it("exposes restore targets only for recoverable creator archives using the latest owner-scoped archive event", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1", user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    const cases = [
+      { id: "public", lifecycleState: "ARCHIVED", lifecycleResumeState: "SUBMITTED", lifecycleResumePublished: true, actor: "CREATOR", target: { state: "submitted", published: true } },
+      { id: "private", lifecycleState: "ARCHIVED", lifecycleResumeState: "DRAFT", lifecycleResumePublished: false, actor: "CREATOR", target: { state: "draft", published: false } },
+      { id: "staff", lifecycleState: "ARCHIVED", lifecycleResumeState: "PUBLISHED", lifecycleResumePublished: true, actor: "MODERATOR", target: null },
+      { id: "missing-state", lifecycleState: "ARCHIVED", lifecycleResumeState: null, lifecycleResumePublished: false, actor: "CREATOR", target: null },
+      { id: "missing-visibility", lifecycleState: "ARCHIVED", lifecycleResumeState: "DRAFT", lifecycleResumePublished: null, actor: "CREATOR", target: null },
+      { id: "unknown-actor", lifecycleState: "ARCHIVED", lifecycleResumeState: "DRAFT", lifecycleResumePublished: false, actor: null, target: null },
+      { id: "suspended", lifecycleState: "SUSPENDED", lifecycleResumeState: "PUBLISHED", lifecycleResumePublished: true, actor: "CREATOR", target: null },
+    ];
+    prismaMock.marketplaceProduct.findMany.mockResolvedValueOnce(cases.map((item) => ({
+      ...item, slug: item.id, name: item.id, itemType: "SKILL", type: "Skill", lifecycleVersion: 4, published: false,
+      rating: 0, reviewCount: 0, version: "1.0.0", updatedAt: new Date(), versions: [],
+      lifecycleEvents: [{ id: "recent-non-archive", action: "DRAFT_SAVED", resultingState: item.lifecycleState, publicReason: null, createdAt: new Date() }],
+      _count: { versions: 1, orders: 2 },
+    }))).mockResolvedValueOnce([]);
+    prismaMock.marketplaceProduct.count.mockResolvedValue(cases.length);
+    prismaMock.marketplaceOrder.count.mockResolvedValue(0);
+    prismaMock.marketplaceListingLifecycleEvent.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce(cases.filter((item) => item.actor).map((item) => ({ productId: item.id, actorType: item.actor })));
+    const response = await request(createApp()).get("/api/marketplace/creator/dashboard?page=1&limit=12")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+    expect(response.status).toBe(200);
+    expect(response.body.data.listings.map((item: { restoreTarget: unknown }) => item.restoreTarget)).toEqual(cases.map((item) => item.target));
+    expect(prismaMock.marketplaceListingLifecycleEvent.findMany).toHaveBeenLastCalledWith({
+      where: { productId: { in: cases.filter((item) => item.lifecycleState === "ARCHIVED").map((item) => item.id) }, product: { creator: { ownerUserId: "reader-1" } }, action: "ARCHIVED" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }], distinct: ["productId"], select: { productId: true, actorType: true },
+    });
+    expect(response.body.data.listings[0]).not.toHaveProperty("actorType");
+    expect(response.body.data.listings[0]).not.toHaveProperty("lifecycleResumeState");
   });
 
   it("reports no average rating, rather than zero, when nothing has been reviewed", async () => {
@@ -1138,6 +1298,159 @@ describe("API", () => {
     expect(response.body.data).not.toHaveProperty("idempotencyKey");
   });
 
+  describe("adding the release the reader inspected", () => {
+    const signedIn = () => prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    const product = {
+      id: "product-1", slug: "owned-skill", priceMinor: 0, currency: "USD", pricingModel: "free",
+      approvedSnapshot: { releaseManifest: { id: "release-2", publishedAt: new Date("2026-09-16T00:00:00.000Z"), sourceCheckStatus: "VERIFIED" } },
+    };
+    const older = {
+      id: "release-1", publishedAt: new Date("2026-08-01T00:00:00.000Z"), sourceCheckStatus: "VERIFIED",
+      sourceKind: "NPM", resolvedInstallationUrl: "https://registry.npmjs.org/@acme/tool/-/tool-1.0.0.tgz",
+    };
+    const acquire = (body?: object, key = "acquire-owned-skill-0002") => {
+      const call = request(createApp())
+        .post("/api/marketplace/products/owned-skill/acquire")
+        .set("Origin", "http://localhost:3000")
+        .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+        .set("Idempotency-Key", key);
+      return body ? call.send(body) : call;
+    };
+    const order = { id: "order-1", status: "completed", releaseManifestId: "release-1", createdAt: new Date("2026-09-18T10:00:00.000Z"), userId: "reader-1", productId: "product-1" };
+
+    it("pins the named release instead of the approved one", async () => {
+      signedIn();
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(product);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(older);
+      prismaMock.marketplaceOrder.findUnique.mockResolvedValue(null);
+      prismaMock.marketplaceOrder.create.mockResolvedValue(order);
+      prismaMock.marketplaceProduct.update.mockResolvedValue({});
+      prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+      const response = await acquire({ version: "1.0.0" });
+
+      expect(response.status).toBe(201);
+      expect(prismaMock.marketplaceReleaseManifest.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({ productVersion: { productId: "product-1", version: "1.0.0" }, publishedAt: { not: null } }),
+      }));
+      expect(prismaMock.marketplaceOrder.create).toHaveBeenCalledWith({ data: expect.objectContaining({ releaseManifestId: "release-1" }) });
+    });
+
+    it("refuses a version that is not a published, verified release", async () => {
+      signedIn();
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(product);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(null);
+      prismaMock.marketplaceOrder.findUnique.mockResolvedValue(null);
+
+      const response = await acquire({ version: "9.9.9" });
+
+      expect(response.status).toBe(409);
+      expect(response.body.error.code).toBe("RELEASE_UNAVAILABLE");
+      expect(prismaMock.marketplaceOrder.create).not.toHaveBeenCalled();
+    });
+
+    it("refuses a named release whose source is not a trusted host", async () => {
+      signedIn();
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(product);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue({ ...older, resolvedInstallationUrl: "https://evil.example/tool.tgz" });
+      prismaMock.marketplaceOrder.findUnique.mockResolvedValue(null);
+
+      const response = await acquire({ version: "1.0.0" });
+
+      expect(response.status).toBe(409);
+      expect(response.body.error.code).toBe("RELEASE_UNAVAILABLE");
+      expect(prismaMock.marketplaceOrder.create).not.toHaveBeenCalled();
+    });
+
+    it("does not hand back a different release the reader already holds", async () => {
+      signedIn();
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(product);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(older);
+      prismaMock.marketplaceOrder.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ ...order, releaseManifestId: "release-2" });
+
+      const response = await acquire({ version: "1.0.0" });
+
+      expect(response.status).toBe(409);
+      expect(response.body.error.code).toBe("ALREADY_IN_LIBRARY");
+      expect(prismaMock.marketplaceOrder.create).not.toHaveBeenCalled();
+    });
+
+    it("returns the held release when the same one is named again", async () => {
+      signedIn();
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(product);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(older);
+      prismaMock.marketplaceOrder.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(order);
+
+      const response = await acquire({ version: "1.0.0" });
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toMatchObject({ releaseManifestId: "release-1" });
+    });
+
+    it("rejects a replayed key that named another release", async () => {
+      signedIn();
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(product);
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(older);
+      prismaMock.marketplaceOrder.findUnique.mockResolvedValueOnce({ ...order, releaseManifestId: "release-2" });
+
+      const response = await acquire({ version: "1.0.0" });
+
+      expect(response.status).toBe(409);
+      expect(response.body.error.code).toBe("IDEMPOTENCY_CONFLICT");
+    });
+
+    it.each([[{ version: "" }], [{ version: "x".repeat(65) }], [{ version: "1.0.0", extra: true }], [{ version: 3 }]])("rejects a malformed body %j", async (body) => {
+      signedIn();
+
+      const response = await acquire(body);
+
+      expect(response.status).toBe(400);
+      expect(prismaMock.marketplaceOrder.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("one published release", () => {
+    const releaseRow = {
+      sourceKind: "NPM", sourceUrl: "https://registry.npmjs.org/@acme/tool", sourceRef: "1.0.0", sourcePath: null,
+      providerIntegrityDigest: null, artifactSizeBytes: null, sourceCheckStatus: "VERIFIED", sourceCheckedAt: new Date("2026-10-01T00:00:00Z"),
+      resolvedInstallationUrl: "https://registry.npmjs.org/@acme/tool/-/tool-1.0.0.tgz", installationMethod: "NPM",
+      licenseIdentifier: "MIT", customLicenseUrl: null, installationInstructions: ["private installation step"],
+      productVersion: { version: "1.0.0" }, permissions: [], environmentVariables: [], mcpServerDetails: null,
+    };
+
+    it("shows an older release's own facts and says it is not the current one", async () => {
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue({ id: "product-1" });
+      prismaMock.marketplaceReleaseManifest.findFirst
+        .mockResolvedValueOnce(releaseRow)
+        .mockResolvedValueOnce({ ...releaseRow, sourceRef: "2.0.0", productVersion: { version: "2.0.0" } });
+
+      const response = await request(createApp()).get("/api/marketplace/products/published-skill/releases/1.0.0");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toMatchObject({ version: "1.0.0", current: false, source: { ref: "1.0.0", integrityDigest: null }, license: "MIT" });
+      expect(prismaMock.marketplaceReleaseManifest.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({ productVersion: { productId: "product-1", version: "1.0.0" } }),
+      }));
+      expect(JSON.stringify(response.body)).not.toContain("private installation step");
+    });
+
+    it("is a 404 for an unpublished listing or a version that was never published", async () => {
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue(null);
+      expect((await request(createApp()).get("/api/marketplace/products/private-skill/releases/1.0.0")).status).toBe(404);
+
+      prismaMock.marketplaceProduct.findFirst.mockResolvedValue({ id: "product-1" });
+      prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(null);
+      const response = await request(createApp()).get("/api/marketplace/products/published-skill/releases/9.9.9");
+      expect(response.status).toBe(404);
+      expect(response.body.error.code).toBe("RELEASE_NOT_FOUND");
+    });
+  });
+
   it("returns installation details for the exact release acquired by the reader", async () => {
     prismaMock.readerSession.findFirst.mockResolvedValue({
       id: "session-1",
@@ -1296,8 +1609,18 @@ describe("API", () => {
       creator: { name: "Creator", handle: "creator", ownerUserId: "reader-1" },
       proposedSnapshot: {
         revision: 2, createdAt: new Date("2026-09-17T07:00:00.000Z"), _count: { communityRequests: 1 },
+        content: { release: { permissions: [
+          { capability: "secret_access", purpose: "Reads API keys" },
+          { capability: "network_access", required: false, purpose: "Calls the provider" },
+          { purpose: "Malformed entry without a capability" },
+        ] } },
         releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: null, productVersion: { version: "1.1.0" } },
       },
+    }, {
+      id: "product-2", slug: "legacy-skill", name: "Legacy Skill", itemType: null, type: "Skill",
+      lifecycleState: "APPROVED", lifecycleVersion: 1, published: false, updatedAt: new Date("2026-09-17T09:00:00.000Z"),
+      creator: { name: "Creator", handle: "creator", ownerUserId: "reader-1" },
+      proposedSnapshot: { revision: 1, createdAt: new Date(), _count: { communityRequests: 0 }, content: { schemaVersion: 0, legacy: true }, releaseManifest: null },
     }]);
     prismaMock.marketplaceProduct.count.mockResolvedValueOnce(1).mockResolvedValueOnce(1).mockResolvedValueOnce(0);
 
@@ -1310,10 +1633,35 @@ describe("API", () => {
     expect(response.body.data.listings[0]).toMatchObject({
       id: "product-1", state: "submitted", selfOwned: false, sourceResolved: true,
       ownershipVerified: false, communityRequestCount: 1, releaseVersion: "1.1.0",
+      capabilities: [{ capability: "secret_access", required: true }, { capability: "network_access", required: false }],
     });
+    expect(response.body.data.listings[1].capabilities).toEqual([]);
     expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { lifecycleState: { in: ["SUBMITTED", "APPROVED"] }, NOT: { creator: { ownerUserId: "moderator-1" } } }, skip: 0, take: 24,
     }));
+  });
+
+  it("shows a listing with nothing pending what its approved version declares, not an empty list", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findMany
+      .mockResolvedValueOnce([{
+        id: "product-3", slug: "live-skill", name: "Live Skill", itemType: "SKILL", type: "Skill",
+        lifecycleState: "PUBLISHED", lifecycleVersion: 5, published: true, updatedAt: new Date("2026-09-17T08:00:00.000Z"),
+        creator: { name: "Creator", handle: "creator", ownerUserId: "reader-1" }, proposedSnapshot: null,
+      }])
+      .mockResolvedValueOnce([{ id: "product-3", approvedSnapshot: { content: { release: { version: "2.0.0", permissions: [{ capability: "secret_access", purpose: "Reads keys" }] } } } }]);
+    prismaMock.marketplaceProduct.count.mockResolvedValueOnce(1).mockResolvedValueOnce(0).mockResolvedValueOnce(0);
+
+    const response = await request(createApp())
+      .get("/api/marketplace/moderation/queue?state=published&page=1&limit=24")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.listings[0]).toMatchObject({ id: "product-3", releaseVersion: "2.0.0", capabilities: [{ capability: "secret_access", required: true }] });
+    expect(prismaMock.marketplaceProduct.findMany).toHaveBeenLastCalledWith(expect.objectContaining({ where: { id: { in: ["product-3"] } } }));
   });
 
   it("does not expose the moderation queue to creators", async () => {
@@ -1898,6 +2246,52 @@ describe("API", () => {
       select: expect.any(Object),
     });
     expect(prismaMock.readerSession.deleteMany).toHaveBeenCalledWith({ where: { userId: "reader-1" } });
+  });
+
+  it("refuses Google sign-in when it has not been configured", async () => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    delete process.env.GOOGLE_CLIENT_ID;
+    try {
+      const response = await request(createApp()).post("/api/readers/google").send({ credential: "v".repeat(120) });
+      expect(response.status).toBe(503);
+      expect(response.body.error.code).toBe("GOOGLE_NOT_CONFIGURED");
+      expect(verifyGoogleIdToken).not.toHaveBeenCalled();
+    } finally { process.env.GOOGLE_CLIENT_ID = clientId; }
+  });
+
+  it("rejects an unverified Google identity before accessing accounts", async () => {
+    verifyGoogleIdToken.mockResolvedValue({ getPayload: () => ({ sub: "google-1", email: "reader@example.com", email_verified: false }) });
+    const response = await request(createApp()).post("/api/readers/google").send({ credential: "v".repeat(120) });
+    expect(response.status).toBe(401);
+    expect(prismaMock.readerUser.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.readerSession.create).not.toHaveBeenCalled();
+  });
+
+  it("creates a verified account from a valid Google identity", async () => {
+    verifyGoogleIdToken.mockResolvedValue({ getPayload: () => ({ sub: "google-new", email: "reader@example.com", email_verified: true }) });
+    prismaMock.readerUser.findFirst.mockResolvedValue(null);
+    prismaMock.readerUser.create.mockResolvedValue({ id: "reader-new", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] });
+    const response = await request(createApp()).post("/api/readers/google").send({ credential: "v".repeat(120) });
+    expect(response.status).toBe(200);
+    expect(response.body.data.user.emailVerified).toBe(true);
+    expect(prismaMock.readerUser.create).toHaveBeenCalledWith(expect.objectContaining({ data: { email: "reader@example.com", googleSubject: "google-new", emailVerifiedAt: expect.any(Date) } }));
+  });
+
+  it("preserves password sign-in when a verified account connects Google", async () => {
+    verifyGoogleIdToken.mockResolvedValue({
+      getPayload: () => ({ sub: "google-subject-1", email: "reader@example.com", email_verified: true }),
+    });
+    const user = { id: "reader-1", email: "reader@example.com", googleSubject: null, emailVerifiedAt: new Date(), marketplaceRoleGrants: [] };
+    prismaMock.readerUser.findFirst.mockResolvedValue(user);
+    prismaMock.readerUser.update.mockResolvedValue({ ...user, googleSubject: "google-subject-1" });
+    prismaMock.$transaction.mockResolvedValueOnce([{ ...user, googleSubject: "google-subject-1" }]).mockResolvedValueOnce([]);
+
+    const response = await request(createApp()).post("/api/readers/google").send({ credential: "v".repeat(120) });
+
+    expect(response.status).toBe(200);
+    const data = prismaMock.readerUser.update.mock.calls[0][0].data;
+    expect(data.googleSubject).toBe("google-subject-1");
+    expect(data.passwordHash).toBeUndefined();
   });
 
   it("returns a safe reader profile without authentication secrets", async () => {

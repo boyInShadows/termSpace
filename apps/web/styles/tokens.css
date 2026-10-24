@@ -1,32 +1,15 @@
-/* ============================================================================
-   TermSpace design tokens — "Signal & Void"
-   ----------------------------------------------------------------------------
-   A terminal for the AI era: signal separated from noise.
-
-   Hue strategy
-     Void     285  violet-cast neutrals — never grey, never cream
-     Plasma   292  primary. Intelligence + premium without blue's ubiquity
-     Signal   196  technical accent. Precision, live wire, metadata
-     Ion      340  gradient partner only. Never a flat fill
-     Verified 152  SEMANTIC LOCK — trust, safety, verification. Nothing else
-     Caution   82  Alert 22
-
-   Discipline: Plasma is the only colour allowed to cover large areas. Signal
-   stays on small technical elements. Ion exists exclusively inside gradients.
-   Verified never decorates — if it is green, it is a trust claim.
-   ========================================================================== */
+/* TermSpace — The Datasheet. Ink, ground, rules and a restrained accent.
+   Shared by public discovery, account flows and the creator dashboard. */
 
 :root {
   /* Declared in globals.css. The "Fallback" faces are local system fonts
      resized to the web font's metrics, so the swap does not move text. */
   --font-geist: "Geist Variable", "Geist Fallback";
   --font-geist-mono: "Geist Mono Variable";
-  --font-newsreader: "Newsreader Variable", "Newsreader Fallback";
   --font-estedad: "Estedad Variable";
 
   /* motion ------------------------------------------------------------- */
-  /* The spec, with rationale, is docs/motion.md. Nothing but the hero
-     manifest sequence and the marquee runs longer than 640ms. */
+  /* Short feedback transitions; page content stays visible immediately. */
   --duration-fast: 160ms;
   --duration-press: 80ms;
   --duration-hover: 160ms;
@@ -35,8 +18,6 @@
   --duration-chip: 320ms;
   --duration-enter: 480ms;
   --stagger-enter: 60ms;
-  /* How strongly the CSS nebula behind the hero shows. */
-  --nebula-opacity: 0.85;
   --duration-slow: 320ms;
   --duration-scene: 640ms;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -44,7 +25,7 @@
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
 
   /* geometry ----------------------------------------------------------- */
-  --radius-card: 0.9rem;
+  --radius-card: 0px;
 
   /* One vertical rhythm for every page section. Sections used to carry their
      own py-20/lg:py-28 pair, which at wide widths left ~250px of nothing
@@ -82,18 +63,7 @@
   --spark: oklch(72% 0.215 340);
   --verified: oklch(82% 0.175 152);
 
-  /* Headline gradient. Separate from --primary/--spark/--accent because those
-     are UI colours that also have to work as fills, borders and small icons,
-     whereas these only ever carry large display text and can be pushed for
-     contrast. Every point along the sweep clears 9:1 here, and still clears
-     AA while the decode animation holds the line at 90% opacity. */
-  --plasma-text-1: oklch(80% 0.150 292);
-  --plasma-text-2: oklch(78% 0.170 340);
-  --plasma-text-3: oklch(84% 0.120 200);
 
-  /* How strongly the decorative nebula reads. Dark absorbs it; on paper the
-     same energy competes with the cards sitting on top of it. */
-  --nebula-opacity: 0.7;
 
   --success: oklch(82% 0.175 152);
   --warning: oklch(83% 0.15 85);
@@ -106,10 +76,6 @@
   --selection: oklch(68% 0.195 292 / 0.32);
   --grid-line: oklch(100% 0 0 / 0.045);
 
-  --shadow-soft: 0 1px 2px oklch(8% 0.02 286 / 0.5), 0 8px 24px oklch(8% 0.02 286 / 0.45);
-  --shadow-lift: 0 2px 6px oklch(8% 0.02 286 / 0.5), 0 22px 48px oklch(8% 0.02 286 / 0.55);
-  --glow-plasma: 0 0 0 1px oklch(68% 0.195 292 / 0.35), 0 8px 34px oklch(68% 0.195 292 / 0.34);
-  --glow-signal: 0 0 28px oklch(80% 0.135 196 / 0.32);
 }
 
 /* ---------------------------------------------------------------------------
@@ -142,13 +108,7 @@
   --spark: oklch(55% 0.235 340);
   --verified: oklch(48% 0.135 152);
 
-  /* Darkened rather than inverted: the sweep clears 6.5:1 on the light
-     background at every point, and AA at 90% opacity mid-decode. */
-  --plasma-text-1: oklch(45% 0.230 292);
-  --plasma-text-2: oklch(46% 0.210 340);
-  --plasma-text-3: oklch(44% 0.110 210);
 
-  --nebula-opacity: 0.3;
 
   --success: oklch(48% 0.135 152);
   --warning: oklch(56% 0.135 75);
@@ -161,8 +121,4 @@
   --selection: oklch(50% 0.225 292 / 0.2);
   --grid-line: oklch(19% 0.028 286 / 0.05);
 
-  --shadow-soft: 0 1px 2px oklch(30% 0.03 286 / 0.06), 0 8px 24px oklch(30% 0.03 286 / 0.07);
-  --shadow-lift: 0 2px 6px oklch(30% 0.03 286 / 0.08), 0 22px 48px oklch(30% 0.03 286 / 0.12);
-  --glow-plasma: 0 0 0 1px oklch(50% 0.225 292 / 0.22), 0 10px 30px oklch(50% 0.225 292 / 0.2);
-  --glow-signal: 0 0 24px oklch(50% 0.115 210 / 0.22);
 }

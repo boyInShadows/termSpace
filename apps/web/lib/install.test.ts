@@ -4,6 +4,7 @@ import type { ProductRelease } from "./types";
 
 const base: ProductRelease = {
   version: "1.2.3",
+  current: true,
   source: { kind: "npm", url: "https://registry.npmjs.org/@acme/tool", ref: "1.2.3", path: null, integrityDigest: "sha512-x", artifactSizeBytes: null, status: "verified", checkedAt: null },
   installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz" },
   permissions: [],
