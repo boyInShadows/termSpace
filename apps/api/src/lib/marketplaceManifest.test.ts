@@ -47,6 +47,17 @@ function manifest(type: keyof typeof typeDetails) {
 }
 
 describe("marketplace manifest v1", () => {
+  it("rejects an oversized collection before expanding per-element validation errors", () => {
+    const input = manifest("skill");
+    const result = marketplaceManifestV1Schema.safeParse({ ...input, listing: { ...input.listing, tags: Array.from({ length: 1_000 }, () => null) } });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issues = result.error.issues.filter((issue) => issue.path[0] === "listing" && issue.path[1] === "tags");
+      expect(issues).toHaveLength(1);
+      expect(issues[0].code).toBe("too_big");
+    }
+  });
+
   it.each(MARKETPLACE_ITEM_TYPES)("accepts a complete %s manifest", (type) => {
     expect(marketplaceManifestV1Schema.safeParse(manifest(type)).success).toBe(true);
   });

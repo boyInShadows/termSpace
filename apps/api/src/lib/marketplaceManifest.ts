@@ -149,7 +149,7 @@ const detailsByType = {
 
 export const marketplaceManifestV1Schema = z.discriminatedUnion("type", MARKETPLACE_ITEM_TYPES.map((type) =>
   z.object({ manifestVersion: z.literal(1), type: z.literal(type), listing: listingSchema, release: releaseSchema, typeDetails: detailsByType[type] }).strict(),
-) as unknown as [z.ZodDiscriminatedUnionOption<"type">, ...z.ZodDiscriminatedUnionOption<"type">[]]);
+) as unknown as Parameters<typeof z.discriminatedUnion>[1]);
 
 export type MarketplaceManifestV1 = {
   [Type in MarketplaceItemTypeKey]: {

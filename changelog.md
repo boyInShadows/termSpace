@@ -4,6 +4,32 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-25
 
+- **Patch API dependencies caught by the release image audit.** Hosted image
+  verification for the integrated release caught three high-severity advisories
+  published after the initial VPS deployment. Upgrade body-parser to 2.4.0,
+  multer to 2.5.0 and Zod to 4.6.7. Retain all request schemas and strict object,
+  ownership and role checks; only the manifest union's removed Zod 3 type is
+  replaced with the public Zod 4 function parameter type.
+  - A manifest regression passes 1,000 invalid tags and checks rejection emits
+    one collection-size issue instead of expanding per-element errors. All
+    271 API tests pass, including authorization and validation; root typecheck
+    passes and the API production dependency audit reports zero vulnerabilities.
+    The final complete root unit run passes all 689 runnable tests, all three
+    normal production builds pass and web lint retains two existing warnings.
+    Hosted release gates are still required before deployment.
+  - Fixes [body-parser](https://github.com/advisories/GHSA-27r3-jxmh-p828),
+    [multer](https://github.com/advisories/GHSA-q7qp-rjg7-q26m) and
+    [Zod](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5). No audit threshold,
+    performance budget, validation limit or authentication check is weakened.
+    Shared `changelog.md` edits were announced in the local planning commit.
+  - Owner-requested release fixes are limited to API package/lock entries,
+    `apps/api/src/lib/marketplaceManifest.ts` and its test. The pre-existing
+    cold-module harness failure in
+    `apps/web/features/product/product-actions.test.tsx` is addressed by a
+    scoped five-second asynchronous dialog wait; release identity, dialog,
+    focus and content assertions are retained. All 11 scenarios in that file
+    pass. This is a functional import wait, not a changed performance budget.
+
 - **Integrate latest redesign into the private VPS release.** Merge redesign
   `851037a` while retaining the preview deployment history, nonce-enforced CSP,
   standalone runtime, private origins and worker/backup safeguards. Combine
