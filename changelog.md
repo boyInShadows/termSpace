@@ -4,6 +4,19 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-25
 
+- **Reject deferred product review-composer split.** A five-line `next/dynamic`
+  experiment reduced the product first-load bundle from the prior 164.9 kB
+  measurement to 153.5 kB and passed catalog, performance and budget checks,
+  but the fresh three-sample Lighthouse comparison regressed the modeled LCP
+  medians: home 2277→2514 ms, dashboard 2783→2791 ms and product detail
+  2267→2639 ms. The import was restored; no application change remains.
+  - Verification: typecheck, web tests (398 passed), production build, lint
+    (two existing warnings), focused E2E (83 passed, 7 expected skips), and
+    Lighthouse (9/9 reports). The local review-composer stash remains
+    preserved for reference; the strict LCP phase remains open.
+  - Shared `changelog.md` edit announced before writing. No queue item was
+    completed or removed.
+
 - **Restore the redesign landing lost during branch merge.** Compared merge
   `fc766ea` with its redesign parent `9326134`; the merge selected the
   Datasheet versions of the landing page, search, process, footer, global
