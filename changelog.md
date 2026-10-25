@@ -4,6 +4,30 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-25
 
+- **Deploy and verify the updated private VPS preview.** Runtime images at
+  `d8ab9f2` include redesign/ramtin `851037a`; all exact-release hosted CI,
+  image smoke/audit, browser and unchanged Lighthouse gates pass. The VPS
+  checkout was fast-forwarded and only the three pinned application image
+  references changed. All five services are healthy with zero restarts;
+  31 migrations are complete, none unfinished, and every pre-existing table
+  count is preserved. No fixtures or demo content were inserted.
+  - Before migration, stopped application writers, encrypted a database/uploads/config
+    backup for both recovery recipients, copied it off-server, verified its SHA-256,
+    decrypted and fully restored into a disposable local database, and tested the
+    migration from 30 to 31. Removed the temporary plaintext and database.
+  - Trusted HTTPS through local tunnel port 8443 passes root, account, catalog,
+    health and Persian RTL checks. CSP nonces change per request; negotiated
+    Brotli decompresses to the exact identity asset bytes. Chrome verifies both
+    owner-requested preview accounts, secure host-only cookies, logout, admin
+    moderation access and client denial. Credentials stay out of Git.
+  - Current-user CA trust was explicitly approved. The email worker and Google
+    sign-in remain disabled; real inbox delivery is untested. The catalog is
+    empty. Monitoring and backup timers are active; no systemd unit is failed.
+    Windows/Linux local Lighthouse timing failures remain in ignored evidence;
+    hosted gates pass without budget or throttling changes. Shared log changes
+    were announced before editing. This entry changes documentation only;
+    deployed application revision remains `d8ab9f2`.
+
 - **Retain required validator files in the API runtime image.** The secured
   image's import smoke test catches npm marking the direct Zod dependency as
   a peer in the workspace lockfile; `--omit=peer` consequently removes it.
