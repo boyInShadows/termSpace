@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import "@/styles/globals.css";
 import { preloadedFonts } from "@/lib/fonts";
 import { SITE_URL } from "@/lib/site";
@@ -19,6 +20,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const [locale, initialSession] = await Promise.all([getLocale(), getServerSession()]);
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang={locale} dir={locale === "fa" ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
@@ -27,7 +29,7 @@ export default async function RootLayout({
         ))}
       </head>
       <body>
-        <Providers locale={locale} messages={sharedMessages(locale)} initialSession={initialSession}>
+        <Providers locale={locale} messages={sharedMessages(locale)} initialSession={initialSession} nonce={nonce}>
           <SkipLink locale={locale} />
           <Header />
           {children}

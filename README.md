@@ -11,6 +11,23 @@ roles never grant Blog publishing access. See
 [Product Direction](docs/product-direction.md) for the durable product
 boundaries and core user journeys.
 
+## VPS preview — 2026-10-25
+
+Public preview address: [TermSpace](https://termspace.13.140.89.146.sslip.io).
+The public deployment uses a free IP-bound hostname and trusted HTTPS through
+a dedicated Nginx site. The browser does not need an SSH tunnel. The existing
+INSIGHT site keeps its routing; TermSpace container ports remain on loopback
+with isolated data volumes. Blog deployment is deferred. Nightly encrypted
+backups and five-minute health checks are active. Email and Google sign-in remain
+disabled; verified test accounts are provisioned separately. Full public launch
+still requires the owner decisions in
+[readiness.md](readiness.md).
+
+Deployment changes are on `codex/vps-preview` in
+[draft PR #11](https://github.com/boyInShadows/termSpace/pull/11), awaiting merge
+into `main`. Use [the VPS runbook](deploy/README.md) and `deploy/compose.yml` for
+this setup. Image builds do not automatically deploy to the VPS.
+
 ## What works today
 
 - An English/Persian community library with RTL support, light/dark themes,
@@ -250,10 +267,11 @@ as Blog: English uses `/`, while Persian uses `/fa` (for example `/fa/explore`
 and `/fa/account`). The web proxy strips the locale prefix internally, sets the
 request locale, and applies RTL document direction and Persian typography.
 
-## Production subdomain deployment
+## Future public subdomain deployment
 
-The intended production layout is one parent domain with two Next.js surfaces,
-for example:
+After the private web preview, the intended public layout is one parent domain
+with two Next.js surfaces, with Blog deployed later. The domain is undecided;
+this is a reference topology, not the current VPS routing. For example:
 
 ```text
 www.example.com   -> apps/web

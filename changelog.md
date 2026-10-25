@@ -2,7 +2,278 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-25
+
+- **Publish owner-requested public HTTPS preview.** Add an explicit
+  `public-preview` deployment mode for an externally reachable HTTPS origin;
+  retain full `public` launch requirements for configured email and legal
+  contact. Regression assertions retain strict secrets, immutable images,
+  same-origin CORS, disabled verification bypasses and rejection of partial
+  mail settings. No application authorization or database schema is changed.
+  - Compile release images for the free
+    `termspace.13.140.89.146.sslip.io` hostname. Add a separate Nginx SNI
+    template with HTTP-to-HTTPS redirect, ACME webroot and noindex header.
+    Health checks verify the configured public certificate normally, retaining
+    the local CA path for private-origin rollback. Document IP-bound DNS,
+    renewal, existing test accounts and deferred email/Google/full-launch
+    acceptance. Shared `changelog.md` edits were announced before editing.
+  - Seven deployment regressions, root typecheck, all 689 runnable unit tests,
+    all production builds and web lint (two existing warnings) pass. The public
+    Let's Encrypt certificate is issued and its renewal dry run succeeds;
+    Chrome validates trusted direct HTTPS before application cutover.
+  - Runtime `fd4bc37` is deployed at the public hostname. Exact-release hosted
+    application/database CI, all three images and browser gates pass. The first
+    Lighthouse attempt selects homepage input delay 138 ms against 130 ms;
+    nine reports are retained. One rerun of only the failed job passes using the
+    same build, budgets and throttle (homepage traces 123/96/89 ms). No application
+    performance change is claimed. Both attempts and the fixture installation
+    endpoint's pre-existing 404 remain in private evidence.
+  - Fresh stopped-writer backup is encrypted for both recovery recipients,
+    copied off-server, checksum-verified, decrypted and fully restored in a
+    disposable local database (31 migrations before and after). Plaintext and
+    the disposable database are removed. All 61 pre-existing table counts match
+    after cutover; all five services are healthy with zero restarts.
+  - Direct public Chrome checks pass both existing account logins, finished
+    moderation rendering, admin/client authorization, secure host-only cookies,
+    actual cross-origin form rejection with session preservation, logout and
+    Persian mobile RTL. Live HTTPS, changing request nonces and Brotli decoded
+    bytes pass. HTTP and the legacy private URL redirect to public HTTPS.
+    Certificate renewal dry run and all backup/health/renewal timers pass;
+    INSIGHT's Nginx configuration checksum is unchanged. Temporary registry
+    credentials are removed. Email/Google remain disabled and inbox delivery is
+    untested. Documentation-only acceptance update announced before editing.
+
+- **Deploy and verify the updated private VPS preview.** Runtime images at
+  `d8ab9f2` include redesign/ramtin `851037a`; all exact-release hosted CI,
+  image smoke/audit, browser and unchanged Lighthouse gates pass. The VPS
+  checkout was fast-forwarded and only the three pinned application image
+  references changed. All five services are healthy with zero restarts;
+  31 migrations are complete, none unfinished, and every pre-existing table
+  count is preserved. No fixtures or demo content were inserted.
+  - Before migration, stopped application writers, encrypted a database/uploads/config
+    backup for both recovery recipients, copied it off-server, verified its SHA-256,
+    decrypted and fully restored into a disposable local database, and tested the
+    migration from 30 to 31. Removed the temporary plaintext and database.
+  - Trusted HTTPS through local tunnel port 8443 passes root, account, catalog,
+    health and Persian RTL checks. CSP nonces change per request; negotiated
+    Brotli decompresses to the exact identity asset bytes. Chrome verifies both
+    owner-requested preview accounts, secure host-only cookies, logout, admin
+    moderation access and client denial. Credentials stay out of Git.
+  - Current-user CA trust was explicitly approved. The email worker and Google
+    sign-in remain disabled; real inbox delivery is untested. The catalog is
+    empty. Monitoring and backup timers are active; no systemd unit is failed.
+    Windows/Linux local Lighthouse timing failures remain in ignored evidence;
+    hosted gates pass without budget or throttling changes. Shared log changes
+    were announced before editing. This entry changes documentation only;
+    deployed application revision remains `d8ab9f2`.
+
+- **Retain required validator files in the API runtime image.** The secured
+  image's import smoke test catches npm marking the direct Zod dependency as
+  a peer in the workspace lockfile; `--omit=peer` consequently removes it.
+  `docker/Dockerfile.api` now uses the standard production install without
+  omitting peers. Explicit TypeScript/Prisma tool removal and the runtime
+  import/dependency-audit gates remain intact. No application behavior or
+  performance setting changes. Shared log update announced before editing.
+  An isolated production install retains patched Zod and required API modules;
+  all six deployment regressions pass. The preceding security candidate's root
+  typecheck, 689 tests, builds, lint and zero-finding audit cover unchanged code;
+  require the corrected image's real import smoke test and fresh hosted gates.
+
+- **Patch API dependencies caught by the release image audit.** Hosted image
+  verification for the integrated release caught three high-severity advisories
+  published after the initial VPS deployment. Upgrade body-parser to 2.4.0,
+  multer to 2.5.0 and Zod to 4.6.7. Retain all request schemas and strict object,
+  ownership and role checks; only the manifest union's removed Zod 3 type is
+  replaced with the public Zod 4 function parameter type.
+  - A manifest regression passes 1,000 invalid tags and checks rejection emits
+    one collection-size issue instead of expanding per-element errors. All
+    271 API tests pass, including authorization and validation; root typecheck
+    passes and the API production dependency audit reports zero vulnerabilities.
+    The final complete root unit run passes all 689 runnable tests, all three
+    normal production builds pass and web lint retains two existing warnings.
+    Hosted release gates are still required before deployment.
+  - Fixes [body-parser](https://github.com/advisories/GHSA-27r3-jxmh-p828),
+    [multer](https://github.com/advisories/GHSA-q7qp-rjg7-q26m) and
+    [Zod](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5). No audit threshold,
+    performance budget, validation limit or authentication check is weakened.
+    Shared `changelog.md` edits were announced in the local planning commit.
+  - Owner-requested release fixes are limited to API package/lock entries,
+    `apps/api/src/lib/marketplaceManifest.ts` and its test. The pre-existing
+    cold-module harness failure in
+    `apps/web/features/product/product-actions.test.tsx` is addressed by a
+    scoped five-second asynchronous dialog wait; release identity, dialog,
+    focus and content assertions are retained. All 11 scenarios in that file
+    pass. This is a functional import wait, not a changed performance budget.
+
+- **Integrate latest redesign into the private VPS release.** Merge redesign
+  `851037a` while retaining the preview deployment history, nonce-enforced CSP,
+  standalone runtime, private origins and worker/backup safeguards. Combine
+  nonce propagation with request-scoped session snapshots and limited locale
+  messages; retain Brotli routing and the dotted-route CSP matcher. Both
+  changelog histories and the remaining owner-dependent launch gates survive.
+  - Package `.next/compressed-assets.json` in the standalone web image and add
+    a real runtime smoke assertion for negotiated Brotli and decoded-byte
+    equality. The moderation pagination test waits for the first-page URL and
+    rows before selecting a case, removing its stale-row navigation race.
+  - Shared surfaces were announced in the local planning commit before merging:
+    `changelog.md`, `pending.md`, API helpers/types/i18n and the Prisma schema.
+    This owner-requested deployment integration includes `docker/`, workflows,
+    `apps/web/app/layout.tsx`, `components/layout/providers.tsx` and `proxy.ts`.
+  - Root typecheck, all 688 runnable unit tests (12 database/Redis skips), web
+    lint (two existing warnings), all three normal production builds and six
+    deployment tests pass. The first parallel web run's cold lazy-dialog
+    timeout is retained; the complete serial web run passes unchanged assertions.
+    Browser, Lighthouse and hosted image/release acceptance are recorded with
+    the release evidence; no performance gate or throttling setting is relaxed.
+    Browser coverage: 437 scenarios pass in the full run, with 46 conditional
+    skips; four new pagination waits initially expected an implicit first-page
+    URL. Correcting them to the component's explicit `page=1` URL makes all 12
+    repeated language/viewport cases pass. The complete scenario set is covered;
+    original failures remain in ignored evidence. All six JavaScript budgets pass.
+    Windows Lighthouse completes nine runs but exceeds timing gates; a Linux
+    container diagnostic also exceeds them and is stopped after two retained
+    reports. The owner requested redeployment after the existing local timing
+    failures were reported. Publish this reviewed release branch for hosted
+    verification; deployment still requires the unchanged hosted application,
+    browser, performance and all three image gates to pass at the same commit.
+    No timing result is discarded or represented as a local pass. Manual
+    Ponytail/security diff review completed; no harness review or usage meter.
+  - Keep the live email worker paused and fixtures/demo/verification bypass off.
+    Release requires a new encrypted, off-server, restore-tested backup before
+    the reporting migration. No unrelated site or database is part of the release.
+
+- **Test and reject startup chunk/font changes that do not meet acceptance.**
+  Production client-only webpack size hints of 160000 and 400000 bytes both
+  build, but each fails three unchanged bundle tests. Dashboard grows from
+  167.9 to 173.7/170.6 kB and Persian detail from 164.9 to 170.7/167.5 kB.
+  Restoring the original configuration returns all six tests to green.
+  - An earlier monospace font hint initially suggests a homepage LCP gain,
+    while the global version's product median worsens. A homepage-only hint
+    and repeat baseline produce home 2483 to 2476 ms, dashboard 2790 to 2789 ms
+    and detail 2473 to 2478 ms. The homepage's apparent gain does not reproduce
+    beyond sample variation. Its FCP improves, but the requested LCP acceptance
+    remains unmet; both font patches are removed. All 36 retained reports use
+    the original profile and have accessibility 100; the slow baseline sample
+    is retained. No framework, dependency, content, style or budget change.
+  - Verification: root typecheck, all 685 runnable unit tests (12 database/Redis
+    skips), web lint (two existing warnings), normal root production build and
+    six restored bundle gates pass. Final application/configuration diff against
+    the published base is empty; the normal production build is restored and
+    its identity checked. Full E2E is not repeated for identical restored code.
+    A PowerShell warning-handling interruption is retained separately from the
+    successful restored checks. Evidence and trial details are recorded in
+    `docs/startup-performance.md`; generated artifacts stay under ignored
+    `docs/artifacts/`. The local queue retains all unfinished acceptance and
+    contains no new completed-trial narrative.
+  - Shared `changelog.md` edits were announced in local planning commits.
+    Manual Ponytail/code-quality second pass; no harness review command or
+    usage meter is available. No provider, database or deployment actions.
+
 ## 2026-10-24
+
+- **Reconcile Ramtin's local queue and continue startup profiling.** Removed
+  completed-trial narrative and replaced its duplicated shared backlog with a
+  reference to the authoritative `pending.md`; no unfinished shared task was
+  marked complete. Strict LCP, comparable hosted input delay, physical-device
+  checks, native Persian approval and owner-deferred provider work remain open.
+  The local queue stays ignored and is not part of the commit.
+  - Confirmed all six hosted checks pass at `d5ac348`, including API integration,
+    437 Playwright passes (46 existing skips, no reported flaky tests) and nine
+    Lighthouse reports. Hosted median LCP is 2409/2278/2164 ms and input delay
+    90/74/83 ms; faster CPU indices still prevent closing the original timing
+    risk. Retained failures and the strict targets are unchanged.
+  - Recomputed eighteen current/prior critical paths and reproduced all nine
+    current baselines. Offline transfer-size sensitivity still estimates a
+    2128 ms dashboard median with every script except the two shared framework
+    scripts reduced to zero transfer bytes. This is a
+    diagnostic, not a shipped gain. No unproven runtime optimization was added;
+    details and evidence paths are in `docs/startup-performance.md`.
+  - Verification: model baseline assertions, hosted check/head verification,
+    queue ownership/deferred-work review and `git diff --check`. Application,
+    tests and configuration are unchanged; reuse the preceding phase's root
+    typecheck, unit tests, lint, production build, full E2E and LHCI results.
+    Manual second-pass review used Ponytail and the code-review workflow;
+    no harness review command or usage meter is available. Shared-surface
+    `changelog.md` was announced in a local planning commit before editing.
+
+- **Reduce public startup transfer with negotiated Brotli assets.** The web build
+  precompresses its JavaScript/CSS and verifies every decoded variant against the
+  original. The proxy and a small Route Handler serve only files in the build's
+  generated allowlist. Missing variants, refused encodings, development and
+  range requests retain normal delivery. Compressed responses keep the original
+  MIME type, immutable public caching, `Vary: Accept-Encoding` and strong ETags
+  with body-free conditional 304s. Private API data, session snapshots, Saved
+  ordering, content and styling are unchanged.
+  - Median local mobile LCP improves home 2816 to 2500 ms, dashboard 2951 to
+    2803 ms and detail 2803 to 2484 ms. Median page transfer drops by
+    28350/30597/29512 bytes respectively. All nine stock Lighthouse reports pass
+    unchanged gates with accessibility 100; performance is 97/96/97 and median
+    max-potential-FID 70/77/68 ms. All six gzip JavaScript budgets pass. The
+    strict 2200/2000/2200 ms targets, comparable hosted timing and physical/native
+    acceptance remain open; no budget or throttling setting was changed.
+  - Verification: root typecheck, normal root production build and 685 runnable
+    unit tests pass (12 database/Redis skips); web lint has no errors and the same
+    two existing warnings.
+    Full serial Playwright validation passes 437 scenarios with 46 existing
+    skips. The earlier two-worker run's one Chrome `ERR_NO_BUFFER_SPACE` failure
+    is retained with its trace: a chunk request failed before an HTTP response.
+    Serial validation uses browser temporary files on D:. No test was removed,
+    weakened or given retries. Thirty-six render checks cover English/Persian
+    RTL, light/dark and 320/768/1280 widths, first keyboard focus and one main,
+    with no overflow or page error. Impeccable detection has no findings.
+  - Manual second-pass review tightened artifact allowlisting and negative-cache
+    behavior, and caught the missing revalidation metadata before completion.
+    The raw transport regression verifies actual encoded bytes and HTTP behavior,
+    beyond mocked headers. Next strips encoding headers from proxy responses;
+    the discarded direct rewrite is retained for evidence. A Turbopack pilot was
+    rejected at 165.3 kB on both product locales; webpack remains in use. No
+    dependency, API/schema, migration, provider or deployment changes.
+  - Owner folder conventions apply to this new work: tests are under
+    `apps/web/tests/`, generated evidence under ignored
+    `docs/artifacts/startup-delivery-20261024/`, and the transport project's
+    failure artifacts under `docs/artifacts/playwright-transport/`. Existing
+    test directories remain supported; CI uploads the new failure location.
+    Config/shared files were announced before editing: `changelog.md`,
+    `.gitignore`, web test configs and the web workflow artifact path. No harness
+    review command or usage meter is available. Further measurements and
+    self-hosted packaging notes are in `docs/startup-performance.md`.
+
+- **Restore the product startup JavaScript budget after reporting integration.**
+  Fast-forwarded `ramtin` onto `main` (`3490d23`), retaining the owner's published
+  reporting UI (`a4935f8`). The baseline Persian detail bundle measured 165.2 kB
+  against its existing 165 kB gate. Reporting-only extraction saved 152 gzip
+  bytes but still failed at 165.1 kB; moving the adjacent listing-moderation
+  helpers into their feature module completes the fix. The eleven endpoint
+  bodies are unchanged and share the existing request transport.
+  - Each of six measured startup routes saves 336 gzip bytes: home EN/FA
+    163.2 to 162.8 kB, dashboard EN/FA 168.2 to 167.9 kB, product EN 153.8 to
+    153.5 kB and product FA 165.2 to 164.9 kB. Private case endpoint paths no
+    longer occur in those initial assets. All six existing browser bundle
+    assertions pass. No budget, timing profile, dependency or UI copy changed.
+  - Verification: root typecheck, normal root production build and 664 runnable
+    unit tests pass (12 database/Redis skips). New transport checks preserve credentialed uncached reads,
+    caller cancellation and non-retrying mutations; existing reporting and
+    moderation tests retain role gates, failure recovery and form state. Web
+    lint has no errors and two existing warnings in `context-help.tsx` and
+    `e2e/mock-reports.mjs`. The full browser suite passes 436 scenarios with
+    46 intentional skips and no retries. Twenty-four render checks cover report
+    forms, cases and moderation in both themes, English/Persian RTL and
+    320/1280 widths: no overflow, duplicate main or page error; keyboard-opened
+    disclosure retains visible focus. Impeccable detection has no findings.
+    All nine Lighthouse reports pass unchanged gates, with accessibility 100.
+    Representative home/dashboard/detail LCP is 2816/2951/2803 ms,
+    performance 96/95/96 and max-potential-FID 107/88/97 ms; strict timing
+    acceptance remains unfinished.
+  - Shared surfaces `apps/web/lib/api.ts` and `changelog.md` were announced in
+    the plan commit before editing. A manual second-pass review checked every
+    caller, mock, transport contract and all eleven moved bodies against the
+    published baseline; no harness review command or usage meter is available.
+    No API/schema, migration, seed, provider or deployment changes. The ignored
+    local queue retains strict LCP, comparable hosted timing, physical-device
+    and native Persian wording acceptance, including reporting screens.
+    Measurements and verification evidence: ignored
+    `maintenance/reporting-performance-20261024/`; interpretation and remaining
+    headroom are documented in `docs/startup-performance.md`.
 
 - **Merge `redesign` into `ramtin` at the owner's request.** Integrates
   `fc766ea` with `703f831`, retaining both histories and the seventeen later
@@ -379,6 +650,63 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-21
 
+- **Deployment documentation reconciled.** Shared surfaces: `pending.md` and
+  `changelog.md`. The README now links the private VPS setup, readiness gates
+  and draft PR #11; readiness distinguishes deployed images (`41a818d`) from
+  operations scripts (`f780314`) and labels the original assessment as historical.
+  Replaced stale missing-policy/demo-seed choices with the remaining legal review,
+  consent and curated-release decisions. Verification: live private HTTPS health
+  returned `ok`, all PR checks at `f780314` passed, local Markdown links and the
+  documentation diff checked. No application or deployment configuration changed.
+
+- **Private VPS deployment and operations (phase 3).** Owner-approved deployment
+  tooling work; shared surfaces: `changelog.md` and `pending.md`. INSIGHT remains
+  active with its original site, ports, certificate and host PostgreSQL. The
+  upgraded host has 2 CPUs, about 4 GB RAM and 40 GB disk. Key-only operator SSH
+  access has neither sudo nor Docker-group membership. The preview uses only
+  loopback 3300/8443; external checks reject 3300/8443/4001/5432/6379.
+  - All three hosted image checks passed in run 39424662557 (`41a818d`). Deployed
+    web `c5713d5d865320c7f5a2a3337bf92ce812ff7b5c7b07a479a7ec79fd2448beec`,
+    API `044801a52921c909dc65a9dc5f2338cec6700117bf7141183dbfbc901f866b8c`,
+    operations `055a3d7716f0515d47bf9157f15eccbd94b5b50a8fa025b2b517601f7cc567ba`
+    are GHCR sha256 digests under `boyinshadows/termspace-{web,api,ops}`. The
+    previous tested web digest `f46876c35c696c71de963dfef0c6ef866ffa8b6357a3b2e434155a893954dea7`
+    booted against the current API/schema on a separate loopback port; the live
+    frontend was not rolled back. Test container was removed afterward.
+  - Fresh database: all 30 migrations, 8 reference categories and 9 platforms;
+    zero products, readers and administrators after acceptance cleanup. Six real
+    database/Redis integration cases passed in disposable, isolated containers.
+    The test runner needed writable temporary Vite configuration; only that
+    disposable container used the source-file owner. Production runs as node.
+    Live trusted HTTPS passed registration, Secure/HttpOnly/host-only sessions,
+    CSRF rejection, unverified creator rejection and logout. English/Persian
+    page controls/theme switching pass; browser console has no errors.
+  - Startup caught YAML flow-list commas splitting tmpfs mount options. Quoted
+    mount strings fix all three services; the new Compose-parsing test includes
+    the optional email profile and rejects split options/public internal ports.
+    Retry used the required matching off-server encrypted backup.
+  - Encrypted snapshot `20261020T130135Z.tar.age` matches off-server SHA-256
+    `f0e94f289502660203d2c6dd7be93b09d0b49b0627151902d9e4f862a5d56d01`.
+    Isolated restore recovered migration/reference/empty-user counts and exact
+    upload marker hash `f88b266dca5c6bd97d65a18f93b8d2fe86b9f46d96a198cab6943b64ad075f47`.
+    PostgreSQL readiness uses its final TCP listener rather than the temporary
+    initialization socket. Restore containers/volume and the live marker were
+    removed. CA/backup private keys remain on the computer; secrets stay outside
+    Git. The pre-change INSIGHT backup was also encrypted and copied off-server.
+  - Stopped-worker rejection and API/web restart recovery passed. Nightly
+    encrypted backup (03:15 UTC plus up to five minutes) and five-minute local
+    health timers are enabled. Health checks verify containers, TLS, disk,
+    available memory and backup freshness. External alerts remain pending.
+    Automatic review rejected forwarding broad GitHub OAuth access; a separate
+    registry bearer requested only pull scopes for the three images and was
+    removed from the VPS after pulls. Broad OAuth stayed on the computer.
+  - Verification: deployment regression tests, root typecheck/tests/build and web
+    lint; preceding application phase passed 328 browser cases and all nine
+    Lighthouse runs. No UI source changed in this operations phase. Manual
+    deployment/security diff review completed; public launch remains blocked on
+    owner settings and real inbox/Google/verified-role acceptance. Usage/cost
+    meter unavailable.
+
 - **Reduce dashboard startup formatting and forced layout (sequential queue).**
   The existing number helper now reuses formatters by resolved locale/options;
   overview summaries, totals, ratings and listing rows use it. Only formatter
@@ -553,6 +881,60 @@ Project changes completed from `pending.md` should be recorded here with the dat
     No usage/cost meter is exposed by this harness.
 
 ## 2026-10-20
+
+- **Enforced web script CSP (deployment phase 2).** The proxy supplies a fresh
+  nonce to Next and the response policy on English/Persian routes, replacing
+  client-supplied nonce/policy headers. Theme bootstrapping, product JSON-LD and
+  the Google loader receive nonces. Production scripts have no unsafe-inline or
+  eval exception; inline styles remain compatible with the existing UI. Dotted
+  HTML routes also receive the policy. The deferred blog is unchanged.
+  - Verification: root typecheck, 574 unit tests (6 database/Redis skips), all
+    production builds and web lint pass. Full browser suite: 328 passed,
+    44 intentional skips; includes fresh nonce and unauthorized inline-script
+    rejection on both languages and viewport projects. Lighthouse passes all
+    existing budgets across 9 runs. The first new assertion incorrectly required
+    explicit nonces on scripts loaded by trusted runtime code; the final test
+    checks server scripts and browser enforcement directly. Manual diff/security
+    review found no remaining issue. Real Google acceptance still needs owner
+    credentials. Shared surface: `changelog.md`; readiness B5 is updated for web
+    only. Usage/cost meter unavailable.
+
+- **Hosted image smoke checks (deployment phase 1 follow-up).** The first hosted
+  run caught TypeScript retained as Prisma's optional peer despite `--omit=dev`;
+  a clean production dependency stage omits dev/peer dependencies and explicitly
+  removes the optional TypeScript/Prisma code-generation peers. npm's `devOptional`
+  workspace lock entries retained them even on a clean install with omit flags.
+  Compiled JS/client imports remain part of the strict smoke test. The web check initially hit Docker's
+  cold-start connection reset; readiness retries all transient errors within its
+  existing bound and prints container diagnostics on failure. The operations
+  and web images passed their smoke checks. Application source is unchanged; the preceding
+  root/browser/Lighthouse gates apply. Hosted image validation is rerunning.
+  Shared surface: `changelog.md`; manual diff review found no additional issue.
+
+- **Private web/API deployment packaging (phase 1).** Owner-approved work outside
+  the presentation lane: `docker/`, `docker-compose.yml`, `deploy/`, build-context
+  exclusions and `.github/workflows/preview-images.yml`. Shared surfaces:
+  `changelog.md` and `pending.md`.
+  - Separate, digest-only preview Compose project; dedicated database/uploads,
+    internal API/PostgreSQL/Redis, web on loopback 3300, private TLS proxy on 8443.
+    No blog or editorial scheduler; email delivery remains an explicit profile.
+  - Standalone web runtime; production-only API dependencies and a separate
+    operations image. Existing Compose migration/worker commands follow the new
+    image layout. Worker errors exit visibly; health requires a recent good poll.
+    Journal is omitted without a configured blog URL. Catalog browser assertions
+    use visible headings rather than hidden streamed text duplicates.
+  - Configuration generation refuses to overwrite secrets. Preflight rejects
+    placeholders, mutable image tags, unsafe flags, broad file permissions,
+    mismatched origins and incomplete email configuration. Release checks baked
+    origin/Google/fixture labels. Backup/release scripts and operator runbook
+    require encrypted, matching off-server backups before updating existing data.
+  - Verification: root typecheck, 573 unit tests (6 database/Redis skips), web
+    lint, all production builds, deployment configuration/worker tests and Compose
+    validation pass. Browser suite: 324 passed, 44 intentional skips; Lighthouse
+    passes all existing budgets across 9 runs. Design detector has no findings.
+    Hosted Docker image checks and VPS acceptance remain pending. Manual review
+    found no remaining implementation issue after adding baked-config checks and
+    matching off-server backup confirmation. Usage/cost meter unavailable.
 
 - **Merge `ramtin` into `redesign`.** Combines `ea26053` and `9326134` with
   both histories retained. Resolutions preserve the risk-first moderation flow,

@@ -61,6 +61,8 @@ for (const locale of ["en", "fa"] as const) {
     await expect(page.getByRole("article")).toHaveCount(1);
     await page.reload(); await expect(page.getByRole("article")).toHaveCount(1);
     await page.getByRole("link", { name: t.previous, exact: true }).click();
+    await expect(page).toHaveURL(`${prefix}/moderation/cases?page=1&state=NEW`);
+    await expect(page.getByRole("article")).toHaveCount(24);
     await page.getByRole("link", { name: t.openCase, exact: true }).first().click();
     await expect(page).toHaveURL(casePath);
     await expect(page.getByRole("heading", { name: t.evidence, exact: true })).toBeVisible();

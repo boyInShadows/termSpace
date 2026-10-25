@@ -4,6 +4,13 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Deployment Safety
 
+- Private VPS preview: sending domain/provider credentials, legal/contact email,
+  Google OAuth, public origin, administrator identity, dedicated registry pull
+  credential and external alert destination remain owner decisions.
+  Complete real inbox verification/reset and verified creator/moderator acceptance
+  before public launch. Keep `LOCAL_AUTO_VERIFY_EMAIL` and demo/mock flags off.
+  The blog deploys after web. Track release/restore evidence in `changelog.md`.
+
 - Before applying migration `202609240001_remove_duplicate_creator_ownership`
   to any database that served the retired `/api/community` publishing routes,
   audit `MarketplaceCreator.userId`. If any row is non-null, reconcile it into
@@ -20,13 +27,12 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Launch — Owner Decisions
 
-- Review and approve the implemented privacy, terms and content-policy pages.
-  The footer's
-  "About" and "Quality standards" point at `/design-system`, "Support" at
-  `/account`.
-- Seeded listings cannot be acquired (no approved release). Launch empty, with
-  curated real listings, or with the demo seed (`SEED_DEMO=true`) knowing the
-  acquire and review loop is unavailable on those items.
+- Review the existing English/Persian privacy, terms and content policy drafts;
+  supply the legal entity/contact details and complete signup consent before
+  public launch. The pages and footer links are implemented.
+- Decide which curated listings and approved releases to publish for public
+  launch. The private preview intentionally has an empty catalog and no demo
+  data; keep `SEED_DEMO=false`.
 
 ## Marketplace — P0 Discovery and Community
 

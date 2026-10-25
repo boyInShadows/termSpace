@@ -73,7 +73,8 @@ describe("ProductActions acquisition flow", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Add v1.0.0 to library" }));
 
-    expect(await screen.findByRole("dialog", { name: "Install acquired release" })).toBeInTheDocument();
+    // Cold lazy-module transformation can exceed Testing Library's one-second default.
+    expect(await screen.findByRole("dialog", { name: "Install acquired release" }, { timeout: 5_000 })).toBeInTheDocument();
     expect(screen.getByText("v1.0.0")).toBeInTheDocument();
     expect(screen.getByText("Extract the archive")).toBeInTheDocument();
     expect(screen.getByText("a".repeat(40))).toBeInTheDocument();

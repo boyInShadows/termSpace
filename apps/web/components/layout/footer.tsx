@@ -9,7 +9,7 @@ export async function Footer() {
   const locale = await getLocale();
   const t = copy[locale];
   const labels = footerLabels[locale];
-  const blogUrl = process.env.NEXT_PUBLIC_BLOG_URL ?? "http://localhost:3001";
+  const blogUrl = process.env.NEXT_PUBLIC_BLOG_URL?.trim();
   const columns = [
     { heading: labels.marketplace, links: [
       { label: labels.explore, href: localePath("/explore", locale) },
@@ -17,7 +17,7 @@ export async function Footer() {
       { label: labels.newReleases, href: `${localePath("/explore", locale)}?sort=newest` },
     ] },
     { heading: labels.company, links: [
-      { label: labels.journal, href: `${blogUrl.replace(/\/$/, "")}${locale === "fa" ? "/fa/blog" : "/blog"}` },
+      ...(blogUrl ? [{ label: labels.journal, href: `${blogUrl.replace(/\/$/, "")}${locale === "fa" ? "/fa/blog" : "/blog"}` }] : []),
       { label: labels.support, href: localePath("/account", locale) },
     ] },
     { heading: legalLabels[locale].legal, links: (["privacy", "terms", "content-policy"] as const).map((slug) => (

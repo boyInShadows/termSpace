@@ -1,0 +1,11 @@
+[Unit]
+Description=Encrypted TermSpace preview backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /opt/termspace/deploy/backup.sh
+UMask=0077
+PrivateTmp=true
+Nice=10

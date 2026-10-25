@@ -45,11 +45,14 @@ dashboardPlan.md
 
 # maintenance screenshots and notes (session scratch, not project docs)
 maintenance/
+/docs/artifacts/
 
 # local tooling and agent harness state
 .cursor/
 .claude/
 .turbo/
+.codex/
+.playwright-mcp/
 
 # additional local artifacts
 build/

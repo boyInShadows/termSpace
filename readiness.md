@@ -1,10 +1,80 @@
 # TermSpace pre-deployment readiness review
 
+## Public preview scope — 2026-10-25
+
+The owner-requested preview is available from ordinary browsers and other
+devices at `https://termspace.13.140.89.146.sslip.io`, using a free hostname
+and trusted TLS. Runtime `fd4bc37` passed hosted application/database CI,
+all three image jobs, browser checks and unchanged Lighthouse gates (one
+failed-job rerun, original measurements retained). Its explicit `public-preview` mode
+permits external HTTPS while retaining strict secrets, disabled bypasses,
+same-origin API/cookies and partial-mail rejection. Full `public` launch still
+requires mail configuration and a legal contact. Email/Google remain disabled;
+the existing verified administrator/client test accounts are used for acceptance.
+The catalog remains empty. Direct public Chrome checks verify both accounts,
+role separation, host-only secure cookies, cross-origin protection and logout.
+TLS renewal dry run, five healthy services with zero restarts, 31 complete
+migrations and preserved counts in all 61 tables pass. A fresh off-server
+encrypted backup is fully restored and checked in a disposable database before
+cutover. HTTP and the old private URL redirect to public HTTPS. The free hostname
+depends on the VPS retaining its current IP. Release evidence and the changelog
+retain both performance attempts and the remaining full-launch limitations.
+
+## Release integration — 2026-10-25
+
+The private-preview release branch now integrates redesign `851037a`, including
+reporting, request-scoped dashboard snapshots and compressed asset delivery.
+It preserves nonce-enforced web CSP, private origins, digest-only deployment,
+worker health checks, encrypted backups and the paused email profile. The
+standalone web image explicitly carries its generated compressed-asset allowlist;
+hosted image smoke checks verify decoded bytes and Brotli negotiation.
+Release acceptance and deployed image digests belong in PR #11 and the operator
+release record. Building or updating a branch does not itself deploy the VPS.
+
+## Initial deployment acceptance — 2026-10-21
+
+Web/API is deployed as a private HTTPS preview at
+`https://termspace.localhost:8443` through an operator SSH tunnel. The VPS has
+2 CPUs, about 4 GB RAM and an expanded 40 GB disk. Existing INSIGHT remains
+active on its original ports, database and Nginx site. TermSpace publishes only
+loopback web 3300/private TLS 8443; external checks reject those ports, API 4001,
+PostgreSQL 5432 and Redis 6379. Blog/email workers and the editorial scheduler
+are deferred; no demo, administrator or bypass account is present.
+
+Hosted run 39424662557 passed all three images for `41a818d`. The preview passed
+6 disposable database/Redis integration tests and live HTTPS session/CSRF and
+unverified-creator checks. Encrypted backups match their off-server copies;
+restore recovered all 30 migrations, 8 categories, 9 platforms, empty readers and
+catalog, and the exact upload marker bytes in disposable resources. Previous
+web image compatibility, stopped-worker detection and API/web restart recovery
+passed. Nightly encrypted backups and five-minute local health checks are active.
+See [changelog.md](changelog.md) and [deploy/README.md](deploy/README.md) for
+evidence, image digests and operation.
+
+Repository status: `codex/vps-preview` is in
+[draft PR #11](https://github.com/boyInShadows/termSpace/pull/11), not yet merged
+into `main`. At this acceptance, application images were pinned to `41a818d`
+and VPS deployment scripts to `f780314`. All PR checks passed at `f780314`, including browser,
+integration and image checks. Lighthouse passed after one failed-job retry at
+unchanged budgets. Later image builds are not automatically deployed.
+
+The original summary/checklist below describe the 2026-10-19 review and contain
+stale unchecked entries. B1–B8 and S1–S10 have later fixes/corrections in their
+detailed sections; web CSP is now nonce-enforced. S13–S19 below distinguish the
+current web/API preview from the deferred blog and remaining CI/alerting work.
+Public DNS/TLS, sending domain/provider, legal/contact review and signup consent,
+Google OAuth, administrator identity, real inbox verification/reset and verified
+creator/moderator acceptance remain owner-dependent launch gates. No verification
+bypass is used to satisfy preview acceptance. Private readiness does not approve
+public launch.
+
+## Original assessment — 2026-10-19 (historical)
+
 Date: 2026-10-19 · Branch: `ramtin` · Scope: `apps/web`, `apps/blog`, `apps/api`, `docker/`, `docker-compose.yml`, `.github/`
 
 **How this was produced.** Source files were not modified. Findings come from three read-only code explorations (API; web+blog; infra/secrets/CI), plus the commands listed under "Commands run". Line numbers come from those explorations and were not all re-checked by hand, so confirm a line before you edit it. Nothing was run against a live deployment. Items marked *verify* depend on your production topology, which I could not see.
 
-## Summary
+### Original summary — superseded by the deployment follow-up above
 
 **Verdict: don't ship yet.** The application code is in good shape: typecheck, lint and build pass, production dependencies have 0 known vulnerabilities, and the API is careful (Zod everywhere, owner-scoped queries, parameterized SQL, no SSRF or open redirects, hashed tokens, Origin-checked CSRF, git history free of secrets). The blockers are almost all deployment configuration and launch hygiene. The rate limiter probably buckets every user together behind your proxy chain. The API container will not shut down gracefully. A mistyped `NODE_ENV` leaks error messages. The blog can bake `localhost` into canonicals and the sitemap. A copied `.env.example` yields a live default admin. Neither site has a privacy policy, terms or content policy, and the footer links to a dev showroom. Security headers are limited to `frame-ancestors`. Each is a small fix; I'd expect a day's work to clear all eight.
 
@@ -21,8 +91,7 @@ Fix: invert to show details only when `NODE_ENV === "development"`; pin `NODE_EN
 **B4. ~~No legal or policy pages, in either app.~~ DONE in phase 2, draft text needs your review.** `/privacy`, `/terms`, `/content-policy` (EN + FA) live in `apps/web` (`lib/legal.ts`), linked from the web footer; the blog footer links to them on the main site (`NEXT_PUBLIC_WEB_URL`). Written from what the code does; no governing law or legal entity is invented. Contact comes from `LEGAL_CONTACT_EMAIL`, which compose requires. Not done: a consent line on the sign-up forms. Original finding: Neither footer links to a privacy policy, terms, cookie notice, content policy or DMCA/takedown route (`apps/web/components/layout/footer.tsx`, `apps/blog/components/SiteFooter.tsx`). The product has accounts (email+password, Google), comments, a newsletter and community-submitted content.
 Fix: add `/privacy`, `/terms`, `/content-policy` (with a takedown contact) to both apps, link them from the footers and the sign-up form. Add consent handling before adding any analytics. Needs legal text from you.
 
-**B5. ~~Security headers are almost absent.~~ DONE in phase 2, with one caveat.** Both apps now send HSTS (no `includeSubDomains`), nosniff, Referrer-Policy, Permissions-Policy, X-Frame-Options, and an enforced CSP of `frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'`; `poweredByHeader` is off. **`script-src` is report-only, not enforced:** Next's inline bootstrap scripts need a nonce setup first, so the full policy ships as `Content-Security-Policy-Report-Only` (Google sign-in allowed). Check the browser console for violations, then add nonces and enforce. Original finding: `apps/web/next.config.ts:14-19`, `apps/blog/next.config.mjs:15-20` set only `Content-Security-Policy: frame-ancestors 'none'` and `X-Frame-Options`. Missing: HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, a real CSP. Also `poweredByHeader` is on.
-Fix: add the headers in both `headers()` blocks (or at the edge), set `poweredByHeader: false`. The CSP must allow `https://accounts.google.com/gsi/client` (`web/features/account/google-sign-in.tsx:32`, `blog/components/ReaderAuthForm.tsx:56`) or Google sign-in breaks; ship it report-only first.
+**B5. Security headers — web script CSP enforced (2026-10-20).** The web proxy replaces client-supplied nonce/CSP headers with a fresh request nonce and sends the full enforced policy. Next bootstrap scripts, the theme bootstrap, product JSON-LD and the Google loader receive nonce values; production permits neither inline script exceptions nor eval. Inline styles remain allowed for the current UI. English/Persian browser checks verify fresh nonces, hydration and blocking an unauthorized inline script. Both apps retain HSTS (without `includeSubDomains`), nosniff, Referrer-Policy, Permissions-Policy, X-Frame-Options and disabled `poweredByHeader`. The deferred blog still uses its partial enforced/report-only policy. Real Google authentication awaits owner configuration and acceptance. See the deployment phase entry in `changelog.md` for final verification.
 
 **B6. ~~Production URLs silently fall back to localhost.~~ FIXED in phase 1** (blog build arg added; compose now requires `WEB_PUBLIC_URL`, `BLOG_SITE_URL`, `MEDIA_PUBLIC_URL`). The in-code localhost fallbacks in `next.config`/`lib` remain, deliberately: a throw there would break CI and e2e builds. Original finding:
 - `docker/Dockerfile.blog` has no `NEXT_PUBLIC_SITE_URL` build arg; compose only sets it at runtime (`docker-compose.yml:~102`). It is inlined at build time, so `metadataBase`, `robots.ts`, the sitemap and RSS get the localhost default (`apps/blog/lib/siteMetadata.ts:11-26`, `apps/blog/app/rss.xml/route.ts:3`).
@@ -53,13 +122,13 @@ Fix: write the real pages or remove the links; remove or gate `/design-system` i
 - **S12. ~~`NEXT_PUBLIC_USE_MOCK=1` serves fixtures~~ LOWER RISK THAN REPORTED, NO CHANGE (phase 3): the Docker builds cannot receive the flag (`Dockerfile.web` has no ARG for it, compose passes none, `.dockerignore` excludes `.env`); only a hand-run host build with it set would. e2e and Lighthouse rely on it in a production build, so a `NODE_ENV` guard would break them.** Original: `NEXT_PUBLIC_USE_MOCK=1` serves fixtures (`apps/web/app/page.tsx:48`), and `lib/mock-home.ts` is bundled. It is build-time inlined, so a wrong build arg ships mock data. Guard on `NODE_ENV !== "production"`.
 
 ### Docker / CI / ops
-- **S13. Base images unpinned** (`node:22-bookworm-slim`, `postgres:16`). Pin versions or digests.
-- **S14. Runtime images ship devDependencies** (`docker/Dockerfile.api:27`, `.web:28`, `.blog:24`: full `node_modules` copied, no prune). Prune after fixing B2.
-- **S15. `.dockerignore:8-9`** omits `.env.*`, `.playwright-mcp`, `.codex`, `**/.impeccable`, `maintenance`, `**/test-results`, `**/playwright-report`.
-- **S16. No HEALTHCHECK for `web`, `blog` or the workers; no resource limits or log rotation.** The scheduler loop (`while true; … sleep 60`) hides job failures. The DB volume is still named `blog_pgdata`.
-- **S17. CI gaps** (`.github/workflows/ci.yml`, `web.yml`): no `npm audit`, dependabot or secret scan; no Docker image build job (so B6 would go unnoticed); no `permissions:` block; no `timeout-minutes`/`concurrency` in `ci.yml`; `apps/api` and `apps/blog` have no `lint` script (`--if-present` skips silently); the integration job runs two named files only.
-- **S18. No rollback, backup/restore, monitoring or error tracking.** No Sentry/OTel/uptime hooks anywhere; README (`:118-215`) has no pre-deploy checklist. Migrations are forward-only, `202609010001_review_hardening` TRUNCATEs `SearchQuery`, `202609240001_remove_duplicate_creator_ownership` aborts if `MarketplaceCreator.userId` has data, and several run data `UPDATE`s. Take and test a `pg_dump` before `migrate deploy`; run the pre-flight query for `202609240001`.
-- **S19. `.gitignore` gaps.** Add `.codex/`, `.playwright-mcp/` (3.5 MB of screenshots/logs), `**/.impeccable/`; 15 `.impeccable` files are already tracked (`git rm -r --cached` if they shouldn't ship). `.env:25-26` repeats `EMAIL_VERIFICATION_SECRET`; `SESSION_COOKIE_DOMAIN` is read by no code.
+- **S13. DONE for the web/API preview.** Node, PostgreSQL and Redis use verified immutable digests; web/API/operations releases are digest-only. Blog and legacy development-stack tags remain outside this deployment.
+- **S14. DONE for web/API runtime.** Standalone web and production-only API dependencies pass hosted image checks; optional Prisma compiler/CLI peers are explicitly excluded from the API runtime. The separate operations image intentionally includes migration/seed/test tools. Blog runtime remains deferred.
+- **S15. DONE.** The Docker build context excludes `.env*`, agent/browser directories, `.impeccable`, maintenance and generated test/report output.
+- **S16. DONE for the preview.** Database/API/web/Redis/worker health checks, worker failure exits, CPU/memory caps, bounded logs and dedicated database/uploads volumes are deployed. Startup caught unquoted comma-separated tmpfs options; quoted strings and an actual Compose-parsing regression test now prevent that defect. No blog or scheduler is deployed.
+- **S17. PARTIAL.** The preview workflow builds/smoke-tests all three images, audits API production dependencies, pins actions and defines permissions/timeouts/concurrency. Six database/Redis cases were verified on disposable VPS containers. Broader legacy CI, Dependabot and secret-scanning coverage remain follow-ups; they are not implied by a passing image workflow.
+- **S18. DONE for private operations; external alerting pending.** Matching encrypted off-server backups, isolated database/uploads restore, previous-web-image compatibility, stopped-worker detection and API/web restart recovery passed. Nightly backup and five-minute health timers are active; local failures reach the journal. External notification destination and long-term off-server automation remain owner decisions. See `deploy/README.md` for protected backup/migration/rollback procedures. No INSIGHT database was used for testing.
+- **S19. PARTIAL / packaging addressed.** `.codex/` and `.playwright-mcp/` are ignored; Docker excludes all agent/design sidecars. Existing tracked design notes and local development `.env` cleanup were not removed as part of deployment. No secret or generated report is staged.
 - **S20. Migration naming.** `20260923202550_new_migration` breaks the `<YYYYMMDD><NNNN>_snake_case` rule. Renaming breaks `_prisma_migrations` if it was ever applied anywhere; rename only if it hasn't been.
 
 ### Performance
