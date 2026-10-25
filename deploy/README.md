@@ -129,6 +129,14 @@ admin/client permissions, Persian RTL and Brotli byte equality on the public
 hostname. Preserve a pre-change encrypted backup and saved configuration for
 rollback. The old tunnel is no longer required for public access.
 
+During public-preview operation, the old private TLS listener redirects to the
+public origin so stale preview links do not use a conflicting authentication
+origin. To roll back, restore the saved protected environment and original
+`nginx-preview.conf`, return the public site to its saved maintenance
+configuration, and validate/reload Nginx. The old digest-pinned images and
+encrypted pre-cutover backup are retained. The renewal timer already manages
+the new certificate; its dedicated dry run passed before cutover.
+
 ## Backups, upgrades and rollback
 
 Generate an age identity on the development computer. Keep its private identity

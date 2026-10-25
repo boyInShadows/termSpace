@@ -4,7 +4,7 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-25
 
-- **Prepare owner-requested public HTTPS preview.** Add an explicit
+- **Publish owner-requested public HTTPS preview.** Add an explicit
   `public-preview` deployment mode for an externally reachable HTTPS origin;
   retain full `public` launch requirements for configured email and legal
   contact. Regression assertions retain strict secrets, immutable images,
@@ -20,9 +20,28 @@ Project changes completed from `pending.md` should be recorded here with the dat
   - Seven deployment regressions, root typecheck, all 689 runnable unit tests,
     all production builds and web lint (two existing warnings) pass. The public
     Let's Encrypt certificate is issued and its renewal dry run succeeds;
-    Chrome validates trusted direct HTTPS before application cutover. Hosted
-    image gates and actual deployment outcomes remain in the release evidence;
-    image publication alone does not imply a live origin change.
+    Chrome validates trusted direct HTTPS before application cutover.
+  - Runtime `fd4bc37` is deployed at the public hostname. Exact-release hosted
+    application/database CI, all three images and browser gates pass. The first
+    Lighthouse attempt selects homepage input delay 138 ms against 130 ms;
+    nine reports are retained. One rerun of only the failed job passes using the
+    same build, budgets and throttle (homepage traces 123/96/89 ms). No application
+    performance change is claimed. Both attempts and the fixture installation
+    endpoint's pre-existing 404 remain in private evidence.
+  - Fresh stopped-writer backup is encrypted for both recovery recipients,
+    copied off-server, checksum-verified, decrypted and fully restored in a
+    disposable local database (31 migrations before and after). Plaintext and
+    the disposable database are removed. All 61 pre-existing table counts match
+    after cutover; all five services are healthy with zero restarts.
+  - Direct public Chrome checks pass both existing account logins, finished
+    moderation rendering, admin/client authorization, secure host-only cookies,
+    actual cross-origin form rejection with session preservation, logout and
+    Persian mobile RTL. Live HTTPS, changing request nonces and Brotli decoded
+    bytes pass. HTTP and the legacy private URL redirect to public HTTPS.
+    Certificate renewal dry run and all backup/health/renewal timers pass;
+    INSIGHT's Nginx configuration checksum is unchanged. Temporary registry
+    credentials are removed. Email/Google remain disabled and inbox delivery is
+    untested. Documentation-only acceptance update announced before editing.
 
 - **Deploy and verify the updated private VPS preview.** Runtime images at
   `d8ab9f2` include redesign/ramtin `851037a`; all exact-release hosted CI,

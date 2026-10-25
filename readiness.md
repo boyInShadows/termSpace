@@ -2,15 +2,23 @@
 
 ## Public preview scope — 2026-10-25
 
-The owner requested access from ordinary browsers and other devices using a
-free hostname and trusted TLS. Deployment preparation targets
-`https://termspace.13.140.89.146.sslip.io`. Its explicit `public-preview` mode
+The owner-requested preview is available from ordinary browsers and other
+devices at `https://termspace.13.140.89.146.sslip.io`, using a free hostname
+and trusted TLS. Runtime `fd4bc37` passed hosted application/database CI,
+all three image jobs, browser checks and unchanged Lighthouse gates (one
+failed-job rerun, original measurements retained). Its explicit `public-preview` mode
 permits external HTTPS while retaining strict secrets, disabled bypasses,
 same-origin API/cookies and partial-mail rejection. Full `public` launch still
 requires mail configuration and a legal contact. Email/Google remain disabled;
 the existing verified administrator/client test accounts are used for acceptance.
-The catalog remains empty. Actual deployment, TLS renewal and browser acceptance
-are recorded with release evidence and in the changelog after verification.
+The catalog remains empty. Direct public Chrome checks verify both accounts,
+role separation, host-only secure cookies, cross-origin protection and logout.
+TLS renewal dry run, five healthy services with zero restarts, 31 complete
+migrations and preserved counts in all 61 tables pass. A fresh off-server
+encrypted backup is fully restored and checked in a disposable database before
+cutover. HTTP and the old private URL redirect to public HTTPS. The free hostname
+depends on the VPS retaining its current IP. Release evidence and the changelog
+retain both performance attempts and the remaining full-launch limitations.
 
 ## Release integration — 2026-10-25
 
