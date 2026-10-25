@@ -4,6 +4,18 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-25
 
+- **Retain required validator files in the API runtime image.** The secured
+  image's import smoke test catches npm marking the direct Zod dependency as
+  a peer in the workspace lockfile; `--omit=peer` consequently removes it.
+  `docker/Dockerfile.api` now uses the standard production install without
+  omitting peers. Explicit TypeScript/Prisma tool removal and the runtime
+  import/dependency-audit gates remain intact. No application behavior or
+  performance setting changes. Shared log update announced before editing.
+  An isolated production install retains patched Zod and required API modules;
+  all six deployment regressions pass. The preceding security candidate's root
+  typecheck, 689 tests, builds, lint and zero-finding audit cover unchanged code;
+  require the corrected image's real import smoke test and fresh hosted gates.
+
 - **Patch API dependencies caught by the release image audit.** Hosted image
   verification for the integrated release caught three high-severity advisories
   published after the initial VPS deployment. Upgrade body-parser to 2.4.0,
