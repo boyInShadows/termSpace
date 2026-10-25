@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { copy } from "@/lib/i18n";
+import { useState } from "react";
 
 const replace = vi.hoisted(() => vi.fn());
 const nav = vi.hoisted(() => ({ pathname: "/dashboard" }));
@@ -18,10 +19,25 @@ vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession
 
 const { DashboardShell } = await import("./dashboard-shell");
 
+function AccountContent() {
+  const [owner] = useState(session.current.email);
+  return <p>{owner}</p>;
+}
+
 describe("DashboardShell", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     nav.pathname = "/dashboard";
+  });
+
+  it("discards mounted account content when identity changes", () => {
+    session.current = { identityLoading: false, loading: true, email: "old@example.com", emailVerified: true, marketplaceRoles: [] };
+    const { rerender } = render(<DashboardShell><AccountContent /></DashboardShell>);
+    expect(within(screen.getByRole("main")).getByText("old@example.com")).toBeVisible();
+    session.current = { ...session.current, email: "new@example.com" };
+    rerender(<DashboardShell><AccountContent /></DashboardShell>);
+    expect(within(screen.getByRole("main")).getByText("new@example.com")).toBeVisible();
+    expect(screen.queryByText("old@example.com")).not.toBeInTheDocument();
   });
 
   it("keeps focus scrolling immediate in the workbench and restores the page preference on exit", () => {

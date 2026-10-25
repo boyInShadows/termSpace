@@ -12,6 +12,7 @@ import type { Locale } from "./i18n";
 export type NumberContext = "prose" | "data";
 
 type FormatOptions = Intl.NumberFormatOptions & { context?: NumberContext; compact?: boolean };
+const numberFormats = new Map<string, Intl.NumberFormat>();
 
 /** The Intl locale tag for a reader locale under the numerals policy above. */
 export function intlLocale(locale: Locale, context: NumberContext = "prose"): string {
@@ -19,5 +20,13 @@ export function intlLocale(locale: Locale, context: NumberContext = "prose"): st
 }
 
 export function formatNumber(value: number, locale: Locale, { context = "prose", compact = false, ...options }: FormatOptions = {}): string {
-  return new Intl.NumberFormat(intlLocale(locale, context), compact ? { notation: "compact", maximumFractionDigits: 1, ...options } : options).format(value);
+  const localeTag = intlLocale(locale, context);
+  const formatOptions: Intl.NumberFormatOptions = compact ? { notation: "compact", maximumFractionDigits: 1, ...options } : options;
+  const key = JSON.stringify([localeTag, formatOptions]);
+  let formatter = numberFormats.get(key);
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(localeTag, formatOptions);
+    numberFormats.set(key, formatter);
+  }
+  return formatter.format(value);
 }

@@ -12,6 +12,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ProviderConnections } from "./provider-connections";
 import { intlLocale } from "@/lib/format";
+import { ContextHelp } from "@/components/ui/context-help";
 
 export function CreatorReleaseManager({ productId }: { productId: string }) {
   const { locale, t } = useLocale();
@@ -61,7 +62,7 @@ export function CreatorReleaseManager({ productId }: { productId: string }) {
     <header className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-3xl">
         <h1 className="font-semibold mt-2 text-2xl sm:text-3xl">{history.listing.name}</h1>
-        <h2 className="mt-3 text-xl font-semibold">{copy.title}</h2>
+        <div className="mt-3 flex items-start justify-between gap-2"><h2 className="text-xl font-semibold">{copy.title}</h2><ContextHelp label={copy.title} topic="source" /></div>
         <p className="mt-2 text-muted-foreground">{copy.intro}</p>
       </div>
       <Link className={buttonVariants()} href={localePath(`/dashboard/studio/listings/${productId}/edit`, locale)}>

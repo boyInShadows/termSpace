@@ -24,11 +24,51 @@ function LoadingState() {
   return <p>{`${session.identityLoading}|${session.loading}|${session.email ?? "Anonymous"}|${session.isFavorite("saved")}`}</p>;
 }
 
+function Refresh() {
+  const session = useMarketplaceSession();
+  return <button onClick={() => void session.refresh()}>Refresh</button>;
+}
+
 describe("marketplace session", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getSession.mockResolvedValue({ data: { authenticated: true, user: { email: "reader@example.com", emailVerified: true, marketplaceRoles: [] } } });
     getFavorites.mockResolvedValue([]);
+  });
+
+  it("uses server-verified identity while revalidating, but keeps Saved loading", async () => {
+    let resolveSession!: (value: Awaited<ReturnType<typeof getSession>>) => void;
+    getSession.mockReturnValue(new Promise((resolve) => { resolveSession = resolve; }));
+    const initialSession = { authenticated: true as const, user: { id: "reader", email: "reader@example.com", emailVerified: true, marketplaceRoles: [] } };
+    render(<MarketplaceSessionProvider initialSession={initialSession}><LoadingState /></MarketplaceSessionProvider>);
+    expect(screen.getByText("false|true|reader@example.com|false")).toBeVisible();
+    await vi.waitFor(() => expect(getSession).toHaveBeenCalledOnce());
+    expect(screen.getByText("false|true|reader@example.com|false")).toBeVisible();
+    expect(getFavorites).not.toHaveBeenCalled();
+    await act(async () => { resolveSession({ data: initialSession }); });
+    expect(await screen.findByText("false|false|reader@example.com|false")).toBeVisible();
+  });
+
+  it("discards server identity when browser revalidation finds an expired session", async () => {
+    getSession.mockResolvedValue({ data: { authenticated: false } });
+    const initialSession = { authenticated: true as const, user: { id: "reader", email: "reader@example.com", emailVerified: true, marketplaceRoles: [] } };
+    render(<MarketplaceSessionProvider initialSession={initialSession}><LoadingState /></MarketplaceSessionProvider>);
+    expect(screen.getByText("false|true|reader@example.com|false")).toBeVisible();
+    expect(await screen.findByText("false|false|Anonymous|false")).toBeVisible();
+    expect(getFavorites).not.toHaveBeenCalled();
+  });
+
+  it("does not let an older identity response overwrite a newer refresh", async () => {
+    let finishOlder!: (value: unknown) => void;
+    getSession.mockReturnValueOnce(new Promise((resolve) => { finishOlder = resolve; }));
+    getSession.mockResolvedValue({ data: { authenticated: true, user: { email: "new@example.com", emailVerified: true, marketplaceRoles: [] } } });
+    const initialSession = { authenticated: true as const, user: { id: "reader", email: "old@example.com", emailVerified: true, marketplaceRoles: [] } };
+    render(<MarketplaceSessionProvider initialSession={initialSession}><LoadingState /><Refresh /></MarketplaceSessionProvider>);
+    await vi.waitFor(() => expect(getSession).toHaveBeenCalledOnce());
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    expect(await screen.findByText("false|false|new@example.com|false")).toBeVisible();
+    await act(async () => { finishOlder({ data: initialSession }); });
+    expect(screen.getByText("false|false|new@example.com|false")).toBeVisible();
   });
 
   it("makes identity ready before favorites without declaring the saved snapshot ready", async () => {

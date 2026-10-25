@@ -98,6 +98,17 @@ jobs:
               curl --retry 15 --retry-delay 2 --retry-all-errors --max-time 15 --fail http://127.0.0.1:3330/account -o /dev/null
               curl --fail http://127.0.0.1:3330/privacy -o /dev/null
               curl --fail http://127.0.0.1:3330/fa/account -o /dev/null
+              docker exec termspace-smoke node --input-type=module -e '
+                import assert from "node:assert/strict";
+                import { readFileSync } from "node:fs";
+                const root = "apps/web/.next/";
+                const [asset] = JSON.parse(readFileSync(root + "compressed-assets.json", "utf8"));
+                assert(asset);
+                const response = await fetch("http://127.0.0.1:3000/_next/static/" + asset, { headers: { "Accept-Encoding": "br" } });
+                assert.equal(response.status, 200);
+                assert.equal(response.headers.get("content-encoding"), "br");
+                assert.deepEqual(Buffer.from(await response.arrayBuffer()), readFileSync(root + "static/" + asset));
+              '
               ;;
           esac
       - name: Scan runtime dependencies

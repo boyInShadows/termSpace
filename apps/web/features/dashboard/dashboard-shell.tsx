@@ -59,7 +59,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <main id="content" tabIndex={-1} className="min-w-0 px-4 pb-24 pt-6 sm:px-6 lg:px-10 lg:py-8">
           <div className="mx-auto max-w-[1200px]">
             <DashboardSearch />
-            <div>
+            <div key={session.email}>
                 {session.identityLoading ? <DashboardOverviewSkeleton /> : !session.emailVerified ? <EmailVerification /> : children}
             </div>
           </div>

@@ -6,6 +6,7 @@ import { connectProvider, getProviderConnections, revokeProvider } from "@/lib/a
 import type { MarketplaceProviderConnection } from "@/lib/types";
 import { useLocale } from "@/lib/locale-context";
 import { Button } from "@/components/ui/button";
+import { ContextHelp } from "@/components/ui/context-help";
 import { creatorWorkspace } from "./workspace-copy";
 
 const connectionCopy = {
@@ -55,7 +56,7 @@ export function ProviderConnections() {
 
   return (
     <section className="mt-6 rounded-none border bg-surface p-5 sm:p-6" aria-labelledby="provider-connections-title">
-      <div className="flex items-start gap-3"><KeyRound className="mt-1 size-5 text-primary" aria-hidden="true" /><div><h2 id="provider-connections-title" className="text-lg font-semibold">{copy.connectionsTitle}</h2><p className="mt-1 text-sm text-muted-foreground">{copy.connectionsIntro}</p></div></div>
+      <div className="flex items-start gap-3"><KeyRound className="mt-1 size-5 text-primary" aria-hidden="true" /><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><h2 id="provider-connections-title" className="text-lg font-semibold">{copy.connectionsTitle}</h2><ContextHelp label={copy.connectionsTitle} topic="provider" /></div><p className="mt-1 text-sm text-muted-foreground">{copy.connectionsIntro}</p></div></div>
       {error ? <div className="mt-5"><p role="alert" className="text-sm text-destructive">{connectionCopy[locale].error}</p><Button className="mt-3" variant="secondary" onClick={() => { setError(false); setConnections(null); setAttempt((value) => value + 1); }}>{copy.retry}</Button></div> : connections === null ? <p role="status" className="mt-5 text-sm text-muted-foreground">{connectionCopy[locale].loading}</p> : <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">{(["github", "npm"] as const).map((provider) => {
         const connection = connections?.find((item) => item.provider === provider && !item.revokedAt);
         return <div key={provider} className="rounded-none border p-4">

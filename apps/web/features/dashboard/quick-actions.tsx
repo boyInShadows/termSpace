@@ -5,6 +5,7 @@ import { useLocale } from "@/lib/locale-context";
 import { DashboardCard } from "./dashboard-card";
 import { savedCopy } from "@/features/library/saved-copy";
 import { libraryCopy } from "@/features/library/library-copy";
+import { ContextHelp } from "@/components/ui/context-help";
 
 /** Ghost rows only — the sidebar's Publish is the page's one primary button. */
 export function QuickActions() {
@@ -19,7 +20,7 @@ export function QuickActions() {
   ];
 
   return (
-    <DashboardCard title={copy.quickTitle}>
+    <DashboardCard title={copy.quickTitle} action={<ContextHelp label={savedCopy[locale].title} topic="library" />}>
       <ul className="space-y-2 px-5 pb-5">
         {items.map((item) => (
           <li key={item.href}>

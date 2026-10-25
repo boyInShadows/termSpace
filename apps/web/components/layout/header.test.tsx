@@ -12,7 +12,7 @@ let session: { marketplaceRoles: string[]; email: string | null; refresh: () => 
 };
 const replace = vi.fn();
 const logout = vi.fn(async () => ({}));
-let resizeHeader = () => {};
+let resizeHeader: (height?: number) => void = () => {};
 
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
@@ -31,7 +31,9 @@ vi.mock("next-themes", () => ({ useTheme: () => ({ setTheme: () => {} }) }));
 describe("Header", () => {
   beforeEach(() => {
     vi.stubGlobal("ResizeObserver", class {
-      constructor(callback: () => void) { resizeHeader = callback; }
+      constructor(callback: (entries: Pick<ResizeObserverEntry, "borderBoxSize">[]) => void) {
+        resizeHeader = (height) => callback([{ borderBoxSize: height === undefined ? [] : [{ blockSize: height, inlineSize: 0 }] }]);
+      }
       observe() {}
       disconnect() {}
     });
@@ -46,12 +48,13 @@ describe("Header", () => {
 
   it("keeps sticky workspace offsets in sync with the actual header height", () => {
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect");
-    bounds.mockReturnValue({ height: 100 } as DOMRect);
     const { unmount } = render(<Header />);
+    expect(bounds).not.toHaveBeenCalled();
+    act(() => resizeHeader(100));
     expect(document.documentElement.style.getPropertyValue("--site-header-height")).toBe("100px");
-    bounds.mockReturnValue({ height: 64 } as DOMRect);
-    act(() => resizeHeader());
+    act(() => resizeHeader(64));
     expect(document.documentElement.style.getPropertyValue("--site-header-height")).toBe("64px");
+    expect(bounds).not.toHaveBeenCalled();
     unmount();
     expect(document.documentElement.style.getPropertyValue("--site-header-height")).toBe("");
   });
@@ -63,6 +66,13 @@ describe("Header", () => {
     expect(explore.some((link) => link.getAttribute("aria-current") === "page")).toBe(
       true,
     );
+  });
+
+  it("falls back to measured bounds when the browser supplies no border box", () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ height: 64 } as DOMRect);
+    render(<Header />);
+    act(() => resizeHeader());
+    expect(document.documentElement.style.getPropertyValue("--site-header-height")).toBe("64px");
   });
 
   it("does not mark a route the reader is not on", () => {

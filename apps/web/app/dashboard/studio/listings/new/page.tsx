@@ -6,6 +6,6 @@ export async function generateMetadata() {
   return { title: copy[await getLocale()].creatorHub.newListing };
 }
 
-export default function NewCreatorListingPage() {
-  return <CreatorDraftEditor />;
+export default async function NewCreatorListingPage() {
+  return <CreatorDraftEditor messages={copy[await getLocale()].creatorDraft} />;
 }

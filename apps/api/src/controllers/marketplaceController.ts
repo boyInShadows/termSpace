@@ -8,8 +8,10 @@ import {
   marketplaceItemTypeKey,
 } from "../lib/marketplaceManifest.js";
 
+const publicCreatorProducts = { published: true, lifecycleState: { notIn: ["SUSPENDED", "ARCHIVED"] } } satisfies Prisma.MarketplaceProductWhereInput;
+
 const productInclude = {
-  creator: { select: { id: true, name: true, handle: true, initials: true, verified: true, bio: true, followers: true, _count: { select: { products: true } } } },
+  creator: { select: { id: true, name: true, handle: true, initials: true, verified: true, bio: true, followers: true, _count: { select: { products: { where: publicCreatorProducts } } } } },
   category: { select: { name: true, slug: true } },
   compatibility: {
     select: { platformKey: true, platform: { select: { nameEn: true, nameFa: true } } },
@@ -282,6 +284,22 @@ export async function listMarketplaceProducts(req: Request, res: Response) {
   const { q, sort, page, limit } = req.query as any;
   const { products, total } = await findProductPage(marketplaceProductWhere(req.query), { q, sort, page, limit });
   res.json({ data: products.map(serializeProduct), meta: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+}
+
+export async function getMarketplaceCreator(req: Request, res: Response) {
+  const creator = await prisma.marketplaceCreator.findFirst({
+    where: { handle: String(req.params.handle), products: { some: publicCreatorProducts } },
+    select: {
+      id: true, name: true, handle: true, initials: true, verified: true, bio: true, followers: true,
+    },
+  });
+  if (!creator) {
+    res.status(404).json({ error: { code: "CREATOR_NOT_FOUND", message: "Creator not found" } });
+    return;
+  }
+  const { page, limit } = req.query as unknown as { page: number; limit: number };
+  const { products, total } = await findProductPage({ ...publicCreatorProducts, creatorId: creator.id }, { sort: "newest", page, limit });
+  res.json({ data: { creator: { ...creator, products: total }, products: products.map(serializeProduct) }, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } });
 }
 
 export async function listMarketplaceCommunities(_req: Request, res: Response) {

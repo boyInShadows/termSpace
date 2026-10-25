@@ -157,7 +157,7 @@ export default async function Home() {
         </Hero>
 
         {/* --- how it works (pinned narrative) ------------------------------- */}
-        <Process copy={sections} />
+        <Process copy={{ processEyebrow: sections.processEyebrow, processTitle: sections.processTitle, processSteps: sections.processSteps }} />
 
         <section className="border-y border-foreground/60 bg-background">
           <div className="container-page section-y">

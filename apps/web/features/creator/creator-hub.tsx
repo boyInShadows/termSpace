@@ -6,6 +6,7 @@ import { ApiError, createOwnedCreatorProfile, getOwnedCreatorProfile, updateOwne
 import type { OwnedCreatorProfile } from "@/lib/types";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ContextHelp } from "@/components/ui/context-help";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
@@ -76,7 +77,7 @@ export function CreatorHub() {
     <form className="mt-7 space-y-5" onSubmit={submit}>
       <div><label htmlFor="creator-name" className="block text-sm font-medium">{t.creatorHub.name}</label><Input id="creator-name" name="name" required minLength={2} maxLength={80} pattern="(?=.*[A-Za-z])[\x20-\x7E]+" defaultValue={profile?.name} autoComplete="name" lang="en" dir="ltr" aria-describedby="creator-name-help" className="mt-2" /><span id="creator-name-help" className="mt-1 block text-xs text-muted-foreground">{t.creatorHub.nameHelp}</span></div>
       <div>
-        <label htmlFor="creator-handle" className="block text-sm font-medium">{t.creatorHub.handle}</label>
+          <div className="flex items-center justify-between gap-2" data-help-anchor><label htmlFor="creator-handle" className="block text-sm font-medium">{t.creatorHub.handle}</label><ContextHelp label={t.creatorHub.handle} topic="handle" /></div>
         <Input id="creator-handle" name="handle" required={!profile} disabled={Boolean(profile)} minLength={3} maxLength={40} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={profile?.handle} dir="ltr" autoComplete="off" aria-describedby="creator-handle-help" className="mt-2" />
         <span id="creator-handle-help" className="mt-1 block text-xs text-muted-foreground">{profile ? t.creatorHub.handleLocked : t.creatorHub.handleHelp}</span>
       </div>

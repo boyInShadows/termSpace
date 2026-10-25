@@ -3,27 +3,30 @@
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useLocale } from "@/lib/locale-context";
-import { creatorWorkspace } from "./workspace-copy";
+import { ContextHelp } from "@/components/ui/context-help";
+import type { HelpTopic } from "@/components/ui/context-help-copy";
 
 type Column = { label: string; type?: "checkbox" | "url"; optional?: boolean; options?: string[] };
 
-export function DeclarationRows({ name, label, columns, initialRows, required = false, onChange }: {
+export function DeclarationRows({ name, label, help, hint, columns, initialRows, required = false, onChange, messages }: {
   name: string;
   label: string;
+  help?: HelpTopic;
+  hint?: string;
   columns: Column[];
   initialRows: string[][];
   required?: boolean;
   onChange: () => void;
+  messages: { choose: string; removeRow: string; noDeclarations: string; addRow: string };
 }) {
-  const { locale, t } = useLocale();
-  const copy = { ...t.creatorDraft, ...creatorWorkspace[locale].creatorDraft };
+  const copy = messages;
   const id = useId();
   const [rows, setRows] = useState(() => initialRows.length ? initialRows : required ? [columns.map(() => "")] : []);
   function update(next: string[][]) { setRows(next); onChange(); }
 
   return <fieldset className="min-w-0 border-t py-4">
-    <legend className="text-sm font-semibold">{label}{required && <span aria-hidden="true"> *</span>}</legend>
+    <legend className="w-full text-sm font-semibold"><span className="flex min-h-11 items-center justify-between gap-2"><span>{label}{required && <span aria-hidden="true"> *</span>}</span>{help && <ContextHelp label={label} topic={help} />}</span></legend>
+    {hint && <p className="mb-3 text-xs text-muted-foreground">{hint}</p>}
     <input type="hidden" name={name} value={JSON.stringify(rows)} />
     <div className="space-y-5">{rows.map((row, rowIndex) => <div key={rowIndex} className="space-y-3 border-b pb-4">
       <div className="grid gap-4 sm:grid-cols-2">{columns.map((column, columnIndex) => {

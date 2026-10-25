@@ -8,5 +8,5 @@ export async function generateMetadata() {
 
 export default async function EditCreatorListingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <CreatorDraftEditor productId={id} />;
+  return <CreatorDraftEditor productId={id} messages={copy[await getLocale()].creatorDraft} />;
 }

@@ -1,4 +1,4 @@
-import type { MyReviewState, OwnReview, ReviewInput, CreatorDashboardResult, CreatorReleaseHistory, MarketplaceCommunity, MarketplaceCommunityPageResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceInstallation, ProductRelease, MarketplaceItemType, MarketplaceLibraryEntry, MarketplaceModerationPreview, MarketplaceModerationQueueResult, MarketplaceProviderConnection, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult, ReaderProfile } from "./types";
+import type { MarketplaceCreatorPageResult, MyReviewState, OwnReview, ReviewInput, CreatorDashboardResult, CreatorReleaseHistory, MarketplaceCommunity, MarketplaceCommunityPageResult, MarketplaceDraftOptions, MarketplaceDraftRecord, MarketplaceHome, MarketplaceInstallation, ProductRelease, MarketplaceItemType, MarketplaceLibraryEntry, MarketplaceProviderConnection, OwnedCreatorProfile, ProductDetail, ProductFilters, ProductPageResult, ReaderProfile } from "./types";
 
 type ApiErrorDetail = { path: string; code?: string; message: string };
 type ErrorBody = { error?: { code?: string; message?: string; details?: ApiErrorDetail[]; correlationId?: string } };
@@ -77,6 +77,10 @@ export async function getMarketplaceCommunity(slug: string, filters: ProductFilt
   Object.entries(filters).forEach(([key, value]) => { if (key !== "community" && value !== undefined && value !== "" && value !== "All" && value !== false) params.set(key, String(value)); });
   return request<MarketplaceCommunityPageResult>(`/api/marketplace/communities/${encodeURIComponent(slug)}?${params}`, { headers: forward, revalidate: publicRevalidate(filters) });
 }
+export async function getMarketplaceCreator(handle: string, page = 1) {
+  const params = new URLSearchParams({ page: String(page), limit: "12" });
+  return request<MarketplaceCreatorPageResult>(`/api/marketplace/creators/${encodeURIComponent(handle)}?${params}`, { revalidate: PUBLIC_REVALIDATE_SECONDS });
+}
 export async function getProducts(filters: ProductFilters = {}, signal?: AbortSignal, forward?: Record<string, string>) {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => { if (value !== undefined && value !== "" && value !== "All" && value !== false) params.set(key, String(value)); });
@@ -85,7 +89,8 @@ export async function getProducts(filters: ProductFilters = {}, signal?: AbortSi
 export async function getProduct(slug: string, signal?: AbortSignal) { return (await request<{ data: ProductDetail }>(`/api/marketplace/products/${encodeURIComponent(slug)}`, { signal, revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
 export async function getProductRelease(slug: string, version: string, signal?: AbortSignal) { return (await request<{ data: ProductRelease }>(`/api/marketplace/products/${encodeURIComponent(slug)}/releases/${encodeURIComponent(version)}`, { signal })).data; }
 export type MarketplaceRole = "creator" | "moderator" | "administrator";
-export async function getSession() { return request<{ data: { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } | { authenticated: false } }>("/api/readers/session"); }
+export type ReaderSession = { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } | { authenticated: false };
+export async function getSession(init?: RequestInit) { return request<{ data: ReaderSession }>("/api/readers/session", init); }
 export async function login(email: string, password: string) { return request("/api/readers/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function loginWithGoogle(credential: string) { return request("/api/readers/google", { method: "POST", body: JSON.stringify({ credential }) }); }
 export async function register(email: string, password: string) { return request<{ data: { accepted: true } }>("/api/readers/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
@@ -96,10 +101,10 @@ export async function getReaderProfile(signal?: AbortSignal) { return (await req
 export async function changeReaderPassword(currentPassword: string, newPassword: string) { return request<{ data: { updated: true } }>("/api/readers/profile/password", { method: "PUT", body: JSON.stringify({ currentPassword, newPassword }) }); }
 export async function requestEmailVerification() { return request<{ data: { accepted: true } }>("/api/readers/email-verification/request", { method: "POST" }); }
 export async function confirmEmailVerification(token: string) { return request<{ data: { verified: true } }>("/api/readers/email-verification/confirm", { method: "POST", body: JSON.stringify({ token }) }); }
-export async function getOwnedCreatorProfile() { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile")).data; }
+export async function getOwnedCreatorProfile(init?: RequestInit) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", init)).data; }
 export async function createOwnedCreatorProfile(input: { name: string; handle: string; bio: string }) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", { method: "POST", body: JSON.stringify(input) })).data; }
 export async function updateOwnedCreatorProfile(input: { name: string; bio: string }) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", { method: "PATCH", body: JSON.stringify(input) })).data; }
-export async function getCreatorDashboard(page = 1, limit = 24, signal?: AbortSignal) { return request<CreatorDashboardResult>(`/api/marketplace/creator/dashboard?page=${page}&limit=${limit}`, { signal }); }
+export async function getCreatorDashboard(page = 1, limit = 24, signal?: AbortSignal, headers?: HeadersInit) { return request<CreatorDashboardResult>(`/api/marketplace/creator/dashboard?page=${page}&limit=${limit}`, { signal, headers }); }
 export async function getMarketplaceDraftOptions() { return (await request<{ data: MarketplaceDraftOptions }>("/api/marketplace/draft-options")).data; }
 export async function getCreatorDraft(id: string) { return (await request<{ data: MarketplaceDraftRecord }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/draft`)).data; }
 export async function getCreatorReleases(id: string, signal?: AbortSignal) { return (await request<{ data: CreatorReleaseHistory }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/releases`, { signal })).data; }
@@ -109,15 +114,6 @@ export async function revokeProvider(provider: "github" | "npm") { return reques
 export async function requestSourceCheck(id: string, expectedVersion: number) { return (await request<{ data: { id: string; status: string; correlationId: string } }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/source-check`, { method: "POST", body: JSON.stringify({ expectedVersion }) })).data; }
 export async function createCreatorDraft(manifest: unknown) { return (await request<{ data: MarketplaceDraftRecord }>("/api/marketplace/creator/products", { method: "POST", body: JSON.stringify({ manifest }) })).data; }
 export async function updateCreatorDraft(id: string, expectedVersion: number, manifest: unknown) { return (await request<{ data: MarketplaceDraftRecord }>(`/api/marketplace/creator/products/${encodeURIComponent(id)}/draft`, { method: "PUT", body: JSON.stringify({ expectedVersion, manifest }) })).data; }
-export async function getModerationQueue(input: { state?: string; q?: string; page?: number; limit?: number }, signal?: AbortSignal) {
-  const params = new URLSearchParams();
-  Object.entries(input).forEach(([key, value]) => { if (value !== undefined && value !== "") params.set(key, String(value)); });
-  return request<MarketplaceModerationQueueResult>(`/api/marketplace/moderation/queue?${params}`, { signal });
-}
-export async function getModerationPreview(id: string) { return (await request<{ data: MarketplaceModerationPreview }>(`/api/marketplace/moderation/products/${encodeURIComponent(id)}`)).data; }
-export async function addModerationNote(id: string, expectedVersion: number, note: string) { return (await request<{ data: { id: string; createdAt: string; correlationId: string } }>(`/api/marketplace/moderation/products/${encodeURIComponent(id)}/notes`, { method: "POST", body: JSON.stringify({ expectedVersion, note }) })).data; }
-export async function moderateCommunityPlacement(id: string, communitySlug: string, input: { expectedVersion: number; action: "APPROVE" | "REJECT" | "REMOVE"; publicReason?: string; internalNote?: string }) { return (await request<{ data: { id: string; state: string; version: number; publicReason: string | null; decidedAt: string; correlationId: string } }>(`/api/marketplace/moderation/products/${encodeURIComponent(id)}/community-placements/${encodeURIComponent(communitySlug)}`, { method: "POST", body: JSON.stringify(input) })).data; }
-export async function moderateListing(id: string, input: { action: string; expectedVersion: number; reasonCode?: string; publicReason?: string; internalNote?: string }) { return (await request<{ data: { id: string; state: string; version: number; published: boolean; correlationId: string } }>(`/api/marketplace/moderation/products/${encodeURIComponent(id)}/lifecycle`, { method: "POST", body: JSON.stringify(input) })).data; }
 export async function getFavorites(signal?: AbortSignal) { return (await request<{ data: string[] }>("/api/marketplace/favorites", { signal })).data; }
 export async function getMarketplaceLibrary(page = 1, limit = 24, signal?: AbortSignal) { return request<{ data: MarketplaceLibraryEntry[]; meta: { page: number; limit: number; total: number; totalPages: number } }>(`/api/marketplace/library?page=${page}&limit=${limit}`, { signal }); }
 export async function setFavorite(slug: string, saved: boolean) { return request(`/api/marketplace/products/${encodeURIComponent(slug)}/favorite`, { method: saved ? "PUT" : "DELETE" }); }

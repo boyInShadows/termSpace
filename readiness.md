@@ -1,6 +1,17 @@
 # TermSpace pre-deployment readiness review
 
-## Deployment follow-up — 2026-10-21
+## Release integration — 2026-10-25
+
+The private-preview release branch now integrates redesign `851037a`, including
+reporting, request-scoped dashboard snapshots and compressed asset delivery.
+It preserves nonce-enforced web CSP, private origins, digest-only deployment,
+worker health checks, encrypted backups and the paused email profile. The
+standalone web image explicitly carries its generated compressed-asset allowlist;
+hosted image smoke checks verify decoded bytes and Brotli negotiation.
+Release acceptance and deployed image digests belong in PR #11 and the operator
+release record. Building or updating a branch does not itself deploy the VPS.
+
+## Initial deployment acceptance — 2026-10-21
 
 Web/API is deployed as a private HTTPS preview at
 `https://termspace.localhost:8443` through an operator SSH tunnel. The VPS has
@@ -22,8 +33,8 @@ evidence, image digests and operation.
 
 Repository status: `codex/vps-preview` is in
 [draft PR #11](https://github.com/boyInShadows/termSpace/pull/11), not yet merged
-into `main`. Live application images remain pinned to `41a818d`; VPS deployment
-scripts are at `f780314`. All PR checks passed at `f780314`, including browser,
+into `main`. At this acceptance, application images were pinned to `41a818d`
+and VPS deployment scripts to `f780314`. All PR checks passed at `f780314`, including browser,
 integration and image checks. Lighthouse passed after one failed-job retry at
 unchanged budgets. Later image builds are not automatically deployed.
 

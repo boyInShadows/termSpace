@@ -7,7 +7,8 @@ import { Providers } from "@/components/layout/providers";
 import { Header } from "@/components/layout/header";
 import { SkipLink } from "@/components/layout/skip-link";
 import { getLocale } from "@/lib/serverLocale";
-import { copy } from "@/lib/i18n";
+import { sharedMessages } from "@/lib/i18n";
+import { getServerSession } from "@/lib/server-session";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const fa = locale === "fa";
@@ -18,7 +19,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const locale = await getLocale();
+  const [locale, initialSession] = await Promise.all([getLocale(), getServerSession()]);
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang={locale} dir={locale === "fa" ? "rtl" : "ltr"} suppressHydrationWarning>
@@ -28,7 +29,7 @@ export default async function RootLayout({
         ))}
       </head>
       <body>
-        <Providers locale={locale} messages={copy[locale]} nonce={nonce}>
+        <Providers locale={locale} messages={sharedMessages(locale)} initialSession={initialSession} nonce={nonce}>
           <SkipLink locale={locale} />
           <Header />
           {children}

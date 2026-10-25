@@ -3,15 +3,15 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { Store } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { isEditable, listingStateLabel } from "@/features/creator/creator-dashboard";
-import { formatRelative, listingTone, listingStatusClass, OVERVIEW_LISTING_LIMIT } from "@/lib/dashboard";
+import { isEditable, listingStateLabel, formatRelative, listingTone, listingStatusClass, OVERVIEW_LISTING_LIMIT } from "@/lib/dashboard";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
 import type { CreatorDashboardListing } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CardError, DashboardCard, Skeleton } from "./dashboard-card";
 import type { OverviewState } from "./overview-state";
-import { intlLocale } from "@/lib/format";
+import { formatNumber, intlLocale } from "@/lib/format";
+import { ContextHelp } from "@/components/ui/context-help";
 
 const HEAD_CELL = "py-2 font-normal";
 const ROW_COUNT_WHILE_LOADING = 5;
@@ -26,7 +26,7 @@ export function ListingsTable({ state, now, onRetry }: { state: OverviewState; n
   );
 
   return (
-    <DashboardCard title={copy.listingsTitle} action={viewAll}>
+    <DashboardCard title={copy.listingsTitle} action={<div className="flex items-center gap-2">{viewAll}<ContextHelp label={copy.listingsTitle} topic="publication" /></div>}>
       {state.status === "loading" && <ListingsSkeleton />}
       {state.status === "error" && <CardError onRetry={onRetry} />}
       {state.status === "ready" && state.home.kind === "no-profile" && (
@@ -51,7 +51,6 @@ function ListingRows({ rows, now }: { rows: CreatorDashboardListing[]; now: numb
   const { locale, t } = useLocale();
   const copy = t.dashboardHome;
   const localeTag = intlLocale(locale);
-  const number = new Intl.NumberFormat(localeTag);
   const fullDate = new Intl.DateTimeFormat(localeTag, { dateStyle: "medium", timeStyle: "short" });
 
   return (
@@ -98,7 +97,7 @@ function ListingRows({ rows, now }: { rows: CreatorDashboardListing[]; now: numb
                       {listingStateLabel(row.state, t.creatorHub)}
                     </span>
                   </td>
-                  <td className="pe-5 text-end font-mono tabular-nums max-sm:pb-3 sm:pe-3"><span className="me-2 font-sans text-xs text-muted-foreground sm:hidden">{copy.colAcquisitions}</span>{number.format(row.acquisitionCount)}</td>
+                  <td className="pe-5 text-end font-mono tabular-nums max-sm:pb-3 sm:pe-3"><span className="me-2 font-sans text-xs text-muted-foreground sm:hidden">{copy.colAcquisitions}</span>{formatNumber(row.acquisitionCount, locale)}</td>
                   <td className="hidden whitespace-nowrap pe-5 text-end font-mono text-muted-foreground md:table-cell">
                     <time dateTime={row.updatedAt} title={fullDate.format(new Date(row.updatedAt))}>
                       {formatRelative(row.updatedAt, now, localeTag)}

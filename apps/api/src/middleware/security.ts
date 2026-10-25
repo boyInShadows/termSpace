@@ -98,6 +98,7 @@ export const searchRateLimit = limiter("search", {
 const HOUR = 60 * 60 * 1000;
 const accepted = (_req: unknown, res: { status(code: number): { json(body: unknown): void } }) => { res.status(202).json({ data: { accepted: true } }); };
 
+export const reportWriteRateLimit = limiter("report-write", { windowMs: HOUR, limit: 20 });
 export const reviewWriteRateLimit = limiter("review-write", { windowMs: HOUR, limit: 20 });
 export const emailVerificationRequestRateLimit = limiter("email-verification-request", { windowMs: HOUR, limit: 12, handler: accepted });
 export const emailVerificationAttemptRateLimit = limiter("email-verification-attempt", { windowMs: HOUR, limit: 12 });

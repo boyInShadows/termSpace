@@ -3,6 +3,30 @@ import { expect, test } from "@playwright/test";
 const isMobile = (projectName: string) => projectName.startsWith("mobile");
 
 test.describe("product detail", () => {
+  for (const locale of ["en", "fa"] as const) {
+    test(`lazy preview traps focus and returns it to its trigger (${locale})`, async ({ page }) => {
+      const fa = locale === "fa";
+      await page.goto(`${fa ? "/fa" : ""}/products/conversion-copywriter`);
+      const trigger = page.getByRole("button", { name: fa ? "پیش‌نمایش" : "Preview", exact: true, includeHidden: true });
+      await trigger.click();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toBeVisible();
+      await expect(trigger).toHaveAttribute("aria-expanded", "true");
+      for (let i = 0; i < 4; i += 1) {
+        await page.keyboard.press("Tab");
+        expect(await dialog.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+      }
+      await page.keyboard.press("Escape");
+      await expect(dialog).toHaveCount(0);
+      await expect(trigger).toBeFocused();
+      await expect(trigger).toHaveAttribute("aria-expanded", "false");
+      await trigger.click();
+      await page.getByRole("button", { name: fa ? "بستن پیش‌نمایش" : "Close preview" }).click();
+      await expect(dialog).toHaveCount(0);
+      await expect(trigger).toBeFocused();
+    });
+  }
+
   test("renders the listing header, trust chips and manifest from the mock", async ({ page }) => {
     const response = await page.goto("/products/conversion-copywriter");
     expect(response?.status()).toBe(200);
@@ -195,7 +219,8 @@ test.describe("explore", () => {
 
   test("a filter changes the URL and the results", async ({ page }) => {
     await page.goto("/explore");
-    const count = page.locator("section p[role=status]");
+    // Streamed pages can retain a hidden copy; assert the exposed result count.
+    const count = page.locator("section").getByRole("status");
     await expect(count).toHaveText("15 resources");
 
     await page.getByRole("button", { name: "Agents", exact: true }).click();
@@ -278,6 +303,6 @@ test.describe("explore", () => {
 
     await page.getByRole("button", { name: "Clear all" }).last().click();
     await expect(page).toHaveURL(/\/explore$/);
-    await expect(page.locator("section p[role=status]")).toHaveText("15 resources");
+    await expect(page.locator("section").getByRole("status")).toHaveText("15 resources");
   });
 });

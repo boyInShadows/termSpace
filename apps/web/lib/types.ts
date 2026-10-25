@@ -182,4 +182,27 @@ export interface MarketplaceTypeCount { type: string; products: number; }
 export interface MarketplaceHome { products: Product[]; creators: Creator[]; categories: MarketplaceCategory[]; types: MarketplaceTypeCount[]; platforms: MarketplacePlatform[]; total: number; }
 export interface ProductPageResult { data: Product[]; meta: { page: number; limit: number; total: number; totalPages: number }; }
 export interface MarketplaceCommunityPageResult { data: { community: MarketplaceCommunity; products: Product[] }; meta: ProductPageResult["meta"]; }
+export interface MarketplaceCreatorPageResult { data: { creator: Creator; products: Product[] }; meta: ProductPageResult["meta"]; }
+
+export type ListingReportReason = "MALICIOUS" | "UNDISCLOSED_PERMISSIONS" | "SOURCE_COMPROMISE" | "IMPERSONATION" | "MISLEADING" | "BROKEN_OR_ABANDONED" | "SPAM_OR_ABUSE" | "OTHER";
+export type ModerationCaseState = "NEW" | "TRIAGED" | "INVESTIGATING" | "ACTIONED" | "DISMISSED";
+export type ModerationCaseSeverity = "STANDARD" | "HIGH" | "CRITICAL";
+export interface ModerationCaseSummary {
+  id: string; productId: string; reason: ListingReportReason; state: ModerationCaseState;
+  severity: ModerationCaseSeverity; version: number; publicReason: string | null;
+  createdAt: string; updatedAt: string; product: { name: string; slug: string }; _count: { reports: number };
+}
+export interface ModerationCaseEvent {
+  id: string; action: string; actorType: "READER" | "MODERATOR" | "ADMINISTRATOR";
+  previousState: ModerationCaseState | null; resultingState: ModerationCaseState;
+  previousSeverity: ModerationCaseSeverity | null; resultingSeverity: ModerationCaseSeverity;
+  reasonCode: string; publicReason: string | null; evidenceReference: string | null;
+  correlationId: string; createdAt: string;
+}
+export interface ModerationCaseReport { id: string; explanation: string; createdAt: string; }
+export interface ModerationCasePage<T> { data: T[]; meta: ProductPageResult["meta"]; }
+export interface ModerationCaseTriage {
+  expectedVersion: number; action: "TRIAGE" | "INVESTIGATE" | "DISMISS";
+  severity: ModerationCaseSeverity; reasonCode: string; publicReason: string; evidenceReference?: string;
+}
 export interface ProductFilters { q?: string; type?: string; category?: string; community?: string; platform?: string; permission?: string; verified?: boolean; minRating?: number; sort?: string; page?: number; limit?: number; }

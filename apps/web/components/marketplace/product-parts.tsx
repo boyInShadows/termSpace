@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { BadgeCheck, ShieldAlert, ShieldCheck, Star } from "lucide-react";
 import { formatNumber } from "@/lib/format";
@@ -11,20 +12,21 @@ export function ProductTypeBadge({ type, label }: { type: ProductType; label?: s
 export function CreatorIdentity({
   creator,
   compact = false,
+  href,
   verifiedLabel = "Verified creator",
 }: {
   creator: Creator;
   compact?: boolean;
-  /** Localized name of the badge; server callers without a locale keep the English default. */
+  href?: string;
   verifiedLabel?: string;
 }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2">
       <Avatar
         initials={creator.initials}
         className={compact ? "size-7 text-xs" : ""}
       />
-      <span className="text-sm font-medium">{creator.name}</span>
+      {href ? <Link href={href} className="relative z-10 inline-flex min-h-7 min-w-0 items-center text-sm font-medium underline-offset-4 hover:underline"><bdi className="min-w-0 break-words">{creator.name}</bdi></Link> : <span className="min-w-0 break-words text-sm font-medium"><bdi>{creator.name}</bdi></span>}
       {/* Identity, not safety: a scalloped badge in the brand colour, so it
           cannot be read as the green shield that means a reviewed listing. */}
       {creator.verified && (

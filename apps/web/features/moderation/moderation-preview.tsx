@@ -4,7 +4,8 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, RotateCcw, ShieldAlert } from "lucide-react";
-import { addModerationNote, ApiError, getModerationPreview, moderateCommunityPlacement, moderateListing } from "@/lib/api";
+import { ApiError } from "@/lib/api";
+import { addModerationNote, getModerationPreview, moderateCommunityPlacement, moderateListing } from "./moderation-api";
 import type { MarketplaceModerationPreview } from "@/lib/types";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
@@ -159,7 +160,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
   const number = new Intl.NumberFormat(intlLocale(locale));
   const stateLabels = t.creatorHub as Labels;
   const releaseVersion = stringValue(release.version) || "—";
-  
+
   return <section aria-labelledby="moderation-preview-title">
     <Link href={backHref} className="inline-flex min-h-6 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">{locale === "fa" ? <ArrowRight className="size-4" aria-hidden /> : <ArrowLeft className="size-4" aria-hidden />}{m.back}</Link>
     <header className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

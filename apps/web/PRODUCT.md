@@ -39,7 +39,9 @@ Tools are evaluated and installed from terminals and editors. A release resolves
 - Trust signals are layered and separate: account, verified email, creator identity, source ownership, release review, community reputation. A creator's identity and a listing's safety review are different claims and must not look alike.
 - Terminology in use: listing, release, community, creator, "Add to library", "safety reviewed".
 - Existing stack (so not recorded as a choice): Next.js 16, Tailwind 4, Express and Postgres API, English and Persian.
-- Undecided or not built yet: creator profile pages, reporting and appeals interface, a permissions filter in discovery, collections, notifications; launch with the demo seed or with real curated listings; privacy policy, terms and content policy pages (none exist).
+- Public creator profiles show the creator's public identity, biography and a paginated collection of published listings. Creators without public listings are not discoverable; private drafts and suspended listings stay excluded, including counts.
+- Signed-in readers can report a listing and receive an opaque receipt. Verified staff can triage private cases, set severity, review paginated evidence/history and dismiss cases; reports alone do not impose restrictions.
+- Undecided or not built yet: case-linked restrictions and appeals, reporting additional targets, a permissions filter in discovery, curated/community collections, notifications; launch with the demo seed or with real curated listings; privacy policy, terms and content policy pages (none exist).
 
 ## Brand Commitments
 

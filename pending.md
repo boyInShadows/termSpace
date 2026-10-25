@@ -21,9 +21,9 @@ This file tracks known improvement work that has not been completed yet. When an
 ## Web — Homepage Follow-ups
 
 - Meet the remaining mobile LCP targets: `/` 2.2 s, `/dashboard` 2.0 s
-  and product detail 2.2 s; dashboard performance must reach 92 before its gate
-  tightens. Profile the remaining shared hydration and mobile rendering cost
-  while preserving the Saved collection's initial-read and mutation ordering.
+  and product detail 2.2 s. Profile the remaining shared hydration and mobile
+  rendering cost while preserving request-scoped dashboard snapshots and the
+  Saved collection's initial-read and mutation ordering.
 
 ## Launch — Owner Decisions
 
@@ -36,11 +36,11 @@ This file tracks known improvement work that has not been completed yet. When an
 
 ## Marketplace — P0 Discovery and Community
 
-- Add creator profile pages and listing collections while excluding drafts and
-  suspended items from public responses.
-- Add reporting controls for unsafe, misleading, abandoned, or malicious items,
-  including case severity, scoped restrictions, appeals, and audit events from
-  ADR 0004.
+- Complete reporting controls for unsafe, misleading, abandoned, or malicious
+  items: connect the listing report and private staff case interfaces to the
+  intake/triage API; add case-linked scoped restrictions, appeals and
+  reinstatement checks/audit events from ADR 0004. Extend reporting to releases,
+  placements and creator profiles; review reporting remains in the ratings queue.
 
 ## Marketplace — P0 Ratings and Reviews
 

@@ -1,7 +1,7 @@
 import express from "express";
 import request from "supertest";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { apiRateLimit, loginRateLimit, registerRateLimit, searchRateLimit } from "./security.js";
+import { apiRateLimit, loginRateLimit, registerRateLimit, reportWriteRateLimit, reviewWriteRateLimit, searchRateLimit } from "./security.js";
 
 function appBehindProxy() {
   const app = express();
@@ -38,6 +38,15 @@ describe("apiRateLimit behind a trusted proxy", () => {
 
 describe("per-endpoint auth limiters and search limiter", () => {
   afterEach(() => vi.unstubAllEnvs());
+
+  it("keeps the reporting budget separate from review writes", async () => {
+    const app = express();
+    app.post("/reports", reportWriteRateLimit, (_req, res) => res.sendStatus(204));
+    app.post("/reviews", reviewWriteRateLimit, (_req, res) => res.sendStatus(204));
+    for (let i = 0; i < 20; i += 1) expect((await request(app).post("/reports")).status).toBe(204);
+    expect((await request(app).post("/reports")).status).toBe(429);
+    expect((await request(app).post("/reviews")).status).toBe(204);
+  });
 
   it("does not let failed logins use up the registration budget", async () => {
     const app = express();

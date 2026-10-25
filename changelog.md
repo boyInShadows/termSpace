@@ -2,6 +2,551 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-25
+
+- **Integrate latest redesign into the private VPS release.** Merge redesign
+  `851037a` while retaining the preview deployment history, nonce-enforced CSP,
+  standalone runtime, private origins and worker/backup safeguards. Combine
+  nonce propagation with request-scoped session snapshots and limited locale
+  messages; retain Brotli routing and the dotted-route CSP matcher. Both
+  changelog histories and the remaining owner-dependent launch gates survive.
+  - Package `.next/compressed-assets.json` in the standalone web image and add
+    a real runtime smoke assertion for negotiated Brotli and decoded-byte
+    equality. The moderation pagination test waits for the first-page URL and
+    rows before selecting a case, removing its stale-row navigation race.
+  - Shared surfaces were announced in the local planning commit before merging:
+    `changelog.md`, `pending.md`, API helpers/types/i18n and the Prisma schema.
+    This owner-requested deployment integration includes `docker/`, workflows,
+    `apps/web/app/layout.tsx`, `components/layout/providers.tsx` and `proxy.ts`.
+  - Root typecheck, all 688 runnable unit tests (12 database/Redis skips), web
+    lint (two existing warnings), all three normal production builds and six
+    deployment tests pass. The first parallel web run's cold lazy-dialog
+    timeout is retained; the complete serial web run passes unchanged assertions.
+    Browser, Lighthouse and hosted image/release acceptance are recorded with
+    the release evidence; no performance gate or throttling setting is relaxed.
+    Browser coverage: 437 scenarios pass in the full run, with 46 conditional
+    skips; four new pagination waits initially expected an implicit first-page
+    URL. Correcting them to the component's explicit `page=1` URL makes all 12
+    repeated language/viewport cases pass. The complete scenario set is covered;
+    original failures remain in ignored evidence. All six JavaScript budgets pass.
+    Windows Lighthouse completes nine runs but exceeds timing gates; a Linux
+    container diagnostic also exceeds them and is stopped after two retained
+    reports. The owner requested redeployment after the existing local timing
+    failures were reported. Publish this reviewed release branch for hosted
+    verification; deployment still requires the unchanged hosted application,
+    browser, performance and all three image gates to pass at the same commit.
+    No timing result is discarded or represented as a local pass. Manual
+    Ponytail/security diff review completed; no harness review or usage meter.
+  - Keep the live email worker paused and fixtures/demo/verification bypass off.
+    Release requires a new encrypted, off-server, restore-tested backup before
+    the reporting migration. No unrelated site or database is part of the release.
+
+- **Test and reject startup chunk/font changes that do not meet acceptance.**
+  Production client-only webpack size hints of 160000 and 400000 bytes both
+  build, but each fails three unchanged bundle tests. Dashboard grows from
+  167.9 to 173.7/170.6 kB and Persian detail from 164.9 to 170.7/167.5 kB.
+  Restoring the original configuration returns all six tests to green.
+  - An earlier monospace font hint initially suggests a homepage LCP gain,
+    while the global version's product median worsens. A homepage-only hint
+    and repeat baseline produce home 2483 to 2476 ms, dashboard 2790 to 2789 ms
+    and detail 2473 to 2478 ms. The homepage's apparent gain does not reproduce
+    beyond sample variation. Its FCP improves, but the requested LCP acceptance
+    remains unmet; both font patches are removed. All 36 retained reports use
+    the original profile and have accessibility 100; the slow baseline sample
+    is retained. No framework, dependency, content, style or budget change.
+  - Verification: root typecheck, all 685 runnable unit tests (12 database/Redis
+    skips), web lint (two existing warnings), normal root production build and
+    six restored bundle gates pass. Final application/configuration diff against
+    the published base is empty; the normal production build is restored and
+    its identity checked. Full E2E is not repeated for identical restored code.
+    A PowerShell warning-handling interruption is retained separately from the
+    successful restored checks. Evidence and trial details are recorded in
+    `docs/startup-performance.md`; generated artifacts stay under ignored
+    `docs/artifacts/`. The local queue retains all unfinished acceptance and
+    contains no new completed-trial narrative.
+  - Shared `changelog.md` edits were announced in local planning commits.
+    Manual Ponytail/code-quality second pass; no harness review command or
+    usage meter is available. No provider, database or deployment actions.
+
+## 2026-10-24
+
+- **Reconcile Ramtin's local queue and continue startup profiling.** Removed
+  completed-trial narrative and replaced its duplicated shared backlog with a
+  reference to the authoritative `pending.md`; no unfinished shared task was
+  marked complete. Strict LCP, comparable hosted input delay, physical-device
+  checks, native Persian approval and owner-deferred provider work remain open.
+  The local queue stays ignored and is not part of the commit.
+  - Confirmed all six hosted checks pass at `d5ac348`, including API integration,
+    437 Playwright passes (46 existing skips, no reported flaky tests) and nine
+    Lighthouse reports. Hosted median LCP is 2409/2278/2164 ms and input delay
+    90/74/83 ms; faster CPU indices still prevent closing the original timing
+    risk. Retained failures and the strict targets are unchanged.
+  - Recomputed eighteen current/prior critical paths and reproduced all nine
+    current baselines. Offline transfer-size sensitivity still estimates a
+    2128 ms dashboard median with every script except the two shared framework
+    scripts reduced to zero transfer bytes. This is a
+    diagnostic, not a shipped gain. No unproven runtime optimization was added;
+    details and evidence paths are in `docs/startup-performance.md`.
+  - Verification: model baseline assertions, hosted check/head verification,
+    queue ownership/deferred-work review and `git diff --check`. Application,
+    tests and configuration are unchanged; reuse the preceding phase's root
+    typecheck, unit tests, lint, production build, full E2E and LHCI results.
+    Manual second-pass review used Ponytail and the code-review workflow;
+    no harness review command or usage meter is available. Shared-surface
+    `changelog.md` was announced in a local planning commit before editing.
+
+- **Reduce public startup transfer with negotiated Brotli assets.** The web build
+  precompresses its JavaScript/CSS and verifies every decoded variant against the
+  original. The proxy and a small Route Handler serve only files in the build's
+  generated allowlist. Missing variants, refused encodings, development and
+  range requests retain normal delivery. Compressed responses keep the original
+  MIME type, immutable public caching, `Vary: Accept-Encoding` and strong ETags
+  with body-free conditional 304s. Private API data, session snapshots, Saved
+  ordering, content and styling are unchanged.
+  - Median local mobile LCP improves home 2816 to 2500 ms, dashboard 2951 to
+    2803 ms and detail 2803 to 2484 ms. Median page transfer drops by
+    28350/30597/29512 bytes respectively. All nine stock Lighthouse reports pass
+    unchanged gates with accessibility 100; performance is 97/96/97 and median
+    max-potential-FID 70/77/68 ms. All six gzip JavaScript budgets pass. The
+    strict 2200/2000/2200 ms targets, comparable hosted timing and physical/native
+    acceptance remain open; no budget or throttling setting was changed.
+  - Verification: root typecheck, normal root production build and 685 runnable
+    unit tests pass (12 database/Redis skips); web lint has no errors and the same
+    two existing warnings.
+    Full serial Playwright validation passes 437 scenarios with 46 existing
+    skips. The earlier two-worker run's one Chrome `ERR_NO_BUFFER_SPACE` failure
+    is retained with its trace: a chunk request failed before an HTTP response.
+    Serial validation uses browser temporary files on D:. No test was removed,
+    weakened or given retries. Thirty-six render checks cover English/Persian
+    RTL, light/dark and 320/768/1280 widths, first keyboard focus and one main,
+    with no overflow or page error. Impeccable detection has no findings.
+  - Manual second-pass review tightened artifact allowlisting and negative-cache
+    behavior, and caught the missing revalidation metadata before completion.
+    The raw transport regression verifies actual encoded bytes and HTTP behavior,
+    beyond mocked headers. Next strips encoding headers from proxy responses;
+    the discarded direct rewrite is retained for evidence. A Turbopack pilot was
+    rejected at 165.3 kB on both product locales; webpack remains in use. No
+    dependency, API/schema, migration, provider or deployment changes.
+  - Owner folder conventions apply to this new work: tests are under
+    `apps/web/tests/`, generated evidence under ignored
+    `docs/artifacts/startup-delivery-20261024/`, and the transport project's
+    failure artifacts under `docs/artifacts/playwright-transport/`. Existing
+    test directories remain supported; CI uploads the new failure location.
+    Config/shared files were announced before editing: `changelog.md`,
+    `.gitignore`, web test configs and the web workflow artifact path. No harness
+    review command or usage meter is available. Further measurements and
+    self-hosted packaging notes are in `docs/startup-performance.md`.
+
+- **Restore the product startup JavaScript budget after reporting integration.**
+  Fast-forwarded `ramtin` onto `main` (`3490d23`), retaining the owner's published
+  reporting UI (`a4935f8`). The baseline Persian detail bundle measured 165.2 kB
+  against its existing 165 kB gate. Reporting-only extraction saved 152 gzip
+  bytes but still failed at 165.1 kB; moving the adjacent listing-moderation
+  helpers into their feature module completes the fix. The eleven endpoint
+  bodies are unchanged and share the existing request transport.
+  - Each of six measured startup routes saves 336 gzip bytes: home EN/FA
+    163.2 to 162.8 kB, dashboard EN/FA 168.2 to 167.9 kB, product EN 153.8 to
+    153.5 kB and product FA 165.2 to 164.9 kB. Private case endpoint paths no
+    longer occur in those initial assets. All six existing browser bundle
+    assertions pass. No budget, timing profile, dependency or UI copy changed.
+  - Verification: root typecheck, normal root production build and 664 runnable
+    unit tests pass (12 database/Redis skips). New transport checks preserve credentialed uncached reads,
+    caller cancellation and non-retrying mutations; existing reporting and
+    moderation tests retain role gates, failure recovery and form state. Web
+    lint has no errors and two existing warnings in `context-help.tsx` and
+    `e2e/mock-reports.mjs`. The full browser suite passes 436 scenarios with
+    46 intentional skips and no retries. Twenty-four render checks cover report
+    forms, cases and moderation in both themes, English/Persian RTL and
+    320/1280 widths: no overflow, duplicate main or page error; keyboard-opened
+    disclosure retains visible focus. Impeccable detection has no findings.
+    All nine Lighthouse reports pass unchanged gates, with accessibility 100.
+    Representative home/dashboard/detail LCP is 2816/2951/2803 ms,
+    performance 96/95/96 and max-potential-FID 107/88/97 ms; strict timing
+    acceptance remains unfinished.
+  - Shared surfaces `apps/web/lib/api.ts` and `changelog.md` were announced in
+    the plan commit before editing. A manual second-pass review checked every
+    caller, mock, transport contract and all eleven moved bodies against the
+    published baseline; no harness review command or usage meter is available.
+    No API/schema, migration, seed, provider or deployment changes. The ignored
+    local queue retains strict LCP, comparable hosted timing, physical-device
+    and native Persian wording acceptance, including reporting screens.
+    Measurements and verification evidence: ignored
+    `maintenance/reporting-performance-20261024/`; interpretation and remaining
+    headroom are documented in `docs/startup-performance.md`.
+
+- **Merge `redesign` into `ramtin` at the owner's request.** Integrates
+  `fc766ea` with `703f831`, retaining both histories and the seventeen later
+  Ramtin commits alongside eight incoming redesign commits. The merged result
+  includes the shared Redis rate-limit support, auth/search/startup hardening,
+  legal pages/security headers, dashboard moderation and revised trust rows.
+  Creator profiles, reporting API/cases, contextual help and request-scoped
+  dashboard behavior remain available.
+  - Six text conflicts resolved: reporting gets its own `report-write` Redis
+    namespace alongside review limits; routes keep creator discovery and search
+    protection; creator identities retain their public links and localized badge
+    names; the API keeps creator reads and forwarded search headers; both dated
+    changelog histories are preserved. Detail-header/sidebar badges use the same
+    localized labels. Regression coverage protects report/review budget separation
+    and the Persian creator-link/badge combination. Reconciled `pending.md` and
+    the ignored local snapshot with the delivered policy pages, retaining owner
+    approval and unresolved footer destinations.
+  - Owner-authorized cross-app integration includes the API controllers, routes,
+    security, validation, startup helpers and seed changes, blog proxy/footer/
+    configuration, dependency lock and deployment definitions from redesign.
+    Shared surfaces were named in the merge-message draft before editing:
+    `apps/web/lib/api.ts`, `apps/web/lib/types.ts`, affected `lib/i18n/` files,
+    `changelog.md`, then `pending.md` before its handoff correction. No database
+    migration, seed, deployment, credential or live-provider operation was run.
+  - Verification: root typecheck, 646 runnable unit tests (12 database/Redis
+    skips), web lint and normal root production build pass. Unit tests use
+    `NODE_OPTIONS=--no-experimental-webstorage` on local Node 24.11. The full web
+    browser suite passes 408 scenarios with 46 intentional skips and no retries.
+    All six JavaScript budgets and nine Lighthouse reports pass unchanged gates;
+    representative LCP/performance/FID is home 2785 ms/96/78 ms, dashboard
+    2946 ms/95/83 ms and detail 2791 ms/96/86 ms; accessibility is 100. Strict
+    LCP/hosted timing targets and physical-device/native-wording acceptance stay
+    open. Eighty-four final render captures plus twelve staff-ready checks cover
+    both themes/locales and 320/768/1280 widths, with no horizontal overflow,
+    duplicate main or page error. Impeccable detection has no findings.
+  - Manual second-pass review covered conflict semantics, authorization boundaries,
+    route compatibility and Datasheet consistency; no harness review command or
+    usage meter is available. Stale generated Next route types were backed up and
+    regenerated. Required dependencies were installed without lifecycle scripts;
+    npm's unrelated lock metadata rewrites were discarded, retaining the incoming
+    lockfile and versions. Manual API integration edits in
+    `apps/api/src/middleware/security.ts`, its test and
+    `apps/api/src/routes/marketplaceRoutes.ts` retain the reporting and incoming
+    shared-limit/search contracts. Pre-existing reporting UI work was protected
+    in a separate 17-file backup and named stash, then restored without including
+    it in this merge commit. Its replay conflict keeps the legacy moderation
+    redirect and places its report-case navigation in the dashboard moderation
+    page as an uncommitted edit. All ten originally untracked files match the
+    backup apart from line endings; the combined working tree passes typecheck,
+    the reporting module's 16 unit tests and all 28 focused browser scenarios.
+    The backup and stash are retained. Evidence: ignored
+    `maintenance/merge-redesign-20261024/`.
+
+- **Measure and reject CSS inlining for the remaining mobile LCP work (local
+  queue).** A clean `e2cefde` checkout and an isolated Next `inlineCss` trial
+  each received three samples on home, dashboard and product detail, using fresh
+  Chrome profiles and the same fixtures. Assertions confirm the existing network,
+  CPU, screen and form-factor profile. Median LCP regressed by 227/150/157 ms;
+  page transfers grew by about 25–28 kB. CPU benchmark medians stayed within
+  roughly 5%, and accessibility was 100 across the eighteen reports.
+  - The fresh dashboard critical path retains the React DOM transfer, its CPU
+    task and root layout/error-script requests. Inlining delays that same modeled
+    tail by about 150 ms. Cold/warm reload probes also show the caching cost:
+    the normal home document is 21,414 encoded body bytes with a separately cached
+    stylesheet, versus 61,332 document bytes on each inline load. Home-to-Explore
+    client navigation remains approximately 5 kB in both cases. Full results,
+    model limits and the official Next reference are in
+    `docs/startup-performance.md`; raw evidence and the rejected patch are under
+    ignored `maintenance/startup-performance-20261024/`.
+  - The single trial flag was reverted, the isolated build restored and its
+    application-source diff checked empty. No runtime, dependency, deployment,
+    credential, schema or environment change is retained. Pre-existing reporting
+    edits remain untouched. Verification: root typecheck, all 609 runnable unit
+    tests (11 database skips), web lint and the normal root production build pass.
+    No full browser or Lighthouse CI rerun is claimed for this documentation-only
+    result; the eighteen Lighthouse probes and reload/navigation assertions are
+    separate evidence. Manual second-pass review checked restored source, profile
+    equivalence, raw medians and the limits of modeled causality. No harness
+    review command or usage meter is available.
+  - Strict 2200/2000/2200 ms LCP and comparable hosted input-delay acceptance
+    remain open in the local queue, along with real devices and native Persian
+    wording. Shared surface: `changelog.md`, announced in the phase plan commit
+    before editing.
+
+- **Add contextual help to the dashboard, studio and five-step listing editor
+  (local queue).** One shared 44px question-mark control explains source/release
+  versions, compatibility, permissions, environment variables, licences,
+  communities, type declarations, progress, review and save actions. Twenty-seven
+  concise EN/FA topics include isolated Latin examples. Dashboard collections,
+  publication states, creator handles and provider/release verification use the
+  same control. Required formats and public-secret warnings remain visible.
+  - Hover, keyboard focus and tap open help; Escape, Tab and outside interaction
+    dismiss it. Bubbles remain hoverable, fit the viewport and anchor outside the
+    associated field or complete sticky action bar. Touch-generated focus waits
+    for the click so it cannot intercept the first tap. Help copy loads on demand
+    with loading/failure recovery and a polite screen-reader announcement.
+    Browser-local Save for later, account Save draft and later submission remain
+    distinct. No dependency, API, schema, credential or environment change.
+  - Verification: root typecheck, 609 runnable unit tests (11 database skips),
+    web lint and the normal root production build pass. The isolated help commit
+    passes all 408 browser scenarios with 46 intentional skips and no retries.
+    All six first-load JS budgets pass: representative home/dashboard/detail
+    sizes are 162.5/167.6/164.3 kB gzip. All nine Lighthouse reports pass unchanged
+    budgets, with representative LCP/performance/FID of 2632 ms/97/75 ms,
+    2787 ms/96/75 ms and 2641 ms/97/86 ms; accessibility is 100 throughout.
+    Strict LCP targets and comparable hosted input-delay acceptance stay open.
+  - Render checks cover EN/FA, both themes, 320/768/1280 widths, all editor steps,
+    short landscape, focus, touch, long help text, viewport bounds and sticky
+    action hit tests. Save-help captures have text contrast at least 7.3:1, no
+    overflow, duplicate main or page error. Impeccable detection has no findings;
+    a manual second-pass review covered dismissal, async copy loading, form
+    preservation and Datasheet consistency. No harness review command or usage
+    meter is available. The dashboard surface brief documents the shared pattern.
+  - Original failures are retained: a missing test fixture, Windows text-pipe
+    encoding damage, eager-copy bundle growth, a substring save selector, a real
+    first-tap interception and sticky-help overlap. An isolated browser run also
+    hit Chromium ERR_NO_BUFFER_SPACE on Explore; the final full run passes.
+    An isolated unit assertion and dependency/junction build limitations are
+    retained; final root gates pass in the canonical checkout. Browser and
+    Lighthouse checks used a separate checkout so pre-existing uncommitted
+    reporting work was neither changed nor included in this phase. Its combined
+    checkout's product bundle failure is retained, not attributed to this commit.
+  - Evidence and native wording choices: ignored
+    `maintenance/context-help-20261024/`; the verification checkout is on D:.
+    Removed the implemented help block from the local queue and retained real
+    iOS/Android and Persian-speaking maintainer acceptance. Shared surface:
+    `changelog.md`, announced before editing in the local plan commit.
+
+- **Add authenticated listing reports and private staff case triage (sequential
+  queue, reporting stage 1).** Reader reports use bounded reasons/explanations,
+  opaque receipts, one original report per account/open case, a transactionally
+  serialized ten-new-report account quota and a separate IP request limit.
+  Staff can page cases, original evidence and audit history, set severity,
+  investigate or dismiss. Current verified roles, owner/reporter conflicts and
+  optimistic versions protect every staff action. Reports never impose a
+  restriction automatically; original reports and audit events are append-only
+  in PostgreSQL. API contract and deployment notes: `docs/marketplace-reporting.md`.
+  - Owner-assigned API lane: report controller, routes, validation, security
+    limiter, tests and Prisma models. Shared surfaces announced in the phase
+    commit body: `apps/api/prisma/schema.prisma`, additive migration
+    `202610240001_marketplace_report_cases`, `pending.md` and `changelog.md`.
+    No existing data rewrite, dependency, credential or environment change.
+  - Verification: root typecheck, all 588 runnable unit tests (11 database
+    skips), web lint and normal root production build pass. Six additional
+    real-Postgres checks pass in a separately migrated disposable schema:
+    concurrent deduplication/quota, staff conflicts and role revocation,
+    version races, immutable evidence/history, and post-dismissal reports.
+    The schema was dropped after success; the working database was not migrated
+    or reset. Preserved failures caught invalid classification/publication
+    fixtures and a real transaction-admission timeout under concurrent load.
+    Reporting now bounds admission at ten seconds and returns retryable 503
+    rather than an internal error on transaction timeouts.
+  - A running local API held the Windows Prisma DLL open. An initial temporary
+    schema workaround triggered Prisma autoinstall; its package-file changes
+    were restored, original dependencies reconciled, and validation/builds
+    rerun. Client generation succeeded from the API directory into ignored
+    temporary output, copying generated client files while retaining the locked
+    engine. No package change is retained. Manual second-pass review covered
+    privacy, lock ordering, atomic audit writes and closed-case retention; no
+    harness review command is available. No UI changed, so browser/Lighthouse
+    suites were not rerun for this stage.
+  - The unfinished queue now names report/staff interfaces, case-linked scoped
+    enforcement and appeals, reinstatement checks, and additional ADR targets.
+    The parent reporting item remains open. Deploy the additive migration before
+    using these endpoints; privacy-policy retention/anonymization decisions and
+    real-device/native-Persian acceptance remain unresolved.
+
+- **Add public creator profiles and published listing collections (sequential
+  queue).** `/creators/[handle]` and its Persian route show the creator's public
+  identity and biography, a published-listing total and a paginated catalog grid.
+  Creator names in catalog cards and product details link to the profile. Unknown
+  creators and creators with no public work return genuine 404s. Recovery text
+  distinguishes unavailable, timed-out, unreachable and rate-limited requests;
+  failures are not indexed. Maximum-length names and biographies wrap on phones.
+  - Owner-assigned API-lane files: `marketplaceController.ts`,
+    `routes/marketplaceRoutes.ts`, `validation/schemas.ts` and their regression
+    coverage add the anonymous, validated creator endpoint. Public fields are
+    selected explicitly; the collection and counts exclude unpublished,
+    suspended and archived listings. Existing published projections survive
+    private draft edits; snapshot/lifecycle identifiers remain hidden. Embedded
+    creator counts in public catalog responses now use the same public filter.
+    No schema, migration, dependency, credential or environment change.
+  - Verification: root typecheck, 569 unit tests (5 database-dependent skips),
+    web lint and the final normal root production build pass. The full browser
+    suite passes 386 scenarios, with 44 intentional skips and no retries. New
+    checks cover anonymous discovery, locale links, pagination/reload, true 404,
+    localized failure/rate-limit recovery, canonical/noindex metadata and 320px
+    long-text bounds. Initial failures are retained: alert assertions were
+    scoped to page content, and an existing ordinary-reader fixture now supplies
+    the same reader role to server and client instead of racing a creator-to-
+    reader identity change. Runtime authorization was not weakened.
+  - All nine local Lighthouse reports pass unchanged budgets: representative
+    LCP/performance/FID is home 2641 ms/97/85 ms, dashboard 2797 ms/96/87 ms,
+    detail 2637 ms/97/83 ms, with accessibility 100. Additional EN/FA profile
+    audits also score accessibility 100. Strict LCP and hosted timing acceptance
+    remain open. Ninety-six captures cover both themes, both locales and
+    320/768/1280 widths, including long text and focused links; 84 geometry
+    checks report no overflow, duplicate main or page error. Impeccable detection
+    has no findings. A fresh finish review matched the inherited design and
+    bounded API privacy; its sole documentation fix was scored resolved. The
+    documenter confirmed the existing system applies without a DESIGN.md change;
+    unrelated pre-existing context metadata/brand-history drift was not repaired.
+  - Removed the completed item from both `pending.md` and the ignored local
+    queue; physical-device and native Persian wording acceptance remain there.
+    Product context, the creator surface brief and onboarding/API documentation
+    describe the delivered feature. Evidence: ignored
+    `maintenance/creator-profiles-20261024/`. Shared surfaces: `apps/web/lib/api.ts`,
+    `apps/web/lib/types.ts`, `pending.md`, `changelog.md`. No usage meter is exposed.
+
+- **Retain LCP diagnostic results and manual acceptance handoff (sequential
+  local queue).** Continued the next active performance item without closing
+  its 2200/2000/2200 ms targets. The retained dashboard summary is server-rendered;
+  its modeled critical path ends at the shared React chunk's download. Added
+  the measured limits and trial results to `docs/startup-performance.md`.
+  - A locale-correct font response-header trial did not establish a useful
+    gain (dashboard 2821 → 2791 ms; detail 2628 → 2630 ms), and its application
+    and test changes were reverted. A separate Brotli sizing/transfer model
+    is diagnostic, not deployed compression or target acceptance. The existing
+    contract prohibiting private dashboard reads before identity verification
+    is preserved; no speculative parallelization or caching was added.
+  - Verification: the restored normal root production build passes. Application
+    source matches the phase-1 source that passed root typecheck, 557 unit tests
+    (5 database-dependent skips) and lint. No browser rerun is claimed for the
+    reverted trial. Original reports, patches and measurements remain under
+    ignored `maintenance/queue-20261023/`; budgets and throttle settings are
+    unchanged. A manual second-pass review confirms no trial code remains.
+  - The ignored local queue retains strict LCP and hosted input-delay acceptance.
+    Its device/wording items remain open, with 21 additional EN/FA editor choices
+    in `maintenance/queue-20261023/owner-review.json` for a Persian-speaking
+    maintainer. Physical iOS/Android results and native wording approval were
+    requested, not inferred. Owner-deferred email/domain/Google work remains
+    paused; the copied shared backlog remains subject to its ownership notes.
+    Shared surface: `changelog.md`. No runtime, schema, dependency, credential
+    or environment changes. No usage meter is exposed by this harness.
+
+## 2026-10-23
+
+- **Identify the hosted dashboard startup bottleneck (sequential local queue).**
+  Inspected original reports and the retained traces from `400c2dd` and
+  `1554e45`. The unchanged shared Next App Router/Flight chunk evaluates in
+  36–43 ms tasks on the formatter runner, accounting for its 109/118/134 ms
+  simulated FID samples. The latest runner executes it faster and has higher
+  CPU indices; its passing result is not treated as a runtime fix. Original
+  failure, downloaded artifacts and two local CPU profiles are retained.
+  - `docs/startup-performance.md` records source runs, per-sample indices,
+    task attribution and measurement limits. Removed the completed investigation
+    from the ignored local queue; hosted stability stays open with the remaining
+    LCP work. No runtime, network, throttle or assertion changes were made.
+  - Verification: root typecheck, 557 unit tests (5 database-dependent skips),
+    web lint and root production build. Existing `1554e45` hosted CI/browser/
+    Lighthouse checks pass. No browser suite was repeated for documentation.
+    Manual second-pass review checked task durations against original traces;
+    no usage meter is exposed. Shared surface: `changelog.md`.
+
+- **Complete listing drafts in five resumable steps (Ramtin).** The creator
+  editor now shows Basics, Release, Access & license, Type details and Review
+  one at a time, with a completion percentage and freely selectable steps.
+  Required fields determine completion; previewing or saving the complete draft
+  completes Review. Editing clears its review checkpoint. Inactive steps retain
+  their fields, and validation opens and focuses the first invalid step.
+  - Save for later stores partial work and its current step on this browser,
+    scoped to the signed-in account and listing. It does not call the draft API.
+    Restoring rejects malformed data and does not apply a browser copy based on
+    an older account version. Storage failures retain dirty work and its exit
+    guard. A successful account save clears the browser copy and uses the new
+    record as the editor baseline. Complete draft validation, optimistic
+    concurrency, release verification and moderation remain authoritative.
+  - Verification: root typecheck, 557 unit tests (5 database-dependent skips),
+    web lint and the normal root production build pass. The full browser suite
+    passes 362 scenarios with 44 intentional skips, including bilingual resume,
+    accurate progress, hidden-field validation and keyboard navigation. Final
+    editor checks cover both browser projects after the mobile refinement and
+    account-save cleanup assertion. An unrelated product-dialog timeout in the
+    first loaded unit run passes in isolation and in both subsequent full runs;
+    its original failure is retained without changing that code or test.
+  - All nine local Lighthouse reports pass unchanged budgets and settings:
+    representative LCP/performance/FID is home 2631 ms/97/76 ms, dashboard
+    2792 ms/96/80 ms and detail 2629 ms/97/75 ms; accessibility is 100 throughout.
+    Existing stricter LCP targets and hosted timing follow-ups remain open.
+    Sixty EN/FA, light/dark, 320/768/1280 captures cover all five steps with no
+    overflow or page errors. Representative renders, keyboard/short-landscape
+    checks, Impeccable detection and a manual second-pass diff review pass.
+    Physical iOS/Android and native Persian wording approval remain in the
+    ignored local queue. Evidence is under `maintenance/draft-steps-20261023/`.
+    No usage/cost meter is exposed by this harness.
+  - Shared surface: `changelog.md`. The dashboard surface brief documents the
+    new flow. No API, schema, dependency, credential or environment changes;
+    no other maintainer's `pending.md` item was taken or marked complete.
+
+## 2026-10-22
+
+- **Reuse relative-time formatters and retain original CI traces (local queue
+  follow-up).** The shared listing/activity helper reuses one formatter per
+  locale, while recomputing every date/current-time difference. No reader
+  values or private responses are cached. CI now retains the original
+  Lighthouse traces and request logs alongside its existing reports, with
+  the same seven-day retention. Assertions, network settings, local 4x and
+  calibrated hosted 3x CPU profiles are unchanged.
+  - The original [hosted product-dialog run](https://github.com/boyInShadows/termSpace/actions/runs/39752758665)
+    passes browser checks but fails dashboard max-potential-FID: samples
+    238/135/126 ms, median 135 versus 130. Warm dashboard CPU indices are
+    2418.5–2461; the cold home sample has index 1506.5/FID 321 ms. Original
+    reports are preserved without rerunning that build. Hosted variability
+    is retained as unfinished work in the ignored local queue; formatter
+    reuse is not claimed to establish stable hosted timing.
+  - Verification: the corrected cache regression fails before the fix (five
+    constructions for two locales) and passes after it, covering advancing
+    time, future dates and Persian digits. Root typecheck, 543 unit tests
+    (5 database-dependent skips), web lint and the normal production build
+    pass. The full browser suite passes 358 scenarios with 44 intentional
+    skips and no retries. New EN/FA desktop/mobile checks block framework
+    JavaScript and confirm that the server summary and totals remain visible;
+    existing request-scope, expiry and Saved ordering checks still pass.
+  - All nine local Lighthouse reports pass: median LCP/performance/FID is
+    home 2646 ms/97/92 ms, dashboard 2839 ms/96/97 ms and detail
+    2649 ms/97/94 ms, with accessibility 100. Nine trace/request-log pairs
+    were generated and preserved, confirming the CI retention settings.
+    Twelve responsive EN/FA/theme dashboard captures have no overflow,
+    duplicate shells or page errors; representative renders, Impeccable
+    detection and a manual second-pass diff review pass. No usage meter is
+    exposed. The stricter LCP targets remain open.
+  - Separate diagnostic: nine applied-throttling runs (default network
+    parameters, 4x CPU, `throttlingMethod: devtools`) give median LCP
+    1828/1727/1858 ms. In the first home sample, content paints at 1845 ms
+    before the largest framework downloads finish at 2216/2240 ms. This is
+    evidence about that diagnostic profile, not acceptance under the
+    existing simulated gates or on physical phones.
+  - Rejected trials: an extra hydration boundary, a transition, reusing a
+    server readout, and native default number formatting did not establish
+    a useful gain; the server-readout trial regressed dashboard LCP. None is
+    retained. Source snapshots, CPU profiles, original failures, diagnostics
+    and final reports are under ignored `maintenance/queue-20261022/`.
+  - Shared surface: `changelog.md`; `.github/workflows/web.yml` changes only
+    artifact retention. No API, schema, dependency, authentication, provider
+    or environment change. Physical-device/native wording acceptance and
+    the owner-deferred domain/email/Google sequence remain open.
+
+- **Defer the complete product dialog runtime (Ramtin local performance queue).**
+  Preview and installation now load their Radix roots with their existing lazy
+  content. Product actions retain ordinary buttons and explicitly restore focus
+  when a dialog closes. Protected focus, Escape, close controls, acquisition
+  errors and release selection are preserved; signed-out acquisition still
+  redirects to sign-in without advertising a dialog.
+  - Product first-load JavaScript falls from 181,388 to 168,458 gzip bytes
+    (7.1%, 177.1 to 164.5 KiB). The bilingual browser gate ratchets from 180
+    to 165 KiB. Home/dashboard bundles differ only by 25 runtime-map bytes;
+    no public or dashboard timing improvement is claimed for those routes.
+  - Verification: root typecheck, 542 unit tests (5 database-dependent skips),
+    web lint and the normal root production build pass. The full browser suite
+    passes 354 scenarios with 44 intentional skips and no retries; the final
+    signed-out accessibility refinement additionally passes its unit check and
+    35 product/bundle browser scenarios (7 intentional skips). Both locales
+    exercise modal focus containment, Escape, reopening, close buttons and
+    return focus. All nine local Lighthouse reports pass unchanged assertions
+    and 4x CPU/network settings: median LCP/performance/FID is home
+    2649 ms/97/91 ms, dashboard 2644 ms/97/83 ms and detail 2646 ms/97/92 ms;
+    accessibility is 100 throughout. The stricter 2200/2000/2200 ms LCP targets
+    remain unfinished and stay in both queues.
+  - Rendered checks: 84 EN/FA, light/dark, 320/768/1280 captures cover public
+    pages, dashboard and both dialogs, including keyboard focus. No overflow,
+    duplicate shells or page errors; representative dialog renders and a manual
+    second-pass diff review were inspected. Impeccable reports no findings.
+    Existing follow-up: the English sample in the Persian preview inherits
+    RTL; `features/product/preview-dialog.tsx` needs a separate bidi-content
+    review. This phase preserves its existing presentation.
+  - A CSS-inlining trial did not establish a useful gain and was reverted;
+    no experimental configuration is retained. The original failing test
+    assertions, corrected checks, before/after profiles, captures and reports
+    are preserved under ignored `maintenance/queue-20261022/`. No usage/cost
+    meter is exposed by this harness.
+  - Shared surface: `changelog.md`. No API, schema, dependency, provider or
+    environment changes. Physical iOS/Android acceptance, native Persian wording
+    approval and the owner-deferred domain/email/Google sequence remain open.
+
 ## 2026-10-21
 
 - **Deployment documentation reconciled.** Shared surfaces: `pending.md` and
@@ -60,6 +605,179 @@ Project changes completed from `pending.md` should be recorded here with the dat
     deployment/security diff review completed; public launch remains blocked on
     owner settings and real inbox/Google/verified-role acceptance. Usage/cost
     meter unavailable.
+
+- **Reduce dashboard startup formatting and forced layout (sequential queue).**
+  The existing number helper now reuses formatters by resolved locale/options;
+  overview summaries, totals, ratings and listing rows use it. Only formatter
+  objects are cached, never reader values or private responses. The shared
+  header uses ResizeObserver's measured border box, retaining the bounds-read
+  fallback, and schedules initial scroll measurement through its existing
+  animation-frame path. Session snapshots, Saved ordering, wording and styling
+  are unchanged.
+  - Preserved the first queue commit's hosted failure: dashboard FID samples
+    147/135/110 ms, median 135 versus the unchanged 130 ms gate, at benchmark
+    indices 2477-2499 and the existing calibrated 3x profile. Original failed
+    reports and older failures remain intact. A separate diagnostic 6x CPU
+    sample had a 176 ms longest task before these edits; two after samples
+    measured 144/152 ms. This is a small diagnostic comparison, not proof that
+    hosted scheduling variability has disappeared.
+  - Verification: cache regression fails before the fix and passes after it;
+    tests preserve Persian/data digits, rating precision, compact overrides,
+    observer offsets and fallback. Root typecheck, 541 unit tests (5 database
+    skips), web lint, root production build, 350 browser passes (44 intentional
+    skips, no retries), nine local Lighthouse reports and 60 responsive
+    EN/FA/theme captures pass. Representative renders and the manual second
+    diff review pass; Impeccable reports no findings. No usage meter is exposed.
+  - Final local 4x CPU median LCP/performance/FID: home 2631 ms/97/76 ms,
+    dashboard 2782 ms/96/74 ms, detail 2782 ms/96/78 ms. Existing assertions,
+    network settings and CPU calibration are unchanged; stricter LCP targets
+    remain open. [Hosted application/database CI](https://github.com/boyInShadows/termSpace/actions/runs/39651240026)
+    and [browser/Lighthouse checks](https://github.com/boyInShadows/termSpace/actions/runs/39651240051)
+    pass on `2a1a03e` without rerunning or altering the calibration. Dashboard
+    FID samples are 134/128/104 ms, median 128 versus the prior 135. Individual
+    outliers remain (home reached 272 ms); no guarantee of stable hosted timing
+    is claimed. The investigation/startup-reduction item is removed from the
+    ignored local queue, while strict LCP acceptance stays open. Evidence and
+    original failures are preserved in `maintenance/queue-20261021/`.
+    An additional font-preload priority experiment did not improve LCP and was
+    reverted; its reports are retained there too.
+  - Shared surface: `changelog.md`. No API, schema, dependency, provider or
+    environment changes; physical-device/native wording acceptance and the
+    owner-deferred domain/email/Google sequence remain open.
+
+- **Remove Studio code from the dashboard overview (sequential local queue,
+  first LCP improvement).** Moved the three existing lifecycle helpers into
+  `lib/dashboard.ts` and updated Studio, overview tables and activity imports.
+  Labels, editability, reader snapshots and Saved ordering are unchanged.
+  Dashboard initial JavaScript falls from 175,544 to 162,878 gzip bytes (7.2%);
+  the bilingual browser budget now ratchets from 200 to 170 kB.
+  - Verification: root typecheck, 538 unit tests (5 database-dependent skips),
+    web lint, root production build, 350 browser passes (44 intentional skips,
+    no retries), and all nine Lighthouse assertions pass. Lifecycle helper
+    checks cover both locales, editability and unknown-value fallbacks. Sixty
+    EN/FA, light/dark, 320/768/1280 captures have no overflow, duplicate shells
+    or page errors; representative dashboard renders were inspected and the
+    Impeccable detector reports no findings. Manual second-pass diff review
+    found no issue; this harness exposes no usage/cost meter.
+  - Local 4x CPU median LCP/performance: home 2631 ms/97, dashboard 2799 ms/96,
+    detail 2777 ms/96; median max-potential-FID 76/80/72 ms. These pass existing
+    gates but miss the stricter 2200/2000/2200 ms targets. Public bundles did
+    not change; timing differences are not claimed as public improvements.
+    The LCP task remains open in both queues. Original reports and CPU-profile
+    evidence are preserved under ignored `maintenance/queue-20261021/`.
+  - Shared surface: `changelog.md`. No API, schema, provider or environment
+    change. Hosted variability, physical phones and native Persian acceptance
+    remain open; the owner-deferred live-provider sequence remains paused.
+
+- **Scope editor labels and trim homepage hydration data (owner-requested next
+  performance step).** Root locale messages no longer serialize the draft
+  editor's labels on every page. New/edit server pages supply the active
+  locale's labels directly to the editor and its declaration rows. The shared
+  creator dashboard retains its conflict message. The homepage process section
+  receives only its three consumed fields. Wording, layout, session handling,
+  API requests and caching are unchanged.
+  - In the English fixture comparison, document transfer fell from 24,033 to
+    22,029 bytes on home (8.3%), 16,718 to 15,490 on dashboard (7.3%) and 24,320
+    to 23,141 on detail (4.8%). First-load JavaScript is unchanged. LCP did not
+    materially improve: final local 4x CPU medians are 2,407 / 2,936 / 2,404 ms,
+    with performance 98 / 95 / 98 and accessibility 100 throughout. All nine
+    LHCI reports pass the existing assertions. The stricter LCP targets remain
+    open; neither budgets nor throttling were changed.
+  - Rejected experiments: the default Turbopack build was slower on all three
+    routes; limiting webpack's initial requests did not help. Neither change
+    is retained. Ignored profiles, critical-path analysis and before/after
+    evidence are under `maintenance/lcp-20261021/`.
+  - Verification: three baseline HTML checks failed before the fix. The new
+    checks cover both locales and retain editor labels on editor routes;
+    scoped draft-options fixtures also open the localized form. Root typecheck,
+    535 unit tests (5 database-dependent skips), web lint, production build,
+    350 browser passes (44 intentional skips, no retries), and Impeccable
+    detection pass. Reviewed 60 public/dashboard and 24 normal editor captures
+    across EN/FA, both themes and 320/768/1280 widths: no overflow, duplicate
+    shells or page errors. Editor outage layouts were checked separately.
+    Physical-device and native Persian acceptance remain outstanding.
+  - Shared surfaces: `apps/web/lib/i18n/index.ts` and `changelog.md`. The ignored
+    local queue retains the unfinished LCP and owner-dependent acceptance work.
+
+- **Explore streaming assertion repair (owner-requested next step).** The latest
+  hosted browser run exposed a strict-selector failure: React temporarily kept
+  a hidden `S:0` result tree beside the visible Explore page. The two result-count
+  assertions now query the exposed status role, while retaining exact totals,
+  filtering, reload persistence and clear-filter checks. Application rendering,
+  timeouts, retries and performance/accessibility gates are unchanged.
+  - Evidence: hosted run `39497147842` and its downloaded trace confirm the hidden
+    duplicate. A focused local reproduction preserves a hidden stale count and
+    confirms that the old CSS selector matches both trees while the role query
+    matches only the current count. Both affected scenarios pass 60 repeated
+    desktop/mobile cases. The full browser suite passes 334 cases with 44
+    intentional skips and no retries. Root typecheck, 535 unit tests (5
+    database-dependent skips), web lint and production build pass.
+  - Scope: `apps/web/e2e/catalog.spec.ts` and shared `changelog.md`. Ignored
+    evidence is under `maintenance/ci-streaming-20261021/`. Local Lighthouse and
+    visual captures were not repeated for this test-only change; the existing
+    strict LCP targets, physical-device checks and native Persian acceptance
+    remain open. This repair restores the browser gate needed by hosted LHCI.
+
+- **Remaining local follow-ups reconciled (owner-requested).** Documented the
+  existing installation-output matrix and corrected the stale platform-registry
+  blocker: compatibility keys already exist, but client-specific configuration
+  and remote transports still need structured fields and a selected target.
+  Additional source providers retain ADR 0001's decision requirement. No new
+  configuration, commands, providers or registry entries are implemented.
+  - Reviewed the assistant-authored Persian account, Profile, hero and listing
+    trust/licence/permission text in source and the current rendered layouts.
+    Recorded concrete terminology/wording choices in ignored
+    `maintenance/performance-20261020/persian-review.json`; a Persian-speaking
+    maintainer's acceptance remains open. No copy change or native approval is
+    claimed. Consolidated duplicate local review entries, retained physical-phone
+    acceptance and the owner's email/Google pause, and moved backup retention
+    into operating notes after confirming the recovery dump still exists.
+  - Scope: `docs/marketplace-manifests.md`, shared `changelog.md` and ignored
+    `ramtin-pending.md`. Existing command builders, manifest validation and the
+    platform registry were checked directly after graph freshness warnings.
+    All four documentation links and the review JSON validate. Root typecheck,
+    535 unit tests (5 database-dependent skips), web lint and production build
+    pass; browser/Lighthouse checks were not repeated for documentation changes.
+
+- **Cold dashboard summary and performance ratchet (owner-requested local queue).**
+  The dashboard can now render its verified reader's summary and totals in the
+  initial HTML. Request-scoped server reads forward the current cookie without
+  caching private responses; each lookup has a 1.5-second deadline and falls
+  back to the existing browser reads. Public pages retain their client identity
+  lookup. The browser still revalidates identity and dashboard data, and Saved
+  still waits for the complete favorites read before showing removal controls.
+  Cold loads therefore add server reads alongside browser revalidation; this
+  reduces the client dependency chain rather than the total request count.
+  - Older refresh results cannot overwrite a newer identity. Account changes
+    remount dashboard content. A fresh review caught a server/browser timezone
+    mismatch, reproduced in both browser projects; the initial clock-dependent
+    content is now deterministic and switches to browser-local time after data
+    loads. Pending panels keep their accessible loading status.
+  - Root typecheck, 535 unit tests (5 database-dependent skips), web lint,
+    334 browser tests (44 intentional skips, no retries), normal production
+    build and 60 EN/FA/theme/320/768/1280 captures pass. The captures check
+    overflow, page errors, locale/theme and one global header/main; representative
+    renders were reviewed. The Impeccable detector returned no findings.
+  - All nine local Lighthouse reports pass at the unchanged 4x CPU/network
+    profile. Median LCP/performance: home 2408 ms/98, dashboard 2955 ms/95,
+    detail 2404 ms/98; accessibility is 100 throughout. Dashboard performance
+    meets its 92 target, so its gate is tightened from 85 to 92 and all reports
+    pass again. LCP gates remain unchanged: the tighter 2.2/2.0/2.2-second
+    targets are still unfinished in both queues. Public-page timing variation
+    is not claimed as a public rendering improvement.
+    All six hosted checks also passed on `09b9ebc`: [browser/performance](https://github.com/boyInShadows/termSpace/actions/runs/39495640293)
+    and [application/database](https://github.com/boyInShadows/termSpace/actions/runs/39495640296).
+  - CSS inlining and below-fold containment experiments were not retained;
+    their samples did not establish a useful public LCP improvement. Evidence,
+    traces, RED/GREEN regressions and rejected experiments are preserved in
+    ignored `maintenance/performance-20261020/`. Graph metadata/partial-parse
+    warnings were checked against current source. Fresh review findings were
+    addressed; no external-model review was authorized or run.
+  - Shared surfaces: `apps/web/lib/api.ts`, `pending.md` and `changelog.md` for
+    this assigned performance phase. No API-server, schema, provider, secret,
+    environment or live user-data change; the local email pause is preserved.
+    Physical devices, native Persian review and live providers remain open.
+    No usage/cost meter is exposed by this harness.
 
 ## 2026-10-20
 
@@ -141,6 +859,23 @@ Project changes completed from `pending.md` should be recorded here with the dat
     issue. Graph metadata was stale, so relevant source was inspected directly.
     Impeccable's existing stale design sidecar remains unchanged; `DESIGN.md`
     remains authoritative. Usage/cost meter unavailable in this harness.
+
+- **README refresh (owner-requested).** Updated the shipped feature summary for
+  community browsing, dashboard/Saved/library/Studio and acquisition-backed
+  reviews. Documented root/app environment setup, mismatched example database
+  passwords, Prisma generation, optional demo-seed limitations, local routes,
+  worker execution, verification commands and production metadata settings.
+  Linked the existing deployment ownership audit and remaining roadmap.
+  - Scope: `README.md` and shared `changelog.md`; no application, dependency,
+    environment, schema or pending-task changes. Current `origin/main` is
+    already included in `ramtin`; no history rewrite or merge was needed.
+  - Verification: root typecheck, 519 unit tests (5 database-dependent skips),
+    web lint and root production build passed. All 14 local README links,
+    18 npm script references and code fences passed documentation checks;
+    `git diff --check` passed. Manual second-pass diff review found no issue.
+    Logs: ignored `maintenance/readme-20261020/`. Browser/Lighthouse, fresh
+    installs, Docker startup and live providers were not rerun for this
+    documentation-only change. No usage/cost meter is exposed by this harness.
 
 ## 2026-10-19
 

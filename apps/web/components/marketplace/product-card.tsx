@@ -113,7 +113,7 @@ export function ProductCard({
         />
 
         <div className="mt-4">
-          <CreatorIdentity creator={product.creator} compact verifiedLabel={card.verifiedCreator} />
+          <CreatorIdentity creator={product.creator} compact href={localePath(`/creators/${product.creator.handle}`, locale)} verifiedLabel={card.verifiedCreator} />
         </div>
         {product.communities.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2" aria-label={card.communities}>

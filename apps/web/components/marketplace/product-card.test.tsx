@@ -97,5 +97,6 @@ describe("ProductCard", () => {
     expect(screen.getByText("بررسی‌شده")).toBeInTheDocument();
     expect(screen.getByText("اعلام نشده")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "سازندهٔ تأییدشده" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: products[0].creator.name })).toHaveAttribute("href", `/fa/creators/${products[0].creator.handle}`);
   });
 });
