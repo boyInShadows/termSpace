@@ -4,6 +4,16 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-25
 
+- **Complete the safe browser-side acceptance pass for the Ramtin queue.** Ran
+  the targeted desktop and mobile Chromium matrix for editor recovery,
+  contextual help, creator profiles, reporting, landing widths, Persian RTL,
+  keyboard focus, landscape layout and touch-target geometry.
+  - Verification: 151 passed, 31 intentional skips. The remaining queue item
+    stays open because real iOS Safari/Android Chrome hardware checks and
+    Persian-speaking maintainer copy approval still require human/device
+    validation; no application files were changed.
+  - Shared `changelog.md` edit announced before writing.
+
 - **Reject deferred product review-composer split.** A five-line `next/dynamic`
   experiment reduced the product first-load bundle from the prior 164.9 kB
   measurement to 153.5 kB and passed catalog, performance and budget checks,
