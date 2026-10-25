@@ -4,6 +4,27 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-25
 
+- **Restore the redesign landing lost during branch merge.** Compared merge
+  `fc766ea` with its redesign parent `9326134`; the merge selected the
+  Datasheet versions of the landing page, search, process, footer, global
+  design primitives and logo/header presentation. Restored those redesign
+  surfaces, including the serif editorial type, typed command search, rounded
+  cards, reveal motion, nebula trust section, gradient CTA, footer treatment
+  and caret logo. Preserved the current root-owned header, `main#content`
+  skip-link target, server-rendered footer, header measurement, route-close
+  behavior and dashboard focus scrolling. Reconciled the landing E2E contract
+  with the redesign's scroll-reveal behavior.
+  - Verification: root typecheck, root tests (685 passed, 12 expected
+    database/Redis skips), web lint (two existing warnings), production build,
+    full web E2E (437 passed, 46 expected skips), Lighthouse (9/9 reports),
+    rendered desktop screenshot, and Impeccable detector. Detector
+    reports the intentional existing Geist/Newsreader and radius deviations
+    from the current Datasheet DESIGN.md; those are required by this requested
+    redesign restoration.
+  - Shared `changelog.md` edit announced before writing. The local
+    `ramtin-pending.md` queue remains untouched; the unrelated review-composer
+    experiment remains stashed.
+
 - **Test and reject startup chunk/font changes that do not meet acceptance.**
   Production client-only webpack size hints of 160000 and 400000 bytes both
   build, but each fails three unchanged bundle tests. Dashboard grows from

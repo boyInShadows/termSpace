@@ -25,18 +25,21 @@ for (const locale of ["en", "fa"]) for (const theme of ["light", "dark"]) {
       expect(styles.headingFont, route).toBe(headingFont);
       expect(styles.headingFont).not.toContain("Newsreader");
       expect(styles.overflow, route).toBe(false);
-      expect(styles.fields.every((radius) => radius === "0px"), route).toBe(true);
-      expect(styles.cards.every((card) => card.radius === "0px" && card.shadow === "none"), route).toBe(true);
+      const isLanding = route === "/";
+      if (!isLanding) {
+        expect(styles.fields.every((radius) => radius === "0px"), route).toBe(true);
+        expect(styles.cards.every((card) => card.radius === "0px" && card.shadow === "none"), route).toBe(true);
+      }
     }
   });
 }
 
-test("hero search stays static and keyboard focus exposes usable suggestions", async ({ page }) => {
+test("hero search types an intent and keyboard focus exposes usable suggestions", async ({ page }) => {
   await page.goto("/");
   const search = page.getByRole("combobox");
   const placeholder = await search.getAttribute("placeholder");
   await page.waitForTimeout(900);
-  await expect(search).toHaveAttribute("placeholder", placeholder!);
+  expect(await search.getAttribute("placeholder")).not.toBe(placeholder);
   await search.focus();
   await expect(search).toBeFocused();
   await expect(search).toHaveAttribute("aria-expanded", "true");

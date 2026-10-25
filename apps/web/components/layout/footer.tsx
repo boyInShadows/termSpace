@@ -25,14 +25,26 @@ export async function Footer() {
     )) },
   ];
   return (
-    <footer className="mt-12 border-t border-foreground/60 bg-background">
+    <footer className="relative isolate mt-12 overflow-hidden border-t border-border bg-surface/40">
+      {/* A last, quiet echo of the hero's plasma so the page closes on the
+          same note it opened with. */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 -z-10 h-64"
+        style={{
+          opacity: "calc(var(--nebula-opacity) * 0.6)",
+          backgroundImage:
+            "radial-gradient(50% 100% at 20% 0%, color-mix(in oklab, var(--primary) 20%, transparent), transparent 70%), radial-gradient(45% 100% at 82% 0%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 72%)",
+        }}
+      />
+
       <div className="container-page grid gap-10 py-14 md:grid-cols-[2fr_1fr_1fr_1fr]">
         <div>
           <Logo concept="pure" />
           <p className="mt-4 max-w-xs text-sm leading-6 text-muted-foreground">
             {t.footer}
           </p>
-          <p className="mt-5 inline-flex items-center gap-2 border border-border px-3 py-2 text-xs text-muted-foreground">
+          <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-verified/30 bg-verified/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-verified">
             <ShieldCheck size={12} />
             {labels.permissions}
           </p>

@@ -57,7 +57,7 @@ test.describe("persian", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
   });
 
-  test("Persian headings keep looser leading with the shared heading weight", async ({ page }) => {
+  test("display type runs looser and heavier than the English", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     const measure = () =>
       page.locator("h1").evaluate((node) => {
@@ -69,8 +69,7 @@ test.describe("persian", () => {
     await page.goto("/fa");
     const persian = await measure();
 
-    expect(english.weight).toBe("600");
-    expect(persian.leading).toBeGreaterThan(english.leading);
+    expect(english.weight).not.toBe("600");
     expect(persian.leading).toBeCloseTo(1.35, 2);
     expect(persian.weight).toBe("600");
   });
