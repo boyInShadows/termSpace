@@ -11,13 +11,16 @@ roles never grant Blog publishing access. See
 [Product Direction](docs/product-direction.md) for the durable product
 boundaries and core user journeys.
 
-## Current deployment — 2026-10-21
+## VPS preview — 2026-10-25
 
-Web/API runs as a private VPS preview at `https://termspace.localhost:8443`
-through an operator SSH tunnel. The existing INSIGHT service remains active;
-TermSpace uses loopback ports 3300/8443 and isolated data volumes. Blog deployment
-is deferred. Nightly encrypted backups and five-minute local health checks are
-active; public launch still requires the owner decisions in
+Public preview address: [TermSpace](https://termspace.13.140.89.146.sslip.io).
+The public deployment uses a free IP-bound hostname and trusted HTTPS through
+a dedicated Nginx site. The browser does not need an SSH tunnel. The existing
+INSIGHT site keeps its routing; TermSpace container ports remain on loopback
+with isolated data volumes. Blog deployment is deferred. Nightly encrypted
+backups and five-minute health checks are active. Email and Google sign-in remain
+disabled; verified test accounts are provisioned separately. Full public launch
+still requires the owner decisions in
 [readiness.md](readiness.md).
 
 Deployment changes are on `codex/vps-preview` in

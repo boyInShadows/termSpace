@@ -12,7 +12,7 @@ export function validateConfig(env) {
   const requireValue = (key) => {
     if (!env[key] || placeholder.test(env[key])) reject(key, "missing or placeholder value");
   };
-  if (!["preview", "public"].includes(env.DEPLOYMENT_MODE)) reject("DEPLOYMENT_MODE", "must be preview or public");
+  if (!["preview", "public-preview", "public"].includes(env.DEPLOYMENT_MODE)) reject("DEPLOYMENT_MODE", "must be preview, public-preview or public");
   if (env.NODE_ENV !== "production") reject("NODE_ENV", "must be production");
   for (const key of ["NEXT_PUBLIC_USE_MOCK", "LOCAL_AUTO_VERIFY_EMAIL", "SEED_DEMO", "SEED_RESET"]) {
     if (env[key] && !["false", "0"].includes(env[key])) reject(key, "must be disabled");
@@ -37,7 +37,7 @@ export function validateConfig(env) {
     origin = url.origin;
     if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || url.pathname !== "/") throw new Error();
     if (env.DEPLOYMENT_MODE === "preview" && origin !== "https://termspace.localhost:8443") throw new Error();
-    if (env.DEPLOYMENT_MODE === "public" && (/localhost$|^127\.|^\[::1\]$/.test(url.hostname) || placeholder.test(url.hostname))) throw new Error();
+    if (env.DEPLOYMENT_MODE !== "preview" && (/localhost$|^127\.|^\[::1\]$/.test(url.hostname) || placeholder.test(url.hostname))) throw new Error();
   } catch { reject("WEB_PUBLIC_URL", "must be the HTTPS origin for the selected deployment mode"); }
   if (!origin || env.CORS_ORIGINS !== origin) reject("CORS_ORIGINS", "must match the web origin exactly");
   if (env.NEXT_PUBLIC_SITE_URL !== origin) reject("NEXT_PUBLIC_SITE_URL", "must match the web origin");

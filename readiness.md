@@ -1,5 +1,17 @@
 # TermSpace pre-deployment readiness review
 
+## Public preview scope — 2026-10-25
+
+The owner requested access from ordinary browsers and other devices using a
+free hostname and trusted TLS. Deployment preparation targets
+`https://termspace.13.140.89.146.sslip.io`. Its explicit `public-preview` mode
+permits external HTTPS while retaining strict secrets, disabled bypasses,
+same-origin API/cookies and partial-mail rejection. Full `public` launch still
+requires mail configuration and a legal contact. Email/Google remain disabled;
+the existing verified administrator/client test accounts are used for acceptance.
+The catalog remains empty. Actual deployment, TLS renewal and browser acceptance
+are recorded with release evidence and in the changelog after verification.
+
 ## Release integration — 2026-10-25
 
 The private-preview release branch now integrates redesign `851037a`, including

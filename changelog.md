@@ -4,6 +4,26 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-25
 
+- **Prepare owner-requested public HTTPS preview.** Add an explicit
+  `public-preview` deployment mode for an externally reachable HTTPS origin;
+  retain full `public` launch requirements for configured email and legal
+  contact. Regression assertions retain strict secrets, immutable images,
+  same-origin CORS, disabled verification bypasses and rejection of partial
+  mail settings. No application authorization or database schema is changed.
+  - Compile release images for the free
+    `termspace.13.140.89.146.sslip.io` hostname. Add a separate Nginx SNI
+    template with HTTP-to-HTTPS redirect, ACME webroot and noindex header.
+    Health checks verify the configured public certificate normally, retaining
+    the local CA path for private-origin rollback. Document IP-bound DNS,
+    renewal, existing test accounts and deferred email/Google/full-launch
+    acceptance. Shared `changelog.md` edits were announced before editing.
+  - Seven deployment regressions, root typecheck, all 689 runnable unit tests,
+    all production builds and web lint (two existing warnings) pass. The public
+    Let's Encrypt certificate is issued and its renewal dry run succeeds;
+    Chrome validates trusted direct HTTPS before application cutover. Hosted
+    image gates and actual deployment outcomes remain in the release evidence;
+    image publication alone does not imply a live origin change.
+
 - **Deploy and verify the updated private VPS preview.** Runtime images at
   `d8ab9f2` include redesign/ramtin `851037a`; all exact-release hosted CI,
   image smoke/audit, browser and unchanged Lighthouse gates pass. The VPS

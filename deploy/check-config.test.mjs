@@ -16,6 +16,21 @@ const valid = () => ({
   NEXT_PUBLIC_API_URL: "/backend", TRUST_PROXY: "1",
 });
 test("private preview permits undecided mail/contact without weakening secrets or authentication", () => assert.deepEqual(validateConfig(valid()), []));
+
+test("public preview permits external HTTPS without claiming mail-enabled launch", () => {
+  const origin = "https://termspace.13.140.89.146.sslip.io";
+  const env = { ...valid(), DEPLOYMENT_MODE: "public-preview", WEB_PUBLIC_URL: origin, NEXT_PUBLIC_SITE_URL: origin, CORS_ORIGINS: origin, MEDIA_PUBLIC_URL: `${origin}/backend/media` };
+  assert.deepEqual(validateConfig(env), []);
+  for (const invalidOrigin of ["http://termspace.13.140.89.146.sslip.io", "https://localhost", "https://127.0.0.1", "https://[::1]"]) {
+    const errors = validateConfig({ ...env, WEB_PUBLIC_URL: invalidOrigin, NEXT_PUBLIC_SITE_URL: invalidOrigin, CORS_ORIGINS: invalidOrigin, MEDIA_PUBLIC_URL: `${invalidOrigin}/backend/media` });
+    assert.ok(errors.some((error) => error.startsWith("WEB_PUBLIC_URL:")), invalidOrigin);
+  }
+  for (const [key, value] of Object.entries({ POSTGRES_PASSWORD: "bad-secret", CORS_ORIGINS: "*", LOCAL_AUTO_VERIFY_EMAIL: "true", WEB_IMAGE: "ghcr.io/boyinshadows/termspace-web:latest", CLOUDFLARE_EMAIL_API_TOKEN: "partial-mail-token" })) {
+    assert.ok(validateConfig({ ...env, [key]: value }).length, key);
+  }
+  assert.ok(validateConfig({ ...env, DEPLOYMENT_MODE: "public" }).some((error) => error.startsWith("LEGAL_CONTACT_EMAIL:")));
+  assert.ok(validateConfig({ ...env, DEPLOYMENT_MODE: "public" }).some((error) => error.startsWith("CLOUDFLARE_EMAIL_API_TOKEN:")));
+});
 test("unsafe settings and partial mail configuration are rejected without exposing values", () => {
   for (const [key, value] of Object.entries({ NODE_ENV: "development", DEPLOYMENT_MODE: "unknown", NEXT_PUBLIC_USE_MOCK: "1", LOCAL_AUTO_VERIFY_EMAIL: "true", SEED_DEMO: "true", SEED_RESET: "true", POSTGRES_PASSWORD: "secret-example-password", MARKETPLACE_PROVIDER_TOKEN_KEY: "invalid-secret", WEB_IMAGE: "ghcr.io/example/image:latest", CORS_ORIGINS: "*", WEB_PUBLIC_URL: "http://localhost:3000", NEXT_PUBLIC_API_URL: "http://api:4001", CLOUDFLARE_EMAIL_API_TOKEN: "private-test-token" })) {
     const errors = validateConfig({ ...valid(), [key]: value });

@@ -1,4 +1,4 @@
-# Private VPS preview
+# VPS preview
 
 Deploy web/API only. INSIGHT keeps its existing Nginx sites, host PostgreSQL,
 certificates and port 3000. TermSpace uses separate Docker volumes and loopback
@@ -28,8 +28,9 @@ Prisma/seed/role tools; the API runtime has production dependencies only.
 
 All three jobs must pass for the same commit before deploying. Record their
 digest references in `WEB_IMAGE`, `API_IMAGE`, `OPS_IMAGE`. Never deploy a mutable
-tag. The web image is compiled for `https://termspace.localhost:8443` with Google
-and the blog disabled. A public origin or Google client change requires a rebuild.
+tag. Google and the blog are disabled. The current workflow builds for the public preview origin
+`https://termspace.13.140.89.146.sslip.io`. An origin or Google client change
+requires a rebuild; existing private-origin digests remain available for rollback.
 
 ## Initial installation
 
@@ -61,9 +62,9 @@ email and a separately generated password through protected configuration.
 Marketplace roles require a verified reader and the existing audited role CLI;
 a blog administrator account does not grant marketplace roles.
 
-## Private access
+## Private access (private-origin releases)
 
-On the development computer, resolve `termspace.localhost` to `127.0.0.1`, trust
+For a private-origin release or rollback, resolve `termspace.localhost` to `127.0.0.1`, trust
 the local certificate and open the tunnel:
 
 ```sh
@@ -93,6 +94,40 @@ claim a provider's accepted/queued response proves receipt.
 `DEPLOYMENT_MODE=public` requires a real HTTPS origin, complete mail configuration
 and legal contact. Public DNS/TLS, legal review, signup consent, Google credentials
 and verified creator/moderator acceptance remain owner-dependent launch gates.
+
+## Public preview
+
+The owner-requested public preview uses
+`https://termspace.13.140.89.146.sslip.io` and `DEPLOYMENT_MODE=public-preview`.
+The free sslip.io hostname resolves its embedded IP without a DNS account. It
+depends on that service and the VPS retaining its current IP; it is not an owned
+domain. Use this origin consistently in `WEB_PUBLIC_URL`, `CORS_ORIGINS`,
+`NEXT_PUBLIC_SITE_URL`, and `MEDIA_PUBLIC_URL` (with `/backend/media` appended).
+Compile and verify the matching web image before changing runtime settings.
+
+Public preview keeps the existing undecided-mail behavior: the email profile and
+Google remain disabled, registrations cannot bypass verification, and the
+owner-provisioned verified test accounts retain their audited roles. It does
+not satisfy full public-launch acceptance. Partial mail settings are rejected
+in every mode; `public` still requires complete mail settings and legal contact.
+
+Install `nginx-public-preview.conf` as an additional SNI site on ports 80/443,
+preserving INSIGHT and the private listener. Bootstrap only its HTTP ACME
+location before the certificate exists; keep the application location unavailable
+until the new images and origin settings pass verification. Use the installed
+Certbot webroot authenticator with `/var/www/termspace-acme` and certificate name
+`termspace-public-preview`. Reload Nginx only after `nginx -t` succeeds. The
+existing certificate-renewal timer runs Certbot renewal for all managed
+certificates and reloads Nginx; verify a dry run for the new certificate.
+
+The public site redirects HTTP to HTTPS and sends `X-Robots-Tag: noindex,
+nofollow`. Only Nginx is public; web/API/database/Redis container ports retain
+their private bindings. The health check validates the configured HTTPS origin
+with normal CA verification, using the explicit local CA only for the original
+private origin. Verify sign-in, sign-out, host-only secure cookies, CSRF rejection,
+admin/client permissions, Persian RTL and Brotli byte equality on the public
+hostname. Preserve a pre-change encrypted backup and saved configuration for
+rollback. The old tunnel is no longer required for public access.
 
 ## Backups, upgrades and rollback
 
