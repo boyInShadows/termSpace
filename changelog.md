@@ -2,6 +2,23 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-27
+
+- **One-time cleanup (low-risk items only).** Removed two unused skeleton
+  components and one unused type, dropped `export` from 21 file-local symbols,
+  deleted 48 unused i18n keys (en and fa) and the unused `shelves` copy,
+  removed the dead `prisma:push` and `db:down` scripts and the inert vitest
+  coverage blocks, gitignored agent tooling state, deleted the obsolete
+  `summary.md` and two empty `pending.md` sections, and gave the load-sensitive
+  product-actions and draft-editor tests explicit timeouts. Touched shared
+  surfaces: `apps/web/lib/i18n/` (deletions) and `pending.md` (empty headings).
+  - Verification: typecheck, lint, tests (270 API + 17 blog + 398 web) and
+    production build pass after every commit. Left for owner decisions: the
+    changelog compaction, `readiness.md`, `.impeccable` mocks and critiques,
+    logo concept PNGs, `apps/web/AGENTS.md`/`CLAUDE.md`, side branches, the
+    `community-placements` endpoint, and declaring `user-event` in `apps/web`
+    (needs a Linux-side lockfile update).
+
 ## 2026-10-25
 
 - **Complete the safe browser-side acceptance pass for the Ramtin queue.** Ran
