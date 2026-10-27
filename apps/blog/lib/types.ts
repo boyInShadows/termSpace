@@ -221,11 +221,3 @@ export interface CategoryInput {
   slug: string;
   description?: string | null;
 }
-
-export interface ApiError {
-  error: {
-    code?: string;
-    message: string;
-    details?: { path: string; message: string }[];
-  };
-}

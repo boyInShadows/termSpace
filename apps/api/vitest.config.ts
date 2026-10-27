@@ -5,6 +5,5 @@ export default defineConfig({
     environment: "node",
     restoreMocks: true,
     exclude: ["dist/**", "node_modules/**"],
-    coverage: { reporter: ["text", "json-summary"] },
   },
 });

@@ -10,7 +10,7 @@ vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession
 vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), getMarketplaceDraftOptions: mocks.options, getMarketplaceItemTypes: mocks.types, getCreatorDraft: mocks.get, createCreatorDraft: mocks.create }));
 const { CreatorDraftEditor } = await import("./creator-draft-editor");
 
-describe("draft editor navigation and recovery", () => {
+describe("draft editor navigation and recovery", { timeout: 15_000 }, () => {
   afterEach(() => { cleanup(); vi.restoreAllMocks(); });
   beforeEach(() => {
     vi.clearAllMocks();

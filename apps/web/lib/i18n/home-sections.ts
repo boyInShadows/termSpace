@@ -22,20 +22,6 @@ export const homeSections = {
         copy: "One command, the exact version you inspected, and updates that arrive with notes from the person who wrote them.",
       },
     ],
-    shelves: [
-      {
-        title: "Tools for careful research",
-        copy: "Evidence-first workflows that keep sources, caveats, and reasoning visible.",
-      },
-      {
-        title: "Ship better software",
-        copy: "Review, accessibility, and database tools made by practicing engineers.",
-      },
-      {
-        title: "Find the words that work",
-        copy: "Brand and conversion systems grounded in customer language, not hype.",
-      },
-    ],
     trustBadge: "Verified",
     trustBody:
       "Most catalogues bury what a tool actually does inside a paragraph of marketing. We break compatibility, permissions, requirements, licence and safety status into separate fields so you can judge a product before it touches your workflow.",
@@ -113,20 +99,6 @@ export const homeSections = {
       {
         title: "به کار بگیریدش",
         copy: "یک فرمان، همان نسخه‌ای که بررسی کردید، و به‌روزرسانی‌هایی که با یادداشت خودِ سازنده می‌رسند.",
-      },
-    ],
-    shelves: [
-      {
-        title: "ابزارهایی برای پژوهش دقیق",
-        copy: "گردش‌کارهای مبتنی بر شواهد که منابع، قیدها و استدلال را همواره نمایان نگه می‌دارند.",
-      },
-      {
-        title: "نرم‌افزار بهتر بسازید",
-        copy: "ابزارهای بازبینی، دسترس‌پذیری و پایگاه داده که مهندسان فعال ساخته‌اند.",
-      },
-      {
-        title: "واژه‌هایی که اثر می‌کنند",
-        copy: "نظام‌های برند و تبدیل که بر زبان مشتری بنا شده‌اند، نه بر شعار.",
       },
     ],
     trustBadge: "تأییدشده",

@@ -45,7 +45,7 @@ function loadFonts() {
   return fontsPromise;
 }
 
-export type OgChip = { label: string; sub: string; tone: "verified" | "accent" | "primary" | "muted" };
+type OgChip = { label: string; sub: string; tone: "verified" | "accent" | "primary" | "muted" };
 
 export async function renderOgCard({ eyebrow, title, pill, chips }: { eyebrow: string; title: string; pill?: string; chips: OgChip[] }) {
   const titleSize = title.length > 34 ? 72 : 92;

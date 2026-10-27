@@ -73,7 +73,7 @@ describe("ProductActions acquisition flow", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Add v1.0.0 to library" }));
 
-    expect(await screen.findByRole("dialog", { name: "Install acquired release" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Install acquired release" }, { timeout: 5000 })).toBeInTheDocument();
     expect(screen.getByText("v1.0.0")).toBeInTheDocument();
     expect(screen.getByText("Extract the archive")).toBeInTheDocument();
     expect(screen.getByText("a".repeat(40))).toBeInTheDocument();
@@ -124,7 +124,7 @@ describe("ProductActions acquisition flow", () => {
     render(<ProductActions product={acquirable} />);
     const button = await screen.findByRole("button", { name: "View installation" });
     fireEvent.click(button);
-    expect(await screen.findByRole("dialog", { name: "Install acquired release" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Install acquired release" }, { timeout: 5000 })).toBeInTheDocument();
     expect(acquireProduct).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());

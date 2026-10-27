@@ -7,6 +7,5 @@ export default defineConfig({
     environment: "jsdom",
     environmentOptions: { jsdom: { url: "http://localhost/" } },
     setupFiles: ["./vitest.setup.ts"],
-    coverage: { reporter: ["text", "json-summary"] },
   },
 });

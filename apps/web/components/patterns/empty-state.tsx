@@ -3,7 +3,7 @@ import { SearchX, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/lib/locale-context";
 
-export type EmptyStateFilter = { key: string; label: string; clear: () => void };
+type EmptyStateFilter = { key: string; label: string; clear: () => void };
 
 /**
  * No results. A search names what was searched, in its own direction, and a

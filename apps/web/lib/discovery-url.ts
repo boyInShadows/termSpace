@@ -7,7 +7,7 @@ import type { ProductFilters } from "./types";
  * change it, so both always agree on what a URL means.
  */
 
-export const DISCOVERY_PAGE_SIZE = 12;
+const DISCOVERY_PAGE_SIZE = 12;
 /** A search is ordered by how well it matches; browsing is ordered by featured. */
 const defaultSort = (query: string | null | undefined) => (query?.trim() ? "relevance" : "featured");
 

@@ -12,7 +12,7 @@ export const legalEntity = () => process.env.LEGAL_ENTITY_NAME?.trim() || "TermS
 export const legalContact = () => process.env.LEGAL_CONTACT_EMAIL?.trim() || undefined;
 
 export type LegalSlug = "privacy" | "terms" | "content-policy";
-export type LegalDoc = { title: string; intro: string; sections: { heading: string; body?: string[]; list?: string[] }[] };
+type LegalDoc = { title: string; intro: string; sections: { heading: string; body?: string[]; list?: string[] }[] };
 
 export const legalLabels = {
   en: { updated: "Last updated", contact: "Contact", privacy: "Privacy policy", terms: "Terms of use", "content-policy": "Content and review policy", legal: "Legal" },

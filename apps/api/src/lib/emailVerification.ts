@@ -1,10 +1,10 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 
-export const EMAIL_VERIFICATION_TTL_MS = 30 * 60 * 1000;
+const EMAIL_VERIFICATION_TTL_MS = 30 * 60 * 1000;
 export const EMAIL_VERIFICATION_RESEND_COOLDOWN_MS = 60 * 1000;
 export const EMAIL_VERIFICATION_RESEND_WINDOW_MS = 60 * 60 * 1000;
 export const EMAIL_VERIFICATION_RESEND_LIMIT = 5;
-export const PASSWORD_RESET_TTL_MS = 10 * 60 * 1000;
+const PASSWORD_RESET_TTL_MS = 10 * 60 * 1000;
 export const PASSWORD_RESET_REQUEST_COOLDOWN_MS = 60 * 1000;
 export const PASSWORD_RESET_REQUEST_WINDOW_MS = 60 * 60 * 1000;
 export const PASSWORD_RESET_REQUEST_LIMIT = 5;

@@ -10,7 +10,7 @@ export const MARKETPLACE_PLATFORM_KEYS = [
   "vscode",
 ] as const;
 
-export type MarketplacePlatformKey = typeof MARKETPLACE_PLATFORM_KEYS[number];
+type MarketplacePlatformKey = typeof MARKETPLACE_PLATFORM_KEYS[number];
 
 export const MARKETPLACE_PLATFORM_REGISTRY: Record<MarketplacePlatformKey, { nameEn: string; nameFa: string }> = {
   api: { nameEn: "API", nameFa: "رابط برنامه‌نویسی" },

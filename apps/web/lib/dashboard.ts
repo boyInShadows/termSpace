@@ -4,7 +4,7 @@ import type { CreatorDashboard, CreatorDashboardListing, OwnedCreatorProfile } f
 /** The overview table shows at most this many listings, newest first. */
 export const OVERVIEW_LISTING_LIMIT = 8;
 /** The overview activity feed shows at most this many events. */
-export const OVERVIEW_ACTIVITY_LIMIT = 6;
+const OVERVIEW_ACTIVITY_LIMIT = 6;
 
 export type DashboardHome =
   | { kind: "creator"; profile: OwnedCreatorProfile; dashboard: CreatorDashboard }
@@ -32,7 +32,7 @@ export async function getDashboardHome(signal?: AbortSignal, headers?: HeadersIn
   }
 }
 
-export type ListingTone = "live" | "review" | "attention" | "draft";
+type ListingTone = "live" | "review" | "attention" | "draft";
 
 export function isEditable(state: string) {
   return state === "draft" || state === "changes_requested" || state === "rejected" || state === "published";
@@ -83,7 +83,7 @@ export function activityTone(action: string): ActivityTone {
   return "progress";
 }
 
-export type DashboardActivity = {
+type DashboardActivity = {
   id: string;
   action: string;
   listingId: string;
@@ -116,7 +116,7 @@ export function collectActivity(
     .slice(0, limit);
 }
 
-export type GreetingPeriod = "morning" | "afternoon" | "evening";
+type GreetingPeriod = "morning" | "afternoon" | "evening";
 
 export function greetingPeriod(hour: number): GreetingPeriod {
   if (hour < 12) return "morning";
