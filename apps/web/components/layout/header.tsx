@@ -140,12 +140,13 @@ export function Header() {
         <div
           data-announcement
           className={cn(
-            "overflow-hidden border-b border-border bg-background transition-[height,opacity] duration-200",
+            "overflow-hidden border-b border-border/60 bg-surface/60 backdrop-blur transition-[height,opacity] duration-500",
             isCondensed ? "h-0 opacity-0" : "h-9 opacity-100",
           )}
         >
           <div className="container-page flex h-9 items-center gap-2">
             <p className="flex min-w-0 flex-1 items-center justify-center gap-2 text-center text-xs">
+              <span className="size-1.5 shrink-0 rounded-full bg-accent" />
               <span className="truncate text-muted-foreground">
                 {t.announcement}
               </span>
@@ -165,7 +166,7 @@ export function Header() {
               type="button"
               onClick={() => setDismissed(ANNOUNCEMENT_ID)}
               aria-label={t.homePage.dismissAnnouncement}
-              className="grid size-6 shrink-0 place-items-center rounded-none text-muted-foreground transition-colors hover:text-foreground"
+              className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground transition-colors hover:text-foreground"
             >
               <X size={13} aria-hidden />
             </button>
@@ -173,7 +174,7 @@ export function Header() {
         </div>
       )}
 
-      <div className="relative border-b border-border-strong bg-background">
+      <div className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl">
         <div
           className={cn(
             "container-page grid grid-cols-[1fr_auto] items-center transition-[height] duration-500 md:grid-cols-[1fr_auto_1fr]",

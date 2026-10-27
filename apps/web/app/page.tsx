@@ -13,6 +13,7 @@ import {
 import { Footer } from "@/components/layout/footer";
 import { Hero } from "@/components/hero/hero";
 import { Process } from "@/components/sections/process";
+import { cn } from "@/lib/utils";
 import { CompactProductCard } from "@/components/marketplace/compact-product-card";
 import { SectionNotice } from "@/components/patterns/section-notice";
 import { SectionEmpty } from "@/components/patterns/section-empty";
@@ -56,6 +57,22 @@ const loadHome = cache(
 );
 
 const TRUST_ICONS = [FileCheck2, RefreshCw, ScrollText] as const;
+
+/**
+ * A distinct tint per trust card, so the three scan as three different
+ * guarantees rather than one repeated in three boxes.
+ *
+ * Purple, cyan, green — not the purple/green/amber a straight reading would
+ * suggest. `--warning` is the caution colour and using it to decorate a
+ * reassurance inverts its meaning. `--verified` is under a semantic lock in
+ * styles/tokens.css ("if it is green, it is a trust claim"), and all three of
+ * these are trust claims, so it is within its own rule here.
+ */
+const TRUST_TINTS = [
+  "bg-primary-soft text-primary",
+  "bg-accent-soft text-accent",
+  "bg-verified/15 text-verified",
+];
 
 const SECTION_HEADING =
   "editorial mt-3 text-[clamp(2rem,1.2rem+2.4vw,3.2rem)] leading-[1.05]";
@@ -101,9 +118,13 @@ async function FeaturedGrid({ locale }: { locale: Locale }) {
           }}
         />
       ) : (
-        <div className="grid gap-px bg-border md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3">
           {featured.slice(0, 3).map((product) => (
-            <CompactProductCard key={product.id} product={product} />
+            <div key={product.id} className="ts-reveal">
+              <div className="ts-lift h-full rounded-lg">
+                <CompactProductCard product={product} />
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -157,13 +178,27 @@ export default async function Home() {
         </Hero>
 
         {/* --- how it works (pinned narrative) ------------------------------- */}
-        <Process copy={{ processEyebrow: sections.processEyebrow, processTitle: sections.processTitle, processSteps: sections.processSteps }} />
+        <Process copy={sections} />
 
-        <section className="border-y border-foreground/60 bg-background">
+        {/* --- trust, inverted ----------------------------------------------
+            The one full-bleed dark section on the page. Every other section is
+            a light-on-background grid, and the argument this one makes is the
+            product's central claim, so it gets a different ground to stand on
+            rather than being the fifth identical band in a row. */}
+        <section className="relative isolate overflow-hidden border-y border-border bg-background-deep">
+          <div
+            aria-hidden
+            className="absolute inset-0 -z-10"
+            style={{
+              opacity: "var(--nebula-opacity)",
+              backgroundImage:
+                "radial-gradient(60% 70% at 12% 0%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 70%), radial-gradient(55% 65% at 88% 100%, color-mix(in oklab, var(--spark) 16%, transparent), transparent 72%)",
+            }}
+          />
           <div className="container-page section-y">
             <div className="grid gap-12">
-              <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
-                <span className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+              <div className="ts-reveal mx-auto flex max-w-2xl flex-col items-center text-center">
+                <span className="inline-flex items-center gap-2 rounded-full border border-verified/30 bg-verified/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-verified">
                   <ShieldCheck size={13} />
                   {sections.trustBadge}
                 </span>
@@ -185,15 +220,18 @@ export default async function Home() {
                 </blockquote>
               </div>
 
-              <div className="grid gap-px bg-border md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-3">
                 {sections.trustFacts.map((fact, index) => {
                   const Icon = TRUST_ICONS[index];
                   return (
-                    <div key={fact.title} className="h-full bg-background">
-                      <div className="h-full bg-background p-6">
+                    <div key={fact.title} className="ts-reveal">
+                      <div className="ts-lift h-full rounded-xl border border-border bg-surface/70 p-6 backdrop-blur">
                         <div className="flex flex-col items-center gap-4 text-center">
                           <span
-                            className="grid size-10 shrink-0 place-items-center border border-border text-muted-foreground"
+                            className={cn(
+                              "grid size-10 shrink-0 place-items-center rounded-lg",
+                              TRUST_TINTS[index],
+                            )}
                           >
                             <Icon size={18} />
                           </span>
@@ -215,10 +253,19 @@ export default async function Home() {
 
         {/* --- closing CTA --------------------------------------------------- */}
         <section className="container-page section-y">
-          <div className="h-full bg-background">
-            <div className="border-y border-foreground/60 px-6 py-12 sm:px-12">
+          <div className="ts-reveal">
+            <div className="relative isolate overflow-hidden rounded-2xl border border-border px-6 py-12 sm:px-12">
+              <div
+                aria-hidden
+                className="absolute inset-0 -z-10"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(115deg, color-mix(in oklab, var(--primary) 22%, transparent), color-mix(in oklab, var(--spark) 16%, transparent) 48%, color-mix(in oklab, var(--accent) 14%, transparent))",
+                }}
+              />
               <div className="mx-auto flex max-w-xl flex-col items-center gap-8 text-center">
                 <div>
+                  <p className="eyebrow">{t.inboxEyebrow}</p>
                   <h2 className="editorial mt-3 text-[clamp(1.9rem,1.2rem+2vw,2.9rem)] leading-[1.05]">
                     {t.inboxTitle}
                   </h2>

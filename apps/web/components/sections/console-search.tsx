@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, use, useId, useMemo, useState } from "react";
+import { Suspense, use, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Search, CornerDownLeft, Clock3, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
+import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 import { useStoredString } from "@/lib/hooks/use-stored-string";
 import { formatNumber } from "@/lib/format";
 import type { MarketplaceTypeCount } from "@/lib/types";
@@ -35,7 +36,23 @@ function parseRecent(raw: string | null): string[] {
   }
 }
 
-/** Search by outcome, with optional scope and per-device recent searches. */
+/**
+ * The search bar, treated as the product's command line rather than as a
+ * form field.
+ *
+ * The placeholder types itself through real user intents on a loop. That is
+ * the hook: it teaches you to search by outcome instead of by file format,
+ * which is the whole premise of the catalogue, without a line of instruction
+ * copy. It stops the moment you focus the field, so it never types over
+ * someone who is trying to think — and it is purely decorative to assistive
+ * tech, which reads the field's stable `aria-label` instead of a placeholder
+ * that rewrites itself every 40ms.
+ *
+ * Two placements. `hero` sits in the hero's copy column as the page's primary
+ * action — this is a library, so search is the thing most people came to do,
+ * and it does not belong below the fold. `band` is the wider standalone strip
+ * used anywhere else on the site.
+ */
 export function ConsoleSearch({
   variant = "band",
   types,
@@ -57,13 +74,53 @@ export function ConsoleSearch({
 }) {
   const { t } = useLocale();
   const intents = t.homePage.typedIntents;
+  const [typed, setTyped] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [scope, setScope] = useState<string | null>(null);
   const [storedRecent, setStoredRecent] = useStoredString(RECENT_KEY);
   const recent = useMemo(() => parseRecent(storedRecent), [storedRecent]);
   const [query, setQuery] = useState("");
+  const prefersReducedMotion = useReducedMotion();
+  const timerRef = useRef<number>(0);
   const suggestionsId = useId();
-  const placeholder = t.homePage.searchPrompt;
+
+  useEffect(() => {
+    if (prefersReducedMotion || isFocused) return;
+
+    let phrase = 0;
+    let char = 0;
+    let isDeleting = false;
+
+    const tick = () => {
+      const current = intents[phrase];
+      char += isDeleting ? -1 : 1;
+      setTyped(current.slice(0, char));
+
+      let delay = isDeleting ? 22 : 42;
+
+      if (!isDeleting && char === current.length) {
+        // Hold the finished phrase long enough to actually be read.
+        delay = 2000;
+        isDeleting = true;
+      } else if (isDeleting && char === 0) {
+        isDeleting = false;
+        phrase = (phrase + 1) % intents.length;
+        delay = 320;
+      }
+
+      timerRef.current = window.setTimeout(tick, delay);
+    };
+
+    timerRef.current = window.setTimeout(tick, 700);
+    return () => window.clearTimeout(timerRef.current);
+  }, [prefersReducedMotion, isFocused, intents]);
+
+  // Derived, not synced: while focused or under reduced motion we simply
+  // render the resting prompt instead of writing it into state.
+  const placeholder =
+    prefersReducedMotion || isFocused || typed === null
+      ? t.homePage.searchPrompt
+      : typed;
 
   const isHero = variant === "hero";
 
@@ -90,6 +147,19 @@ export function ConsoleSearch({
         onSubmit={() => remember(query)}
         className={cn("group relative", isHero ? "w-full" : "mx-auto max-w-3xl")}
       >
+        {/* Plasma bloom behind the field. The hero is plain: its field is a
+            ruled box that takes the accent on focus. */}
+        {!isHero && (
+          <div
+            aria-hidden
+            className="absolute -inset-px rounded-xl opacity-0 blur-md transition-opacity duration-500 group-focus-within:opacity-70"
+            style={{
+              background:
+                "linear-gradient(100deg, var(--primary), var(--spark), var(--accent))",
+            }}
+          />
+        )}
+
         {/* The active scope travels with the form, so pressing Enter searches
             inside it and an empty query still lands on that type's listing. */}
         {scope && <input type="hidden" name="type" value={scope} />}
@@ -98,8 +168,8 @@ export function ConsoleSearch({
           className={cn(
             "relative flex items-center transition-colors",
             isHero
-              ? "rounded-none border border-border-strong bg-background pe-1.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/25"
-              : "rounded-none border border-border-strong bg-background focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/25",
+              ? "rounded-full border border-border-strong bg-background pe-1.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/25"
+              : "rounded-xl border border-border-strong bg-surface/90 shadow-soft backdrop-blur focus-within:border-transparent",
           )}
         >
           <Search
@@ -111,6 +181,10 @@ export function ConsoleSearch({
             name="q"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
+            // A stable name for the field. The placeholder rewrites itself
+            // every 40ms, and a screen reader with no explicit label would
+            // fall back to it and re-announce a half-typed sentence on every
+            // keystroke.
             aria-label={t.homePage.searchLabel}
             placeholder={placeholder}
             autoComplete="off"
@@ -123,14 +197,14 @@ export function ConsoleSearch({
             onBlur={() => window.setTimeout(() => setIsFocused(false), 120)}
             className={cn(
               "min-w-0 flex-1 bg-transparent px-4 text-base placeholder:text-muted-foreground focus:outline-none",
-              isHero ? "h-14" : "h-16",
+              isHero ? "h-12" : "h-16",
             )}
           />
           {isHero ? (
             <button
               type="submit"
               aria-label={t.homePage.searchCta}
-              className="grid size-11 shrink-0 place-items-center rounded-none bg-primary text-primary-foreground transition hover:bg-primary-hover"
+              className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition hover:bg-primary-hover"
             >
               <CornerDownLeft size={16} aria-hidden />
             </button>
@@ -163,7 +237,7 @@ export function ConsoleSearch({
                 ? t.homePage.recentSearches
                 : t.homePage.popularSearches
             }
-            className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-xl border border-border bg-surface "
+            className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-xl border border-border bg-surface shadow-lift"
           >
             <li className="eyebrow px-4 pb-1 pt-3">
               {recent.length > 0
@@ -270,7 +344,7 @@ function ScopeChips({
               // as code tokens rather than as things you can press.
               plain
                 ? "inline-flex min-h-8 items-center gap-1 px-1.5 underline underline-offset-4 transition-colors"
-                : "inline-flex min-h-8 items-center gap-1.5 rounded-none border px-3.5 text-xs font-medium transition",
+                : "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3.5 text-xs font-medium transition",
               plain
                 ? isActive
                   ? "font-semibold text-foreground decoration-foreground"

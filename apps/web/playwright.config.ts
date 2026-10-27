@@ -40,6 +40,11 @@ export default defineConfig({
       name: "mobile-chromium",
       use: { ...devices["Pixel 7"], ...channel },
     },
+    {
+      name: "transport",
+      testDir: "./tests/e2e",
+      outputDir: "../../docs/artifacts/playwright-transport",
+    },
   ],
   webServer: [
     {

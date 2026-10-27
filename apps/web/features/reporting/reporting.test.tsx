@@ -5,7 +5,7 @@ import { ApiError } from "@/lib/api";
 const api = vi.hoisted(() => ({ report: vi.fn(), cases: vi.fn(), detail: vi.fn(), reports: vi.fn(), events: vi.fn(), triage: vi.fn() }));
 const session = vi.hoisted(() => ({ identityLoading: false, email: "reader@example.test" as string | null, emailVerified: true, marketplaceRoles: ["moderator"] }));
 const locale = vi.hoisted(() => ({ value: "en" as "en" | "fa" }));
-vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), reportListing: api.report, getReportCases: api.cases, getReportCase: api.detail, getCaseReports: api.reports, getCaseEvents: api.events, triageReportCase: api.triage }));
+vi.mock("./reporting-api", () => ({ reportListing: api.report, getReportCases: api.cases, getReportCase: api.detail, getCaseReports: api.reports, getCaseEvents: api.events, triageReportCase: api.triage }));
 vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => session }));
 vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: locale.value }) }));
 import { ListingReportForm } from "./listing-report-form";
