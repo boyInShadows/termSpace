@@ -12,7 +12,6 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "prisma:push": "prisma db push",
     "seed": "tsx prisma/seed.ts",
     "marketplace:role": "tsx src/scripts/manageMarketplaceRole.ts",
     "publish:scheduled": "tsx src/jobs/publishScheduled.ts",
