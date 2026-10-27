@@ -9,7 +9,7 @@ import type { Locale } from "./i18n";
  *   in Latin digits in every locale, so "v2.4.0 · 12 versions" reads the same
  *   everywhere. Render data inside a `dir="ltr"` element so it never flips.
  */
-export type NumberContext = "prose" | "data";
+type NumberContext = "prose" | "data";
 
 type FormatOptions = Intl.NumberFormatOptions & { context?: NumberContext; compact?: boolean };
 const numberFormats = new Map<string, Intl.NumberFormat>();

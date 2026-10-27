@@ -1,4 +1,4 @@
-export type EmailDeliveryResult =
+type EmailDeliveryResult =
   | { outcome: "sent"; statusCode: number }
   | { outcome: "retry" | "failed"; statusCode?: number; errorCode: string };
 

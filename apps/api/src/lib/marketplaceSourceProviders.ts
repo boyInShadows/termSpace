@@ -137,7 +137,7 @@ export async function verifyProviderCredential(
   return { accountId: String(accountId), accountLogin, statusCode: result.statusCode };
 }
 
-export type SourceResolutionInput = {
+type SourceResolutionInput = {
   sourceKind: MarketplaceSourceKind;
   sourceUrl: string;
   sourceRef: string;
@@ -145,7 +145,7 @@ export type SourceResolutionInput = {
   providerIntegrityDigest: string | null;
 };
 
-export type SourceResolution = {
+type SourceResolution = {
   provider: MarketplaceProvider;
   statusCode: number;
   resolvedSourceRef: string;

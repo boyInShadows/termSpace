@@ -89,7 +89,7 @@ export function TrustStatus({
   );
 }
 
-export type TrustStripLabels = {
+type TrustStripLabels = {
   reviewLabel: string;
   safetyReviewed: string;
   notReviewed: string;

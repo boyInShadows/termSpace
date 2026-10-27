@@ -17,7 +17,7 @@ export class MarketplaceLifecycleError extends Error {
   }
 }
 
-export interface MarketplaceListingLifecycleContext {
+interface MarketplaceListingLifecycleContext {
   state: MarketplaceListingStateValue;
   published: boolean;
   hasApprovedSnapshot: boolean;
@@ -27,7 +27,7 @@ export interface MarketplaceListingLifecycleContext {
   archivedBy: MarketplaceLifecycleActor | "SYSTEM" | null;
 }
 
-export interface MarketplaceListingTransitionResult {
+interface MarketplaceListingTransitionResult {
   state: MarketplaceListingStateValue;
   published: boolean;
   approvedSnapshot: "keep" | "promote-proposed";

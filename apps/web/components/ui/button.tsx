@@ -28,7 +28,7 @@ export const buttonVariants = cva(
     defaultVariants: { variant: "primary", size: "md" },
   },
 );
-export interface ButtonProps
+interface ButtonProps
   extends
     // ComponentProps, not ButtonHTMLAttributes: React 19 passes `ref` as a prop.
     React.ComponentProps<"button">,
