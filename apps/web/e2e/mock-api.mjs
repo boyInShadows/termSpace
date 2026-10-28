@@ -164,6 +164,14 @@ async function handle(request, response) {
     return send(response, 204, undefined, { "Set-Cookie": `${COOKIE}=; Path=/; Max-Age=0` });
   }
 
+  // The emailed link is the proof, so confirming works without a session.
+  if (route === "POST /api/readers/profile/email/confirm") {
+    const { token } = await readJson(request);
+    if (String(token).startsWith("taken")) return send(response, 409, error("EMAIL_UNAVAILABLE", "That email address is already in use"));
+    if (!String(token).startsWith("valid")) return send(response, 400, error("INVALID_OR_EXPIRED_EMAIL_CHANGE", "This confirmation link is invalid or has expired"));
+    return send(response, 200, { data: { changed: true } });
+  }
+
   // Like the real API: asking who is signed in is not an error when nobody is.
   if (route === "GET /api/readers/session" && !persona) return send(response, 200, { data: { authenticated: false } });
   if (!persona) return send(response, 401, error("UNAUTHENTICATED", "Sign in to continue"));
@@ -184,6 +192,12 @@ async function handle(request, response) {
   if (route === "GET /api/readers/profile") return send(response, 200, {
     data: { email: PERSONAS[persona].email, createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false, emailVerified: true },
   });
+  if (route === "POST /api/readers/profile/email") {
+    const body = await readJson(request);
+    if (body.currentPassword !== "correct-password") return send(response, 401, error("INVALID_CURRENT_PASSWORD", "Current password is incorrect"));
+    return send(response, 202, { data: { accepted: true } });
+  }
+  if (route === "POST /api/readers/sessions/revoke-others") return send(response, 200, { data: { revoked: 1 } });
   if (route === "GET /api/readers/profile/export") {
     return send(response, 200, { data: { account: { email: PERSONAS[persona].email }, favorites: [], acquisitions: [], reviews: [] } }, { "Content-Disposition": 'attachment; filename="termspace-account-export.json"' });
   }

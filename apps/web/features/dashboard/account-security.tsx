@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { ApiError, changeReaderPassword, getReaderProfile } from "@/lib/api";
+import { revokeOtherSessions } from "@/lib/account-api";
 import type { ReaderProfile } from "@/lib/types";
 import { useLocale } from "@/lib/locale-context";
 import { intlLocale } from "@/lib/format";
@@ -20,6 +21,8 @@ export function AccountSecurity({ onProfileState }: { onProfileState?: (state: P
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [signingOutOthers, setSigningOutOthers] = useState(false);
+  const [othersResult, setOthersResult] = useState<{ text: string; failed: boolean } | null>(null);
 
   useEffect(() => { onProfileState?.(state); }, [state, onProfileState]);
 
@@ -60,6 +63,20 @@ export function AccountSecurity({ onProfileState }: { onProfileState?: (state: P
     } finally { setBusy(false); }
   }
 
+  async function signOutOthers() {
+    setSigningOutOthers(true);
+    setOthersResult(null);
+    try {
+      const { revoked } = await revokeOtherSessions();
+      setOthersResult({ text: revoked > 0 ? copy.othersSignedOut : copy.noOtherSessions, failed: false });
+    } catch (cause) {
+      setOthersResult({
+        text: !(cause instanceof ApiError) ? copy.requestOffline : cause.status === 429 ? copy.rateLimited : cause.status >= 500 ? t.serviceError : copy.signOutOthersFailed,
+        failed: true,
+      });
+    } finally { setSigningOutOthers(false); }
+  }
+
   return <section className="border border-border bg-surface p-5 [&_input]:scroll-mt-32 [&_button]:scroll-mt-32 [&_input]:scroll-mb-[calc(6rem+env(safe-area-inset-bottom))] [&_button]:scroll-mb-[calc(6rem+env(safe-area-inset-bottom))]" aria-labelledby="account-security-title">
     <h2 id="account-security-title" className="text-xl font-semibold">{copy.title}</h2>
     {state.status === "loading" ? <p role="status" className="mt-4 text-sm text-muted-foreground">{copy.loading}</p>
@@ -82,6 +99,11 @@ export function AccountSecurity({ onProfileState }: { onProfileState?: (state: P
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           {saved && <p role="status" className="text-sm text-foreground">{copy.saved}</p>}
         </form> : <p className="mt-5 text-sm text-muted-foreground">{copy.noPasswordIntro}</p>}
+        <div className="mt-6 border-t border-border pt-5">
+          <p id="sign-out-others-help" className="max-w-prose text-sm text-muted-foreground">{copy.signOutOthersHelp}</p>
+          <Button className="mt-3" variant="secondary" disabled={signingOutOthers} aria-describedby="sign-out-others-help" onClick={() => void signOutOthers()}>{signingOutOthers ? copy.signingOutOthers : copy.signOutOthers}</Button>
+          {othersResult && <p role={othersResult.failed ? "alert" : "status"} className={`mt-3 text-sm ${othersResult.failed ? "text-destructive" : "text-foreground"}`}>{othersResult.text}</p>}
+        </div>
       </>}
   </section>;
 }

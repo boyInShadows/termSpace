@@ -7,8 +7,9 @@ import { ApiError } from "@/lib/api";
 import { AccountSecurity } from "./account-security";
 import { accountSecurityCopy } from "./account-security-copy";
 
-const mocks = vi.hoisted(() => ({ profile: vi.fn(), change: vi.fn() }));
+const mocks = vi.hoisted(() => ({ profile: vi.fn(), change: vi.fn(), revoke: vi.fn() }));
 vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), getReaderProfile: mocks.profile, changeReaderPassword: mocks.change }));
+vi.mock("@/lib/account-api", () => ({ revokeOtherSessions: mocks.revoke }));
 const profile = { email: "reader@e2e.test", createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false, emailVerified: true };
 
 function fill(current = "fixture-current", next = "fixture-next-password", confirm = next) {
@@ -94,5 +95,55 @@ describe("account security", () => {
     expect(screen.getByLabelText(accountSecurityCopy.en.currentPassword)).toHaveValue("");
     expect(screen.getByLabelText(copy.en.confirmPassword)).toHaveValue("");
     expect(screen.getByRole("status")).toHaveTextContent(accountSecurityCopy.en.saved);
+  });
+});
+
+describe("sign out other devices", () => {
+  const text = accountSecurityCopy.en;
+  beforeEach(() => { vi.clearAllMocks(); mocks.profile.mockResolvedValue(profile); });
+  const open = async () => {
+    render(<LocaleProvider locale="en" messages={copy.en}><AccountSecurity /></LocaleProvider>);
+    return screen.findByRole("button", { name: text.signOutOthers });
+  };
+
+  it("explains that this device stays signed in and reports how it went", async () => {
+    mocks.revoke.mockResolvedValue({ revoked: 2 });
+    const button = await open();
+    expect(button).toHaveAccessibleDescription(text.signOutOthersHelp);
+    fireEvent.click(button);
+    expect(await screen.findByRole("status")).toHaveTextContent(text.othersSignedOut);
+  });
+
+  it("says so when no other device was signed in", async () => {
+    mocks.revoke.mockResolvedValue({ revoked: 0 });
+    fireEvent.click(await open());
+    expect(await screen.findByRole("status")).toHaveTextContent(text.noOtherSessions);
+  });
+
+  it("is available to a Google-only account", async () => {
+    mocks.profile.mockResolvedValue({ ...profile, hasPassword: false, connectedGoogle: true });
+    expect(await open()).toBeEnabled();
+  });
+
+  it("ignores a second click while the request is pending", async () => {
+    let finish!: (value: { revoked: number }) => void;
+    mocks.revoke.mockReturnValue(new Promise((resolve) => { finish = resolve; }));
+    const button = await open();
+    fireEvent.click(button);
+    expect(await screen.findByRole("button", { name: text.signingOutOthers })).toBeDisabled();
+    expect(mocks.revoke).toHaveBeenCalledOnce();
+    await act(async () => { finish({ revoked: 1 }); });
+    expect(await screen.findByRole("button", { name: text.signOutOthers })).toBeEnabled();
+  });
+
+  it.each([
+    ["an unreachable server", new TypeError("Failed to fetch"), text.requestOffline],
+    ["a rate limit", new ApiError(429, "RATE_LIMITED", "slow"), text.rateLimited],
+    ["a server failure", new ApiError(503, "API_ERROR", "down"), copy.en.serviceError],
+    ["another rejection", new ApiError(403, "FORBIDDEN", "no"), text.signOutOthersFailed],
+  ])("names the cause of %s", async (_name, failure, message) => {
+    mocks.revoke.mockRejectedValue(failure);
+    fireEvent.click(await open());
+    expect(await screen.findByRole("alert")).toHaveTextContent(message);
   });
 });

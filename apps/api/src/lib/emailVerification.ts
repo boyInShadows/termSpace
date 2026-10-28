@@ -89,6 +89,39 @@ export function newVerificationData(now = new Date()) {
   };
 }
 
+type EmailChangeFields = VerificationFields & { newEmail: string };
+
+// The signature covers the new address, so a link cannot be reused for a different one.
+function emailChangeSignature(fields: EmailChangeFields): Buffer {
+  return createHmac("sha256", verificationSecret())
+    .update(`email-change.${fields.id}.${fields.userId}.${fields.newEmail}.${fields.expiresAt.getTime()}`)
+    .digest();
+}
+
+export function createEmailChangeToken(fields: EmailChangeFields): string {
+  return `${fields.id}.${emailChangeSignature(fields).toString("base64url")}`;
+}
+
+export function verifyEmailChangeToken(token: string, fields: EmailChangeFields): boolean {
+  const separator = token.indexOf(".");
+  if (separator < 1 || token.slice(0, separator) !== fields.id) return false;
+  try {
+    const supplied = Buffer.from(token.slice(separator + 1), "base64url");
+    const expected = emailChangeSignature(fields);
+    return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+  } catch {
+    return false;
+  }
+}
+
+export function newEmailChangeData(newEmail: string, now = new Date()) {
+  return {
+    newEmail,
+    expiresAt: new Date(now.getTime() + EMAIL_VERIFICATION_TTL_MS),
+    outbox: { create: { correlationId: randomUUID() } },
+  };
+}
+
 export function createPasswordResetCode(fields: VerificationFields): string {
   return String(passwordResetDigest(fields).readUInt32BE(0) % 1_000_000).padStart(6, "0");
 }
@@ -105,14 +138,17 @@ export function newPasswordResetData(now = new Date()) {
   };
 }
 
-export function verificationUrl(token: string): string {
+function accountLink(pathname: string, token: string): string {
   const configured = process.env.WEB_PUBLIC_URL ?? "http://localhost:3000";
   const base = new URL(configured);
   if (process.env.NODE_ENV === "production" && base.protocol !== "https:") {
     throw new Error("WEB_PUBLIC_URL must use HTTPS in production");
   }
-  base.pathname = "/account/verify-email";
+  base.pathname = pathname;
   base.search = "";
   base.hash = `token=${encodeURIComponent(token)}`;
   return base.toString();
 }
+
+export const verificationUrl = (token: string) => accountLink("/account/verify-email", token);
+export const emailChangeUrl = (token: string) => accountLink("/account/confirm-email", token);

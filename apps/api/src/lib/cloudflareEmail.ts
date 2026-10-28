@@ -14,6 +14,20 @@ type SendPasswordResetEmailInput = {
   correlationId: string;
 };
 
+type SendEmailChangeEmailInput = {
+  to: string;
+  confirmationUrl: string;
+  correlationId: string;
+};
+
+type SendEmailChangedNoticeInput = {
+  to: string;
+  newEmail: string;
+  correlationId: string;
+};
+
+const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
+
 type FetchLike = typeof fetch;
 type CloudflareEmailResponse = { result?: { delivered?: unknown[]; queued?: unknown[]; permanent_bounces?: unknown[] } };
 
@@ -53,6 +67,32 @@ export async function sendPasswordResetEmail(
     subject: "Reset your TermSpace password",
     text: `Your TermSpace password reset code is ${input.code}. It expires in 10 minutes.\n\nIf you did not request this code, you can ignore this message.`,
     html: `<p>Your TermSpace password reset code is:</p><p style="font-size:24px;font-weight:700;letter-spacing:0.2em">${input.code}</p><p>It expires in 10 minutes. If you did not request this code, you can ignore this message.</p>`,
+  }, fetchImpl);
+}
+
+export async function sendEmailChangeEmail(
+  input: SendEmailChangeEmailInput,
+  fetchImpl: FetchLike = fetch,
+): Promise<EmailDeliveryResult> {
+  return sendTransactionalEmail({
+    to: input.to,
+    correlationId: input.correlationId,
+    subject: "Confirm your new TermSpace email",
+    text: `Confirm this address to use it for your TermSpace account. This link expires in 30 minutes:\n\n${input.confirmationUrl}\n\nIf you did not ask to change your email, you can ignore this message and nothing will change.`,
+    html: `<p>Confirm this address to use it for your TermSpace account.</p><p><a href="${input.confirmationUrl}">Confirm new email</a></p><p>This link expires in 30 minutes. If you did not ask to change your email, you can ignore this message and nothing will change.</p>`,
+  }, fetchImpl);
+}
+
+export async function sendEmailChangedNotice(
+  input: SendEmailChangedNoticeInput,
+  fetchImpl: FetchLike = fetch,
+): Promise<EmailDeliveryResult> {
+  return sendTransactionalEmail({
+    to: input.to,
+    correlationId: input.correlationId,
+    subject: "Your TermSpace email was changed",
+    text: `The email address on your TermSpace account was changed to ${input.newEmail}. You were signed out everywhere.\n\nIf this was not you, reset your password right away and contact us.`,
+    html: `<p>The email address on your TermSpace account was changed to <strong>${escapeHtml(input.newEmail)}</strong>. You were signed out everywhere.</p><p>If this was not you, reset your password right away and contact us.</p>`,
   }, fetchImpl);
 }
 

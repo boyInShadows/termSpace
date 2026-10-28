@@ -139,6 +139,11 @@ export const readerAccountDeleteSchema = z.object({
   credential: z.string().min(1).max(4096).optional(),
 });
 
+export const readerEmailChangeSchema = z.object({
+  newEmail: z.string().trim().toLowerCase().email("Enter a valid email address").max(320),
+  currentPassword: z.string().min(1).max(128),
+});
+
 export const readerPasswordResetRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address").max(320),
 });

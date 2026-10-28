@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { sendPasswordResetEmail, sendVerificationEmail } from "./cloudflareEmail.js";
+import { sendEmailChangeEmail, sendEmailChangedNotice, sendPasswordResetEmail, sendVerificationEmail } from "./cloudflareEmail.js";
 
 describe("Cloudflare transactional email", () => {
   beforeEach(() => {
@@ -52,5 +52,19 @@ describe("Cloudflare transactional email", () => {
   it("fails permanent bounces without retrying", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ result: { permanent_bounces: ["reader@example.com"] } }), { status: 200 }));
     await expect(sendVerificationEmail({ to: "reader@example.com", verificationUrl: "https://example.com/#token=x", correlationId: "bounce" }, fetchMock)).resolves.toEqual({ outcome: "failed", statusCode: 200, errorCode: "PERMANENT_BOUNCE" });
+  });
+
+  it("mails the confirmation link to the new address and escapes it in the old address's notice", async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => new Response(JSON.stringify({ result: { queued: ["x"] } }), { status: 200 }));
+    await sendEmailChangeEmail({ to: "new@example.com", confirmationUrl: "https://termspace.example/account/confirm-email#token=secret", correlationId: "change-1" }, fetchMock);
+    const confirmation = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
+    expect(confirmation).toMatchObject({ to: "new@example.com", subject: "Confirm your new TermSpace email" });
+    expect(confirmation.text).toContain("account/confirm-email#token=secret");
+
+    await sendEmailChangedNotice({ to: "old@example.com", newEmail: "a<b>@example.com", correlationId: "change-2" }, fetchMock);
+    const notice = JSON.parse(String((fetchMock.mock.calls[1][1] as RequestInit).body));
+    expect(notice).toMatchObject({ to: "old@example.com", subject: "Your TermSpace email was changed" });
+    expect(notice.html).toContain("a&lt;b&gt;@example.com");
+    expect(notice.html).not.toContain("a<b>");
   });
 });

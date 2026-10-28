@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { pathToFileURL } from "node:url";
 import { Prisma, type TransactionalEmailStatus } from "@prisma/client";
-import { emailConfig, sendPasswordResetEmail, sendVerificationEmail } from "../lib/cloudflareEmail.js";
-import { createEmailVerificationToken, createPasswordResetCode, verificationSecret, verificationUrl } from "../lib/emailVerification.js";
+import { emailConfig, sendEmailChangeEmail, sendEmailChangedNotice, sendPasswordResetEmail, sendVerificationEmail } from "../lib/cloudflareEmail.js";
+import { createEmailChangeToken, createEmailVerificationToken, createPasswordResetCode, emailChangeUrl, verificationSecret, verificationUrl } from "../lib/emailVerification.js";
 import { prisma } from "../lib/prisma.js";
 
 const MAX_ATTEMPTS = 5;
@@ -12,6 +12,8 @@ type ClaimedEmail = {
   id: string;
   verificationId: string | null;
   passwordResetId: string | null;
+  emailChangeId: string | null;
+  emailChangeNoticeId: string | null;
   correlationId: string;
   attempts: number;
 };
@@ -34,7 +36,7 @@ export async function claimTransactionalEmails(limit = 10): Promise<ClaimedEmail
     SET "status" = 'PROCESSING', "lockedAt" = NOW(), "attempts" = outbox."attempts" + 1, "updatedAt" = NOW()
     FROM candidates
     WHERE outbox."id" = candidates."id"
-    RETURNING outbox."id", outbox."verificationId", outbox."passwordResetId", outbox."correlationId", outbox."attempts"
+    RETURNING outbox."id", outbox."verificationId", outbox."passwordResetId", outbox."emailChangeId", outbox."emailChangeNoticeId", outbox."correlationId", outbox."attempts"
   `);
 }
 
@@ -74,6 +76,30 @@ export async function processTransactionalEmailBatch(limit = Number(process.env.
         code: createPasswordResetCode(reset),
         correlationId: job.correlationId,
       });
+    } else if (job.emailChangeId) {
+      const change = await prisma.readerEmailChange.findUnique({
+        where: { id: job.emailChangeId },
+        select: { id: true, userId: true, newEmail: true, expiresAt: true, consumedAt: true },
+      });
+      if (!change || change.consumedAt || change.expiresAt <= new Date()) {
+        await prisma.transactionalEmailOutbox.update({ where: { id: job.id }, data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "EMAIL_CHANGE_INACTIVE" } });
+        continue;
+      }
+      result = await sendEmailChangeEmail({
+        to: change.newEmail,
+        confirmationUrl: emailChangeUrl(createEmailChangeToken(change)),
+        correlationId: job.correlationId,
+      });
+    } else if (job.emailChangeNoticeId) {
+      const change = await prisma.readerEmailChange.findUnique({
+        where: { id: job.emailChangeNoticeId },
+        select: { newEmail: true, previousEmail: true, consumedAt: true },
+      });
+      if (!change?.consumedAt || !change.previousEmail) {
+        await prisma.transactionalEmailOutbox.update({ where: { id: job.id }, data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "EMAIL_CHANGE_NOTICE_INACTIVE" } });
+        continue;
+      }
+      result = await sendEmailChangedNotice({ to: change.previousEmail, newEmail: change.newEmail, correlationId: job.correlationId });
     } else {
       await prisma.transactionalEmailOutbox.update({ where: { id: job.id }, data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "INVALID_TARGET" } });
       continue;

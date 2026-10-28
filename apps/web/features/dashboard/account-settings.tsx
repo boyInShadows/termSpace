@@ -12,6 +12,7 @@ import { ProviderConnections } from "@/features/creator/provider-connections";
 import { AccountSecurity, type ProfileState } from "./account-security";
 import { accountSecurityCopy } from "./account-security-copy";
 import { AccountData } from "./account-data";
+import { AccountEmail } from "./account-email";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -94,6 +95,8 @@ export function AccountSettings() {
       </section>
 
       <AccountSecurity onProfileState={setReaderProfile} />
+
+      <AccountEmail profile={readerProfile} />
 
       {profile && session.marketplaceRoles.includes("creator") && <ProviderConnections />}
 

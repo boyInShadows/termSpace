@@ -79,4 +79,15 @@ for (const locale of ["en", "fa"] as const) {
     await expect(page.getByLabel(text.currentPassword)).toBeVisible();
     expect(calls).toBe(3);
   });
+
+  test(`signs out other devices and reports failures without leaving the page (${locale})`, async ({ page }) => {
+    await page.goto(path);
+    const button = page.getByRole("button", { name: text.signOutOthers });
+    await button.click();
+    await expect(page.getByText(text.othersSignedOut)).toBeVisible();
+    await page.route("**/api/readers/sessions/revoke-others", (route) => route.fulfill({ status: 429, json: { error: { code: "RATE_LIMITED", message: "fixture" } } }));
+    await button.click();
+    await expect(page.getByRole("alert").filter({ hasText: text.rateLimited })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
 }

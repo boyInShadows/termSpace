@@ -32,6 +32,14 @@ async function googleSubject(credential: unknown) {
   }
 }
 
+/** Ends every other signed-in session of the caller; the session making this request stays. */
+export async function revokeOtherReaderSessions(_req: Request, res: Response) {
+  const { count } = await prisma.readerSession.deleteMany({
+    where: { userId: res.locals.reader.id as string, id: { not: res.locals.readerSessionId as string } },
+  });
+  res.json({ data: { revoked: count } });
+}
+
 /**
  * Everything the reader owns, as a download. Secrets (password hash, session
  * tokens, provider credentials, the Google subject) are never selected.

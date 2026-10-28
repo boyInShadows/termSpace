@@ -83,9 +83,11 @@ export const adminLoginRateLimit = authRateLimit("admin-login");
 export const registerRateLimit = authRateLimit("register");
 export const googleSignInRateLimit = authRateLimit("google");
 export const passwordChangeRateLimit = authRateLimit("password-change");
+export const sessionRevokeRateLimit = authRateLimit("session-revoke");
+export const emailChangeRequestRateLimit = authRateLimit("email-change");
 export const accountExportRateLimit = authRateLimit("account-export");
 export const accountDeleteRateLimit = authRateLimit("account-delete");
-export const authRateLimiters = [loginRateLimit, adminLoginRateLimit, registerRateLimit, googleSignInRateLimit, passwordChangeRateLimit, accountExportRateLimit, accountDeleteRateLimit];
+export const authRateLimiters = [loginRateLimit, adminLoginRateLimit, registerRateLimit, googleSignInRateLimit, passwordChangeRateLimit, sessionRevokeRateLimit, emailChangeRequestRateLimit, accountExportRateLimit, accountDeleteRateLimit];
 
 /**
  * Text search runs LIKE/full-text scans, so it gets a tighter budget than plain browsing.

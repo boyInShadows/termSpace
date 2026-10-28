@@ -4,6 +4,74 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-28
 
+- **Full gate for sign out other devices and change email.** Full web E2E
+  (with the Docker stack running, so slow): 437 passed, 46 skipped, 36 failed.
+  Rerun of the failing specs with two workers left 5: `reporting` and
+  `context-help` (known load-sensitive, pass alone earlier) and two real
+  failures in `budget.spec.ts`: the product page's first-load JS was 165.1 kB
+  against the 165 kB budget (164.9 kB before this batch). The three new
+  account calls added to the shared `lib/api.ts` caused it, so they moved to
+  `lib/account-api.ts`, which only the dashboard components import; the budget
+  is unchanged (it ratchets down, never up). After that, budget, email-change,
+  account-security and account-data E2E: 58 passed. Root typecheck, 294 API
+  tests, 446 web tests, lint (two existing warnings) and build pass.
+
+- **Change email (launch-readiness item 1 after sign out other devices).**
+  A signed-in password account asks to change its address with
+  `POST /api/readers/profile/email` (new address plus current password,
+  rate limited, one request a minute and five an hour per account). A signed
+  confirmation link goes to the new address; nothing changes until it is
+  opened. `POST /api/readers/profile/email/confirm` (token only, so it works
+  from any browser) makes the new address the verified sign-in email, ends
+  every session and mails the old address a notice. The token signature covers
+  the new address; a newer request or a used link invalidates older ones; an
+  address taken in the meantime returns `EMAIL_UNAVAILABLE`; an address that is
+  already taken at request time looks identical to an accepted one and sends
+  nothing. Google-only accounts are refused (`EMAIL_CHANGE_REQUIRES_PASSWORD`)
+  because Google vouches for their address. New migration
+  `202610280002_reader_email_change` (table, outbox columns, widened
+  `exactly_one_target` check); the mail worker and Cloudflare sender gained the
+  confirmation and notice emails. Web: an "Email address" section in Settings
+  (shares the one profile request), a `/account/confirm-email` page that reads
+  the token from the URL fragment and strips it, English and Persian copy in
+  `features/account/email-change-copy.ts` (Persian needs maintainer approval).
+  Shared surfaces: `schema.prisma`, the migration, `lib/api.ts`, `pending.md`,
+  `changelog.md`.
+  - Verification: root typecheck; 6 new API integration tests on the scratch
+    database (rejections, no enumeration, full flow with worker-sent mail and
+    notice, tampered/used/superseded links, taken-in-the-meantime, cooldown)
+    and a mailer test; 36 new web unit tests and 20 new E2E tests. The
+    migration was diffed against `schema.prisma` with no drift. Not run: the
+    full suites, lint and build for this item; no real mail was sent (the
+    worker was exercised against a mocked provider). Local dev note: there is
+    no local-verification bypass for email change, so it needs a configured
+    mail provider to confirm. Removed from `pending.md` and renumbered.
+  - Also set `fileParallelism: false` in `apps/api/vitest.config.ts`: the new
+    tests send mail through the worker, which drains one global outbox, and
+    that made `readerFlow.integration.test.ts` fail intermittently when the
+    files ran side by side. Whole API suite with integration tests, run twice:
+    294 passed, about 39 s. Web: 446 tests, lint (two existing warnings) and
+    production build pass.
+
+- **Sign out other devices (launch-readiness item 1 after the account
+  deletion phase).** Added `POST /api/readers/sessions/revoke-others`
+  (authenticated, rate limited), which deletes every other session of the
+  caller and keeps the current one; it returns the number revoked. Account
+  security gets a "Sign out other devices" button for every account type, with
+  a help line that this device stays signed in, a result message (signed out,
+  or none were signed in) and a specific message per failure (unreachable,
+  rate limit, server, other); English and Persian copy added to
+  `account-security-copy.ts` (Persian needs maintainer approval). Checked that
+  password change and password reset already end other sessions, so no change
+  was needed there. Removed the deferred blog-data item and this item from
+  `pending.md` at the owner's request and renumbered the rest.
+  - Verification: root typecheck; API integration suite 6 of 6 on the scratch
+    database (new test: other sessions end, the caller's and another
+    account's survive, second call revokes 0); 8 new web unit tests; E2E for
+    account-security and account-data 32 passed. Not run: full web tests, lint,
+    build and the full E2E for this item. Shared surfaces: `lib/api.ts`,
+    `pending.md`, `changelog.md`.
+
 - **Reader account export and deletion (launch-readiness item 1, approved plan
   in `plan.md`).** Added `GET /api/readers/profile/export` (owner-scoped JSON
   download, no secrets) and `DELETE /api/readers/profile`, which anonymizes

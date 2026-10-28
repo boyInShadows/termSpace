@@ -34,8 +34,15 @@ describe.skipIf(!databaseUrl)("reader account export and deletion on a real data
     return { id: user.id, email, cookie };
   }
 
+  async function extraSession(userId: string) {
+    const token = randomBytes(32).toString("base64url");
+    await prisma.readerSession.create({ data: { userId, tokenHash: auth.hashSessionToken(token), expiresAt: new Date(Date.now() + 3_600_000) } });
+    return `${auth.READER_SESSION_COOKIE}=${token}`;
+  }
+
   const asReader = (cookie: string) => ({
     get: (path: string) => request(app).get(path).set("Cookie", cookie).set("Origin", origin),
+    post: (path: string) => request(app).post(path).set("Cookie", cookie).set("Origin", origin),
     delete: (path: string, body: object = {}) => request(app).delete(path).set("Cookie", cookie).set("Origin", origin).send(body),
   });
 
@@ -94,6 +101,23 @@ describe.skipIf(!databaseUrl)("reader account export and deletion on a real data
       await prisma.$disconnect();
     }
     vi.unstubAllEnvs();
+  });
+
+  it("signs out every other session but keeps the caller's and other accounts' sessions", async () => {
+    const owner = await reader("revoke-owner");
+    const bystander = await reader("revoke-bystander");
+    const [phone, laptop] = [await extraSession(owner.id), await extraSession(owner.id)];
+
+    expect((await request(app).post("/api/readers/sessions/revoke-others").set("Origin", origin)).status).toBe(401);
+    const revoked = await asReader(owner.cookie).post("/api/readers/sessions/revoke-others");
+    expect(revoked.status).toBe(200);
+    expect(revoked.body).toEqual({ data: { revoked: 2 } });
+
+    expect((await asReader(owner.cookie).get("/api/readers/profile")).status).toBe(200);
+    expect((await asReader(phone).get("/api/readers/profile")).status).toBe(401);
+    expect((await asReader(laptop).get("/api/readers/profile")).status).toBe(401);
+    expect((await asReader(bystander.cookie).get("/api/readers/profile")).status).toBe(200);
+    expect((await asReader(owner.cookie).post("/api/readers/sessions/revoke-others")).body).toEqual({ data: { revoked: 0 } });
   });
 
   it("exports only the caller's own data and never a secret", async () => {

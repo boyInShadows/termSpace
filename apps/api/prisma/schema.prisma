@@ -265,6 +265,7 @@ model ReaderUser {
   marketplaceRoleEvents  MarketplaceRoleEvent[]
   emailVerifications     ReaderEmailVerification[]
   passwordResets         ReaderPasswordReset[]
+  emailChanges           ReaderEmailChange[]
   marketplaceCreator     MarketplaceCreator?                @relation("OwnedCreator")
   listingLifecycleEvents MarketplaceListingLifecycleEvent[]
   communityRequests      MarketplaceCommunityPlacementRequest[]
@@ -298,6 +299,23 @@ model ReaderEmailVerification {
   @@index([expiresAt, consumedAt])
 }
 
+model ReaderEmailChange {
+  id            String                    @id @default(cuid())
+  userId        String
+  newEmail      String
+  // Filled in when the change is confirmed, so the old address can be told.
+  previousEmail String?
+  expiresAt     DateTime
+  consumedAt    DateTime?
+  createdAt     DateTime                  @default(now())
+  user          ReaderUser                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outbox        TransactionalEmailOutbox? @relation("EmailChangeConfirmation")
+  noticeOutbox  TransactionalEmailOutbox? @relation("EmailChangeNotice")
+
+  @@index([userId, createdAt])
+  @@index([expiresAt, consumedAt])
+}
+
 model ReaderPasswordReset {
   id             String                    @id @default(cuid())
   userId         String
@@ -316,6 +334,8 @@ model TransactionalEmailOutbox {
   id             String                   @id @default(cuid())
   verificationId String?                  @unique
   passwordResetId String?                 @unique
+  emailChangeId  String?                  @unique
+  emailChangeNoticeId String?             @unique
   correlationId  String                   @unique
   status         TransactionalEmailStatus @default(PENDING)
   attempts       Int                      @default(0)
@@ -328,6 +348,8 @@ model TransactionalEmailOutbox {
   updatedAt      DateTime                 @updatedAt
   verification   ReaderEmailVerification? @relation(fields: [verificationId], references: [id], onDelete: Cascade)
   passwordReset  ReaderPasswordReset?     @relation(fields: [passwordResetId], references: [id], onDelete: Cascade)
+  emailChange    ReaderEmailChange?       @relation("EmailChangeConfirmation", fields: [emailChangeId], references: [id], onDelete: Cascade)
+  emailChangeNotice ReaderEmailChange?    @relation("EmailChangeNotice", fields: [emailChangeNoticeId], references: [id], onDelete: Cascade)
 
   @@index([status, nextAttemptAt])
   @@index([lockedAt])
