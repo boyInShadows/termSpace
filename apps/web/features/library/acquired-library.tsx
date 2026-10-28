@@ -10,7 +10,7 @@ import { intlLocale } from "@/lib/format";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { libraryCopy } from "./library-copy";
 
-export function AcquiredLibrary({ embedded = false }: { embedded?: boolean }) {
+export function AcquiredLibrary() {
   const { locale } = useLocale();
   const copy = libraryCopy[locale];
   const router = useRouter();
@@ -25,7 +25,6 @@ export function AcquiredLibrary({ embedded = false }: { embedded?: boolean }) {
   const loading = loadedPage !== page;
   const number = new Intl.NumberFormat(intlLocale(locale));
   const date = new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" });
-  const Title = embedded ? "h2" : "h1";
 
   const changePage = useCallback((next: number, replace = false) => {
     const params = new URLSearchParams(query);
@@ -54,7 +53,7 @@ export function AcquiredLibrary({ embedded = false }: { embedded?: boolean }) {
   }
 
   return <section aria-labelledby="library-title" aria-busy={loading} className="[&_a]:scroll-mt-32 [&_button]:scroll-mt-32 [&_a]:scroll-mb-[calc(6rem+env(safe-area-inset-bottom))] [&_button]:scroll-mb-[calc(6rem+env(safe-area-inset-bottom))]">
-    <Title id="library-title" className="text-2xl font-semibold sm:text-3xl">{copy.title}</Title>
+    <h1 id="library-title" className="text-2xl font-semibold sm:text-3xl">{copy.title}</h1>
     <p className="mt-3 max-w-prose text-muted-foreground">{copy.intro}</p>
     {loading && <p className="mt-6 text-sm text-muted-foreground" role="status">{copy.loading}</p>}
     {!loading && error && <div className="mt-6 border-y py-5"><p className="text-sm text-destructive" role="alert">{copy.error}</p><Button className="mt-4" variant="secondary" onClick={retry}>{copy.retry}</Button></div>}

@@ -17,6 +17,7 @@ export const accountSecurityCopy = {
     saved: "Password changed. Your other sessions have been signed out.",
     invalidCurrent: "Your current password is incorrect. Please try again.",
     rateLimited: "Too many attempts. Please wait before trying again.",
+    signOutOffline: "Could not reach TermSpace, so you are still signed in. Check your connection and try again.",
   },
   fa: {
     title: "امنیت حساب",
@@ -35,5 +36,6 @@ export const accountSecurityCopy = {
     saved: "رمز عبور تغییر کرد. نشست‌های دیگر شما خارج شدند.",
     invalidCurrent: "رمز عبور فعلی نادرست است. لطفاً دوباره تلاش کنید.",
     rateLimited: "تعداد تلاش‌ها بیش از حد مجاز است. لطفاً کمی بعد دوباره تلاش کنید.",
+    signOutOffline: "ارتباط با سرور برقرار نشد و همچنان وارد حساب هستید. اتصال اینترنت خود را بررسی کنید و دوباره تلاش کنید.",
   },
 } as const;

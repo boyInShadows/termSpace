@@ -1,7 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const getMarketplaceLibrary = vi.hoisted(() => vi.fn());
 const requestPasswordReset = vi.hoisted(() => vi.fn());
 const confirmPasswordReset = vi.hoisted(() => vi.fn());
 const login = vi.hoisted(() => vi.fn());
@@ -15,7 +14,6 @@ const router = vi.hoisted(() => ({ replace, refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => router, usePathname: () => "/account", useSearchParams: () => new URLSearchParams({ next: params.next }) }));
 vi.mock("@/lib/api", async (importOriginal) => ({
   ...await importOriginal<typeof import("@/lib/api")>(),
-  getMarketplaceLibrary,
   requestPasswordReset,
   confirmPasswordReset,
   login,
@@ -37,34 +35,24 @@ vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: "en", t: {
 
 const { AccountForm } = await import("./account-form");
 
-describe("marketplace account library", () => {
+describe("signed-in account", () => {
   afterEach(cleanup);
   beforeEach(() => {
     vi.clearAllMocks();
     session.email = "reader@example.com";
     session.emailVerified = true;
-    getMarketplaceLibrary.mockResolvedValue({
-      data: [{
-        acquisitionId: "order-1", acquiredAt: "2026-09-18T10:00:00.000Z",
-        product: { id: "product-1", slug: "owned-skill", name: "Owned Skill", type: "Skill", typeKey: "skill", outcome: "Completes a useful task", creator: { name: "Creator", handle: "creator" } },
-        release: { id: "release-1", version: "1.0.0", sourceStatus: "verified" }, installationAvailable: true,
-      }],
-      meta: { page: 1, limit: 24, total: 1, totalPages: 1 },
-    });
   });
 
-  it("shows acquired resources and links back to their gated installation", async () => {
+  it("points to the dashboard library instead of embedding it", () => {
     render(<AccountForm />);
-    expect(await screen.findByRole("heading", { name: "Owned Skill" })).toBeInTheDocument();
-    expect(screen.getByText("v1.0.0")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View installation" })).toHaveAttribute("href", "/products/owned-skill");
+    expect(screen.getByRole("link", { name: "Open acquired library" })).toHaveAttribute("href", "/dashboard/library");
+    expect(screen.queryByRole("heading", { name: "Owned Skill" })).not.toBeInTheDocument();
   });
 
-  it("keeps a verification link available to returning unverified readers", async () => {
+  it("keeps a verification link available to returning unverified readers", () => {
     session.emailVerified = false;
     render(<AccountForm />);
     expect(screen.getByRole("link", { name: "Verify your email" })).toHaveAttribute("href", "/account/verify-email");
-    await screen.findByRole("heading", { name: "Owned Skill" });
   });
 });
 

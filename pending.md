@@ -2,6 +2,64 @@
 
 This file tracks known improvement work that has not been completed yet. When an item is finished, remove it from this file and add a dated entry to `changelog.md`.
 
+## Launch Readiness — Dashboard Studio, Library, Settings
+
+Source: 2026-10-28 review of `/dashboard/studio`, `/dashboard/library` and
+`/dashboard/settings` (code, API routes and the 2026-10-25 E2E evidence; not
+rendered signed in). Items are in the suggested order; each is one reviewable
+phase. Items 1–4 add API routes and migrations, so they touch shared surfaces
+(`apps/api/src/app.ts`, `schema.prisma`, `migrations/`, `lib/api.ts`,
+`lib/types.ts`, `lib/i18n/`) and need a written plan first.
+
+1. **Account deletion and data export.** No endpoint exists for either
+   (`readerRoutes.ts`, `marketplaceRoutes.ts`). Plan: authenticated export of
+   the reader's own data (profile, library, favorites, reviews, creator
+   profile and listings) and a re-authenticated deletion flow with a defined
+   outcome for creator listings, reviews and acquisitions. Deleting an account
+   cascades its reviews, so recalculate affected listing ratings
+   transactionally (carried from the old ratings queue). Until built, state
+   the manual request route on the Settings page and in the privacy policy.
+   Owner decision needed: retention rules and what happens to published
+   listings. Acceptance: API tests for owner scoping and cascade, E2E for the
+   deletion flow, privacy policy updated to match.
+2. **Sign out everywhere.** Settings can only end the current session, although
+   a password change already signs out the others (per
+   `account-security-copy.ts`; confirm that also holds for password reset). Add
+   session listing or at minimum a "sign out all devices" action that
+   invalidates the other sessions. Acceptance: API test that old cookies stop working, UI in Settings
+   under Account security.
+3. **Change email.** The email row is read-only. Add a verified change flow
+   (confirm via the new address, notify the old one, keep the verified-email
+   requirement for creators). Acceptance: API and UI tests, rate limits like
+   the existing verification routes.
+4. **Notification and newsletter preferences.** Settings has no opt-out for
+   the newsletter or future notifications. Add a preferences section backed by
+   the existing newsletter subscription data; extend it when item 7 ships.
+   Acceptance: unsubscribe reflected in the newsletter API, both locales.
+5. **Library depth.** Add sort and filter (and search past one page) to
+   `/dashboard/library`, a link from each acquired entry to its review
+   composer, and a batch endpoint so Saved (`saved-listings.tsx`) stops
+   resolving up to 12 products one request at a time. Acceptance: one request
+   per Saved page, E2E for sort/filter and for the review link.
+6. **Studio onboarding and feedback.** Give a creator with no listings a short
+   guide (profile, first draft, source check, submit). Show review feedback
+   and per-listing analytics (views, acquisitions over time) on the listing
+   card; this overlaps the privacy-conscious analytics item below, so build
+   them together. Acceptance: empty-state E2E, no personal data exposed.
+7. **Creator notifications for moderation decisions.** Creators currently have
+    to return to the dashboard to see approvals, rejections and change
+    requests. Notify on each decision (in dashboard and by email) and let item
+    4 control delivery. Acceptance: API test per decision type, email worker
+    coverage.
+8. **Consolidate creator copy.** `creator-hub.tsx` and
+    `provider-connections.tsx` merge `t.creatorHub`/`t.creatorReleases` with
+    `creatorWorkspace[locale]`. Collapse to one source so English and Persian
+    cannot drift. Acceptance: key-parity test passes, no behaviour change.
+9. **Signed-in verification pass (final gate).** Seed a verified account and a
+    verified creator, then check all three pages and their sub-routes in light
+    and dark, English and Persian RTL, 320–1280 px, keyboard focus, and every
+    loading/error/empty state. Record evidence in `changelog.md`.
+
 ## Deployment Safety
 
 - Before applying migration `202609240001_remove_duplicate_creator_ownership`
@@ -10,76 +68,3 @@ This file tracks known improvement work that has not been completed yet. When an
   the canonical `ownerUserId` profile and create any required audited creator
   role grant before migrating. The migration intentionally aborts instead of
   discarding ownership data.
-
-## Web — Homepage Follow-ups
-
-- Meet the remaining mobile LCP targets: `/` 2.2 s, `/dashboard` 2.0 s
-  and product detail 2.2 s. Profile the remaining shared hydration and mobile
-  rendering cost while preserving request-scoped dashboard snapshots and the
-  Saved collection's initial-read and mutation ordering.
-
-## Launch — Owner Decisions
-
-- Review and approve the implemented privacy, terms and content-policy pages.
-  The footer's
-  "About" and "Quality standards" point at `/design-system`, "Support" at
-  `/account`.
-- Seeded listings cannot be acquired (no approved release). Launch empty, with
-  curated real listings, or with the demo seed (`SEED_DEMO=true`) knowing the
-  acquire and review loop is unavailable on those items.
-
-## Marketplace — P0 Discovery and Community
-
-- Complete reporting controls for unsafe, misleading, abandoned, or malicious
-  items: connect the listing report and private staff case interfaces to the
-  intake/triage API; add case-linked scoped restrictions, appeals and
-  reinstatement checks/audit events from ADR 0004. Extend reporting to releases,
-  placements and creator profiles; review reporting remains in the ratings queue.
-
-## Marketplace — P0 Ratings and Reviews
-
-Reviews are live (2026-10-08, see `changelog.md`): linked to a verified account
-with a completed acquisition, one per reader and listing, editable and
-withdrawable, aggregates calculated transactionally, moderators can hide and
-restore. Still open, per ADR 0004:
-
-- Reader reports on reviews, which move a published review into a held state
-  while it is investigated, and the case workflow they feed.
-- Creator responses: one labelled response per review, same content rules, no
-  effect on the rating.
-- Automated holds beyond the per-hour rate limit: duplicate and coordinated
-  content signals, account and acquisition age, repeated edits, and
-  creator-team conflicts of interest.
-- Preserve the original and edited text of a review for audit. Edits currently
-  overwrite the row.
-- Recalculate a listing's rating when a reader's account is deleted (the
-  review is removed by cascade; no account deletion exists yet).
-
-## Marketplace — Search
-
-- If a deployment sits behind a CDN, add `Cache-Control: public, s-maxage=30`
-  to the public catalogue routes. The API already sends ETags and answers
-  conditional requests with 304; nothing is added without knowing the CDN.
-
-## Marketplace — P1 Operations and Growth
-
-- Add creator notifications for moderation decisions, reviews, reports, and
-  listing health issues.
-- Add user notifications for updates to acquired or followed items.
-- Add privacy-conscious creator analytics for listing views, acquisition/install
-  conversions, version adoption, and rating trends.
-- Add dependency, compatibility, deprecation, and abandoned-project indicators.
-- Add curated and community collections without conflating them with Blog
-  editorial content.
-
-## Blog — Staff-Managed Editorial
-
-- Plan and publish the vibe-coding checklist series with a repeatable article
-  structure and links to relevant marketplace items where editorially useful.
-- Add newsletter subscriber export, unsubscribe links, campaign creation,
-  article-to-email publishing, and delivery analytics.
-- Add threaded replies to comments, including moderation and clear parent-comment context.
-- Add immersive article formats such as visual timelines, annotated case studies, interviews, data stories, and side-by-side arguments.
-- Add living topic dossiers that collect key ideas, timelines, people, resources, and new coverage around an evolving subject.
-- Add a concise editorial Signals format for notable product changes, statistics, patterns, quotations, and tools between major articles.
-- Add curated reader perspectives with focused prompts and editor-selected responses presented as article margin notes.

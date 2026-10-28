@@ -8,7 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
-import { AcquiredLibrary } from "@/features/library/acquired-library";
+import { libraryCopy } from "@/features/library/library-copy";
 import { GoogleSignIn } from "./google-sign-in";
 
 export function AccountForm() {
@@ -108,6 +108,6 @@ function SignedInAccount({ email }: { email: string }) {
   return <div className="mx-auto max-w-4xl space-y-6">
     <header className="rounded-xl border bg-surface p-7 sm:flex sm:items-end sm:justify-between sm:gap-6"><div><p className="eyebrow">{fa ? "حساب خواننده" : "Reader account"}</p><h1 className="editorial mt-2 text-4xl">{t.account}</h1><p className="mt-3 text-muted-foreground">{t.signedInAs} {email}</p></div><Button className="mt-6 sm:mt-0" variant="secondary" onClick={async () => { await logout(); await session.refresh(); router.replace(localePath("/", locale)); router.refresh(); }}>{t.signOut}</Button></header>
     {!session.emailVerified && <section className="rounded-xl border bg-surface p-7"><p className="text-muted-foreground">{t.verificationInstructions}</p><Link className={`${buttonVariants()} mt-4`} href={localePath("/account/verify-email", locale)}>{t.verifyEmail}</Link></section>}
-    <AcquiredLibrary embedded />
+    <section className="rounded-xl border bg-surface p-7"><h2 className="text-xl font-semibold">{libraryCopy[locale].title}</h2><p className="mt-3 text-muted-foreground">{libraryCopy[locale].intro}</p><Link className={`${buttonVariants({ variant: "secondary" })} mt-4`} href={localePath("/dashboard/library", locale)}>{libraryCopy[locale].quickAction}</Link></section>
   </div>;
 }

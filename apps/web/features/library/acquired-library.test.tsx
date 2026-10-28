@@ -45,12 +45,12 @@ it.each(["en", "fa"] as const)("keeps pinned/legacy/unavailable releases distinc
 
 it("retries an error without falsely reporting an empty library", async () => {
   getLibrary.mockRejectedValueOnce(new Error("Offline")).mockResolvedValueOnce(result());
-  render(<AcquiredLibrary embedded />);
+  render(<AcquiredLibrary />);
   expect(await screen.findByRole("alert")).toHaveTextContent(libraryCopy.en.error);
   expect(screen.queryByText(libraryCopy.en.empty)).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: libraryCopy.en.retry }));
   await screen.findByRole("heading", { name: "Owned Skill" });
-  expect(screen.getByRole("heading", { level: 2, name: libraryCopy.en.title })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { level: 1, name: libraryCopy.en.title })).toBeInTheDocument();
   expect(getLibrary).toHaveBeenCalledTimes(2);
 });
 

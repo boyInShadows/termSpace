@@ -97,12 +97,12 @@ for (const locale of ["en", "fa"] as const) {
     await expect(section.getByRole("link", { name: text.browse })).toHaveAttribute("href", `${prefix}/explore`);
   });
 
-  test(`/account keeps its account and paginated library (${locale})`, async ({ page }) => {
+  test(`/account links to the dashboard library instead of embedding it (${locale})`, async ({ page }) => {
     await libraryFixture(page);
-    await page.goto(`${prefix}/account?page=2`);
+    await page.goto(`${prefix}/account`);
     await expect(page.getByRole("heading", { level: 1, name: copy[locale].account })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 2, name: text.title })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Second page skill" })).toBeVisible();
+    await expect(page.getByRole("link", { name: text.quickAction })).toHaveAttribute("href", `${prefix}/dashboard/library`);
+    await expect(page.getByRole("heading", { name: "Second page skill" })).toHaveCount(0);
   });
 
   test(`signed-out library visitors return through account sign-in (${locale})`, async ({ page, context }) => {

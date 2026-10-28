@@ -4,7 +4,6 @@ import { copy as translations } from "@/lib/i18n";
 import { creatorWorkspace } from "./workspace-copy";
 
 const getReleases = vi.hoisted(() => vi.fn());
-const getConnections = vi.hoisted(() => vi.fn());
 const copy = {
   ...translations.en.creatorReleases,
   ...creatorWorkspace.en.creatorReleases,
@@ -22,7 +21,7 @@ const copy = {
 
 vi.mock("@/lib/api", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/lib/api")>();
-  return { ...original, getCreatorReleases: getReleases, getProviderConnections: getConnections };
+  return { ...original, getCreatorReleases: getReleases };
 });
 vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: "en", t: { creatorReleases: copy } }) }));
 
@@ -32,7 +31,6 @@ describe("CreatorReleaseManager", () => {
   afterEach(cleanup);
   beforeEach(() => {
     vi.clearAllMocks();
-    getConnections.mockResolvedValue([]);
     getReleases.mockResolvedValue({
       listing: { id: "product-1", slug: "owned-skill", name: "Owned Skill", state: "published", lifecycleVersion: 4, published: true },
       releases: [{
@@ -56,14 +54,12 @@ describe("CreatorReleaseManager", () => {
     expect(screen.getByRole("link", { name: /Prepare new release/ })).toHaveAttribute("href", "/dashboard/studio/listings/product-1/edit");
   });
 
-  it("puts provider permissions and revocation guidance beside the token controls", async () => {
+  it("links to Settings for provider connections instead of embedding the token forms", async () => {
     render(<CreatorReleaseManager productId="product-1" />);
     await screen.findByRole("heading", { name: "Owned Skill" });
-    await screen.findAllByLabelText("Access token");
-    expect(screen.getByText(copy.githubTokenHelp)).toBeInTheDocument();
-    expect(screen.getByText(copy.npmTokenHelp)).toBeInTheDocument();
-    expect(screen.getByText(copy.tokenRevocation)).toBeInTheDocument();
-    expect(screen.getAllByLabelText("Access token")[0]).toHaveAttribute("aria-describedby", "github-token-help");
+    expect(screen.getByText(creatorWorkspace.en.creatorReleases.connectionsIntro)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: creatorWorkspace.en.creatorReleases.connectionsTitle })).toHaveAttribute("href", "/dashboard/settings");
+    expect(screen.queryByLabelText("Access token")).not.toBeInTheDocument();
   });
 
   it("explains a missing source reference and links to its editable draft", async () => {
@@ -76,18 +72,10 @@ describe("CreatorReleaseManager", () => {
     expect(screen.getByRole("alert").querySelector("a")).toHaveAttribute("href", "/dashboard/studio/listings/product-1/edit");
   });
 
-  it("keeps release history readable when provider loading fails", async () => {
-    getConnections.mockRejectedValue(new Error("provider offline"));
-    render(<CreatorReleaseManager productId="product-1" />);
-    expect(await screen.findByRole("heading", { name: "Owned Skill" })).toBeVisible();
-    expect(await screen.findByRole("alert")).toHaveTextContent("Provider connections could not be loaded.");
-    expect(screen.getByText("Current public release")).toBeVisible();
-  });
-
-  it("keeps account-wide provider controls available when release history fails", async () => {
+  it("keeps the Settings link available when release history fails", async () => {
     getReleases.mockRejectedValue(new Error("history offline"));
     render(<CreatorReleaseManager productId="product-1" />);
     expect(await screen.findByRole("alert")).toHaveTextContent(creatorWorkspace.en.creatorReleases.loadError);
-    expect(await screen.findAllByLabelText("Access token")).toHaveLength(2);
+    expect(screen.getByRole("link", { name: creatorWorkspace.en.creatorReleases.connectionsTitle })).toHaveAttribute("href", "/dashboard/settings");
   });
 });

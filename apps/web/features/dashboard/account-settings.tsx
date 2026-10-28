@@ -10,6 +10,7 @@ import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
 import { ProviderConnections } from "@/features/creator/provider-connections";
 import { AccountSecurity } from "./account-security";
+import { accountSecurityCopy } from "./account-security-copy";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -26,7 +27,7 @@ export function AccountSettings() {
   const session = useMarketplaceSession();
   const [profile, setProfile] = useState<OwnedCreatorProfile | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-  const [signOutError, setSignOutError] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setStatus("loading");
@@ -45,6 +46,23 @@ export function AccountSettings() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
+
+  async function signOut() {
+    setSignOutError(null);
+    try {
+      await logout();
+    } catch (cause) {
+      const security = accountSecurityCopy[locale];
+      setSignOutError(!(cause instanceof ApiError) ? security.signOutOffline
+        : cause.status === 429 ? security.rateLimited
+        : cause.status >= 500 ? t.serviceError
+        : t.dashboardHome.signOutError);
+      return;
+    }
+    await session.refresh();
+    router.replace(localePath("/", locale));
+    router.refresh();
+  }
 
   return (
     <div className="space-y-8">
@@ -77,21 +95,10 @@ export function AccountSettings() {
 
       {profile && session.marketplaceRoles.includes("creator") && <ProviderConnections />}
 
-      <Button
-        variant="secondary"
-        onClick={async () => {
-          try {
-            setSignOutError(false);
-            await logout();
-            await session.refresh();
-            router.replace(localePath("/", locale));
-            router.refresh();
-          } catch { setSignOutError(true); }
-        }}
-      >
+      <Button variant="secondary" onClick={() => void signOut()}>
         {t.signOut}
       </Button>
-      {signOutError && <p role="alert" className="text-sm text-destructive">{t.dashboardHome.signOutError}</p>}
+      {signOutError && <p role="alert" className="text-sm text-destructive">{signOutError}</p>}
     </div>
   );
 }

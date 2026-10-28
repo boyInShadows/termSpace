@@ -10,7 +10,6 @@ import { creatorWorkspace } from "./workspace-copy";
 import { localePath } from "@/lib/i18n";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ProviderConnections } from "./provider-connections";
 import { intlLocale } from "@/lib/format";
 import { ContextHelp } from "@/components/ui/context-help";
 
@@ -37,8 +36,14 @@ export function CreatorReleaseManager({ productId }: { productId: string }) {
     return () => window.clearTimeout(timer);
   }, [history]);
 
-  if (!history && !error) return <><p role="status" className="text-sm text-muted-foreground">{copy.loading}</p><ProviderConnections /></>;
-  if (!history) return <><ProviderConnections /><div className="rounded-none border border-destructive/30 bg-surface p-8">
+  const connectionsLink = <section className="mt-6 border-y py-4" aria-labelledby="release-connections-title">
+    <h2 id="release-connections-title" className="text-base font-semibold">{copy.connectionsTitle}</h2>
+    <p className="mt-1 text-sm text-muted-foreground">{copy.connectionsIntro}</p>
+    <Link className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4" href={localePath("/dashboard/settings", locale)}>{copy.connectionsTitle}</Link>
+  </section>;
+
+  if (!history && !error) return <><p role="status" className="text-sm text-muted-foreground">{copy.loading}</p>{connectionsLink}</>;
+  if (!history) return <>{connectionsLink}<div className="rounded-none border border-destructive/30 bg-surface p-8">
     <p role="alert" className="text-destructive">{copy.loadError}</p>
     <Button className="mt-5" variant="secondary" onClick={() => { setError(false); setReload((value) => value + 1); }}>
       <RotateCcw className="size-4" aria-hidden="true" />{copy.retry}
@@ -70,7 +75,7 @@ export function CreatorReleaseManager({ productId }: { productId: string }) {
       </Link>
     </header>
     <p className="mt-6 border-y py-4 text-sm text-muted-foreground">{copy.immutableNotice}</p>
-    <ProviderConnections />
+    {connectionsLink}
     {actionMessage && <p className="mt-4 text-sm" role="status">{actionMessage}</p>}
     {history.releases.length === 0
       ? <p className="mt-6 rounded-none border border-dashed p-8 text-center text-muted-foreground">{copy.empty}</p>
