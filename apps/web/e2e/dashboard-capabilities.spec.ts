@@ -27,15 +27,16 @@ for (const locale of ["en", "fa"] as const) {
     await expect(header.getByRole("link", { name: copy[locale].dashboard, exact: true })).toBeVisible();
   });
 
-  test(`saved collection bounds requests, isolates unavailable items and removes them (${locale})`, async ({ page }) => {
+  test(`saved collection loads a page in one request, isolates unavailable items and removes them (${locale})`, async ({ page }) => {
     let slugs = Array.from({ length: 13 }, (_, index) => `saved-${index}`);
-    const reads: string[] = [];
+    const batches: string[][] = [];
     await page.route("**/api/marketplace/favorites", (route) => route.fulfill({ json: { data: slugs } }));
-    await page.route("**/api/marketplace/products/saved-*", async (route) => {
-      const slug = new URL(route.request().url()).pathname.split("/").at(-1)!;
-      reads.push(slug);
-      return slug === "saved-1" ? route.fulfill({ status: 404, json: { error: { code: "NOT_FOUND", message: "Unavailable" } } })
-        : route.fulfill({ json: { data: { name: slug === "saved-0" ? "R".repeat(80) : slug, outcome: "Public saved resource" } } });
+    // One request resolves a whole page; a listing that is not published is simply missing from it.
+    await page.route((url) => url.pathname.endsWith("/api/marketplace/products") && url.searchParams.has("slugs"), (route) => {
+      const requested = new URL(route.request().url()).searchParams.get("slugs")!.split(",");
+      batches.push(requested);
+      const data = requested.filter((slug) => slug !== "saved-1").map((slug) => ({ slug, name: slug === "saved-0" ? "R".repeat(80) : slug, outcome: "Public saved resource" }));
+      return route.fulfill({ json: { data, meta: { page: 1, limit: requested.length, total: data.length, totalPages: 1 } } });
     });
     await page.route("**/api/marketplace/products/*/favorite", (route) => {
       expect(route.request().method()).toBe("DELETE");
@@ -47,8 +48,9 @@ for (const locale of ["en", "fa"] as const) {
     await page.getByRole("link", { name: text.title, exact: true }).click();
     await expect(page.getByRole("heading", { level: 1, name: text.title })).toBeVisible();
     await expect(page.getByRole("heading", { name: "R".repeat(80), exact: true })).toBeVisible();
-    expect(reads).toHaveLength(12);
-    expect(reads).not.toContain("saved-12");
+    expect(batches).toHaveLength(1);
+    expect(batches[0]).toHaveLength(12);
+    expect(batches[0]).not.toContain("saved-12");
     const unavailable = page.getByRole("listitem").filter({ hasText: text.unavailable });
     await unavailable.getByRole("button", { name: text.remove }).click();
     await expect(page.getByText(text.unavailable)).toHaveCount(0);

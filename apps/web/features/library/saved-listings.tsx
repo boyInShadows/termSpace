@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ApiError, getFavorites, getProduct } from "@/lib/api";
-import type { ProductDetail } from "@/lib/types";
+import { getFavorites } from "@/lib/api";
+import { getProductsBySlugs } from "@/lib/account-api";
+import type { Product } from "@/lib/types";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { localePath } from "@/lib/i18n";
@@ -12,7 +13,7 @@ import { libraryCopy } from "./library-copy";
 import { savedCopy } from "./saved-copy";
 
 const PAGE_SIZE = 12;
-type Entry = { slug: string } & ({ status: "ready"; product: ProductDetail } | { status: "unavailable" | "error" });
+type Entry = { slug: string } & ({ status: "ready"; product: Product } | { status: "unavailable" });
 
 export function SavedListings() {
   const { locale } = useLocale();
@@ -42,11 +43,17 @@ export function SavedListings() {
   useEffect(() => {
     if (!slugs) return;
     const controller = new AbortController();
-    // The API returns slugs only; resolve at most one 12-item page at a time.
-    void Promise.all(slugs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map(async (slug): Promise<Entry> => {
-      try { return { slug, status: "ready", product: await getProduct(slug, controller.signal) }; }
-      catch (cause) { return { slug, status: cause instanceof ApiError && cause.status === 404 ? "unavailable" : "error" }; }
-    })).then((result) => { if (!controller.signal.aborted) setEntries(result); });
+    // The favourites list is slugs only; one request resolves a 12-item page and a slug that
+    // is not published any more simply comes back missing.
+    const pageSlugs = slugs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+    void (pageSlugs.length ? getProductsBySlugs(pageSlugs, controller.signal) : Promise.resolve([]))
+      .then((products) => {
+        if (controller.signal.aborted) return;
+        const bySlug = new Map(products.map((product) => [product.slug, product]));
+        setError(false);
+        setEntries(pageSlugs.map((slug): Entry => { const product = bySlug.get(slug); return product ? { slug, status: "ready", product } : { slug, status: "unavailable" }; }));
+      })
+      .catch(() => { if (!controller.signal.aborted) setError(true); });
     return () => controller.abort();
   }, [slugs, page, attempt]);
 
@@ -74,7 +81,7 @@ export function SavedListings() {
           : <ul className="mt-6 divide-y border-y bg-surface">{entries?.map((entry) => <li key={entry.slug} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               {entry.status === "ready" ? <><h2 className="break-words font-semibold"><Link className="block min-h-11 py-2 hover:underline" href={localePath(`/products/${encodeURIComponent(entry.slug)}`, locale)}><bdi>{entry.product.name}</bdi></Link></h2><p dir="auto" className="break-words text-sm text-muted-foreground">{entry.product.outcome}</p></>
-                : <><p className="text-sm text-muted-foreground" role={entry.status === "error" ? "alert" : undefined}>{entry.status === "unavailable" ? copy.unavailable : copy.itemError}</p>{entry.status === "error" && <Button className="mt-3" variant="secondary" onClick={retry}>{labels.retry}</Button>}</>}
+                : <><p className="text-sm text-muted-foreground">{copy.unavailable}</p></>}
               {removeError === entry.slug && <p role="alert" className="mt-3 text-sm text-destructive">{copy.removeError}</p>}
             </div>
             <Button className="shrink-0" variant="secondary" disabled={busy !== null} onClick={() => void remove(entry.slug)}>{busy === entry.slug ? copy.loading : copy.remove}</Button>

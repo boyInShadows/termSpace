@@ -15,26 +15,21 @@ phase. Items 1 and 5 add API routes or migrations, so they touch shared surfaces
    the newsletter or future notifications. Add a preferences section backed by
    the existing newsletter subscription data; extend it when item 4 ships.
    Acceptance: unsubscribe reflected in the newsletter API, both locales.
-2. **Library depth.** Add sort and filter (and search past one page) to
-   `/dashboard/library`, a link from each acquired entry to its review
-   composer, and a batch endpoint so Saved (`saved-listings.tsx`) stops
-   resolving up to 12 products one request at a time. Acceptance: one request
-   per Saved page, E2E for sort/filter and for the review link.
-3. **Studio onboarding and feedback.** Give a creator with no listings a short
+2. **Studio onboarding and feedback.** Give a creator with no listings a short
    guide (profile, first draft, source check, submit). Show review feedback
    and per-listing analytics (views, acquisitions over time) on the listing
    card; this overlaps the privacy-conscious analytics item below, so build
    them together. Acceptance: empty-state E2E, no personal data exposed.
-4. **Creator notifications for moderation decisions.** Creators currently have
+3. **Creator notifications for moderation decisions.** Creators currently have
     to return to the dashboard to see approvals, rejections and change
     requests. Notify on each decision (in dashboard and by email) and let item
     1 control delivery. Acceptance: API test per decision type, email worker
     coverage.
-5. **Consolidate creator copy.** `creator-hub.tsx` and
+4. **Consolidate creator copy.** `creator-hub.tsx` and
     `provider-connections.tsx` merge `t.creatorHub`/`t.creatorReleases` with
     `creatorWorkspace[locale]`. Collapse to one source so English and Persian
     cannot drift. Acceptance: key-parity test passes, no behaviour change.
-6. **Set up Cloudflare Email Sending and test the email flows (needs the
+5. **Set up Cloudflare Email Sending and test the email flows (needs the
    domain).** Blocked until a domain is on the Cloudflare account. Steps:
    onboard the domain under Email Sending and add the SPF, DKIM and DMARC
    records it lists; create an API token with the "Email Sending: Edit"
@@ -53,6 +48,16 @@ phase. Items 1 and 5 add API routes or migrations, so they touch shared surfaces
    tier would also cover the volume but needs a provider adapter (not built).
    Acceptance: each flow delivers a real email and the link or code works;
    record evidence in `changelog.md`.
+6. **Rate limiting can silently turn off at API startup.** Found 2026-10-28 in
+   the Docker stack: with the machine under load, every limiter logged
+   "async error during store initialization: Command timed out" (Redis
+   `commandTimeout` is 1 s in `lib/redis.ts`), `passOnStoreError` then let all
+   requests through uncounted, and 12 wrong logins were never blocked. A
+   restart on a quiet machine fixed it. Make startup robust: create the
+   limiters only once Redis answers (or retry the store initialization), log
+   loudly and expose it on the health check when a limiter's store is down.
+   Acceptance: a test that starts the app with a slow Redis and still counts,
+   plus a documented failure mode.
 7. **Signed-in verification pass (final gate).** Seed a verified account and a
     verified creator, then check all three pages and their sub-routes in light
     and dark, English and Persian RTL, 320–1280 px, keyboard focus, and every
@@ -60,7 +65,7 @@ phase. Items 1 and 5 add API routes or migrations, so they touch shared surfaces
     the Google re-authentication button on a real Google client, the export
     download in a real browser, an Impeccable review of the new "Your data" and
     "Delete account" sections, and maintainer approval of the new Persian copy
-    (sign-out errors, sign out other devices, account data, change email, privacy policy). Record evidence in
+    (sign-out errors, sign out other devices, account data, change email, library filters, privacy policy). Record evidence in
     `changelog.md`.
 
 ## Deployment Safety

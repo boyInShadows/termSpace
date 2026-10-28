@@ -187,11 +187,19 @@ export const marketplaceProductQuerySchema = z.object({
   verified: z.enum(["true", "false"]).optional().transform((value) => value === "true" ? true : undefined),
   minRating: z.coerce.number().min(0).max(5).optional().default(0),
   sort: z.enum(["featured", "rating", "newest", "relevance"]).optional().default("featured"),
+  // Exact listings by slug, so a page of saved items is one request instead of one per item.
+  slugs: z.string().max(8000)
+    .transform((value) => value.split(",").map((slug) => slug.trim()).filter(Boolean))
+    .pipe(z.array(z.string().regex(slugPattern).max(160)).min(1).max(48))
+    .optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(48).optional().default(12),
 });
 
 export const marketplaceLibraryQuerySchema = z.object({
+  q: z.string().trim().max(80).optional().default(""),
+  type: z.enum(MARKETPLACE_ITEM_TYPES).optional(),
+  sort: z.enum(["newest", "oldest", "name"]).optional().default("newest"),
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(50).optional().default(24),
 });

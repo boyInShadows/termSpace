@@ -6,6 +6,7 @@ import {
   MARKETPLACE_ITEM_TYPES,
   MARKETPLACE_ITEM_TYPE_REGISTRY,
   marketplaceItemTypeKey,
+  type MarketplaceItemTypeKey,
 } from "../lib/marketplaceManifest.js";
 
 const publicCreatorProducts = { published: true, lifecycleState: { notIn: ["SUSPENDED", "ARCHIVED"] } } satisfies Prisma.MarketplaceProductWhereInput;
@@ -65,11 +66,12 @@ function serializeProduct(product: any) {
 const searchTerms = (q: unknown): string[] => (q ? String(q).split(/\s+/).filter(Boolean).slice(0, 8) : []);
 
 function marketplaceProductWhere(filters: any, communitySlug?: string): Prisma.MarketplaceProductWhereInput {
-  const { q, type, category, community, platform, permission, verified, minRating } = filters;
+  const { q, type, category, community, platform, permission, verified, minRating, slugs } = filters;
   const selectedCommunity = communitySlug ?? community;
   const terms = searchTerms(q);
   return {
     published: true,
+    ...(slugs ? { slug: { in: slugs as string[] } } : {}),
     ...(terms.length ? { AND: terms.map((term) => {
       const pattern = term.replace(/[\\%_]/g, "\\$&");
       const tag = term.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -386,8 +388,16 @@ export async function listMarketplaceFavorites(_req: Request, res: Response) {
 
 export async function listMarketplaceLibrary(req: Request, res: Response) {
   res.set("Cache-Control", "private, no-store");
-  const { page, limit } = req.query as unknown as { page: number; limit: number };
-  const where = { userId: res.locals.reader.id as string, status: "completed" } as const;
+  const { page, limit, q, type, sort } = req.query as unknown as { page: number; limit: number; q: string; type?: MarketplaceItemTypeKey; sort: "newest" | "oldest" | "name" };
+  const pattern = q.replace(/[\\%_]/g, "\\$&");
+  const productFilter = {
+    ...(type ? { itemType: MARKETPLACE_DATABASE_ITEM_TYPES[type] } : {}),
+    ...(q ? { name: { contains: pattern, mode: "insensitive" as const } } : {}),
+  };
+  const where = { userId: res.locals.reader.id as string, status: "completed", ...(type || q ? { product: productFilter } : {}) } as const;
+  const orderBy = sort === "oldest" ? [{ createdAt: "asc" as const }, { id: "asc" as const }]
+    : sort === "name" ? [{ product: { name: "asc" as const } }, { id: "asc" as const }]
+    : [{ createdAt: "desc" as const }, { id: "desc" as const }];
   const select = {
       id: true,
       createdAt: true,
@@ -395,7 +405,7 @@ export async function listMarketplaceLibrary(req: Request, res: Response) {
       releaseManifest: { select: { id: true, sourceCheckStatus: true, productVersion: { select: { version: true } } } },
   } as const;
   const [orders, total] = await Promise.all([
-    prisma.marketplaceOrder.findMany({ where, orderBy: [{ createdAt: "desc" }, { id: "desc" }], select, skip: (page - 1) * limit, take: limit }),
+    prisma.marketplaceOrder.findMany({ where, orderBy, select, skip: (page - 1) * limit, take: limit }),
     prisma.marketplaceOrder.count({ where }),
   ]);
   res.json({ data: orders.map((order) => ({

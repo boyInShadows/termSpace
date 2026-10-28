@@ -105,6 +105,33 @@ for (const locale of ["en", "fa"] as const) {
     await expect(page.getByRole("heading", { name: "Second page skill" })).toHaveCount(0);
   });
 
+  test(`library search, type and sort drive the address and the request, and review links to the listing (${locale})`, async ({ page }) => {
+    const seen: string[] = [];
+    await page.route("**/api/marketplace/library?*", (route) => {
+      const params = new URL(route.request().url()).searchParams;
+      seen.push(`${params.get("q") ?? ""}|${params.get("type") ?? ""}|${params.get("sort") ?? ""}`);
+      const none = params.get("q") === "zzz";
+      return route.fulfill({ json: { data: none ? [] : [entry], meta: { page: 1, limit: 24, total: none ? 0 : 1, totalPages: none ? 0 : 1 } } });
+    });
+    await page.goto(`${prefix}/dashboard/library`);
+    await expect(page.getByRole("heading", { name: entry.product.name })).toBeVisible();
+    await expect(page.getByRole("link", { name: text.review })).toHaveAttribute("href", `${prefix}/products/conversion-copywriter#reviews`);
+    await page.getByLabel(text.typeLabel, { exact: true }).selectOption("skill");
+    await expect(page).toHaveURL(/type=skill/);
+    await page.getByLabel(text.sortLabel, { exact: true }).selectOption("name");
+    await expect(page).toHaveURL(/sort=name/);
+    await page.getByLabel(text.searchLabel, { exact: true }).fill("zzz");
+    await page.getByRole("button", { name: text.searchButton }).click();
+    await expect(page).toHaveURL(/q=zzz/);
+    await expect(page.getByText(text.noMatches)).toBeVisible();
+    await page.getByRole("button", { name: text.clearFilters }).click();
+    await expect(page).toHaveURL(new RegExp(`${prefix}/dashboard/library$`));
+    await expect(page.getByRole("heading", { name: entry.product.name })).toBeVisible();
+    expect(seen).toContain("|skill|name");
+    expect(seen).toContain("zzz|skill|name");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+
   test(`signed-out library visitors return through account sign-in (${locale})`, async ({ page, context }) => {
     await context.clearCookies(); await page.goto(`${prefix}/dashboard/library`);
     await expect(page).toHaveURL(new RegExp(`${prefix}/account\\?next=`));

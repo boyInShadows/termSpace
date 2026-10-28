@@ -4,6 +4,35 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-28
 
+- **Library depth (launch-readiness item).** `GET /api/marketplace/library`
+  now takes `q` (name search, 80 characters, `%` and `_` treated literally),
+  `type` (item type key) and `sort` (`newest` default, `oldest`, `name`); totals
+  and pages count only the matches and other readers' acquisitions never
+  appear. `GET /api/marketplace/products` takes `slugs` (1 to 48 valid slugs)
+  so a page of Saved listings is one request instead of up to 12; listings
+  that are not published come back missing and show as unavailable. The
+  library page gets a search box, a type filter and a sort control kept in the
+  URL (changing one returns to page 1 and keeps other parameters), a "no
+  resources match" state with Clear filters that is distinct from an empty
+  library, and a Rate or review link to each installable item's `#reviews`
+  section. The controls use `id`-linked labels so each field has a short
+  accessible name. The library and batch calls moved to `lib/account-api.ts`
+  (the old `getMarketplaceLibrary` left `lib/api.ts`), which keeps the public
+  bundle unchanged. The per-item Saved error and its copy (`itemError`) went:
+  a failed batch is one retryable error. English and Persian copy added to
+  `library-copy.ts` (Persian needs maintainer approval).
+  - Verification: root typecheck; 11 new API integration tests on the scratch
+    database (sorts, type filter, wildcard escaping, pagination with filters,
+    validation, owner scoping, slug lookup); library unit tests 27 (11 new, the
+    Saved tests rewritten for one batch request); E2E dashboard-library and
+    dashboard-capabilities 44 passed (new filter test, Saved test now asserts
+    one 12-slug request) and budget passes. Shared surfaces: `pending.md`,
+    `changelog.md`. Removed the item from `pending.md` and renumbered.
+  - Full gate: root typecheck, API 306 and web 456 tests, lint (two existing
+    warnings), production build, and the full web E2E with three workers: 474
+    passed, 46 skipped, 3 failed (`reporting`, `context-help`, `catalog`; all
+    load-sensitive, 101 passed on rerun).
+
 - **Full gate for sign out other devices and change email.** Full web E2E
   (with the Docker stack running, so slow): 437 passed, 46 skipped, 36 failed.
   Rerun of the failing specs with two workers left 5: `reporting` and

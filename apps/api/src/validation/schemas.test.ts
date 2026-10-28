@@ -39,9 +39,13 @@ describe("content validation", () => {
   });
 
   it("bounds marketplace library pagination", () => {
-    expect(marketplaceLibraryQuerySchema.parse({})).toEqual({ page: 1, limit: 24 });
+    expect(marketplaceLibraryQuerySchema.parse({})).toEqual({ q: "", sort: "newest", page: 1, limit: 24 });
     expect(marketplaceLibraryQuerySchema.safeParse({ page: "2", limit: "50" }).success).toBe(true);
     expect(marketplaceLibraryQuerySchema.safeParse({ page: "0", limit: "51" }).success).toBe(false);
+  });
+  it("validates library search, type and sort", () => {
+    expect(marketplaceLibraryQuerySchema.parse({ q: "  copy ", type: "mcp_server", sort: "name" })).toMatchObject({ q: "copy", type: "mcp_server", sort: "name" });
+    for (const bad of [{ type: "gadget" }, { sort: "random" }, { q: "x".repeat(81) }]) expect(marketplaceLibraryQuerySchema.safeParse(bad).success).toBe(false);
   });
   it("preserves an omitted article publication filter", () => {
     expect(articleQuerySchema.parse({}).published).toBeUndefined();
