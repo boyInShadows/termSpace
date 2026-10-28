@@ -9,8 +9,9 @@ import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
 import { ProviderConnections } from "@/features/creator/provider-connections";
-import { AccountSecurity } from "./account-security";
+import { AccountSecurity, type ProfileState } from "./account-security";
 import { accountSecurityCopy } from "./account-security-copy";
+import { AccountData } from "./account-data";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -28,6 +29,7 @@ export function AccountSettings() {
   const [profile, setProfile] = useState<OwnedCreatorProfile | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [signOutError, setSignOutError] = useState<string | null>(null);
+  const [readerProfile, setReaderProfile] = useState<ProfileState>({ status: "loading" });
 
   const load = useCallback(async () => {
     setStatus("loading");
@@ -91,9 +93,11 @@ export function AccountSettings() {
         </Row>
       </section>
 
-      <AccountSecurity />
+      <AccountSecurity onProfileState={setReaderProfile} />
 
       {profile && session.marketplaceRoles.includes("creator") && <ProviderConnections />}
+
+      <AccountData profile={readerProfile} />
 
       <Button variant="secondary" onClick={() => void signOut()}>
         {t.signOut}

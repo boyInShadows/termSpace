@@ -184,6 +184,16 @@ async function handle(request, response) {
   if (route === "GET /api/readers/profile") return send(response, 200, {
     data: { email: PERSONAS[persona].email, createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false, emailVerified: true },
   });
+  if (route === "GET /api/readers/profile/export") {
+    return send(response, 200, { data: { account: { email: PERSONAS[persona].email }, favorites: [], acquisitions: [], reviews: [] } }, { "Content-Disposition": 'attachment; filename="termspace-account-export.json"' });
+  }
+  if (route === "DELETE /api/readers/profile") {
+    // Mirrors the real rules: creators with live listings are blocked, everyone else proves the password.
+    if (PERSONAS[persona].listings > 0) return send(response, 409, error("CREATOR_LISTINGS_ACTIVE", "Withdraw or archive your listings first"));
+    const body = await readJson(request);
+    if (body.currentPassword !== "correct-password") return send(response, 401, error("INVALID_CURRENT_PASSWORD", "Current password is incorrect"));
+    return send(response, 204, undefined, { "Set-Cookie": `${COOKIE}=; Path=/; Max-Age=0` });
+  }
   if (route === "GET /api/marketplace/library") {
     return send(response, 200, { data: [], meta: { page: 1, limit: 24, total: 0, totalPages: 0 } });
   }

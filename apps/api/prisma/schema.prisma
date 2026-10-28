@@ -251,6 +251,8 @@ model ReaderUser {
   passwordHash           String?
   googleSubject          String?                                @unique
   emailVerifiedAt        DateTime?
+  // Set when the owner deletes the account; the row stays as an anonymized tombstone.
+  deletedAt              DateTime?
   createdAt              DateTime                               @default(now())
   updatedAt              DateTime                               @updatedAt
   sessions               ReaderSession[]

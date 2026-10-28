@@ -97,6 +97,8 @@ export async function register(email: string, password: string) { return request
 export async function requestPasswordReset(email: string) { return request<{ data: { accepted: true } }>("/api/readers/password-reset/request", { method: "POST", body: JSON.stringify({ email }) }); }
 export async function confirmPasswordReset(email: string, code: string, newPassword: string) { return request<{ data: { reset: true } }>("/api/readers/password-reset/confirm", { method: "POST", body: JSON.stringify({ email, code, newPassword }) }); }
 export async function logout() { return request("/api/readers/logout", { method: "POST" }); }
+export async function exportAccountData() { return (await request<{ data: unknown }>("/api/readers/profile/export")).data; }
+export async function deleteAccount(proof: { currentPassword?: string; credential?: string }) { return request("/api/readers/profile", { method: "DELETE", body: JSON.stringify(proof) }); }
 export async function getReaderProfile(signal?: AbortSignal) { return (await request<{ data: ReaderProfile }>("/api/readers/profile", { signal })).data; }
 export async function changeReaderPassword(currentPassword: string, newPassword: string) { return request<{ data: { updated: true } }>("/api/readers/profile/password", { method: "PUT", body: JSON.stringify({ currentPassword, newPassword }) }); }
 export async function requestEmailVerification() { return request<{ data: { accepted: true } }>("/api/readers/email-verification/request", { method: "POST" }); }

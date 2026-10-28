@@ -4,6 +4,38 @@ Project changes completed from `pending.md` should be recorded here with the dat
 
 ## 2026-10-28
 
+- **Reader account export and deletion (launch-readiness item 1, approved plan
+  in `plan.md`).** Added `GET /api/readers/profile/export` (owner-scoped JSON
+  download, no secrets) and `DELETE /api/readers/profile`, which anonymizes
+  the account in one transaction: the `ReaderUser` row stays as a tombstone
+  (`deletedAt`, email `deleted-<id>@deleted.invalid`, credentials cleared)
+  because eleven relations are `onDelete: Restrict`. Sessions, favourites,
+  bookmarks, progress, verification and reset codes, role grants and reviews
+  are deleted; each affected listing's rating is recomputed under the
+  per-listing lock; creator provider credentials are scrubbed and the creator
+  profile anonymized. Orders, reports and audit events are retained against
+  the tombstone. A creator with submitted, approved, published, suspended or
+  changes-requested listings is blocked with `CREATOR_LISTINGS_ACTIVE`.
+  Password accounts confirm with the password, Google-only accounts with a
+  fresh Google credential for the same subject. Settings gains "Your data" and
+  "Delete account" sections (typed-email confirmation, real error per cause,
+  English and Persian); the privacy policy and its date were updated.
+  Account security now shares its single profile request with the new section.
+  Shared surfaces: `schema.prisma`, migration `202610280001_reader_account_deletion`,
+  `lib/api.ts`, `pending.md`, `changelog.md`. Review-controller helpers
+  `recomputeRating` and `lockProductReviews` are now exported.
+  - Verification: root typecheck; 286 API tests including 5 new integration
+    tests (anonymization, rating recalculation, creator block, credential
+    scrubbing, Google subject) against a scratch database with all migrations
+    applied; 418 of 419 web tests (one load-sensitive shell test passed three
+    times alone); lint (two existing warnings); production build. Full web
+    E2E: 439 passed, 46 skipped, 10 load-sensitive failures that all pass with
+    limited workers (108 passed on rerun); the new spec passes. The E2E found two real problems, fixed
+    here: duplicate "Current password" labels, and a second profile request
+    that broke the retry test. Not covered: the Google button on a real
+    client, an Impeccable review, Persian copy approval (all in `pending.md`).
+    Blog comments and the newsletter list are deliberately untouched.
+
 - **Full gate for the first launch-readiness items (noindex, one library home,
   Settings link, specific sign-out errors).** Root typecheck, tests (270 API +
   17 blog + 403 web), web lint (two existing warnings) and production build

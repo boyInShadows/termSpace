@@ -33,7 +33,7 @@ function serializeOwnReview(review: {
  * transaction as the change, and never read from a request. Callers hold the
  * per-listing advisory lock so two writers cannot interleave.
  */
-async function recomputeRating(tx: Prisma.TransactionClient, productId: string) {
+export async function recomputeRating(tx: Prisma.TransactionClient, productId: string) {
   const { _avg, _count } = await tx.marketplaceReview.aggregate({
     where: { productId, published: true },
     _avg: { rating: true },
@@ -45,7 +45,7 @@ async function recomputeRating(tx: Prisma.TransactionClient, productId: string) 
   });
 }
 
-const lockProductReviews = (tx: Prisma.TransactionClient, productId: string) =>
+export const lockProductReviews = (tx: Prisma.TransactionClient, productId: string) =>
   tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${productId}, 7))`;
 
 /** The reader's own review of a listing, and whether they may write one. */

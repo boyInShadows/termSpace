@@ -133,6 +133,12 @@ export const readerPasswordChangeSchema = z.object({
   newPassword: z.string().min(8, "New password must be at least 8 characters").max(128),
 });
 
+// Password accounts confirm with their password, Google-only accounts with a fresh Google credential.
+export const readerAccountDeleteSchema = z.object({
+  currentPassword: z.string().min(1).max(128).optional(),
+  credential: z.string().min(1).max(4096).optional(),
+});
+
 export const readerPasswordResetRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address").max(320),
 });

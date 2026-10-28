@@ -6,7 +6,7 @@ import type { Locale } from "@/lib/i18n";
  * Legal entity and contact address come from LEGAL_ENTITY_NAME / LEGAL_CONTACT_EMAIL
  * (runtime env, required by docker-compose.yml) so no placeholder ships.
  */
-export const LEGAL_UPDATED = "2026-10-19";
+export const LEGAL_UPDATED = "2026-10-28";
 
 export const legalEntity = () => process.env.LEGAL_ENTITY_NAME?.trim() || "TermSpace";
 export const legalContact = () => process.env.LEGAL_CONTACT_EMAIL?.trim() || undefined;
@@ -41,7 +41,7 @@ export const legalDocs: Record<Locale, Record<LegalSlug, LegalDoc>> = {
           "Source checks for submitted listings read public information from GitHub and npm.",
         ] },
         { heading: "What is public", body: ["Reviews, creator profiles and published listings are visible to everyone. Your email address and library are not."] },
-        { heading: "Your choices", body: ["Write to us to ask for access to, correction of, or deletion of your data, or to unsubscribe from the newsletter. We keep logs and account data only as long as we need them to run and secure the service."] },
+        { heading: "Your choices", body: ["Sign in and open Settings to download your data or delete your account. Deleting is permanent: it removes your sign-in, favourites, bookmarks, reading progress, reviews and stored credentials, and anonymizes your creator profile. We keep a record that an acquisition, report or moderation action happened, linked only to an anonymized account that cannot sign in. Creators must first withdraw or archive submitted and published listings. To correct your data, remove a journal comment or unsubscribe from the newsletter, write to us. We keep logs and account data only as long as we need them to run and secure the service."] },
         { heading: "Changes", body: ["We will update the date above when this policy changes."] },
       ],
     },
@@ -106,7 +106,7 @@ export const legalDocs: Record<Locale, Record<LegalSlug, LegalDoc>> = {
           "بررسی منبع فهرست‌های ارسال‌شده، اطلاعات عمومی GitHub و npm را می‌خواند.",
         ] },
         { heading: "آنچه عمومی است", body: ["نقدها، نمایهٔ سازندگان و فهرست‌های منتشرشده برای همه دیدنی است. نشانی ایمیل و کتابخانهٔ شما دیدنی نیست."] },
-        { heading: "حق انتخاب شما", body: ["برای دسترسی به داده‌هایتان، اصلاح یا حذف آن‌ها، یا لغو اشتراک خبرنامه به ما نامه بنویسید. گزارش‌ها و داده‌های حساب را فقط تا هر زمان که برای اجرا و ایمن‌سازی سرویس لازم باشد نگه می‌داریم."] },
+        { heading: "حق انتخاب شما", body: ["وارد شوید و تنظیمات را باز کنید تا داده‌هایتان را دریافت یا حساب خود را حذف کنید. حذف دائمی است: ورود، علاقه‌مندی‌ها، نشانک‌ها، پیشرفت مطالعه، نقدها و اطلاعات دسترسی ذخیره‌شده‌تان حذف و نمایهٔ سازنده‌تان ناشناس می‌شود. سابقهٔ اینکه یک دریافت، گزارش یا اقدام نظارتی انجام شده را فقط به یک حساب ناشناس‌شده که امکان ورود ندارد متصل نگه می‌داریم. سازندگان باید ابتدا فهرست‌های ارسال‌شده و منتشرشده را پس بگیرند یا بایگانی کنند. برای اصلاح داده‌ها، حذف یک دیدگاه مجله یا لغو اشتراک خبرنامه به ما نامه بنویسید. گزارش‌ها و داده‌های حساب را فقط تا هر زمان که برای اجرا و ایمن‌سازی سرویس لازم باشد نگه می‌داریم."] },
         { heading: "تغییرات", body: ["هرگاه این سیاست تغییر کند، تاریخ بالای صفحه به‌روز می‌شود."] },
       ],
     },

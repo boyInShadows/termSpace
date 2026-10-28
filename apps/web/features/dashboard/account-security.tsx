@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { accountSecurityCopy } from "./account-security-copy";
 
-type ProfileState = { status: "loading" } | { status: "error" } | { status: "ready"; profile: ReaderProfile };
+export type ProfileState = { status: "loading" } | { status: "error" } | { status: "ready"; profile: ReaderProfile };
 
-export function AccountSecurity() {
+/** `onProfileState` lets the settings page reuse this one profile request instead of repeating it. */
+export function AccountSecurity({ onProfileState }: { onProfileState?: (state: ProfileState) => void } = {}) {
   const { locale, t } = useLocale();
   const copy = accountSecurityCopy[locale];
   const [state, setState] = useState<ProfileState>({ status: "loading" });
@@ -19,6 +20,8 @@ export function AccountSecurity() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => { onProfileState?.(state); }, [state, onProfileState]);
 
   useEffect(() => {
     const controller = new AbortController();

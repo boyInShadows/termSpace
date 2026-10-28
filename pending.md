@@ -11,17 +11,14 @@ phase. Items 1–4 add API routes and migrations, so they touch shared surfaces
 (`apps/api/src/app.ts`, `schema.prisma`, `migrations/`, `lib/api.ts`,
 `lib/types.ts`, `lib/i18n/`) and need a written plan first.
 
-1. **Account deletion and data export.** No endpoint exists for either
-   (`readerRoutes.ts`, `marketplaceRoutes.ts`). Plan: authenticated export of
-   the reader's own data (profile, library, favorites, reviews, creator
-   profile and listings) and a re-authenticated deletion flow with a defined
-   outcome for creator listings, reviews and acquisitions. Deleting an account
-   cascades its reviews, so recalculate affected listing ratings
-   transactionally (carried from the old ratings queue). Until built, state
-   the manual request route on the Settings page and in the privacy policy.
-   Owner decision needed: retention rules and what happens to published
-   listings. Acceptance: API tests for owner scoping and cascade, E2E for the
-   deletion flow, privacy policy updated to match.
+1. **Blog data on account deletion.** Deliberately left out of the account
+   deletion phase (owner: no blog work for now). `Comment` stores a name and
+   email with no link to the reader, and `NewsletterSubscriber` stores an
+   email. Account deletion does not touch either, and the privacy policy tells
+   people to write to us for both. Add deletion of comments and the
+   subscription matching the account email, and an unsubscribe in Settings
+   (see the notification preferences item). Acceptance: API test that both
+   are removed with the account, policy copy updated.
 2. **Sign out everywhere.** Settings can only end the current session, although
    a password change already signs out the others (per
    `account-security-copy.ts`; confirm that also holds for password reset). Add
@@ -58,7 +55,12 @@ phase. Items 1–4 add API routes and migrations, so they touch shared surfaces
 9. **Signed-in verification pass (final gate).** Seed a verified account and a
     verified creator, then check all three pages and their sub-routes in light
     and dark, English and Persian RTL, 320–1280 px, keyboard focus, and every
-    loading/error/empty state. Record evidence in `changelog.md`.
+    loading/error/empty state. Also cover what automated tests could not:
+    the Google re-authentication button on a real Google client, the export
+    download in a real browser, an Impeccable review of the new "Your data" and
+    "Delete account" sections, and maintainer approval of the new Persian copy
+    (sign-out errors, account data, privacy policy). Record evidence in
+    `changelog.md`.
 
 ## Deployment Safety
 
@@ -68,3 +70,8 @@ phase. Items 1–4 add API routes and migrations, so they touch shared surfaces
   the canonical `ownerUserId` profile and create any required audited creator
   role grant before migrating. The migration intentionally aborts instead of
   discarding ownership data.
+- Apply migration `202610280001_reader_account_deletion` (adds
+  `ReaderUser.deletedAt`) before starting the API that includes the account
+  deletion change: the generated client reads that column on every reader
+  query, so the new API fails against an unmigrated database. The change is
+  additive; old API versions keep working after the migration.
