@@ -25,22 +25,24 @@ const productInclude = {
   },
 } as const;
 
-function serializeProduct(product: any) {
+type CatalogProduct = Prisma.MarketplaceProductGetPayload<{ include: typeof productInclude }>;
+
+function serializeProduct(product: CatalogProduct) {
   return {
     ...product,
     typeKey: marketplaceItemTypeKey(product.itemType),
     rating: Number(product.rating),
     pricing: { amountMinor: product.priceMinor, currency: product.currency, model: product.pricingModel },
     compatibility: {
-      platforms: product.compatibility?.map((entry: any) => entry.platform.nameEn) ?? product.platforms,
-      platformKeys: product.compatibility?.map((entry: any) => entry.platformKey) ?? product.platforms,
+      platforms: product.compatibility?.map((entry) => entry.platform.nameEn) ?? product.platforms,
+      platformKeys: product.compatibility?.map((entry) => entry.platformKey) ?? product.platforms,
       models: product.models,
     },
-    communities: product.communityPlacements?.map((placement: any) => placement.community) ?? [],
+    communities: product.communityPlacements?.map((placement) => placement.community) ?? [],
     category: product.category.name,
     creator: product.creator ? {
       ...product.creator,
-      products: product.creator._count?.products ?? product.creator.products ?? 0,
+      products: product.creator._count?.products ?? 0,
       _count: undefined,
     } : undefined,
     priceMinor: undefined,
