@@ -1,299 +1,87 @@
 # TermSpace
 
-TermSpace is a community publishing and discovery platform for agentic coding
-tools. Its catalog is designed for skills, agents, MCP servers, integrations,
-rules, prompts, hooks, templates, and workflows contributed by creators and
-shared across platform communities.
+An English/Persian community library for agentic coding tools. Discover skills,
+agents, MCP servers, prompts and workflows; inspect their declared access and
+source before adding a pinned release to your library.
 
-The repository also contains the TermSpace Blog, a separate staff-managed
-publication about agentic coding. Community accounts and creator or moderator
-roles never grant Blog publishing access. See
-[Product Direction](docs/product-direction.md) for the durable product
-boundaries and core user journeys.
+**Status:** implemented platform with launch work still open. Resources are free;
+paid checkout and creator payouts are not implemented. This is a collaborative
+project; [contributors and history](https://github.com/boyInShadows/termSpace/graphs/contributors)
+retain attribution. **Ramtin Farzane's contribution:** web presentation, landing
+page and dashboard shell (confirmed by Ramtin).
 
-## What works today
+[Run locally](docs/development.md#local-development) |
+[Verification](docs/development.md#verification) |
+[Deployment](docs/development.md#production-subdomain-deployment) |
+[Product direction](docs/product-direction.md) | [Open work](pending.md)
 
-- An English/Persian community library with RTL support, light/dark themes,
-  public catalog search and filters, community browsing, and item pages.
-- Reader authentication, verified accounts, marketplace role grants, and
-  creator profiles.
-- An owner-scoped creator dashboard and structured drafts for all nine item
-  types, including compatibility, permissions, installation, and source data.
-- Immutable proposed and approved listing snapshots with explicit lifecycle
-  states and audit events.
-- A role-gated moderation workspace with queues, safe text-only previews,
-  private staff notes, decisions, suspension, archival, and restoration.
-- Staff-defined communities and creator placement requests, kept separate from
-  platform compatibility.
-- Idempotent free-resource acquisition, an account library, and entitlement-
-  gated installation details pinned to the exact verified release acquired.
-- A reader dashboard with saved items, an acquired library, and creator Studio
-  controls for drafts, releases, submission withdrawal, archival, and restoration.
-- Acquisition-backed ratings and reviews from verified readers, with editing,
-  withdrawal, server-calculated aggregates, and staff hide/restore controls.
+![TermSpace homepage with synthetic example listings](docs/artifacts/showcase/termspace-home.png)
 
-The first community-library milestone is external-source-first: submissions reference
-GitHub or npm artifacts instead of uploading executable packages to TermSpace.
-Authenticated GitHub/npm source ingestion, creator-controlled immutable release
-management, and free add/install flows are implemented. All published resources
-are free; there is no paid checkout or creator payout flow. Reporting, creator
-responses to reviews, public creator pages, and remaining launch work are tracked
-in [pending.md](pending.md). See [changelog.md](changelog.md) for completed work.
+![Persian catalog and filters in the running application](docs/artifacts/showcase/termspace-catalog-fa.png)
 
-## Repository layout
+Actual production-build captures with the repository's synthetic mock catalog.
+Names, ratings and listing counts are example data; these images do not establish
+live users, provider verification or production deployment.
 
-```text
-apps/
-  web/   Community library and creator frontend (Next.js)
-  blog/  Staff-managed editorial frontend (Next.js)
-  api/   Shared Express/Prisma API
-docs/    Product, architecture, and operational documentation
-```
+## Implemented journeys
 
-## Local development
+- Browse and search the bilingual catalog by type, community and platform, with
+  Persian RTL, themes, listing details and public creator profiles.
+- Create owner-scoped drafts, manage immutable release snapshots and submit them
+  to a role-gated moderation workspace with audit events.
+- Acquire a free, approved release, view its pinned installation information and
+  submit acquisition-backed ratings/reviews from a verified account.
+- Publish editorial content in the separate staff-managed Blog. Marketplace
+  creator/moderator roles do not grant Blog publishing access.
 
-Prerequisites are Node.js 22 or newer, npm, Docker, and Docker Compose. Run the
-following commands from the repository root.
+The first milestone references external GitHub/npm sources rather than executing
+uploaded community packages. Source ingestion and free acquisition are implemented;
+real provider credentials and workers are required for those flows. The current
+[launch queue](pending.md) covers notification preferences, Studio onboarding and
+feedback, moderation notifications, real email delivery, Redis limiter startup
+reliability and final signed-in acceptance. Those items remain open.
+Detailed operations remain in [development and deployment](docs/development.md).
 
-Install all workspace dependencies from the repository root:
+## Start here
+
+Requires Node.js 22+, npm and PostgreSQL (Docker Compose is supported).
 
 ```bash
+git clone https://github.com/boyInShadows/termSpace.git
+cd termSpace
 npm ci
 npm run prisma:generate
 ```
 
-Copy the root and each application's environment template before starting:
+Then follow [environment, database and startup steps](docs/development.md#local-development).
+Copying the templates alone is insufficient: align database settings and supply
+runtime secrets. The web app runs on `3000`, Blog on `3001`, and API on `4001`.
+The browser-test fixture can run without PostgreSQL; it does not verify real provider flows.
 
-```sh
-cp .env.example .env
-cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env
-cp apps/blog/.env.example apps/blog/.env
-```
+## Code map
 
-In PowerShell, use `Copy-Item` in place of `cp` if needed. Keep local `.env`
-files out of Git. On Windows, keep real secrets in user environment variables
-and open a new terminal after configuring them.
-
-Set the database credentials used by Compose, and make the API's `DATABASE_URL`
-match `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, and `DB_HOST_PORT`.
-The example passwords differ, so copying the templates alone is not sufficient.
-The default database port is `5433`; change both `DB_HOST_PORT` and
-`DATABASE_URL` if it is occupied. Set a real `EMAIL_VERIFICATION_SECRET` and a
-valid `MARKETPLACE_PROVIDER_TOKEN_KEY` before using account/source workflows.
-The root environment is used by Compose; npm workspace commands load the API's
-own environment and do not inherit the root `.env` file.
-
-Start PostgreSQL and apply the migrations:
-
-```bash
-npm run db:up
-npm run prisma:deploy
-```
-
-Run each application in its own terminal:
-
-```sh
-npm run dev:api
-npm run dev:web
-npm run dev:blog
-```
-
-Run `npm run seed` when you explicitly want development seed data. A clean
-database is intentionally not seeded during normal startup. Demo listings do
-not have approved releases and cannot exercise acquisition or review flows;
-use a source-verified, approved release for those journeys. In production, seed
-only administrator/reference data; `SEED_DEMO=true` is for a demo environment.
-
-The default local URLs are:
-
-| Service | URL |
+| Path | Responsibility |
 | --- | --- |
-| Community library | <http://localhost:3000> |
-| Blog | <http://localhost:3001> |
-| API health | <http://localhost:4001/api/health> |
+| `apps/web` | Next.js community catalog, reader dashboard and creator interface |
+| `apps/blog` | Separate Next.js editorial publication |
+| `apps/api` | Express API, authentication, authorization, Prisma and PostgreSQL |
+| `docs` | Product boundaries, architecture and operational guides |
 
-The main site uses `/explore`, `/communities`, `/account`, `/dashboard`,
-`/dashboard/library`, and `/dashboard/studio`; marketplace staff use
-`/moderation`. Persian routes use the `/fa` prefix, for example `/fa/explore`.
+The API hashes stored session tokens, checks expiry and explicit marketplace roles,
+and keeps creator operations owner-scoped. These are inspected boundaries, not a
+complete security-audit claim. See [creator ownership](docs/creator-onboarding.md)
+and [role operations](docs/marketplace-roles.md).
 
-### Accounts and background workers
+## Verification
 
-For local browser testing without an email provider, set
-`LOCAL_AUTO_VERIFY_EMAIL=true` and keep `WEB_PUBLIC_URL` on a loopback hostname.
-New password accounts will be verified immediately. The API rejects this bypass
-for non-loopback public URLs. Production and staging must use the real email
-verification worker described in
-[Email Verification Operations](docs/email-verification.md).
+Use the [documented checks](docs/development.md#verification) and inspect the
+[CI](.github/workflows/ci.yml) and [browser/performance runs](.github/workflows/web.yml).
+The 2026-10-30 review started from public source `4701126`. After the bounded
+serializer typing change, type-checks, 779 tests, web lint (two existing warnings)
+and all three builds passed, including tests on a fresh migrated PostgreSQL 16
+database. One Redis integration case was skipped without Redis. A focused browser pass
+completed 90 checks with six intentional device-specific skips using the mock API.
 
-To test creator source verification, generate a stable encryption key and run
-the source worker alongside the API:
-
-```bash
-openssl rand -base64 32
-npm run marketplace:source-worker --workspace @termspace/api
-```
-
-Set the generated value as `MARKETPLACE_PROVIDER_TOKEN_KEY` in the environment
-of both the API and source worker. In the creator release workspace, connect a
-fine-grained GitHub token with access to the submitted public repository or an
-npm token for the submitted package, then queue the source check. GitHub requires
-admin or maintain repository permission; npm requires authenticated write
-collaborator access. Tokens are encrypted at rest and never returned by the API.
-
-The standalone source command processes one batch; rerun it for queued checks
-and reconciliation. The `marketplace:source-worker:watch` script repeats it in
-a POSIX shell. Compose runs the recurring worker automatically. For real email
-delivery, configure the email provider and run `npm run email:worker -w apps/api`
-for each batch. Scheduled Blog publication uses
-`npm run publish:scheduled -w apps/api`. Compose runs both on a schedule.
-
-### Verification
-
-Run the repository checks from the root:
-
-```bash
-npm run typecheck
-npm test
-npm run lint -w apps/web
-npm run build
-```
-
-For web behavior and performance checks:
-
-```sh
-npm exec -w apps/web playwright install chromium
-npm run e2e -w apps/web
-npm run lhci -w apps/web
-```
-
-Playwright builds against the mock API and does not need PostgreSQL. Lighthouse
-also uses the mock fixture build; see [the web CI workflow](.github/workflows/web.yml)
-for the build environment and sequence. Unit tests skip database-dependent
-integration cases unless `INTEGRATION_DATABASE_URL` points to a disposable,
-migrated database; [the CI workflow](.github/workflows/ci.yml) runs those cases
-against PostgreSQL. See [Contributing](docs/CONTRIBUTING.md) for review guidance.
-
-Marketplace roles are assigned independently from Blog administration. See
-[Marketplace Role Operations](docs/marketplace-roles.md) for verified-account
-requirements and the audited grant/revoke command.
-Password-account verification delivery and Cloudflare onboarding are documented
-in [Email Verification Operations](docs/email-verification.md).
-Creator identity boundaries and self-service ownership are documented in
-[Creator Onboarding and Ownership](docs/creator-onboarding.md).
-Controlled item types, manifest validation, legacy classification, and immutable
-release storage are documented in [Marketplace Item Types and Manifests](docs/marketplace-manifests.md).
-Listing review states, immutable approved/proposed snapshots, and transition
-authorization are documented in [Marketplace Listing Lifecycle](docs/marketplace-listing-lifecycle.md).
-
-## Run the complete stack with Docker
-
-Docker Compose runs PostgreSQL, the shared API, the scheduled publishing worker,
-the marketplace source reconciliation worker,
-the community library, and the Blog:
-
-```bash
-cp .env.example .env
-# Configure database/admin passwords, signing secret, and provider-token key first.
-npm run docker:up
-```
-
-The API applies every committed Prisma migration before it starts. The other
-services wait for the API health check, so a migration failure prevents a
-partially working stack from coming online.
-
-The transactional email worker starts with the full stack and requires configured
-Cloudflare Email Service credentials. Configure them before testing verification
-or password-reset delivery; the local verification bypass does not provide email
-delivery. See [Email Verification Operations](docs/email-verification.md).
-
-With the example host ports, the loopback-only services are available at:
-
-- Community library: <http://localhost:3000>
-- Blog: <http://localhost:3001>
-- API health: <http://localhost:4001/api/health>
-- PostgreSQL: `localhost:5433`
-
-Confirm startup with `docker compose ps`; the database and API should report as
-healthy. Stop the stack without deleting local data with `npm run docker:down`.
-
-Persistent PostgreSQL data is stored in the `blog_pgdata` volume and local media
-uploads in `api_uploads`. To rebuild from a completely empty local state:
-
-```bash
-docker compose down -v --remove-orphans
-docker compose build --no-cache
-docker compose up -d
-```
-
-The `-v` reset permanently deletes the local database and locally uploaded
-media. It is not a normal restart command and cannot be undone without a backup.
-
-If a host port is already in use, set `DB_HOST_PORT`, `API_HOST_PORT`,
-`WEB_HOST_PORT`, or `BLOG_HOST_PORT` in `.env`; container-to-container addresses
-do not change. For example, `DB_HOST_PORT=55433 WEB_HOST_PORT=3100` lets the
-stack coexist with an older local database and frontend.
-
-For production, provide a real `.env` without committing it. Set strong database
-and administrator passwords, production `CORS_ORIGINS`, `MEDIA_PUBLIC_URL`, and
-the exact reverse-proxy hop count in `TRUST_PROXY`. Put TLS and public routing in
-a reverse proxy in front of the three HTTP services. PostgreSQL is bound to
-loopback by default and must not be exposed publicly.
-
-The API is shared infrastructure, but its route modules and permissions remain
-separated by domain. Article, reader, newsletter, and editorial routes serve the
-Blog; community-catalog routes retain their internal `marketplace` module names
-and remain separate from editorial controllers.
-
-The main frontend supports English and Persian through the same locale pattern
-as Blog: English uses `/`, while Persian uses `/fa` (for example `/fa/explore`
-and `/fa/account`). The web proxy strips the locale prefix internally, sets the
-request locale, and applies RTL document direction and Persian typography.
-
-## Production subdomain deployment
-
-The intended production layout is one parent domain with two Next.js surfaces,
-for example:
-
-```text
-www.example.com   -> apps/web
-blog.example.com  -> apps/blog
-api.example.com   -> apps/api (or an internal API service behind both proxies)
-```
-
-Both frontends call the same `/api/readers/*` endpoints and use the same
-`ReaderUser` records. Browser requests go through each frontend's same-origin
-`/backend/*` rewrite. Reader cookies are deliberately host-only so a compromised
-or dangling sibling subdomain cannot receive them; users therefore authenticate
-separately on each frontend until a controlled one-time token exchange is added.
-`SameSite=Lax` remains intentional and the cookie is unavailable to JavaScript.
-
-Set `API_URL` at frontend build time to the internal API address and include the public
-frontend origins in `CORS_ORIGINS` when the API is reachable cross-origin (for
-example `https://www.example.com,https://blog.example.com`). Keep
-`NEXT_PUBLIC_API_URL=/backend` in both frontends so browser calls remain
-same-origin and preserve the shared cookie.
-
-Set the public web origin (`WEB_PUBLIC_URL` in Compose,
-`NEXT_PUBLIC_SITE_URL` for the web app) before building so canonical links,
-sitemaps, and social metadata use the deployed domain. Keep
-`LOCAL_AUTO_VERIFY_EMAIL=false` outside loopback development.
-
-## Existing database migration
-
-The monorepo adds the previously missing initial content migration. Before the
-first deployment to a database that already contains the blog tables, mark only
-that baseline as applied, then deploy the remaining migrations:
-
-```bash
-npm exec --workspace @termspace/api prisma migrate resolve --applied 202608230001_initial_content
-npm run prisma:deploy
-```
-
-Do not run `resolve` on a new database; `prisma migrate deploy` must create the
-initial tables there.
-
-Before migrating an older database that used the retired `/api/community`
-publishing routes, complete the creator-ownership audit in
-[Deployment Safety](pending.md#deployment-safety). The ownership migration
-intentionally aborts rather than discard unreconciled ownership data.
+Production email/source-provider access, real device acceptance and launch readiness
+remain separate from these local checks. [Changelog](changelog.md) records scoped
+changes and verification.

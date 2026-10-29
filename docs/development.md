@@ -1,0 +1,252 @@
+# Development and operations
+
+[Project overview](../README.md). Run commands from the repository root.
+
+## Local development
+
+Prerequisites are Node.js 22 or newer, npm, Docker, and Docker Compose. Run the
+following commands from the repository root.
+
+Install all workspace dependencies from the repository root:
+
+```bash
+npm ci
+npm run prisma:generate
+```
+
+Copy the root and each application's environment template before starting:
+
+```sh
+cp .env.example .env
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+cp apps/blog/.env.example apps/blog/.env
+```
+
+In PowerShell, use `Copy-Item` in place of `cp` if needed. Keep local `.env`
+files out of Git. On Windows, keep real secrets in user environment variables
+and open a new terminal after configuring them.
+
+Set the database credentials used by Compose, and make the API's `DATABASE_URL`
+match `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, and `DB_HOST_PORT`.
+The example passwords differ, so copying the templates alone is not sufficient.
+The default database port is `5433`; change both `DB_HOST_PORT` and
+`DATABASE_URL` if it is occupied. Set a real `EMAIL_VERIFICATION_SECRET` and a
+valid `MARKETPLACE_PROVIDER_TOKEN_KEY` before using account/source workflows.
+The root environment is used by Compose; npm workspace commands load the API's
+own environment and do not inherit the root `.env` file.
+
+Start PostgreSQL and apply the migrations:
+
+```bash
+npm run db:up
+npm run prisma:deploy
+```
+
+Run each application in its own terminal:
+
+```sh
+npm run dev:api
+npm run dev:web
+npm run dev:blog
+```
+
+Run `npm run seed` when you explicitly want development seed data. A clean
+database is intentionally not seeded during normal startup. Demo listings do
+not have approved releases and cannot exercise acquisition or review flows;
+use a source-verified, approved release for those journeys. In production, seed
+only administrator/reference data; `SEED_DEMO=true` is for a demo environment.
+
+The default local URLs are:
+
+| Service | URL |
+| --- | --- |
+| Community library | <http://localhost:3000> |
+| Blog | <http://localhost:3001> |
+| API health | <http://localhost:4001/api/health> |
+
+The main site uses `/explore`, `/communities`, `/account`, `/dashboard`,
+`/dashboard/library`, and `/dashboard/studio`; marketplace staff use
+`/moderation`. Persian routes use the `/fa` prefix, for example `/fa/explore`.
+
+### Accounts and background workers
+
+For local browser testing without an email provider, set
+`LOCAL_AUTO_VERIFY_EMAIL=true` and keep `WEB_PUBLIC_URL` on a loopback hostname.
+New password accounts will be verified immediately. The API rejects this bypass
+for non-loopback public URLs. Production and staging must use the real email
+verification worker described in
+[Email Verification Operations](email-verification.md).
+
+To test creator source verification, generate a stable encryption key and run
+the source worker alongside the API:
+
+```bash
+openssl rand -base64 32
+npm run marketplace:source-worker --workspace @termspace/api
+```
+
+Set the generated value as `MARKETPLACE_PROVIDER_TOKEN_KEY` in the environment
+of both the API and source worker. In the creator release workspace, connect a
+fine-grained GitHub token with access to the submitted public repository or an
+npm token for the submitted package, then queue the source check. GitHub requires
+admin or maintain repository permission; npm requires authenticated write
+collaborator access. Tokens are encrypted at rest and never returned by the API.
+
+The standalone source command processes one batch; rerun it for queued checks
+and reconciliation. The `marketplace:source-worker:watch` script repeats it in
+a POSIX shell. Compose runs the recurring worker automatically. For real email
+delivery, configure the email provider and run `npm run email:worker -w apps/api`
+for each batch. Scheduled Blog publication uses
+`npm run publish:scheduled -w apps/api`. Compose runs both on a schedule.
+
+### Verification
+
+Run the repository checks from the root:
+
+```bash
+npm run typecheck
+npm test
+npm run lint -w apps/web
+npm run build
+```
+
+For web behavior and performance checks:
+
+```sh
+npm exec -w apps/web playwright install chromium
+npm run e2e -w apps/web
+npm run lhci -w apps/web
+```
+
+Playwright builds against the mock API and does not need PostgreSQL. Lighthouse
+also uses the mock fixture build; see [the web CI workflow](../.github/workflows/web.yml)
+for the build environment and sequence. Unit tests skip database-dependent
+integration cases unless `INTEGRATION_DATABASE_URL` points to a disposable,
+migrated database; [the CI workflow](../.github/workflows/ci.yml) runs those cases
+against PostgreSQL. See [Contributing](CONTRIBUTING.md) for review guidance.
+
+Marketplace roles are assigned independently from Blog administration. See
+[Marketplace Role Operations](marketplace-roles.md) for verified-account
+requirements and the audited grant/revoke command.
+Password-account verification delivery and Cloudflare onboarding are documented
+in [Email Verification Operations](email-verification.md).
+Creator identity boundaries and self-service ownership are documented in
+[Creator Onboarding and Ownership](creator-onboarding.md).
+Controlled item types, manifest validation, legacy classification, and immutable
+release storage are documented in [Marketplace Item Types and Manifests](marketplace-manifests.md).
+Listing review states, immutable approved/proposed snapshots, and transition
+authorization are documented in [Marketplace Listing Lifecycle](marketplace-listing-lifecycle.md).
+
+## Run the complete stack with Docker
+
+Docker Compose runs PostgreSQL, the shared API, the scheduled publishing worker,
+the marketplace source reconciliation worker,
+the community library, and the Blog:
+
+```bash
+cp .env.example .env
+# Configure database/admin passwords, signing secret, and provider-token key first.
+npm run docker:up
+```
+
+The API applies every committed Prisma migration before it starts. The other
+services wait for the API health check, so a migration failure prevents a
+partially working stack from coming online.
+
+The transactional email worker starts with the full stack and requires configured
+Cloudflare Email Service credentials. Configure them before testing verification
+or password-reset delivery; the local verification bypass does not provide email
+delivery. See [Email Verification Operations](email-verification.md).
+
+With the example host ports, the loopback-only services are available at:
+
+- Community library: <http://localhost:3000>
+- Blog: <http://localhost:3001>
+- API health: <http://localhost:4001/api/health>
+- PostgreSQL: `localhost:5433`
+
+Confirm startup with `docker compose ps`; the database and API should report as
+healthy. Stop the stack without deleting local data with `npm run docker:down`.
+
+Persistent PostgreSQL data is stored in the `blog_pgdata` volume and local media
+uploads in `api_uploads`. To rebuild from a completely empty local state:
+
+```bash
+docker compose down -v --remove-orphans
+docker compose build --no-cache
+docker compose up -d
+```
+
+The `-v` reset permanently deletes the local database and locally uploaded
+media. It is not a normal restart command and cannot be undone without a backup.
+
+If a host port is already in use, set `DB_HOST_PORT`, `API_HOST_PORT`,
+`WEB_HOST_PORT`, or `BLOG_HOST_PORT` in `.env`; container-to-container addresses
+do not change. For example, `DB_HOST_PORT=55433 WEB_HOST_PORT=3100` lets the
+stack coexist with an older local database and frontend.
+
+For production, provide secrets through the deployment environment. Keep local `.env`
+files out of Git. Set strong database
+and administrator passwords, production `CORS_ORIGINS`, `MEDIA_PUBLIC_URL`, and
+the exact reverse-proxy hop count in `TRUST_PROXY`. Put TLS and public routing in
+a reverse proxy in front of the three HTTP services. PostgreSQL is bound to
+loopback by default and must not be exposed publicly.
+
+The API is shared infrastructure, but its route modules and permissions remain
+separated by domain. Article, reader, newsletter, and editorial routes serve the
+Blog; community-catalog routes retain their internal `marketplace` module names
+and remain separate from editorial controllers.
+
+The main frontend supports English and Persian through the same locale pattern
+as Blog: English uses `/`, while Persian uses `/fa` (for example `/fa/explore`
+and `/fa/account`). The web proxy strips the locale prefix internally, sets the
+request locale, and applies RTL document direction and Persian typography.
+
+## Production subdomain deployment
+
+The intended production layout is one parent domain with two Next.js surfaces,
+for example:
+
+```text
+www.example.com   -> apps/web
+blog.example.com  -> apps/blog
+api.example.com   -> apps/api (or an internal API service behind both proxies)
+```
+
+Both frontends call the same `/api/readers/*` endpoints and use the same
+`ReaderUser` records. Browser requests go through each frontend's same-origin
+`/backend/*` rewrite. Reader cookies are deliberately host-only so a compromised
+or dangling sibling subdomain cannot receive them; users therefore authenticate
+separately on each frontend until a controlled one-time token exchange is added.
+`SameSite=Lax` remains intentional and the cookie is unavailable to JavaScript.
+
+Set `API_URL` at frontend build time to the internal API address and include the public
+frontend origins in `CORS_ORIGINS` when the API is reachable cross-origin (for
+example `https://www.example.com,https://blog.example.com`). Keep
+`NEXT_PUBLIC_API_URL=/backend` in both frontends so browser calls remain
+same-origin and preserve the shared cookie.
+
+Set the public web origin (`WEB_PUBLIC_URL` in Compose,
+`NEXT_PUBLIC_SITE_URL` for the web app) before building so canonical links,
+sitemaps, and social metadata use the deployed domain. Keep
+`LOCAL_AUTO_VERIFY_EMAIL=false` outside loopback development.
+
+## Existing database migration
+
+The monorepo adds the previously missing initial content migration. Before the
+first deployment to a database that already contains the blog tables, mark only
+that baseline as applied, then deploy the remaining migrations:
+
+```bash
+npm exec --workspace @termspace/api prisma migrate resolve --applied 202608230001_initial_content
+npm run prisma:deploy
+```
+
+Do not run `resolve` on a new database; `prisma migrate deploy` must create the
+initial tables there.
+
+Before migrating an older database that used the retired `/api/community`
+publishing routes, complete the creator-ownership audit in
+[Deployment Safety](../pending.md#deployment-safety). The ownership migration
+intentionally aborts rather than discard unreconciled ownership data.

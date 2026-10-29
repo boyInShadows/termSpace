@@ -2,6 +2,33 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-30 — GitHub presentation review
+
+- Condense the public README into purpose, status, real fixture captures, implemented
+  journeys, contribution limits and setup navigation. Preserve the operational
+  material in `docs/development.md` and correct its relative links.
+- Reconcile the stale README follow-ups with the current queue: public creator
+  profiles are implemented; notifications, Studio feedback, real email delivery,
+  Redis limiter startup reliability and final signed-in acceptance remain open.
+- Bounded API review: `apps/api/src/controllers/marketplaceController.ts` is named
+  by Astra's GitHub plan. Derive the serializer payload from its shared Prisma
+  include shape and infer nested mappings. All six serializer sites receive that
+  include; remove the unreachable creator `products` field fallback while retaining
+  the selected `_count`, zero and null-creator handling. Authentication,
+  authorization, query filters and owner boundaries are unchanged. This records
+  the reason for entering the API maintainer's lane.
+- Final checks: root typecheck, 779 tests, web lint (two existing warnings) and all
+  three builds passed. All migrations and database cases ran on a fresh disposable
+  PostgreSQL 16 database; one Redis case remains skipped. Focused production-fixture
+  browser pass: 90 passed, six intentional device-specific skips. Real provider,
+  deployment and device acceptance remain separate. Ramtin confirmed his contribution
+  as web presentation, landing page and dashboard shell; README credits that scope.
+- Shared `changelog.md` edit announced in the prior local commit body before editing.
+  Original `ramtin` checkout and its unpublished work remain separate. Final review
+  completed manually across correctness, readability, architecture, security and
+  performance; source fallback covered graph-excluded tests and callback references.
+  Hosted checks are recorded with the PR, not inferred from workflow-file presence.
+
 ## 2026-10-28
 
 - **Library depth (launch-readiness item).** `GET /api/marketplace/library`
