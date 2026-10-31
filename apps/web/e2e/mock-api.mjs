@@ -62,6 +62,11 @@ function listing(index) {
     rating: state === "published" ? 4.6 : 0,
     reviewCount: state === "published" ? 12 : 0,
     acquisitionCount: state === "published" ? 48 : 0,
+    acquisitionsLast30Days: state === "published" ? 9 : 0,
+    recentReviews: state === "published" ? [
+      { id: "review-1", author: "Ada Lovelace", rating: 5, body: "Saved me an afternoon of review churn.", createdAt: ago(2 * DAY) },
+      { id: "review-2", author: "Lin", rating: 4, body: "Good defaults, a little noisy on large diffs.", createdAt: ago(5 * DAY) },
+    ] : [],
     currentVersion: "1.2.0",
     releaseCount: 3,
     latestRelease: { version: "1.2.0", releasedAt: updatedAt },
@@ -212,6 +217,7 @@ async function handle(request, response) {
     return send(response, 200, { data: [], meta: { page: 1, limit: 24, total: 0, totalPages: 0 } });
   }
   if (route === "GET /api/marketplace/creator/profile") return send(response, 200, { data: profile(persona) });
+  if (route === "PATCH /api/marketplace/creator/profile") return send(response, 200, { data: { ...profile(persona), ...(await readJson(request)) } });
   if (route === "GET /api/marketplace/creator/dashboard") return send(response, 200, dashboard(persona));
 
   // Loud, so a test that starts depending on a new endpoint says which one.

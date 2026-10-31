@@ -28,7 +28,7 @@ const prismaMock = vi.hoisted(() => ({
   marketplaceCommunityPlacementEvent: { create: vi.fn() },
   marketplaceListingLifecycleEvent: { create: vi.fn(), findMany: vi.fn() },
   marketplaceReview: { findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), aggregate: vi.fn() },
-  marketplaceOrder: { count: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn() },
+  marketplaceOrder: { count: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), groupBy: vi.fn() },
   marketplaceCreator: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceRoleGrant: { findUnique: vi.fn(), create: vi.fn() },
   marketplaceRoleEvent: { create: vi.fn() },
@@ -1070,6 +1070,11 @@ describe("API", () => {
       productId: "product-1", action: "CHANGES_REQUESTED", reasonCode: "PERMISSIONS_UNCLEAR",
       publicReason: "Clarify network access.", createdAt: new Date("2026-09-16T09:00:00.000Z"),
     }]);
+    prismaMock.marketplaceOrder.groupBy.mockResolvedValue([{ productId: "product-1", _count: { _all: 2 } }]);
+    prismaMock.marketplaceReview.findMany.mockResolvedValue([
+      { id: "review-1", author: "Ada", rating: 5, body: "x".repeat(400), createdAt: new Date("2026-09-17T10:00:00.000Z") },
+      { id: "review-2", author: "Lin", rating: 3, body: "Fine.", createdAt: new Date("2026-09-16T10:00:00.000Z") },
+    ]);
 
     const response = await request(createApp())
       .get("/api/marketplace/creator/dashboard?page=1&limit=12")
@@ -1083,7 +1088,20 @@ describe("API", () => {
     expect(response.body.data.listings[0]).toMatchObject({
       id: "product-1", typeKey: "skill", state: "changes_requested", acquisitionCount: 7,
       releaseCount: 2, moderationFeedback: { reasonCode: "PERMISSIONS_UNCLEAR", message: "Clarify network access." },
+
+      acquisitionsLast30Days: 2,
     });
+    const [first, second] = response.body.data.listings[0].recentReviews;
+    expect(first).toMatchObject({ id: "review-1", author: "Ada", rating: 5 });
+    expect(first.body).toHaveLength(280);
+    expect(first.body.endsWith("…")).toBe(true);
+    expect(second.body).toBe("Fine.");
+    expect(prismaMock.marketplaceOrder.groupBy).toHaveBeenCalledWith(expect.objectContaining({
+      by: ["productId"], where: { productId: { in: ["product-1"] }, status: "completed", createdAt: { gte: expect.any(Date) } },
+    }));
+    expect(prismaMock.marketplaceReview.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { productId: "product-1", published: true, hiddenAt: null }, take: 3,
+    }));
     expect(response.body.meta).toEqual({ page: 1, limit: 12, total: 1, totalPages: 1 });
     expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { creator: { ownerUserId: "reader-1" } }, skip: 0, take: 12,
@@ -1122,6 +1140,8 @@ describe("API", () => {
     }))).mockResolvedValueOnce([]);
     prismaMock.marketplaceProduct.count.mockResolvedValue(cases.length);
     prismaMock.marketplaceOrder.count.mockResolvedValue(0);
+    prismaMock.marketplaceOrder.groupBy.mockResolvedValue([]);
+    prismaMock.marketplaceReview.findMany.mockResolvedValue([]);
     prismaMock.marketplaceListingLifecycleEvent.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce(cases.filter((item) => item.actor).map((item) => ({ productId: item.id, actorType: item.actor })));
     const response = await request(createApp()).get("/api/marketplace/creator/dashboard?page=1&limit=12")
       .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");

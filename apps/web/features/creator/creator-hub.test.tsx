@@ -10,6 +10,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
   return { ...original, getOwnedCreatorProfile: apiMocks.get, createOwnedCreatorProfile: apiMocks.create, updateOwnedCreatorProfile: apiMocks.update };
 });
 vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => sessionState }));
+vi.mock("./creator-dashboard", () => ({ CreatorDashboard: () => <p>Studio dashboard</p> }));
 vi.mock("@/lib/locale-context", () => ({
   useLocale: () => ({ locale: "en", t: {
     signIn: "Sign in", verifyEmail: "Verify your email", wait: "Please wait…",
@@ -59,8 +60,33 @@ describe("CreatorHub", () => {
     fireEvent.click(screen.getByRole("button", { name: "Create creator profile" }));
 
     await waitFor(() => expect(apiMocks.create).toHaveBeenCalledWith({ name: "Tool Builder", handle: "tool-builder", bio: "I build dependable agentic coding tools for teams." }));
-    expect(await screen.findByText("Creator profile saved.")).toBeInTheDocument();
+    // Creating the profile is the studio's first step, so it hands straight over to the studio.
+    expect(await screen.findByText("Studio dashboard")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Public name")).not.toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
+  });
+
+  it("edits an existing profile in Settings, not in the studio", async () => {
+    apiMocks.get.mockResolvedValue({ id: "creator-1", name: "Tool Builder", handle: "tool-builder", bio: "I build dependable agentic coding tools.", accessActive: true });
+    render(<CreatorHub />);
+    expect(await screen.findByText("Studio dashboard")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Public name")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Biography")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Your creator profile" })).toHaveAttribute("href", "/dashboard/settings#creator-profile");
+  });
+
+  it("explains revoked access instead of showing the studio", async () => {
+    apiMocks.get.mockResolvedValue({ id: "creator-1", name: "Tool Builder", handle: "tool-builder", bio: "x".repeat(30), accessActive: false });
+    render(<CreatorHub />);
+    expect(await screen.findByText("Access revoked")).toBeInTheDocument();
+    expect(screen.queryByText("Studio dashboard")).not.toBeInTheDocument();
+  });
+
+  it("keeps the creation form and says why when the profile could not be loaded", async () => {
+    apiMocks.get.mockRejectedValue(new Error("offline"));
+    render(<CreatorHub />);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Load failed");
+    expect(screen.getByLabelText("Public name")).toBeInTheDocument();
   });
 
   it("marks creator public names as English-only", async () => {

@@ -45,7 +45,7 @@ function dashboardResult(page = 1) {
       listings: [{
         id: `product-${page}`, slug: "owned-skill", name: "Owned Skill", type: "Skill", typeKey: "skill",
         state: "changes_requested", lifecycleVersion: 3, published: true, restoreTarget: null as { state: string; published: boolean } | null, rating: 4.5, reviewCount: 2,
-        acquisitionCount: 7, currentVersion: "1.1.0", releaseCount: 2,
+        acquisitionCount: 7, acquisitionsLast30Days: 0, recentReviews: [], currentVersion: "1.1.0", releaseCount: 2,
         latestRelease: { version: "1.1.0", releasedAt: "2026-09-15T10:00:00.000Z" },
         moderationFeedback: { action: "changes_requested", reasonCode: "PERMISSIONS_UNCLEAR", message: "Clarify network access.", createdAt: "2026-09-16T09:00:00.000Z" },
         recentUpdates: [{ id: `event-${page}`, action: "changes_requested", state: "changes_requested", message: "Clarify network access.", createdAt: "2026-09-16T09:00:00.000Z" }],
@@ -310,5 +310,65 @@ describe("CreatorDashboard", () => {
     fireEvent.click(screen.getByRole("button", { name: hub.confirmWithdrawal }));
     await screen.findByText(hub.withdrawalSuccess);
     expect(transitionListing).toHaveBeenCalledTimes(2);
+  });
+
+  describe("empty studio", () => {
+    const empty = () => ({ data: { summary: { totalListings: 0, publishedListings: 0, inReviewListings: 0, totalAcquisitions: 0 }, listings: [] }, meta: { page: 1, limit: 12, total: 0, totalPages: 0 } });
+
+    it.each(["en", "fa"] as const)("walks a new creator from draft to published and points to the next action (%s)", async (locale) => {
+      localeState.locale = locale;
+      getDashboard.mockResolvedValue(empty());
+      render(<CreatorDashboard />);
+      const hub = creatorWorkspace[locale].creatorHub;
+      const prefix = locale === "fa" ? "/fa" : "";
+      const steps = await screen.findByRole("list", { name: copy.noListings });
+      expect(within(steps).getAllByRole("listitem")).toHaveLength(4);
+      for (const title of [hub.onboardingTitle1, hub.onboardingTitle2, hub.onboardingTitle3, hub.onboardingTitle4]) expect(within(steps).getByRole("heading", { name: title })).toBeInTheDocument();
+      expect(screen.getByText(hub.noListingsIntro)).toBeInTheDocument();
+      expect(screen.queryByText(/next part of the workspace/i)).not.toBeInTheDocument();
+      expect(screen.getAllByRole("link", { name: /New listing/ }).at(-1)).toHaveAttribute("href", `${prefix}/dashboard/studio/listings/new`);
+      expect(screen.getByRole("link", { name: hub.connectSource })).toHaveAttribute("href", `${prefix}/dashboard/settings`);
+    });
+  });
+
+  describe("listing feedback", () => {
+    const withListing = (changes: Record<string, unknown>) => {
+      const result = dashboardResult();
+      Object.assign(result.data.listings[0], changes);
+      getDashboard.mockResolvedValue(result);
+    };
+
+    it("shows the last 30 days of acquisitions and recent reader reviews with a link to all of them", async () => {
+      withListing({
+        acquisitionsLast30Days: 5,
+        recentReviews: [
+          { id: "r1", author: "Ada", rating: 5, body: "Saved me an afternoon.", createdAt: "2026-09-17T10:00:00.000Z" },
+          { id: "r2", author: "Lin", rating: 3, body: "Does the job.", createdAt: "2026-09-16T10:00:00.000Z" },
+        ],
+      });
+      render(<CreatorDashboard />);
+      await screen.findByRole("heading", { name: "Owned Skill" });
+      const hub = creatorWorkspace.en.creatorHub;
+      expect(screen.getByText(hub.acquisitionsLast30Days)).toBeInTheDocument();
+      expect(screen.getByText("5", { selector: "bdi" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: hub.recentReviews })).toBeInTheDocument();
+      expect(screen.getByText("Saved me an afternoon.")).toBeInTheDocument();
+      expect(screen.getByText("Ada")).toBeInTheDocument();
+      expect(screen.getByText("5 / 5", { selector: "bdi" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: hub.readAllReviews })).toHaveAttribute("href", "/products/owned-skill#reviews");
+    });
+
+    it("says so when a published listing has no reviews, and stays quiet for an unpublished one", async () => {
+      withListing({ reviewCount: 0, recentReviews: [] });
+      const { unmount } = render(<CreatorDashboard />);
+      await screen.findByRole("heading", { name: "Owned Skill" });
+      expect(screen.getByText(creatorWorkspace.en.creatorHub.noReviewsYet)).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: creatorWorkspace.en.creatorHub.readAllReviews })).not.toBeInTheDocument();
+      unmount();
+      withListing({ published: false, state: "draft", reviewCount: 0, recentReviews: [] });
+      render(<CreatorDashboard />);
+      await screen.findByRole("heading", { name: "Owned Skill" });
+      expect(screen.queryByRole("heading", { name: creatorWorkspace.en.creatorHub.recentReviews })).not.toBeInTheDocument();
+    });
   });
 });

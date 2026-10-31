@@ -18,7 +18,7 @@ import { isEditable, lifecycleActionLabel, listingStateLabel, listingStatusClass
 const PAGE_SIZE = 12;
 type SubmissionFeedback = { id: string; message: string; sourceRequired?: boolean; refreshRequired?: boolean; success?: boolean } | null;
 
-export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
+export function CreatorDashboard() {
   const { locale, t } = useLocale();
   const hub = { ...t.creatorHub, ...creatorWorkspace[locale].creatorHub };
   const [page, setPage] = useState(1);
@@ -31,7 +31,6 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
   const [reviewing, setReviewing] = useState<{ id: string; action: CreatorListingAction } | null>(null);
   const mutationPending = useRef(false);
 
-  useEffect(() => { if (!loading) onReady?.(); }, [loading, onReady]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -141,9 +140,20 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
       <Button size="sm" variant="secondary" onClick={retry}>{hub.retry}</Button>
     </div>}
 
-    {listings.length === 0 ? <div className="mt-5 rounded-card border border-dashed bg-muted/25 p-10 text-center">
+    {listings.length === 0 ? <div className="mt-5 rounded-card border border-dashed bg-muted/25 p-6 sm:p-10">
       <h3 className="font-semibold text-2xl">{hub.noListings}</h3>
-      <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">{hub.noListingsIntro}</p>
+      <p className="mt-2 max-w-xl text-sm text-muted-foreground">{hub.noListingsIntro}</p>
+      <ol className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label={hub.noListings}>
+        {[{ title: hub.onboardingTitle1, body: hub.onboardingBody1 }, { title: hub.onboardingTitle2, body: hub.onboardingBody2 }, { title: hub.onboardingTitle3, body: hub.onboardingBody3 }, { title: hub.onboardingTitle4, body: hub.onboardingBody4 }].map((step, index) => <li key={step.title} className="border bg-surface p-4">
+          <span className="text-xs font-semibold text-muted-foreground tabular-nums">{number.format(index + 1)}</span>
+          <h4 className="mt-1 font-semibold">{step.title}</h4>
+          <p className="mt-1 text-sm text-muted-foreground">{step.body}</p>
+        </li>)}
+      </ol>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link className={buttonVariants()} href={localePath("/dashboard/studio/listings/new", locale)}><Plus aria-hidden="true" className="size-4" />{hub.newListing}</Link>
+        <Link className={buttonVariants({ variant: "secondary" })} href={localePath("/dashboard/settings", locale)}>{hub.connectSource}</Link>
+      </div>
     </div> : <div className="mt-5 space-y-4">
       {listings.map((listing) => <ListingCard
         key={listing.id}
@@ -256,10 +266,11 @@ function ListingCard({ listing, submitting, feedback, action, onReview, onCancel
       {!feedback.success && <Button className="ms-2" size="sm" variant="secondary" disabled={submitting} onClick={onRefresh}>{hub.retry}</Button>}
     </div>}
 
-    <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 border-y py-4 sm:grid-cols-4">
+    <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 border-y py-4 sm:grid-cols-5">
       <Metric label={hub.rating} value={listing.reviewCount ? `${number.format(listing.rating)} / ${number.format(5)}` : hub.noRating} icon={<Star />} />
       <Metric label={hub.reviews} value={number.format(listing.reviewCount)} />
       <Metric label={hub.acquisitions} value={number.format(listing.acquisitionCount)} icon={<Download />} />
+      <Metric label={hub.acquisitionsLast30Days} value={number.format(listing.acquisitionsLast30Days)} />
       <Metric label={hub.releases} value={number.format(listing.releaseCount)} icon={<Layers3 />} />
     </dl>
 
@@ -267,6 +278,22 @@ function ListingCard({ listing, submitting, feedback, action, onReview, onCancel
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-800 dark:text-amber-300">{hub.moderationFeedback}</p>
       <p className="mt-2 text-sm">{listing.moderationFeedback.message}</p>
       <p className="mt-2 text-xs text-muted-foreground">{date.format(new Date(listing.moderationFeedback.createdAt))} · {listing.moderationFeedback.reasonCode.replaceAll("_", " ")}</p>
+    </div>}
+
+    {(listing.recentReviews.length > 0 || listing.published) && <div className="mt-5">
+      <div className="flex items-baseline justify-between gap-4">
+        <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{hub.recentReviews}</h4>
+        {listing.published && listing.reviewCount > 0 && <Link className="text-xs font-semibold underline underline-offset-4" href={`${localePath(`/products/${listing.slug}`, locale)}#reviews`}>{hub.readAllReviews}</Link>}
+      </div>
+      {listing.recentReviews.length ? <ul className="mt-2 divide-y border-y">
+        {listing.recentReviews.map((review) => <li key={review.id} className="py-3 text-sm">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <span className="flex items-center gap-1.5 font-semibold"><Star aria-hidden="true" className="size-3.5" /><bdi dir="ltr">{number.format(review.rating)} / {number.format(5)}</bdi><span className="font-normal text-muted-foreground"><bdi>{review.author}</bdi></span></span>
+            <time className="text-xs text-muted-foreground" dateTime={review.createdAt}>{date.format(new Date(review.createdAt))}</time>
+          </div>
+          <p className="mt-1 max-w-prose break-words text-muted-foreground">{review.body}</p>
+        </li>)}
+      </ul> : <p className="mt-2 text-sm text-muted-foreground">{hub.noReviewsYet}</p>}
     </div>}
 
     <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">

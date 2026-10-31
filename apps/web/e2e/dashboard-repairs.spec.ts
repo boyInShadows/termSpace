@@ -80,11 +80,23 @@ test("global navigation also protects an unsaved dashboard draft", async ({ page
   await expect(page).toHaveURL(/\/explore$/);
 });
 
-test("Settings reaches the asynchronously loaded creator profile form", async ({ page }) => {
-  await page.goto("/dashboard/settings");
+test("the studio's edit link opens the creator profile form in Settings", async ({ page }) => {
+  await page.goto("/dashboard/studio");
   await page.getByRole("link", { name: copy.en.creatorHub.editTitle }).click();
-  await expect(page).toHaveURL(/\/dashboard\/studio#creator-profile$/);
+  await expect(page).toHaveURL(/\/dashboard\/settings#creator-profile$/);
   await expect(page.getByRole("heading", { name: copy.en.creatorHub.editTitle })).toBeInViewport();
+  await expect(page.locator("#creator-handle")).toBeDisabled();
+  // The studio itself no longer carries the form.
+  await page.goto("/dashboard/studio");
+  await expect(page.getByLabel(copy.en.creatorHub.bio)).toHaveCount(0);
+});
+
+test("a creator edits the public profile in Settings", async ({ page }) => {
+  await page.goto("/dashboard/settings");
+  await page.getByLabel(copy.en.creatorHub.name).fill("Ellis N North");
+  await page.getByLabel(copy.en.creatorHub.bio).fill("Builds careful agentic coding tools for teams.");
+  await page.getByRole("button", { name: copy.en.creatorHub.save }).click();
+  await expect(page.getByText(copy.en.creatorHub.saved)).toBeVisible();
 });
 
 test("every listing type exposes its required detail fields", async ({ page }) => {

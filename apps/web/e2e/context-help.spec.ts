@@ -1,15 +1,12 @@
 import { expect, test, type Locator } from "@playwright/test";
 import { copy } from "../lib/i18n";
 
+// The panel repositions itself on scroll, so wait for the page to settle before judging where it landed.
 async function inViewport(tooltip: Locator) {
-  const bounds = await tooltip.evaluate((element) => {
+  await expect.poll(() => tooltip.evaluate((element) => {
     const box = element.getBoundingClientRect();
-    return { left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: innerWidth, height: innerHeight };
-  });
-  expect(bounds.left).toBeGreaterThanOrEqual(7);
-  expect(bounds.top).toBeGreaterThanOrEqual(7);
-  expect(bounds.right).toBeLessThanOrEqual(bounds.width - 7);
-  expect(bounds.bottom).toBeLessThanOrEqual(bounds.height - 7);
+    return box.left >= 7 && box.top >= 7 && box.right <= innerWidth - 7 && box.bottom <= innerHeight - 7;
+  })).toBe(true);
 }
 
 test.beforeEach(async ({ context, baseURL, page }) => {

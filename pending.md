@@ -15,11 +15,15 @@ phase. Items 1 and 5 add API routes or migrations, so they touch shared surfaces
    the newsletter or future notifications. Add a preferences section backed by
    the existing newsletter subscription data; extend it when item 4 ships.
    Acceptance: unsubscribe reflected in the newsletter API, both locales.
-2. **Studio onboarding and feedback.** Give a creator with no listings a short
-   guide (profile, first draft, source check, submit). Show review feedback
-   and per-listing analytics (views, acquisitions over time) on the listing
-   card; this overlaps the privacy-conscious analytics item below, so build
-   them together. Acceptance: empty-state E2E, no personal data exposed.
+2. **Listing views and trends (privacy-conscious analytics).** The studio card
+   now shows acquisitions for the last 30 days and recent reader reviews, but
+   nothing records listing views, so there is no view-to-acquisition
+   conversion and no trend over time. Design a counter that stores no
+   personal data (daily per-listing aggregates, no per-visitor rows, honour
+   Do Not Track), decide what the creator sees (views, conversion, a 30-day
+   sparkline), and add it to the listing card. Needs a migration and a short
+   privacy-policy note. Acceptance: API test that no visitor identifier is
+   stored, UI states for no data, and the policy updated.
 3. **Creator notifications for moderation decisions.** Creators currently have
     to return to the dashboard to see approvals, rejections and change
     requests. Notify on each decision (in dashboard and by email) and let item

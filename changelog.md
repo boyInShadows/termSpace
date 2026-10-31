@@ -80,6 +80,54 @@ copy, imagery or illustration was taken from that site. The "Datasheet" rules
 
 ## 2026-10-28
 
+- **Move the creator profile form from the studio to Settings.** The studio
+  keeps only the first step, creating the profile (with its permanent handle),
+  and hands straight over to the studio dashboard once it exists; Settings now
+  edits the public name and biography in its own "Your creator profile"
+  section, with the handle read-only, a revoked-access message instead of the
+  form, and a "Become a TermSpace creator" link for readers without a profile.
+  The studio shows an "Edit your profile" link to `/dashboard/settings#creator-profile`
+  (Settings scrolls to it once the profile has loaded). One shared
+  `CreatorProfileForm` serves both places, and the form is now labelled by its
+  heading. A profile edit no longer reloads the session: only creating the
+  profile grants the creator role, and the reload swapped the page for its
+  skeleton and erased the "saved" message (found by the new E2E). Removed the
+  unused `onReady` prop from `CreatorDashboard`. No API change, no shared
+  surface touched.
+  - Verification: root typecheck, lint (two existing warnings), creator and
+    dashboard unit tests 145 (hub tests rewritten, four new Settings tests,
+    four new hub tests); E2E dashboard-repairs, capabilities, studio-feedback,
+    account-security, dashboard and budget 113 passed. The `context-help`
+    tooltip check now waits for the page to settle (the panel repositions on
+    scroll and the Settings page now has a help button further down); 66 of 66
+    over three repeats. Not run: the full suites and the full E2E for the
+    studio batch.
+
+- **Studio onboarding and listing feedback (launch-readiness item).** The
+  empty studio told new creators that draft creation was "the next part of the
+  workspace" although the New listing button works; it now shows a four-step
+  guide (describe it, link the source, submit for review, publish and learn)
+  with New listing and "Connect a source in Settings" actions. Each listing
+  card gains an "acquisitions in the last 30 days" metric and up to three
+  recent reader reviews (rating, author name, 280-character excerpt, date)
+  with a link to all reviews for published listings. The dashboard API adds
+  `acquisitionsLast30Days` (completed orders, one grouped query) and
+  `recentReviews` (published, not hidden, newest first, per listing); both
+  read only the listings already selected for the caller. New copy is
+  feature-local in `workspace-copy.ts` (English and Persian; the Persian needs
+  maintainer approval) and overrides the stale shared `noListingsIntro`; the
+  shared i18n files were not touched. Listing views and trends are queued as
+  their own item because nothing records views yet.
+  - Verification: root typecheck; API 4 new integration tests on the scratch
+    database (30-day window, pending orders excluded, newest three visible
+    reviews, hidden/unpublished/other creators' reviews never shown, empty
+    creator) plus the mocked dashboard tests updated (134 pass); 7 new web unit
+    tests and fixtures updated (153 pass across creator and dashboard); E2E
+    new `studio-feedback` spec and neighbouring dashboard, repairs and budget
+    specs: 92 passed, with one `context-help` mobile case that flakes in
+    parallel and passes alone (22 of 22). Not run: full suites and the full E2E
+    for this item. Shared surfaces: `pending.md`, `changelog.md`.
+
 - **Library depth (launch-readiness item).** `GET /api/marketplace/library`
   now takes `q` (name search, 80 characters, `%` and `_` treated literally),
   `type` (item type key) and `sort` (`newest` default, `oldest`, `name`); totals
