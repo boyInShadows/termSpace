@@ -1,0 +1,38 @@
+// Dashboard-only copy, kept out of the dictionary every public page ships.
+// Persian wording needs maintainer approval.
+export const notificationsCopy = {
+  en: {
+    title: "Notifications",
+    label: "Notifications",
+    unread: (count: number) => `${count} unread`,
+    loading: "Loading notifications…",
+    loadError: "Notifications could not be loaded.",
+    retry: "Retry",
+    empty: "No moderation decisions yet. Approvals, change requests and rejections appear here.",
+    markAllRead: "Mark all as read",
+    markingAll: "Marking…",
+    markedAll: "All notifications marked as read.",
+    markAllFailed: "Notifications could not be updated. Try again.",
+    approved: "Approved",
+    changes_requested: "Changes requested",
+    rejected: "Not approved",
+    reviewerNote: "Reviewer note",
+  },
+  fa: {
+    title: "اعلان‌ها",
+    label: "اعلان‌ها",
+    unread: (count: number) => `${count} خوانده‌نشده`,
+    loading: "در حال بارگذاری اعلان‌ها…",
+    loadError: "اعلان‌ها بارگذاری نشد.",
+    retry: "تلاش دوباره",
+    empty: "هنوز تصمیم بازبینی‌ای ثبت نشده است. تأیید، درخواست تغییر و رد در اینجا نمایش داده می‌شوند.",
+    markAllRead: "خواندن همه",
+    markingAll: "در حال ثبت…",
+    markedAll: "همهٔ اعلان‌ها خوانده‌شده شدند.",
+    markAllFailed: "اعلان‌ها به‌روزرسانی نشد. دوباره تلاش کنید.",
+    approved: "تأیید شد",
+    changes_requested: "درخواست تغییر",
+    rejected: "تأیید نشد",
+    reviewerNote: "یادداشت بازبین",
+  },
+} as const;

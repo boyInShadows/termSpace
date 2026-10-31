@@ -15,16 +15,10 @@ import { useStoredString } from "@/lib/hooks/use-stored-string";
 import { localePath } from "@/lib/i18n";
 
 /**
- * The header does two things beyond navigation.
- *
- * It condenses once you leave the hero — the announcement strip retracts and
- * the bar tightens — so the page gives its vertical space back to content as
- * soon as you have committed to reading.
- *
- * And it carries a plasma read-out of how far through the page you are.
- * Progress is written straight to a CSS custom property from a scroll
- * listener; routing the highest-frequency input on the page through React
- * state would make every frame a reconciliation.
+ * The header does one thing beyond navigation: it condenses once you leave the
+ * hero — the announcement strip retracts and the bar tightens — so the page
+ * gives its vertical space back to content as soon as you have committed to
+ * reading.
  */
 
 const ANNOUNCEMENT_KEY = "termspace:announcement-dismissed";
@@ -56,7 +50,6 @@ export function Header() {
   const [isCondensed, setIsCondensed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [dismissed, setDismissed] = useStoredString(ANNOUNCEMENT_KEY);
-  const progressRef = useRef<HTMLDivElement | null>(null);
   const headerRef = useRef<HTMLElement | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -105,16 +98,7 @@ export function Header() {
 
     const measure = () => {
       queued = false;
-      const scrolled = window.scrollY;
-      const scrollable = Math.max(
-        1,
-        document.documentElement.scrollHeight - window.innerHeight,
-      );
-      progressRef.current?.style.setProperty(
-        "--scrolled",
-        (scrolled / scrollable).toFixed(4),
-      );
-      setIsCondensed(scrolled > 80);
+      setIsCondensed(window.scrollY > 80);
     };
 
     const onScroll = () => {
@@ -251,14 +235,6 @@ export function Header() {
             </Button>
           </div>
         </div>
-
-        {/* --- reading progress ------------------------------------------ */}
-        <div
-          ref={progressRef}
-          aria-hidden
-          className="rule-plasma absolute inset-x-0 bottom-0 h-px origin-left"
-          style={{ transform: "scaleX(var(--scrolled, 0))" }}
-        />
       </div>
 
       {/* --- mobile menu -------------------------------------------------- */}

@@ -143,6 +143,7 @@ export async function deleteReaderAccount(req: Request, res: Response) {
       await tx.marketplaceFavorite.deleteMany({ where: { userId } });
       await tx.readerEmailVerification.deleteMany({ where: { userId } });
       await tx.readerPasswordReset.deleteMany({ where: { userId } });
+      await tx.marketplaceNotification.deleteMany({ where: { userId } });
       await tx.marketplaceRoleGrant.deleteMany({ where: { userId } });
       // The newsletter row belongs to the address, not the tombstone; stop delivery.
       await tx.newsletterSubscriber.updateMany({ where: { email: user.email }, data: { active: false } });

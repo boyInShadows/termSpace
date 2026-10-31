@@ -26,6 +26,16 @@ type SendEmailChangedNoticeInput = {
   correlationId: string;
 };
 
+type SendModerationDecisionEmailInput = {
+  to: string;
+  productName: string;
+  decision: "approved" | "changes_requested" | "rejected";
+  publicReason?: string | null;
+  dashboardUrl: string;
+  settingsUrl: string;
+  correlationId: string;
+};
+
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
 
 type FetchLike = typeof fetch;
@@ -93,6 +103,50 @@ export async function sendEmailChangedNotice(
     subject: "Your TermSpace email was changed",
     text: `The email address on your TermSpace account was changed to ${input.newEmail}. You were signed out everywhere.\n\nIf this was not you, reset your password right away and contact us.`,
     html: `<p>The email address on your TermSpace account was changed to <strong>${escapeHtml(input.newEmail)}</strong>. You were signed out everywhere.</p><p>If this was not you, reset your password right away and contact us.</p>`,
+  }, fetchImpl);
+}
+
+/**
+ * One email per staff decision. The public reason is included verbatim (it was
+ * written to be shown to the creator); the internal note never leaves staff.
+ * Settings controls this channel, so every message says where to turn it off.
+ */
+export async function sendModerationDecisionEmail(
+  input: SendModerationDecisionEmailInput,
+  fetchImpl: FetchLike = fetch,
+): Promise<EmailDeliveryResult> {
+  const reason = input.publicReason ? escapeHtml(input.publicReason) : null;
+  const link = escapeHtml(input.dashboardUrl);
+  const settings = escapeHtml(input.settingsUrl);
+  const footer = `Moderation email is on in your TermSpace settings. Turn it off at ${input.settingsUrl}.`;
+
+  const copy = {
+    approved: {
+      subject: `Your listing "${input.productName.replace(/[\r\n]+/g, " ")}" was approved`,
+      lead: `The review approved your listing, "${input.productName}". Publish it from the studio when you are ready.`,
+      reasonLabel: null,
+    },
+    changes_requested: {
+      subject: `Changes requested for "${input.productName.replace(/[\r\n]+/g, " ")}"`,
+      lead: `A reviewer asked for changes to "${input.productName}". The listing is editable again.`,
+      reasonLabel: "Reviewer note",
+    },
+    rejected: {
+      subject: `Your listing "${input.productName.replace(/[\r\n]+/g, " ")}" was not approved`,
+      lead: `The review did not approve "${input.productName}".`,
+      reasonLabel: "Reason",
+    },
+  }[input.decision];
+
+  const reasonText = reason ? `\n\n${copy.reasonLabel}:\n${input.publicReason}` : "";
+  const reasonHtml = reason ? `<p><strong>${copy.reasonLabel}:</strong><br>${reason}</p>` : "";
+
+  return sendTransactionalEmail({
+    to: input.to,
+    correlationId: input.correlationId,
+    subject: copy.subject,
+    text: `${copy.lead}${reasonText}\n\nOpen the studio: ${input.dashboardUrl}\n\n${footer}`,
+    html: `<p>${escapeHtml(copy.lead)}</p>${reasonHtml}<p><a href="${link}">Open the studio</a></p><p style="font-size:12px;color:#64748b">Moderation email is on in your TermSpace settings. Turn it off <a href="${settings}">in Settings</a>.</p>`,
   }, fetchImpl);
 }
 

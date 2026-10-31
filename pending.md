@@ -7,21 +7,14 @@ This file tracks known improvement work that has not been completed yet. When an
 Source: 2026-10-28 review of `/dashboard/studio`, `/dashboard/library` and
 `/dashboard/settings` (code, API routes and the 2026-10-25 E2E evidence; not
 rendered signed in). Items are in the suggested order; each is one reviewable
-phase. Item 1 adds API routes, an email worker path and notification storage,
-so it touches shared surfaces (`apps/api/src/app.ts`, `schema.prisma`,
-`migrations/`, `lib/api.ts`, `lib/types.ts`, `lib/i18n/`) and needs a written
-plan first.
+phase. Items that add routes, storage or worker paths name the shared surfaces
+they touch and need a written plan first.
 
-1. **Creator notifications for moderation decisions.** Creators currently have
-    to return to the dashboard to see approvals, rejections and change
-    requests. Notify on each decision (in dashboard and by email); delivery is
-    controlled by the email preferences section added on 2026-10-31.
-    Acceptance: API test per decision type, email worker coverage.
-2. **Consolidate creator copy.** `creator-hub.tsx` and
-    `provider-connections.tsx` merge `t.creatorHub`/`t.creatorReleases` with
-    `creatorWorkspace[locale]`. Collapse to one source so English and Persian
-    cannot drift. Acceptance: key-parity test passes, no behaviour change.
-3. **Set up Cloudflare Email Sending and test the email flows (needs the
+1. **Consolidate creator copy.** `creator-hub.tsx` and
+   `provider-connections.tsx` merge `t.creatorHub`/`t.creatorReleases` with
+   `creatorWorkspace[locale]`. Collapse to one source so English and Persian
+   cannot drift. Acceptance: key-parity test passes, no behaviour change.
+2. **Set up Cloudflare Email Sending and test the email flows (needs the
    domain).** Blocked until a domain is on the Cloudflare account. Steps:
    onboard the domain under Email Sending and add the SPF, DKIM and DMARC
    records it lists; create an API token with the "Email Sending: Edit"
@@ -40,7 +33,7 @@ plan first.
    tier would also cover the volume but needs a provider adapter (not built).
    Acceptance: each flow delivers a real email and the link or code works;
    record evidence in `changelog.md`.
-4. **Rate limiting can silently turn off at API startup.** Found 2026-10-28 in
+3. **Rate limiting can silently turn off at API startup.** Found 2026-10-28 in
    the Docker stack: with the machine under load, every limiter logged
    "async error during store initialization: Command timed out" (Redis
    `commandTimeout` is 1 s in `lib/redis.ts`), `passOnStoreError` then let all
@@ -50,7 +43,7 @@ plan first.
    loudly and expose it on the health check when a limiter's store is down.
    Acceptance: a test that starts the app with a slow Redis and still counts,
    plus a documented failure mode.
-5. **Signed-in verification pass (final gate).** Seed a verified account and a
+4. **Signed-in verification pass (final gate).** Seed a verified account and a
     verified creator, then check all three pages and their sub-routes in light
     and dark, English and Persian RTL, 320–1280 px, keyboard focus, and every
     loading/error/empty state. Also cover what automated tests could not:
@@ -82,3 +75,9 @@ plan first.
   `MarketplaceListingViewDaily` table) before starting the API that counts
   views: the new endpoint and the creator dashboard read that table. The change
   is additive; old API versions keep working after the migration.
+- Apply migration `202611010002_moderation_notifications`
+  (`ReaderUser.notifyModerationEmail`, the `MarketplaceNotification` table and
+  the new outbox `notificationId` target) before starting the API and email
+  worker that include creator notifications: reader queries select the new
+  column and the worker claims the new outbox target. The change is additive;
+  old API versions keep working after the migration.

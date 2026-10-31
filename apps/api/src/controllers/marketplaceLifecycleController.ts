@@ -41,10 +41,20 @@ const productLifecycleSelect = {
     take: 1,
     select: { actorType: true },
   },
-  creator: { select: { ownerUserId: true } },
+  creator: { select: { ownerUserId: true, owner: { select: { notifyModerationEmail: true } } } },
 } satisfies Prisma.MarketplaceProductSelect;
 
 const publicReasonActions = new Set<MarketplaceListingAction>(["REQUEST_CHANGES", "REJECT", "SUSPEND"]);
+
+/**
+ * The three staff decisions a creator is told about. Other actions (submit,
+ * publish, withdraw, archive, notes) are creator-initiated or internal.
+ */
+const moderationNotificationTypes = {
+  APPROVE: "LISTING_APPROVED",
+  REQUEST_CHANGES: "LISTING_CHANGES_REQUESTED",
+  REJECT: "LISTING_REJECTED",
+} as const;
 
 function actorFor(readerRoles: string[], creatorRequest: boolean): MarketplaceLifecycleActor {
   if (creatorRequest) return "CREATOR";
@@ -179,6 +189,28 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
           correlationId,
         },
       });
+
+      // The in-app record is written with the decision, so it cannot be lost
+      // if mail delivery fails. Email is a second, optional outbox row.
+      const notificationType = creatorRequest
+        ? undefined
+        : moderationNotificationTypes[action as keyof typeof moderationNotificationTypes];
+      if (notificationType && product.creator.ownerUserId) {
+        const notification = await tx.marketplaceNotification.create({
+          data: {
+            userId: product.creator.ownerUserId,
+            type: notificationType,
+            productId: product.id,
+            publicReason: req.body.publicReason ?? null,
+          },
+          select: { id: true },
+        });
+        if (product.creator.owner?.notifyModerationEmail ?? true) {
+          await tx.transactionalEmailOutbox.create({
+            data: { notificationId: notification.id, correlationId },
+          });
+        }
+      }
       return { ...next, correlationId };
     });
 

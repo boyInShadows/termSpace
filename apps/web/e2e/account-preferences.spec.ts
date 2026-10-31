@@ -15,29 +15,29 @@ for (const locale of ["en", "fa"] as const) {
     let subscribed = true;
     await page.route("**/api/readers/preferences", async (route) => {
       if (route.request().method() === "PATCH") subscribed = Boolean(route.request().postDataJSON().newsletter);
-      await route.fulfill({ json: { data: { newsletter: subscribed } } });
+      await route.fulfill({ json: { data: { newsletter: subscribed, moderation: true } } });
     });
     await page.goto(path);
     const panel = page.getByRole("region", { name: text.title, exact: true });
     const toggle = panel.getByRole("switch", { name: text.newsletter });
     await expect(toggle).toHaveAttribute("aria-checked", "true");
-    await expect(panel.getByText(text.on, { exact: true })).toBeVisible();
+    await expect(panel.getByText(text.on, { exact: true }).first()).toBeVisible();
 
     await toggle.focus();
     await page.keyboard.press("Space");
 
     await expect(toggle).toHaveAttribute("aria-checked", "false");
     await expect(panel.getByRole("status")).toHaveText(text.unsubscribed);
-    await expect(panel.getByText(text.off, { exact: true })).toBeVisible();
+    await expect(panel.getByText(text.off, { exact: true }).first()).toBeVisible();
 
     await page.reload();
-    await expect(page.getByRole("region", { name: text.title, exact: true }).getByRole("switch")).toHaveAttribute("aria-checked", "false");
+    await expect(page.getByRole("region", { name: text.title, exact: true }).getByRole("switch").first()).toHaveAttribute("aria-checked", "false");
   });
 
   test(`failed newsletter change keeps the switch and names the recovery (${locale})`, async ({ page }) => {
     await page.route("**/api/readers/preferences", async (route) => {
       if (route.request().method() === "PATCH") return route.fulfill({ status: 500, json: { error: { code: "FAILED", message: "fixture" } } });
-      await route.fulfill({ json: { data: { newsletter: true } } });
+      await route.fulfill({ json: { data: { newsletter: true, moderation: true } } });
     });
     await page.goto(path);
     const panel = page.getByRole("region", { name: text.title, exact: true });
@@ -53,7 +53,7 @@ for (const locale of ["en", "fa"] as const) {
     await page.route("**/api/readers/preferences", async (route) => {
       calls++;
       if (calls === 1) return route.fulfill({ status: 500, json: { error: { code: "FAILED", message: "fixture" } } });
-      await route.fulfill({ json: { data: { newsletter: false } } });
+      await route.fulfill({ json: { data: { newsletter: false, moderation: true } } });
     });
     await page.goto(path);
     const panel = page.getByRole("region", { name: text.title, exact: true });
@@ -62,6 +62,6 @@ for (const locale of ["en", "fa"] as const) {
 
     await panel.getByRole("button", { name: text.retry }).click();
 
-    await expect(panel.getByRole("switch")).toHaveAttribute("aria-checked", "false");
+    await expect(panel.getByRole("switch").first()).toHaveAttribute("aria-checked", "false");
   });
 }

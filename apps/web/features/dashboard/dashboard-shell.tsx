@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { EmailVerification } from "@/features/account/email-verification";
@@ -24,7 +24,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() ?? "/dashboard";
   const signInHref = `${localePath("/account", locale)}?next=${encodeURIComponent(pathname)}`;
+  const [Menu, setMenu] = useState<ComponentType | null>(null);
   const isSignedOut = !session.identityLoading && !session.email;
+
+  useEffect(() => {
+    // The feed is only useful after hydration; loading it this way keeps its
+    // code out of the dashboard's first-load scripts.
+    let active = true;
+    void import("./notification-menu").then((module) => {
+      if (active) setMenu(() => module.NotificationMenu);
+    });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     // Smooth page scrolling can leave keyboard focus behind the fixed tab bar.
@@ -58,7 +69,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {/* Bottom padding clears the fixed tab bar below lg. */}
         <main id="content" tabIndex={-1} className="min-w-0 px-4 pb-24 pt-6 sm:px-6 lg:px-10 lg:py-8">
           <div className="mx-auto max-w-[1200px]">
-            <DashboardSearch />
+            <div className="mb-6 flex items-center gap-2">
+              <DashboardSearch />
+              {Menu ? <Menu /> : <span aria-hidden className="size-11 shrink-0" />}
+            </div>
             <div key={session.email}>
                 {session.identityLoading ? <DashboardOverviewSkeleton /> : !session.emailVerified ? <EmailVerification /> : children}
             </div>

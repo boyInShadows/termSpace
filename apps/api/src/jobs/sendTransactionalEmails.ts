@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { pathToFileURL } from "node:url";
 import { Prisma, type TransactionalEmailStatus } from "@prisma/client";
-import { emailConfig, sendEmailChangeEmail, sendEmailChangedNotice, sendPasswordResetEmail, sendVerificationEmail } from "../lib/cloudflareEmail.js";
+import { emailConfig, sendEmailChangeEmail, sendEmailChangedNotice, sendModerationDecisionEmail, sendPasswordResetEmail, sendVerificationEmail } from "../lib/cloudflareEmail.js";
 import { createEmailChangeToken, createEmailVerificationToken, createPasswordResetCode, emailChangeUrl, verificationSecret, verificationUrl } from "../lib/emailVerification.js";
 import { prisma } from "../lib/prisma.js";
 
@@ -14,9 +14,20 @@ type ClaimedEmail = {
   passwordResetId: string | null;
   emailChangeId: string | null;
   emailChangeNoticeId: string | null;
+  notificationId: string | null;
   correlationId: string;
   attempts: number;
 };
+
+/**
+ * Moderation decisions are the one notification type delivered by email today.
+ * The mapping lives here so the database enum stays presentation-free.
+ */
+const decisionByNotification = {
+  LISTING_APPROVED: "approved",
+  LISTING_CHANGES_REQUESTED: "changes_requested",
+  LISTING_REJECTED: "rejected",
+} as const;
 
 export async function claimTransactionalEmails(limit = 10): Promise<ClaimedEmail[]> {
   const boundedLimit = Math.max(1, Math.min(limit, 50));
@@ -36,7 +47,7 @@ export async function claimTransactionalEmails(limit = 10): Promise<ClaimedEmail
     SET "status" = 'PROCESSING', "lockedAt" = NOW(), "attempts" = outbox."attempts" + 1, "updatedAt" = NOW()
     FROM candidates
     WHERE outbox."id" = candidates."id"
-    RETURNING outbox."id", outbox."verificationId", outbox."passwordResetId", outbox."emailChangeId", outbox."emailChangeNoticeId", outbox."correlationId", outbox."attempts"
+    RETURNING outbox."id", outbox."verificationId", outbox."passwordResetId", outbox."emailChangeId", outbox."emailChangeNoticeId", outbox."notificationId", outbox."correlationId", outbox."attempts"
   `);
 }
 
@@ -100,6 +111,36 @@ export async function processTransactionalEmailBatch(limit = Number(process.env.
         continue;
       }
       result = await sendEmailChangedNotice({ to: change.previousEmail, newEmail: change.newEmail, correlationId: job.correlationId });
+    } else if (job.notificationId) {
+      const notification = await prisma.marketplaceNotification.findUnique({
+        where: { id: job.notificationId },
+        select: {
+          id: true,
+          type: true,
+          publicReason: true,
+          user: { select: { email: true, notifyModerationEmail: true } },
+          product: { select: { name: true } },
+        },
+      });
+      if (!notification) {
+        await prisma.transactionalEmailOutbox.update({ where: { id: job.id }, data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "NOTIFICATION_INACTIVE" } });
+        continue;
+      }
+      if (!notification.user.notifyModerationEmail) {
+        // The creator opted out after the decision was made.
+        await prisma.transactionalEmailOutbox.update({ where: { id: job.id }, data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "NOTIFICATION_OPTED_OUT" } });
+        continue;
+      }
+      const webUrl = (process.env.WEB_PUBLIC_URL ?? "").replace(/\/$/, "");
+      result = await sendModerationDecisionEmail({
+        to: notification.user.email,
+        productName: notification.product.name,
+        decision: decisionByNotification[notification.type],
+        publicReason: notification.publicReason,
+        dashboardUrl: `${webUrl}/dashboard/studio`,
+        settingsUrl: `${webUrl}/dashboard/settings#account-preferences`,
+        correlationId: job.correlationId,
+      });
     } else {
       await prisma.transactionalEmailOutbox.update({ where: { id: job.id }, data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "INVALID_TARGET" } });
       continue;

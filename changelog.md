@@ -2,6 +2,73 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-01 — Creator notifications for moderation decisions
+
+- **What the creator gets.** An approval, a change request or a rejection now
+  creates one in-app notification for the listing owner and, unless they opted
+  out, one email. The dashboard header gains a bell with an unread count;
+  opening it refreshes the feed. Each row names the listing, the decision, the
+  public reviewer note and the date, and links to the studio. "Mark all as
+  read" clears the badge; using a row's link clears that row. Empty, loading,
+  failure and retry states are kept, and the panel closes on Escape, outside
+  click and route change.
+- **What is stored and sent.** `MarketplaceNotification` copies the decision
+  type and the public reason only — never the internal note. Email is a second
+  `TransactionalEmailOutbox` row with a new `notificationId` target, so a failed
+  delivery cannot lose the in-app record. The worker re-checks the preference
+  and cancels with `NOTIFICATION_OPTED_OUT`; a missing row cancels with
+  `NOTIFICATION_INACTIVE`. Creator-initiated transitions, internal notes and
+  community-placement decisions create nothing. Account deletion removes the
+  reader's notification rows with the rest of their personal data.
+- **Preference.** `ReaderUser.notifyModerationEmail` defaults to on and sits
+  beside the newsletter switch in Settings → Email preferences; in-app
+  notifications are always on. The two switches save independently and the API
+  accepts either field.
+- **API.** `GET /api/marketplace/notifications` returns the caller's newest 12
+  rows plus an unread count; `POST /api/marketplace/notifications/read` marks
+  all or the supplied ids, always scoped by the session. `GET`/`PATCH
+  /api/readers/preferences` add `moderation` beside `newsletter`.
+- **Migration.** `202611010002_moderation_notifications` adds the reader column,
+  the notification table and the outbox target, and widens
+  `TransactionalEmailOutbox_exactly_one_target`. Additive; applied to the local
+  database.
+- **Shared surfaces touched:** `apps/api/prisma/schema.prisma`,
+  `apps/api/prisma/migrations/`, `changelog.md`, `pending.md`. Files:
+  `marketplaceLifecycleController.ts`, `marketplaceNotificationController.ts`
+  (new), `readerPreferencesController.ts`, `readerAccountController.ts`,
+  `validation/schemas.ts`,
+  `routes/marketplaceRoutes.ts`, `lib/cloudflareEmail.ts`,
+  `jobs/sendTransactionalEmails.ts`, `lib/account-api.ts`,
+  `lib/notification-api.ts` (new),
+  `features/dashboard/notification-menu.tsx` (new),
+  `features/dashboard/notifications-copy.ts` (new), `dashboard-shell.tsx`,
+  `dashboard-search.tsx`, `components/layout/header.tsx`,
+  `account-preferences.tsx` and its copy/tests,
+  `e2e/notifications.spec.ts` (new), `e2e/mock-api.mjs` and
+  `e2e/account-preferences.spec.ts`. `lib/i18n/`, `lib/types.ts` and
+  `lib/api.ts` were not touched.
+- **Budget.** The bell's code loads after hydration (a manual `import()` in the
+  dashboard shell) instead of in the dashboard's first paint. The decorative
+  reading-progress line was removed from the shared header; with the new client
+  module in the graph, the FA detail page had reached 0.2 kB over its 165 kB
+  gate. Both changes are presentation-only.
+- **Verification.** Root typecheck; all tests (API, web 478, blog 17); web lint
+  (0 errors, 2 pre-existing warnings); all builds; the migration applied to the
+  local database and checked by running a real staff decision (a notification
+  and one single-target outbox row were created, then removed with the temporary
+  demo change). The first full serialized E2E run passed 505 with 46 intentional
+  skips and four first-load-JS budget failures (dashboard 1.3 kB and FA detail
+  0.2 kB over). After the lazy bell and the header trim, the budget,
+  notifications and shared-navigation specs passed (42 passed, 6 skips); the
+  remaining full suite was not re-run after that final presentation-only change.
+  The panel was inspected against the local stack in EN/FA, light/dark,
+  including RTL. Not verified: real Cloudflare delivery (the provider is not
+  configured locally) and real-phone testing.
+- **Out of scope / follow-ups.** Suspension decisions can reuse the same model.
+  Transactional email copy is English, like the other account mail; a Persian
+  email needs a stored locale or a bilingual template. Real delivery remains
+  blocked on the Cloudflare Email Sending item in `pending.md`.
+
 ## 2026-11-01 — Listing views and reach (launch-readiness item 1)
 
 - **What a creator sees.** Each studio listing card gains a "Reach · last 30

@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({ get: vi.fn(), reader: vi.fn(), replace: vi.fn(
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: mocks.replace, refresh: vi.fn() }) }));
 vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: "fa", t: copy.fa }) }));
 vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => ({ email: "creator@example.test", marketplaceRoles: [], refresh: mocks.sessionRefresh }) }));
-vi.mock("@/lib/account-api", async (original) => ({ ...await original<typeof import("@/lib/account-api")>(), getNewsletterPreference: mocks.preferences }));
+vi.mock("@/lib/account-api", async (original) => ({ ...await original<typeof import("@/lib/account-api")>(), getEmailPreferences: mocks.preferences }));
 vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), getOwnedCreatorProfile: mocks.get, getReaderProfile: mocks.reader, logout: mocks.logout, updateOwnedCreatorProfile: mocks.update }));
 const { ApiError } = await import("@/lib/api");
 const { AccountSettings } = await import("./account-settings");
@@ -14,7 +14,7 @@ const { accountSecurityCopy } = await import("./account-security-copy");
 
 describe("account profile state", () => {
   afterEach(cleanup);
-  beforeEach(() => { vi.clearAllMocks(); mocks.reader.mockResolvedValue({ createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false }); mocks.preferences.mockResolvedValue({ newsletter: true }); });  it("does not claim a missing profile while loading, recovers a failure and isolates Latin identity", async () => {
+  beforeEach(() => { vi.clearAllMocks(); mocks.reader.mockResolvedValue({ createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false }); mocks.preferences.mockResolvedValue({ newsletter: true, moderation: true }); });  it("does not claim a missing profile while loading, recovers a failure and isolates Latin identity", async () => {
     let reject!: (cause: Error) => void;
     mocks.get.mockReturnValueOnce(new Promise((_, fail) => { reject = fail; })).mockResolvedValue(creator);
     render(<AccountSettings />);

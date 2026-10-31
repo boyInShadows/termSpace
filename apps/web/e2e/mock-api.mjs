@@ -200,14 +200,16 @@ async function handle(request, response) {
   if (persona === "reader" && pathname.startsWith("/api/marketplace/creator/")) return send(response, 403, error("FORBIDDEN", "Creator access required"));
   if (route === "GET /api/marketplace/creator/provider-connections") return send(response, 200, { data: [] });
   if (route === "GET /api/marketplace/favorites") return send(response, 200, { data: [] });
+  if (route === "GET /api/marketplace/notifications") return send(response, 200, { data: { unread: 0, notifications: [] } });
+  if (route === "POST /api/marketplace/notifications/read") return send(response, 200, { data: { updated: 0, unread: 0 } });
   if (route === "GET /api/readers/profile") return send(response, 200, {
     data: { email: PERSONAS[persona].email, createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false, emailVerified: true },
   });
   // Stateless default: tests that need persistence intercept this route themselves.
-  if (route === "GET /api/readers/preferences") return send(response, 200, { data: { newsletter: true } });
+  if (route === "GET /api/readers/preferences") return send(response, 200, { data: { newsletter: true, moderation: true } });
   if (route === "PATCH /api/readers/preferences") {
     const body = await readJson(request);
-    return send(response, 200, { data: { newsletter: Boolean(body.newsletter) } });
+    return send(response, 200, { data: { newsletter: body.newsletter ?? true, moderation: body.moderation ?? true } });
   }
   if (route === "POST /api/readers/profile/email") {
     const body = await readJson(request);

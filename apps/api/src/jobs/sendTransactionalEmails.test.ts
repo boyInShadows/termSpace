@@ -2,16 +2,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const sendVerificationEmail = vi.hoisted(() => vi.fn());
 const sendPasswordResetEmail = vi.hoisted(() => vi.fn());
+const sendEmailChangeEmail = vi.hoisted(() => vi.fn());
+const sendModerationDecisionEmail = vi.hoisted(() => vi.fn());
 const emailConfig = vi.hoisted(() => vi.fn());
 const prismaMock = vi.hoisted(() => ({
   $queryRaw: vi.fn(),
   readerEmailVerification: { findUnique: vi.fn() },
   readerPasswordReset: { findUnique: vi.fn() },
+  readerEmailChange: { findUnique: vi.fn() },
+  marketplaceNotification: { findUnique: vi.fn() },
   transactionalEmailOutbox: { update: vi.fn() },
 }));
 
 vi.mock("../lib/prisma.js", () => ({ prisma: prismaMock }));
-vi.mock("../lib/cloudflareEmail.js", () => ({ emailConfig, sendPasswordResetEmail, sendVerificationEmail }));
+vi.mock("../lib/cloudflareEmail.js", () => ({ emailConfig, sendEmailChangeEmail, sendModerationDecisionEmail, sendPasswordResetEmail, sendVerificationEmail }));
 
 process.env.EMAIL_VERIFICATION_SECRET = "test-secret-that-is-definitely-longer-than-32-bytes";
 process.env.WEB_PUBLIC_URL = "https://termspace.example";
@@ -20,7 +24,7 @@ const { processTransactionalEmailBatch } = await import("./sendTransactionalEmai
 describe("transactional email worker", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    prismaMock.$queryRaw.mockResolvedValue([{ id: "outbox-1", verificationId: "verification-1", passwordResetId: null, correlationId: "correlation-1", attempts: 1 }]);
+    prismaMock.$queryRaw.mockResolvedValue([{ id: "outbox-1", verificationId: "verification-1", passwordResetId: null, emailChangeId: null, emailChangeNoticeId: null, notificationId: null, correlationId: "correlation-1", attempts: 1 }]);
     prismaMock.readerEmailVerification.findUnique.mockResolvedValue({
       id: "verification-1", userId: "reader-1", expiresAt: new Date(Date.now() + 60_000), consumedAt: null,
       user: { email: "reader@example.com", emailVerifiedAt: null },
@@ -90,5 +94,45 @@ describe("transactional email worker", () => {
     await expect(processTransactionalEmailBatch()).resolves.toBe(1);
     expect(sendPasswordResetEmail).toHaveBeenCalledWith({ to: "reader@example.com", code: expect.stringMatching(/^\d{6}$/), correlationId: "correlation-reset" });
     expect(sendVerificationEmail).not.toHaveBeenCalled();
+  });
+
+  it("delivers a moderation decision to the listing owner", async () => {
+    prismaMock.$queryRaw.mockResolvedValueOnce([{ id: "outbox-notification", verificationId: null, passwordResetId: null, emailChangeId: null, emailChangeNoticeId: null, notificationId: "notification-1", correlationId: "correlation-moderation", attempts: 1 }]);
+    prismaMock.marketplaceNotification.findUnique.mockResolvedValue({
+      id: "notification-1", type: "LISTING_CHANGES_REQUESTED", publicReason: "Clarify network access.",
+      user: { email: "creator@example.com", notifyModerationEmail: true },
+      product: { name: "Owned Skill" },
+    });
+    sendModerationDecisionEmail.mockResolvedValue({ outcome: "sent", statusCode: 200 });
+
+    await expect(processTransactionalEmailBatch()).resolves.toBe(1);
+    expect(sendModerationDecisionEmail).toHaveBeenCalledWith({
+      to: "creator@example.com",
+      productName: "Owned Skill",
+      decision: "changes_requested",
+      publicReason: "Clarify network access.",
+      dashboardUrl: "https://termspace.example/dashboard/studio",
+      settingsUrl: "https://termspace.example/dashboard/settings#account-preferences",
+      correlationId: "correlation-moderation",
+    });
+    expect(prismaMock.transactionalEmailOutbox.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "outbox-notification" }, data: expect.objectContaining({ status: "SENT" }),
+    }));
+  });
+
+  it("cancels a queued moderation email when the owner opted out", async () => {
+    prismaMock.$queryRaw.mockResolvedValueOnce([{ id: "outbox-notification", verificationId: null, passwordResetId: null, emailChangeId: null, emailChangeNoticeId: null, notificationId: "notification-1", correlationId: "correlation-moderation", attempts: 1 }]);
+    prismaMock.marketplaceNotification.findUnique.mockResolvedValue({
+      id: "notification-1", type: "LISTING_APPROVED", publicReason: null,
+      user: { email: "creator@example.com", notifyModerationEmail: false },
+      product: { name: "Owned Skill" },
+    });
+
+    await processTransactionalEmailBatch();
+    expect(sendModerationDecisionEmail).not.toHaveBeenCalled();
+    expect(prismaMock.transactionalEmailOutbox.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "outbox-notification" },
+      data: expect.objectContaining({ status: "CANCELLED", lastErrorCode: "NOTIFICATION_OPTED_OUT" }),
+    }));
   });
 });

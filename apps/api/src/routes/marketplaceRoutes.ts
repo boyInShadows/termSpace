@@ -4,6 +4,7 @@ import { createOwnedCreatorProfile, getCreatorDashboard, getOwnedCreatorProfile,
 import { transitionModeratedMarketplaceListing, transitionOwnedMarketplaceListing } from "../controllers/marketplaceLifecycleController.js";
 import { createOwnedMarketplaceDraft, getOwnedMarketplaceDraft, listMarketplaceDraftOptions, updateOwnedMarketplaceDraft } from "../controllers/marketplaceDraftController.js";
 import { addMarketplaceModerationNote, getMarketplaceModerationPreview, listMarketplaceModerationQueue, moderateMarketplaceCommunityPlacement } from "../controllers/marketplaceModerationController.js";
+import { listMarketplaceNotifications, markMarketplaceNotificationsRead } from "../controllers/marketplaceNotificationController.js";
 import { connectOwnedProvider, enqueueOwnedSourceCheck, listOwnedProviderConnections, revokeOwnedProvider } from "../controllers/marketplaceSourceController.js";
 import { deleteReview, getMyReview, listProductReviewsForModeration, saveReview, setReviewVisibility } from "../controllers/marketplaceReviewController.js";
 import { getMarketplaceReportCase, listMarketplaceCaseEvents, listMarketplaceCaseReports, listMarketplaceReportCases, reportMarketplaceListing, triageMarketplaceReportCase } from "../controllers/marketplaceReportController.js";
@@ -11,7 +12,7 @@ import { marketplaceReportSchema, moderationCaseQuerySchema, moderationCaseTriag
 import { requireMarketplaceRole, requireReader, requireVerifiedReader } from "../middleware/auth.js";
 import { reportWriteRateLimit, reviewWriteRateLimit, searchRateLimit, listingViewRateLimit } from "../middleware/security.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
-import { marketplaceCreatorQuerySchema, communityPlacementDecisionSchema, marketplaceAcquireSchema, releaseVersionSchema, reviewVisibilitySchema, reviewWriteSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
+import { marketplaceCreatorQuerySchema, communityPlacementDecisionSchema, marketplaceAcquireSchema, releaseVersionSchema, reviewVisibilitySchema, reviewWriteSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, notificationReadSchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
 
 const router = Router();
 router.param("id", validateRouteParam("id", routeIdSchema));
@@ -55,6 +56,8 @@ router.post("/moderation/products/:id/notes", requireMarketplaceRole("moderator"
 router.post("/moderation/products/:id/community-placements/:communitySlug", requireMarketplaceRole("moderator", "administrator"), validate(communityPlacementDecisionSchema), moderateMarketplaceCommunityPlacement);
 router.post("/moderation/products/:id/lifecycle", requireMarketplaceRole("moderator", "administrator"), validate(moderatedListingLifecycleSchema), transitionModeratedMarketplaceListing);
 router.get("/favorites", requireReader, listMarketplaceFavorites);
+router.get("/notifications", requireReader, listMarketplaceNotifications);
+router.post("/notifications/read", requireReader, validate(notificationReadSchema), markMarketplaceNotificationsRead);
 router.get("/library", requireReader, validate(marketplaceLibraryQuerySchema, "query"), listMarketplaceLibrary);
 router.put("/products/:slug/favorite", requireReader, addMarketplaceFavorite);
 router.delete("/products/:slug/favorite", requireReader, removeMarketplaceFavorite);

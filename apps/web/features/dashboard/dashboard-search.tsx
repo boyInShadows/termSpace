@@ -26,7 +26,7 @@ export function DashboardSearch() {
   }, []);
 
   return (
-    <form role="search" action={localePath("/explore", locale)} className="mb-6 w-full sm:ms-auto sm:max-w-md">
+    <form role="search" action={localePath("/explore", locale)} className="w-full min-w-0 sm:ms-auto sm:max-w-md">
       <label htmlFor="dashboard-search" className="sr-only">
         {t.dashboardHome.searchLabel}
       </label>

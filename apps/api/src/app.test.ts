@@ -14,7 +14,8 @@ const prismaMock = vi.hoisted(() => ({
   newsletterSubscriber: { findUnique: vi.fn(), upsert: vi.fn(), updateMany: vi.fn(), delete: vi.fn() },
   readerEmailVerification: { findUnique: vi.fn(), findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   readerPasswordReset: { findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
-  transactionalEmailOutbox: { updateMany: vi.fn() },
+  transactionalEmailOutbox: { updateMany: vi.fn(), create: vi.fn() },
+  marketplaceNotification: { create: vi.fn(), findMany: vi.fn(), count: vi.fn(), updateMany: vi.fn() },
   marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), groupBy: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceProductVersion: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceReleaseManifest: { create: vi.fn(), update: vi.fn(), findFirst: vi.fn() },
@@ -478,7 +479,7 @@ describe("API", () => {
     });
   });
 
-  it("reads and writes the signed-in reader's newsletter preference", async () => {
+  it("reads and writes the signed-in reader's email preferences", async () => {
     prismaMock.readerSession.findFirst.mockResolvedValue({
       id: "session-1",
       user: { id: "reader-1", email: "Reader@Example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
@@ -486,26 +487,30 @@ describe("API", () => {
     prismaMock.newsletterSubscriber.findUnique.mockResolvedValue({ active: true });
     prismaMock.newsletterSubscriber.upsert.mockResolvedValue({});
     prismaMock.newsletterSubscriber.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.readerUser.findUnique.mockResolvedValue({ notifyModerationEmail: true });
+    prismaMock.readerUser.update.mockResolvedValue({});
     const cookie = "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456";
 
     const read = await request(createApp()).get("/api/readers/preferences").set("Cookie", cookie);
     expect(read.status).toBe(200);
-    expect(read.body).toEqual({ data: { newsletter: true } });
+    expect(read.body).toEqual({ data: { newsletter: true, moderation: true } });
     expect(prismaMock.newsletterSubscriber.findUnique).toHaveBeenCalledWith({
       where: { email: "reader@example.com" },
       select: { active: true },
     });
 
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValue({ active: false });
     const unsubscribe = await request(createApp()).patch("/api/readers/preferences")
       .set("Origin", "http://localhost:3000").set("Cookie", cookie).send({ newsletter: false });
     expect(unsubscribe.status).toBe(200);
-    expect(unsubscribe.body).toEqual({ data: { newsletter: false } });
+    expect(unsubscribe.body).toEqual({ data: { newsletter: false, moderation: true } });
     expect(prismaMock.newsletterSubscriber.updateMany).toHaveBeenCalledWith({
       where: { email: "reader@example.com", active: true },
       data: { active: false },
     });
     expect(prismaMock.newsletterSubscriber.delete).not.toHaveBeenCalled();
 
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValue({ active: true });
     const resubscribe = await request(createApp()).patch("/api/readers/preferences")
       .set("Origin", "http://localhost:3000").set("Cookie", cookie).send({ newsletter: true });
     expect(resubscribe.status).toBe(200);
@@ -513,6 +518,16 @@ describe("API", () => {
       where: { email: "reader@example.com" },
       create: { email: "reader@example.com" },
       update: { active: true },
+    });
+
+    prismaMock.readerUser.findUnique.mockResolvedValue({ notifyModerationEmail: false });
+    const mute = await request(createApp()).patch("/api/readers/preferences")
+      .set("Origin", "http://localhost:3000").set("Cookie", cookie).send({ moderation: false });
+    expect(mute.status).toBe(200);
+    expect(mute.body).toEqual({ data: { newsletter: true, moderation: false } });
+    expect(prismaMock.readerUser.update).toHaveBeenCalledWith({
+      where: { id: "reader-1" },
+      data: { notifyModerationEmail: false },
     });
   });
 
@@ -984,6 +999,9 @@ describe("API", () => {
       productId: "product-1", snapshotId: "snapshot-2", previousState: "DRAFT", resultingState: "SUBMITTED",
       action: "SUBMITTED", actorType: "CREATOR", actorUserId: "reader-1",
     }) });
+    // Creator-initiated transitions are not moderation decisions.
+    expect(prismaMock.marketplaceNotification.create).not.toHaveBeenCalled();
+    expect(prismaMock.transactionalEmailOutbox.create).not.toHaveBeenCalled();
   });
 
   it("freezes the exact release manifest in the publication transaction", async () => {
@@ -1132,6 +1150,119 @@ describe("API", () => {
     expect(prismaMock.marketplaceListingLifecycleEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({
       snapshotId: "public-snapshot", action: "SUSPENDED",
     }) });
+  });
+
+  it.each([
+    { action: "APPROVE", type: "LISTING_APPROVED", state: "APPROVED", publicReason: undefined },
+    { action: "REQUEST_CHANGES", type: "LISTING_CHANGES_REQUESTED", state: "CHANGES_REQUESTED", publicReason: "Clarify network access." },
+    { action: "REJECT", type: "LISTING_REJECTED", state: "REJECTED", publicReason: "The release does not meet the source rules." },
+  ])("notifies the listing owner when staff $action a listing", async (scenario) => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    const product = {
+      id: "product-1", slug: "owned-skill", name: "Owned Skill", published: false, lifecycleState: "SUBMITTED", lifecycleVersion: 3,
+      lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: null, proposedSnapshotId: "snapshot-1",
+      proposedSnapshot: null, approvedSnapshot: null, lifecycleEvents: [],
+      creator: { ownerUserId: "reader-1", owner: { notifyModerationEmail: true } },
+    };
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue(product);
+    prismaMock.marketplaceProduct.update.mockResolvedValue({
+      ...product, lifecycleState: scenario.state, lifecycleVersion: 4,
+    });
+    prismaMock.marketplaceListingLifecycleEvent.create.mockResolvedValue({});
+    prismaMock.marketplaceNotification.create.mockResolvedValue({ id: "notification-1" });
+    prismaMock.transactionalEmailOutbox.create.mockResolvedValue({});
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/moderation/products/product-1/lifecycle")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ action: scenario.action, expectedVersion: 3, ...(scenario.publicReason ? { publicReason: scenario.publicReason } : {}) });
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.marketplaceNotification.create).toHaveBeenCalledWith({
+      data: { userId: "reader-1", type: scenario.type, productId: "product-1", publicReason: scenario.publicReason ?? null },
+      select: { id: true },
+    });
+    expect(prismaMock.transactionalEmailOutbox.create).toHaveBeenCalledWith({
+      data: { notificationId: "notification-1", correlationId: expect.any(String) },
+    });
+  });
+
+  it("keeps the in-app row but skips the email when the owner opted out", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    const product = {
+      id: "product-1", slug: "owned-skill", name: "Owned Skill", published: false, lifecycleState: "SUBMITTED", lifecycleVersion: 3,
+      lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: null, proposedSnapshotId: "snapshot-1",
+      proposedSnapshot: null, approvedSnapshot: null, lifecycleEvents: [],
+      creator: { ownerUserId: "reader-1", owner: { notifyModerationEmail: false } },
+    };
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue(product);
+    prismaMock.marketplaceProduct.update.mockResolvedValue({ ...product, lifecycleState: "APPROVED", lifecycleVersion: 4 });
+    prismaMock.marketplaceListingLifecycleEvent.create.mockResolvedValue({});
+    prismaMock.marketplaceNotification.create.mockResolvedValue({ id: "notification-1" });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/moderation/products/product-1/lifecycle")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ action: "APPROVE", expectedVersion: 3 });
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.marketplaceNotification.create).toHaveBeenCalledTimes(1);
+    expect(prismaMock.transactionalEmailOutbox.create).not.toHaveBeenCalled();
+  });
+
+  it("lists only the signed-in creator's notifications and marks them read", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    const createdAt = new Date("2026-11-01T09:00:00.000Z");
+    prismaMock.marketplaceNotification.findMany.mockResolvedValue([{
+      id: "notification-1", type: "LISTING_CHANGES_REQUESTED", publicReason: "Clarify network access.",
+      readAt: null, createdAt, product: { name: "Owned Skill", slug: "owned-skill" },
+    }]);
+    prismaMock.marketplaceNotification.count.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operations) => Promise.all(operations));
+
+    const list = await request(createApp())
+      .get("/api/marketplace/notifications")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+    expect(list.status).toBe(200);
+    expect(list.body.data).toEqual({
+      unread: 1,
+      notifications: [{
+        id: "notification-1", type: "changes_requested", productName: "Owned Skill", productSlug: "owned-skill",
+        publicReason: "Clarify network access.", readAt: null, createdAt: createdAt.toISOString(),
+      }],
+    });
+    expect(prismaMock.marketplaceNotification.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: "reader-1" }, take: 12,
+    }));
+
+    prismaMock.marketplaceNotification.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.marketplaceNotification.count.mockResolvedValue(0);
+    const read = await request(createApp())
+      .post("/api/marketplace/notifications/read")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ ids: ["notification-1"] });
+    expect(read.status).toBe(200);
+    expect(read.body.data).toEqual({ updated: 1, unread: 0 });
+    expect(prismaMock.marketplaceNotification.updateMany).toHaveBeenCalledWith({
+      where: { userId: "reader-1", readAt: null, id: { in: ["notification-1"] } },
+      data: { readAt: expect.any(Date) },
+    });
   });
 
   it("does not reveal or transition another creator's listing", async () => {
