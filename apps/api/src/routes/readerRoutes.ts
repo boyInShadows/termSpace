@@ -2,10 +2,11 @@ import { Router } from "express";
 import { addBookmark, changeReaderPassword, confirmReaderEmailVerification, confirmReaderPasswordReset, getReaderLibrary, getReaderProfile, getReaderSession, loginReader, loginReaderWithGoogle, logoutReader, registerReader, removeBookmark, requestReaderEmailVerification, requestReaderPasswordReset, saveProgress, syncReaderLibrary } from "../controllers/readerController.js";
 import { confirmReaderEmailChange, requestReaderEmailChange } from "../controllers/readerEmailController.js";
 import { deleteReaderAccount, exportReaderData, revokeOtherReaderSessions } from "../controllers/readerAccountController.js";
+import { getReaderPreferences, updateReaderPreferences } from "../controllers/readerPreferencesController.js";
 import { optionalReader, requireReader } from "../middleware/auth.js";
-import { accountDeleteRateLimit, accountExportRateLimit, emailChangeRequestRateLimit, sessionRevokeRateLimit, emailVerificationAttemptRateLimit, emailVerificationRequestRateLimit, googleSignInRateLimit, loginRateLimit, passwordChangeRateLimit, passwordResetAttemptRateLimit, passwordResetRequestRateLimit, registerRateLimit } from "../middleware/security.js";
+import { accountDeleteRateLimit, accountExportRateLimit, emailChangeRequestRateLimit, sessionRevokeRateLimit, emailVerificationAttemptRateLimit, emailVerificationRequestRateLimit, googleSignInRateLimit, loginRateLimit, passwordChangeRateLimit, passwordResetAttemptRateLimit, passwordResetRequestRateLimit, readerPreferencesRateLimit, registerRateLimit } from "../middleware/security.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
-import { emailVerificationConfirmSchema, googleCredentialSchema, readerAccountDeleteSchema, readerCredentialsSchema, readerEmailChangeSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, readerPasswordResetConfirmSchema, readerPasswordResetRequestSchema, readerProgressSchema, routeSlugSchema } from "../validation/schemas.js";
+import { emailVerificationConfirmSchema, googleCredentialSchema, readerAccountDeleteSchema, readerCredentialsSchema, readerEmailChangeSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, readerPasswordResetConfirmSchema, readerPasswordResetRequestSchema, readerPreferencesSchema, readerProgressSchema, routeSlugSchema } from "../validation/schemas.js";
 
 const router = Router();
 router.param("slug", validateRouteParam("slug", routeSlugSchema));
@@ -26,6 +27,8 @@ router.post("/password-reset/request", passwordResetRequestRateLimit, validate(r
 router.post("/password-reset/confirm", passwordResetAttemptRateLimit, validate(readerPasswordResetConfirmSchema), confirmReaderPasswordReset);
 router.put("/profile/password", requireReader, passwordChangeRateLimit, validate(readerPasswordChangeSchema), changeReaderPassword);
 router.get("/library", requireReader, getReaderLibrary);
+router.get("/preferences", requireReader, getReaderPreferences);
+router.patch("/preferences", requireReader, readerPreferencesRateLimit, validate(readerPreferencesSchema), updateReaderPreferences);
 router.post("/library/sync", requireReader, validate(readerLibrarySyncSchema), syncReaderLibrary);
 router.put("/articles/:slug/bookmark", requireReader, addBookmark);
 router.delete("/articles/:slug/bookmark", requireReader, removeBookmark);

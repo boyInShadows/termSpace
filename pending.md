@@ -7,15 +7,11 @@ This file tracks known improvement work that has not been completed yet. When an
 Source: 2026-10-28 review of `/dashboard/studio`, `/dashboard/library` and
 `/dashboard/settings` (code, API routes and the 2026-10-25 E2E evidence; not
 rendered signed in). Items are in the suggested order; each is one reviewable
-phase. Items 1 and 5 add API routes or migrations, so they touch shared surfaces
-(`apps/api/src/app.ts`, `schema.prisma`, `migrations/`, `lib/api.ts`,
-`lib/types.ts`, `lib/i18n/`) and need a written plan first.
+phase. The views item adds a migration, so it touches shared surfaces
+(`schema.prisma`, `migrations/`, `lib/api.ts`, `lib/types.ts`, `lib/i18n/`) and
+needs a written plan first.
 
-1. **Notification and newsletter preferences.** Settings has no opt-out for
-   the newsletter or future notifications. Add a preferences section backed by
-   the existing newsletter subscription data; extend it when item 4 ships.
-   Acceptance: unsubscribe reflected in the newsletter API, both locales.
-2. **Listing views and trends (privacy-conscious analytics).** The studio card
+1. **Listing views and trends (privacy-conscious analytics).** The studio card
    now shows acquisitions for the last 30 days and recent reader reviews, but
    nothing records listing views, so there is no view-to-acquisition
    conversion and no trend over time. Design a counter that stores no
@@ -24,16 +20,16 @@ phase. Items 1 and 5 add API routes or migrations, so they touch shared surfaces
    sparkline), and add it to the listing card. Needs a migration and a short
    privacy-policy note. Acceptance: API test that no visitor identifier is
    stored, UI states for no data, and the policy updated.
-3. **Creator notifications for moderation decisions.** Creators currently have
+2. **Creator notifications for moderation decisions.** Creators currently have
     to return to the dashboard to see approvals, rejections and change
-    requests. Notify on each decision (in dashboard and by email) and let item
-    1 control delivery. Acceptance: API test per decision type, email worker
-    coverage.
-4. **Consolidate creator copy.** `creator-hub.tsx` and
+    requests. Notify on each decision (in dashboard and by email); delivery is
+    controlled by the email preferences section added on 2026-10-31.
+    Acceptance: API test per decision type, email worker coverage.
+3. **Consolidate creator copy.** `creator-hub.tsx` and
     `provider-connections.tsx` merge `t.creatorHub`/`t.creatorReleases` with
     `creatorWorkspace[locale]`. Collapse to one source so English and Persian
     cannot drift. Acceptance: key-parity test passes, no behaviour change.
-5. **Set up Cloudflare Email Sending and test the email flows (needs the
+4. **Set up Cloudflare Email Sending and test the email flows (needs the
    domain).** Blocked until a domain is on the Cloudflare account. Steps:
    onboard the domain under Email Sending and add the SPF, DKIM and DMARC
    records it lists; create an API token with the "Email Sending: Edit"
@@ -52,7 +48,7 @@ phase. Items 1 and 5 add API routes or migrations, so they touch shared surfaces
    tier would also cover the volume but needs a provider adapter (not built).
    Acceptance: each flow delivers a real email and the link or code works;
    record evidence in `changelog.md`.
-6. **Rate limiting can silently turn off at API startup.** Found 2026-10-28 in
+5. **Rate limiting can silently turn off at API startup.** Found 2026-10-28 in
    the Docker stack: with the machine under load, every limiter logged
    "async error during store initialization: Command timed out" (Redis
    `commandTimeout` is 1 s in `lib/redis.ts`), `passOnStoreError` then let all
@@ -62,7 +58,7 @@ phase. Items 1 and 5 add API routes or migrations, so they touch shared surfaces
    loudly and expose it on the health check when a limiter's store is down.
    Acceptance: a test that starts the app with a slow Redis and still counts,
    plus a documented failure mode.
-7. **Signed-in verification pass (final gate).** Seed a verified account and a
+6. **Signed-in verification pass (final gate).** Seed a verified account and a
     verified creator, then check all three pages and their sub-routes in light
     and dark, English and Persian RTL, 320–1280 px, keyboard focus, and every
     loading/error/empty state. Also cover what automated tests could not:

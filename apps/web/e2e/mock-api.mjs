@@ -197,6 +197,12 @@ async function handle(request, response) {
   if (route === "GET /api/readers/profile") return send(response, 200, {
     data: { email: PERSONAS[persona].email, createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false, emailVerified: true },
   });
+  // Stateless default: tests that need persistence intercept this route themselves.
+  if (route === "GET /api/readers/preferences") return send(response, 200, { data: { newsletter: true } });
+  if (route === "PATCH /api/readers/preferences") {
+    const body = await readJson(request);
+    return send(response, 200, { data: { newsletter: Boolean(body.newsletter) } });
+  }
   if (route === "POST /api/readers/profile/email") {
     const body = await readJson(request);
     if (body.currentPassword !== "correct-password") return send(response, 401, error("INVALID_CURRENT_PASSWORD", "Current password is incorrect"));

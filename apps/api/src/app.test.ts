@@ -11,6 +11,7 @@ const prismaMock = vi.hoisted(() => ({
   article: { findUnique: vi.fn(), updateMany: vi.fn() },
   readerUser: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
   readerSession: { findFirst: vi.fn(), deleteMany: vi.fn(), create: vi.fn() },
+  newsletterSubscriber: { findUnique: vi.fn(), upsert: vi.fn(), updateMany: vi.fn(), delete: vi.fn() },
   readerEmailVerification: { findUnique: vi.fn(), findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   readerPasswordReset: { findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   transactionalEmailOutbox: { updateMany: vi.fn() },
@@ -460,6 +461,76 @@ describe("API", () => {
       .send({ email: "not-an-email" });
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("reactivates an unsubscribed address from the public newsletter form", async () => {
+    prismaMock.newsletterSubscriber.upsert.mockResolvedValue({});
+    const response = await request(createApp())
+      .post("/api/newsletter/subscribers")
+      .send({ email: "Return@Example.com" });
+
+    expect(response.status).toBe(202);
+    expect(prismaMock.newsletterSubscriber.upsert).toHaveBeenCalledWith({
+      where: { email: "return@example.com" },
+      create: { email: "return@example.com" },
+      update: { active: true },
+    });
+  });
+
+  it("reads and writes the signed-in reader's newsletter preference", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "Reader@Example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValue({ active: true });
+    prismaMock.newsletterSubscriber.upsert.mockResolvedValue({});
+    prismaMock.newsletterSubscriber.updateMany.mockResolvedValue({ count: 1 });
+    const cookie = "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456";
+
+    const read = await request(createApp()).get("/api/readers/preferences").set("Cookie", cookie);
+    expect(read.status).toBe(200);
+    expect(read.body).toEqual({ data: { newsletter: true } });
+    expect(prismaMock.newsletterSubscriber.findUnique).toHaveBeenCalledWith({
+      where: { email: "reader@example.com" },
+      select: { active: true },
+    });
+
+    const unsubscribe = await request(createApp()).patch("/api/readers/preferences")
+      .set("Origin", "http://localhost:3000").set("Cookie", cookie).send({ newsletter: false });
+    expect(unsubscribe.status).toBe(200);
+    expect(unsubscribe.body).toEqual({ data: { newsletter: false } });
+    expect(prismaMock.newsletterSubscriber.updateMany).toHaveBeenCalledWith({
+      where: { email: "reader@example.com", active: true },
+      data: { active: false },
+    });
+    expect(prismaMock.newsletterSubscriber.delete).not.toHaveBeenCalled();
+
+    const resubscribe = await request(createApp()).patch("/api/readers/preferences")
+      .set("Origin", "http://localhost:3000").set("Cookie", cookie).send({ newsletter: true });
+    expect(resubscribe.status).toBe(200);
+    expect(prismaMock.newsletterSubscriber.upsert).toHaveBeenCalledWith({
+      where: { email: "reader@example.com" },
+      create: { email: "reader@example.com" },
+      update: { active: true },
+    });
+  });
+
+  it("requires a reader session and a boolean preference to write", async () => {
+    const anonymous = await request(createApp()).patch("/api/readers/preferences").send({ newsletter: true });
+    expect(anonymous.status).toBe(401);
+
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [] },
+    });
+    const invalid = await request(createApp()).patch("/api/readers/preferences")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ newsletter: "yes" });
+    expect(invalid.status).toBe(400);
+    expect(invalid.body.error.code).toBe("VALIDATION_ERROR");
+    expect(prismaMock.newsletterSubscriber.upsert).not.toHaveBeenCalled();
+    expect(prismaMock.newsletterSubscriber.updateMany).not.toHaveBeenCalled();
   });
 
   it("rejects oversized JSON payloads with 413", async () => {

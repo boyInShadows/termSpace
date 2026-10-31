@@ -2,6 +2,58 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-31 — Settings email preferences (launch-readiness item 1)
+
+- **What readers can do.** `/dashboard/settings` now has an "Email preferences"
+  section with a "Weekly newsletter" switch: current state as words (On/Off),
+  a saving state, a live success announcement, and named recovery for a
+  rate-limited (429), expired session (401), offline/service failure and a
+  failed initial load (with Retry, never a guessed state). English and Persian,
+  RTL-aware, keyboard operable. The section only lists channels that exist;
+  creator notification mail will extend it.
+- **One source of truth, no migration.** The reader's newsletter state is the
+  existing `NewsletterSubscriber` row keyed by the account email, so the public
+  sign-up form and Settings cannot disagree. New
+  `GET`/`PATCH /api/readers/preferences` (`requireReader`, zod boolean, new
+  `readerPreferencesRateLimit`) read it; unsubscribing sets `active:false`
+  with `updateMany` (it never creates a row for someone who never subscribed)
+  and subscribing upserts `active:true` while keeping `subscribedAt`.
+- **Consistency fixes this exposed.** The public sign-up form now reactivates
+  an existing inactive row (before, a duplicate returned 202 but left the
+  address unsubscribed forever). Changing the account email moves the
+  subscription row to the new address inside the existing transaction,
+  reviving an inactive row there; deleting the account deactivates the row for
+  that address. The privacy policy's "Your choices" now names Settings as the
+  place to change the newsletter subscription (EN/FA).
+- **Lane note.** Settings is Ramtin's presentation lane; entered because
+  `pending.md` item 1 assigned this work and the owner explicitly asked for it.
+  Shared surfaces touched: `changelog.md`, `pending.md`. Files:
+  `apps/api/src/controllers/readerPreferencesController.ts` (new),
+  `newsletterController.ts`, `readerEmailController.ts`,
+  `readerAccountController.ts`, `routes/readerRoutes.ts`,
+  `middleware/security.ts`, `validation/schemas.ts`, `app.test.ts`,
+  `readerFlow`/`readerEmail`/`readerAccount` integration tests;
+  `apps/web/features/dashboard/account-preferences.tsx` and its copy/test
+  (new), `account-settings.tsx`, `account-settings.test.tsx`,
+  `lib/account-api.ts`, `lib/legal.ts`, `e2e/account-preferences.spec.ts` (new),
+  `e2e/mock-api.mjs`.
+- **Verification.** Root typecheck, lint (0 errors, 2 pre-existing warnings) and
+  all three builds passed. API: 314 passed, 1 skipped (the Redis limiter case)
+  against a fresh disposable PostgreSQL 16 database with every migration
+  applied, including new integration coverage for subscribe → unsubscribe →
+  resubscribe via the public form, email change moving the row, and deletion
+  deactivating it. Web: 470 passed. E2E `account-preferences` 12/12 (EN/FA,
+  desktop and mobile, Space-key toggle, persistence across reload, failed save,
+  failed load + Retry). Focused settings/design batch: 120 passed; eight
+  `dashboard-repairs`/`account-data` failures under parallel load all passed on
+  a serial re-run (44 passed, 12 device skips), i.e. load flakiness rather than
+  regressions. Visual pass of the new section in EN/FA, light/dark at
+  320/768/1280 px; fixed a dark-theme thumb that inherited the surface colour
+  and an early row wrap at tablet widths. Impeccable detector: no findings.
+- **Not covered.** The full E2E suite, real email delivery (the Cloudflare
+  domain is still missing) and maintainer approval of the new Persian copy.
+
+
 ## 2026-10-31 — Soft direction: navy/paper tokens and shared components
 
 Phase 1 of the design-direction change requested by Ramtin: soften TermSpace

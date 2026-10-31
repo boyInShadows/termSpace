@@ -1,0 +1,38 @@
+// Settings-only copy stays out of the dictionary shipped on every public page.
+// Persian wording needs maintainer approval.
+export const accountPreferencesCopy = {
+  en: {
+    title: "Email preferences",
+    intro: "Choose what TermSpace sends to your account email. Account security messages always arrive.",
+    newsletter: "Weekly newsletter",
+    newsletterHelp: "One email a week with new listings and editorial picks. Unsubscribe any time.",
+    on: "On",
+    off: "Off",
+    loading: "Loading your email preferences…",
+    loadError: "Your email preferences could not be loaded.",
+    retry: "Retry",
+    saving: "Saving…",
+    subscribed: "You are subscribed to the weekly newsletter.",
+    unsubscribed: "You are unsubscribed. You will not receive the newsletter.",
+    failed: "Your preference could not be saved. Check your connection and try again.",
+    rateLimited: "Too many changes. Please wait a moment and try again.",
+    sessionExpired: "Your session has ended. Sign in again to change this setting.",
+  },
+  fa: {
+    title: "تنظیمات ایمیل",
+    intro: "انتخاب کنید ترم‌اسپیس چه پیام‌هایی به ایمیل حساب شما بفرستد. پیام‌های امنیتی حساب همیشه فرستاده می‌شوند.",
+    newsletter: "خبرنامهٔ هفتگی",
+    newsletterHelp: "هفته‌ای یک ایمیل با فهرست‌های تازه و یادداشت‌های تحریریه. هر زمان بخواهید لغو کنید.",
+    on: "فعال",
+    off: "غیرفعال",
+    loading: "در حال بارگذاری تنظیمات ایمیل…",
+    loadError: "تنظیمات ایمیل بارگذاری نشد.",
+    retry: "تلاش دوباره",
+    saving: "در حال ذخیره…",
+    subscribed: "عضویت شما در خبرنامهٔ هفتگی فعال شد.",
+    unsubscribed: "عضویت شما در خبرنامه لغو شد. دیگر خبرنامه دریافت نمی‌کنید.",
+    failed: "تنظیمات ذخیره نشد. اتصال اینترنت خود را بررسی کنید و دوباره تلاش کنید.",
+    rateLimited: "تعداد تغییرها بیش از حد مجاز است. کمی بعد دوباره تلاش کنید.",
+    sessionExpired: "نشست شما به پایان رسیده است. برای تغییر این تنظیم دوباره وارد شوید.",
+  },
+} as const;

@@ -144,6 +144,11 @@ export const readerEmailChangeSchema = z.object({
   currentPassword: z.string().min(1).max(128),
 });
 
+// Only preferences that exist today. Add fields here as each channel ships.
+export const readerPreferencesSchema = z.object({
+  newsletter: z.boolean(),
+});
+
 export const readerPasswordResetRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address").max(320),
 });
