@@ -43,7 +43,7 @@ export function CreatorReleaseManager({ productId }: { productId: string }) {
   </section>;
 
   if (!history && !error) return <><p role="status" className="text-sm text-muted-foreground">{copy.loading}</p>{connectionsLink}</>;
-  if (!history) return <>{connectionsLink}<div className="rounded-none border border-destructive/30 bg-surface p-8">
+  if (!history) return <>{connectionsLink}<div className="rounded-card border border-destructive/30 bg-surface p-8">
     <p role="alert" className="text-destructive">{copy.loadError}</p>
     <Button className="mt-5" variant="secondary" onClick={() => { setError(false); setReload((value) => value + 1); }}>
       <RotateCcw className="size-4" aria-hidden="true" />{copy.retry}
@@ -78,7 +78,7 @@ export function CreatorReleaseManager({ productId }: { productId: string }) {
     {connectionsLink}
     {actionMessage && <p className="mt-4 text-sm" role="status">{actionMessage}</p>}
     {history.releases.length === 0
-      ? <p className="mt-6 rounded-none border border-dashed p-8 text-center text-muted-foreground">{copy.empty}</p>
+      ? <p className="mt-6 rounded-card border border-dashed p-8 text-center text-muted-foreground">{copy.empty}</p>
       : <ol className="mt-6 space-y-4">{history.releases.map((release) => <ReleaseCard key={release.id} release={release} copy={copy} date={date} number={number} busy={busy === "source"} onCheck={checkSource} editHref={localePath(`/dashboard/studio/listings/${productId}/edit`, locale)} />)}</ol>}
   </div>;
 }
@@ -93,11 +93,11 @@ function ReleaseCard({ release, copy, date, number, busy, onCheck, editHref }: {
   editHref: string;
 }) {
   const status = release.status === "published" ? copy.published : release.status === "proposed" ? copy.proposed : copy.supersededDraft;
-  return <li className="rounded-none border bg-surface p-5 sm:p-6">
+  return <li className="rounded-card border bg-surface p-5 sm:p-6">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-xl font-semibold" dir="ltr">v{release.version}</h3>
-        <span className={cn("rounded-none px-2.5 py-1 text-xs font-semibold", release.status === "published" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-muted text-muted-foreground")}>{status}</span>
+        <span className={cn("rounded-chip px-2.5 py-1 text-xs font-semibold", release.status === "published" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-muted text-muted-foreground")}>{status}</span>
         {release.isCurrent && <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary"><CheckCircle2 className="size-4" aria-hidden="true" />{copy.current}</span>}
       </div>
       <span className="text-sm text-muted-foreground">{copy.acquisitions}: {number.format(release.acquisitionCount)}</span>

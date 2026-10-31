@@ -91,7 +91,7 @@ export function ContextHelp({ label, topic }: { label: string; topic: HelpTopic 
       <CircleHelp className="size-4" aria-hidden="true" />
     </button>
     {open && createPortal(<div ref={bubble} id={id} role="tooltip" aria-live="polite" aria-atomic="true" dir={locale === "fa" ? "rtl" : "ltr"}
-      className="fixed z-[80] max-h-[calc(100dvh-1rem)] w-72 max-w-[calc(100vw-1rem)] overflow-y-auto border border-border-strong bg-surface p-4 text-start text-sm font-normal leading-6 text-foreground [overflow-wrap:anywhere]"
+      className="fixed z-[80] max-h-[calc(100dvh-1rem)] w-72 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-card border border-border-strong bg-surface p-4 text-start text-sm font-normal leading-6 text-foreground shadow-panel [overflow-wrap:anywhere]"
       onPointerEnter={cancelClose} onPointerLeave={leave}>
       <p>{message?.body ?? (locale === "fa" ? "در حال بارگذاری راهنما…" : "Loading help…")}</p>
       {message?.example && <p className="mt-2 text-muted-foreground">{locale === "fa" ? "مثال: " : "Example: "}<bdi dir="auto">{message.example}</bdi></p>}

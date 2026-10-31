@@ -186,7 +186,7 @@ export function Header() {
           </div>
 
           <nav
-            className="hidden items-center justify-self-center gap-5 whitespace-nowrap text-sm md:flex lg:gap-8"
+            className="hidden items-center justify-self-center gap-1 whitespace-nowrap text-sm md:flex lg:gap-2"
             aria-label={t.primary}
           >
             {NAV.map((item) => {
@@ -197,20 +197,11 @@ export function Header() {
                   href={localePath(item.href, locale)}
                   aria-current={current ? "page" : undefined}
                   className={cn(
-                    "group relative py-1 transition-colors hover:text-primary",
-                    current && "font-semibold text-primary",
+                    "inline-flex min-h-11 items-center rounded-nav px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                    current && "bg-primary-soft text-foreground",
                   )}
                 >
                   {item.label}
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "rule-plasma absolute inset-x-0 -bottom-0.5 h-px origin-left transition-transform duration-300",
-                      // The current route keeps its underline; the others grow
-                      // one on hover.
-                      current ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
-                    )}
-                  />
                 </Link>
               );
             })}
@@ -281,8 +272,8 @@ export function Header() {
                 aria-current={isCurrent(item.href) ? "page" : undefined}
                 onClick={() => setIsMenuOpen(false)}
                 className={cn(
-                  "border-b border-border/60 py-3 text-sm last:border-0",
-                  isCurrent(item.href) && "font-semibold text-primary",
+                  "rounded-nav border-b border-border/60 px-2 py-3 text-sm last:border-0 hover:bg-muted",
+                  isCurrent(item.href) && "bg-primary-soft font-semibold text-foreground",
                 )}
               >
                 {item.label}
@@ -302,7 +293,7 @@ export function Header() {
                 <Link
                   href={localePath("/dashboard", locale)}
                   onClick={() => setIsMenuOpen(false)}
-                  className="border-t border-border/60 py-3 text-sm"
+                  className="rounded-nav border-t border-border/60 px-2 py-3 text-sm hover:bg-muted"
                 >
                   {t.dashboard}
                 </Link>
@@ -312,7 +303,7 @@ export function Header() {
                     setIsMenuOpen(false);
                     void signOut();
                   }}
-                  className="border-t border-border/60 py-3 text-start text-sm"
+                  className="rounded-nav border-t border-border/60 px-2 py-3 text-start text-sm hover:bg-muted"
                 >
                   {t.signOut}
                 </button>
@@ -321,7 +312,7 @@ export function Header() {
               <Link
                 href={localePath("/account", locale)}
                 onClick={() => setIsMenuOpen(false)}
-                className="border-t border-border/60 py-3 text-sm font-semibold"
+                className="rounded-nav border-t border-border/60 px-2 py-3 text-sm font-semibold hover:bg-muted"
               >
                 {t.signIn}
               </Link>
@@ -329,7 +320,7 @@ export function Header() {
             <a
               href={switchHref}
               lang={locale === "fa" ? "en" : "fa"}
-              className="inline-flex items-center gap-2 border-t border-border/60 py-3 text-sm"
+              className="inline-flex items-center gap-2 rounded-nav border-t border-border/60 px-2 py-3 text-sm hover:bg-muted"
             >
               <Globe size={15} aria-hidden />
               {t.language}

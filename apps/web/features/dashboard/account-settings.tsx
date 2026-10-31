@@ -76,7 +76,7 @@ export function AccountSettings() {
         <p className="mt-3 text-sm text-muted-foreground">{t.settingsIntro}</p>
       </header>
 
-      <section className="rounded-none border border-border bg-surface px-5">
+      <section className="rounded-card border border-border bg-surface px-5">
         <Row label={t.email}><bdi dir="ltr">{session.email}</bdi></Row>
         <Row label={t.settingsCreator}>
           {status === "loading" ? <p role="status">{t.creatorHub.loading}</p> : status === "error" ? <div>

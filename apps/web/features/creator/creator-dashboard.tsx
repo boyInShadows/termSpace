@@ -92,13 +92,13 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
   }
 
   if (loading && !result) {
-    return <section className="rounded-none border bg-surface p-8" aria-busy="true">
+    return <section className="rounded-card border bg-surface p-8" aria-busy="true">
       <p className="text-sm text-muted-foreground" role="status">{hub.dashboardLoading}</p>
     </section>;
   }
 
   if (error && !result) {
-    return <section className="rounded-none border border-destructive/30 bg-surface p-8">
+    return <section className="rounded-card border border-destructive/30 bg-surface p-8">
       <p className="text-sm text-destructive" role="alert">{hub.dashboardLoadError}</p>
       <Button className="mt-5" variant="secondary" onClick={retry}>
         <RotateCcw aria-hidden="true" className="size-4" />{hub.retry}
@@ -136,12 +136,12 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
       {loading && <span className="text-xs text-muted-foreground" role="status">{hub.dashboardLoading}</span>}
     </div>
 
-    {error && result && <div className="mt-4 flex items-center justify-between gap-4 rounded-none border border-destructive/30 bg-destructive/5 p-4">
+    {error && result && <div className="mt-4 flex items-center justify-between gap-4 rounded-card border border-destructive/30 bg-destructive/5 p-4">
       <p className="text-sm text-destructive" role="alert">{hub.dashboardLoadError}</p>
       <Button size="sm" variant="secondary" onClick={retry}>{hub.retry}</Button>
     </div>}
 
-    {listings.length === 0 ? <div className="mt-5 rounded-none border border-dashed bg-muted/25 p-10 text-center">
+    {listings.length === 0 ? <div className="mt-5 rounded-card border border-dashed bg-muted/25 p-10 text-center">
       <h3 className="font-semibold text-2xl">{hub.noListings}</h3>
       <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">{hub.noListingsIntro}</p>
     </div> : <div className="mt-5 space-y-4">
@@ -173,7 +173,7 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
 }
 
 function SummaryCard({ label, value, icon }: { label: string; value: string; icon: React.ReactElement }) {
-  return <div className="rounded-none border bg-surface p-5">
+  return <div className="rounded-card border bg-surface p-5">
     <dt className="flex min-h-10 items-start gap-2 text-xs font-medium leading-5 text-muted-foreground">
       <span className="text-primary [&>svg]:size-4" aria-hidden="true">{icon}</span>{label}
     </dt>
@@ -216,7 +216,7 @@ function ListingCard({ listing, submitting, feedback, action, onReview, onCancel
     trigger.current?.focus();
   }
 
-  return <article className="rounded-none border bg-surface p-5 sm:p-6 [&_button]:scroll-mt-32 [&_button]:scroll-mb-[calc(6rem+env(safe-area-inset-bottom))]">
+  return <article className="rounded-card border bg-surface p-5 sm:p-6 [&_button]:scroll-mt-32 [&_button]:scroll-mb-[calc(6rem+env(safe-area-inset-bottom))]">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
@@ -263,7 +263,7 @@ function ListingCard({ listing, submitting, feedback, action, onReview, onCancel
       <Metric label={hub.releases} value={number.format(listing.releaseCount)} icon={<Layers3 />} />
     </dl>
 
-    {listing.moderationFeedback?.message && <div className="mt-5 rounded-none border border-amber-500/30 bg-amber-500/5 p-4">
+    {listing.moderationFeedback?.message && <div className="mt-5 rounded-card border border-amber-500/30 bg-amber-500/5 p-4">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-800 dark:text-amber-300">{hub.moderationFeedback}</p>
       <p className="mt-2 text-sm">{listing.moderationFeedback.message}</p>
       <p className="mt-2 text-xs text-muted-foreground">{date.format(new Date(listing.moderationFeedback.createdAt))} · {listing.moderationFeedback.reasonCode.replaceAll("_", " ")}</p>

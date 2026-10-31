@@ -144,7 +144,7 @@ export function Process({ copy }: { copy: Pick<HomeSections, "processEyebrow" | 
                       className={cn(
                         "absolute start-0 top-8 grid size-8 place-items-center rounded-full border transition-all duration-500 lg:top-12",
                         isActive
-                          ? "border-primary bg-primary text-primary-foreground shadow-plasma"
+                          ? "border-primary bg-primary text-primary-foreground shadow-panel"
                           : "border-border bg-background text-muted-foreground",
                       )}
                     >
@@ -214,7 +214,7 @@ export function Process({ copy }: { copy: Pick<HomeSections, "processEyebrow" | 
 function StepPanel({ step, index }: { step: Step; index: number }) {
   const PanelIcon = PANEL_ICONS[index];
   return (
-    <div className="panel overflow-hidden rounded-2xl shadow-lift">
+    <div className="panel overflow-hidden rounded-2xl shadow-panel">
       <div className="flex items-center gap-2.5 border-b border-border/80 bg-surface-raised/60 px-4 py-3">
         <PanelIcon size={14} className="text-primary" />
         <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">

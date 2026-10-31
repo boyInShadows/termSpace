@@ -2,6 +2,55 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-10-31 — Soft direction: navy/paper tokens and shared components
+
+Phase 1 of the design-direction change requested by Ramtin: soften TermSpace
+toward the calm, card-led feel of anicards.ir. Inspired by, not copied — no logo,
+copy, imagery or illustration was taken from that site. The "Datasheet" rules
+(square controls, ruled-only structure, no shadows) are retired.
+
+- **Tokens.** Light theme retuned to a cool paper ground, white surfaces, navy
+  ink, one blue signal and the anicards state palette (success `#047857`,
+  warning `#b45309`, danger `#be123c`), converted to OKLCH. Dark theme keeps its
+  structure but moves from violet 286–292 to a blue 262 hue with softer borders,
+  so both themes share one brand. Added pastel tints (`--tint-sage/paper/mist/
+  lavender`), a navy-tinted `--panel-shadow`/`--promo-shadow`, and the
+  8/12/16/pill radius scale (`rounded-nav`, `rounded-control`, `rounded-card`,
+  `rounded-chip`; `lg`/`xl`/`2xl` all resolve to the 16px panel step).
+- **Globals.** Wired radii, tints and shadows into `@theme`, replaced the broken
+  self-referential `--shadow-soft/lift/plasma/signal` aliases, and removed the
+  dashboard's blanket zero-radius override. The dashboard now applies a
+  control-radius fallback through `:where()` (zero specificity) so explicit
+  utilities still win. The global focus outline no longer forces a 2px corner.
+- **Shared components.** `Button` (12px, navy primary, `shadow-sm`), `Input`
+  (12px, white field), `Badge` (pill), `ProductCard`/`CompactProductCard`
+  (16px, hairline border, panel shadow, border-only hover), skeletons,
+  `EmptyState`, `ContextHelp`, the header nav pills, account menu, dashboard nav
+  and the shared creator/dashboard panels. Swept all 48 `rounded-none`
+  occurrences; removed the old glow/lift shadow utilities from the landing
+  process and search components.
+- **Docs.** Rewrote `apps/web/DESIGN.md` as "Paper & Signal" with the new colour,
+  shape, elevation and component contract, an explicit inspiration credit, and
+  the retained type/density/state rules. Updated the local `/design-system`
+  swatches and radius/elevation samples.
+- **Verification.** Root typecheck; `npm test -w apps/web` 466 passed; web lint
+  (0 errors, 2 pre-existing warnings); `npm run build` passed. Full E2E under
+  parallel load: 455 passed, 32 failed; every failing spec was re-run serially
+  (`--workers=1`) and all 254 re-run tests passed, confirming load flakiness
+  rather than regressions. `design-consistency.spec` now asserts the new
+  contract (12px fields, 16px shadowed cards) instead of zero radius, and the
+  768px header check allows the new 44px nav pills. `budget.spec` (first-load
+  JS) passed after dropping an unused `tint` prop from `ProductCard`. LHCI could
+  not complete: Lighthouse's Chrome temp directory returns `EPERM` on cleanup
+  on this Windows host after three attempts (including a redirected temp path),
+  so it failed before assertions could run; no audit score regressed. Visual
+  pass against the production mock build inspected home, explore, product,
+  dashboard and 404 in EN/FA, light/dark, 390/768/1280px; contrast was computed
+  for every text/surface pair (lowest 4.86:1). Detector: 7 advisory findings
+  (Geist overused, Newsreader in OG-card CSS, spring easing), all documented in
+  `DESIGN.md` and unchanged by this phase. Session `/usage` is not exposed by
+  this harness.
+
 ## 2026-10-30 — GitHub presentation review
 
 - Condense the public README into purpose, status, real fixture captures, implemented

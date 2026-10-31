@@ -19,8 +19,11 @@
 :root { --header-chrome: 4.0625rem; }
 :root:has([data-announcement]) { --header-chrome: 6.3125rem; }
 
-.dashboard-operate :is(button, input, select, textarea, a) {
-  border-radius: 0;
+.dashboard-operate :where(button, input, select, textarea, a) {
+  /* `:where()` keeps this at zero specificity so an explicit radius utility
+     wins. Controls without one still round to the shared control radius
+     instead of falling back to a square. */
+  border-radius: var(--radius-control);
   /* Native focus scrolling must clear the fixed dashboard tabs. */
   scroll-margin-bottom: calc(6rem + env(safe-area-inset-bottom));
 }
@@ -75,16 +78,30 @@
   --color-warning: var(--warning);
   --color-destructive: var(--destructive);
   --color-info: var(--info);
+  --color-tint-sage: var(--tint-sage);
+  --color-tint-paper: var(--tint-paper);
+  --color-tint-mist: var(--tint-mist);
+  --color-tint-lavender: var(--tint-lavender);
 
-  --radius-sm: 0.35rem;
-  --radius-md: 0.6rem;
-  --radius-lg: 0.9rem;
-  --radius-xl: 1.25rem;
+  /* 8 / 12 / 16, plus a pill for chips. `rounded-control` for fields and
+     buttons, `rounded-nav` for menu rows and tabs, `rounded-card` for panels.
+     `lg`, `xl` and `2xl` all resolve to the same 16px panel step so older
+     call sites land on the card radius without being rewritten. */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1rem;
+  --radius-nav: 0.5rem;
+  --radius-control: 0.75rem;
+  --radius-card: 1rem;
+  --radius-chip: 9999px;
 
-  --shadow-soft: var(--shadow-soft);
-  --shadow-lift: var(--shadow-lift);
-  --shadow-plasma: var(--glow-plasma);
-  --shadow-signal: var(--glow-signal);
+  /* Light and dark values live in tokens.css; these aliases generate
+     `shadow-panel` / `shadow-promo`. A shadow is offset and blurred, never a
+     zero-offset halo. */
+  --shadow-panel: var(--panel-shadow);
+  --shadow-promo: var(--promo-shadow);
 
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
@@ -185,7 +202,6 @@ select {
 :focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 3px;
-  border-radius: 2px;
 }
 
 /* --- typography -------------------------------------------------------- */
@@ -335,7 +351,7 @@ select {
 }
 .ts-lift:hover {
   translate: 0 -2px;
-  box-shadow: var(--shadow-lift);
+  box-shadow: var(--panel-shadow);
 }
 
 /* --- scroll reveal ------------------------------------------------------

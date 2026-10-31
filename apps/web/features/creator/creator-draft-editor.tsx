@@ -380,7 +380,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
           <Field label={copy.tags} hint={copy.listHint}><Input name="tags" required defaultValue={Array.isArray(listing.tags) ? listing.tags.join(", ") : ""} /></Field>
         </div>
         <fieldset className="mt-5"><legend className="w-full text-sm font-semibold"><span className="flex items-center justify-between gap-2">{copy.communities}<ContextHelp label={copy.communities} topic="communities" /></span></legend><p className="mt-1 text-xs text-muted-foreground">{copy.communitiesHint}</p><div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {options.communities.map((community) => <label key={community.slug} className="flex min-h-11 items-start gap-3 rounded-none border p-3 text-sm"><input className="mt-1" type="checkbox" name="communitySlugs" value={community.slug} defaultChecked={(listing.communitySlugs as string[] | undefined)?.includes(community.slug)} /><span><strong className="block">{locale === "fa" ? community.nameFa ?? community.nameEn : community.nameEn}</strong><span className="text-xs text-muted-foreground">{locale === "fa" ? community.descriptionFa ?? community.descriptionEn : community.descriptionEn}</span></span></label>)}
+          {options.communities.map((community) => <label key={community.slug} className="flex min-h-11 items-start gap-3 rounded-control border p-3 text-sm"><input className="mt-1" type="checkbox" name="communitySlugs" value={community.slug} defaultChecked={(listing.communitySlugs as string[] | undefined)?.includes(community.slug)} /><span><strong className="block">{locale === "fa" ? community.nameFa ?? community.nameEn : community.nameEn}</strong><span className="text-xs text-muted-foreground">{locale === "fa" ? community.descriptionFa ?? community.descriptionEn : community.descriptionEn}</span></span></label>)}
         </div></fieldset>
       </FormSection>
 
@@ -467,7 +467,7 @@ function SourceFields({ kind, source, copy }: { kind: SourceKind; source: Record
 function DetailInput({ field, locale, value }: { field: DetailField; locale: "en" | "fa"; value: unknown }) {
   const label = locale === "fa" ? field.fa : field.en;
   const help: HelpTopic | undefined = field.key === "entryPath" || field.key === "entryPaths" ? "entryPath" : field.key === "transport" ? "transport" : field.key === "authentication" || field.key === "authenticationMethod" ? "authentication" : undefined;
-  if (field.kind === "boolean") return <label className="flex min-h-11 items-center gap-3 self-end rounded-none border px-3 text-sm font-medium"><input name={`detail_${field.key}`} type="checkbox" defaultChecked={Boolean(value)} />{label}</label>;
+  if (field.kind === "boolean") return <label className="flex min-h-11 items-center gap-3 self-end rounded-control border px-3 text-sm font-medium"><input name={`detail_${field.key}`} type="checkbox" defaultChecked={Boolean(value)} />{label}</label>;
   if (field.kind === "select") return <Field label={label} help={help}><select name={`detail_${field.key}`} required={field.required} defaultValue={stringValue(value)} className={selectClass}>{field.options?.map((option) => <option key={option}>{option}</option>)}</select></Field>;
   const defaultValue = field.kind === "list" ? (Array.isArray(value) ? value.join("\n") : "") : field.kind === "stages" && Array.isArray(value) ? (value as Array<{ name: string; description: string; humanApproval: boolean }>).map((stage) => `${stage.name} | ${stage.description} | ${stage.humanApproval}`).join("\n") : stringValue(value);
   if (field.kind === "textarea" || field.kind === "list" || field.kind === "stages") return <Field label={label} help={help}><Textarea name={`detail_${field.key}`} required={field.required} defaultValue={defaultValue} /></Field>;
@@ -486,9 +486,9 @@ function Field({ label, hint, help, children }: { label: string; hint?: string; 
     <div className="mt-2">{field ? cloneElement(field, { id, "aria-describedby": hint ? `${id}-hint` : undefined }) : children}</div>
   </div>;
 }
-function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) { return <textarea {...props} className="min-h-28 w-full rounded-none border border-input bg-surface px-3 py-3 text-sm placeholder:text-muted-foreground/75 hover:border-border-strong focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20" />; }
-function EditorStatus({ message, error = false }: { message: string; error?: boolean }) { return <div className="mx-auto max-w-xl rounded-none border bg-surface p-8"><p className={error ? "text-destructive" : "text-muted-foreground"} role={error ? "alert" : "status"}>{message}</p></div>; }
-const selectClass = "min-h-11 w-full rounded-none border border-input bg-surface px-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20";
+function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) { return <textarea {...props} className="min-h-28 w-full rounded-control border border-input bg-surface px-3 py-3 text-sm placeholder:text-muted-foreground/75 hover:border-border-strong focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20" />; }
+function EditorStatus({ message, error = false }: { message: string; error?: boolean }) { return <div className="mx-auto max-w-xl rounded-card border bg-surface p-8"><p className={error ? "text-destructive" : "text-muted-foreground"} role={error ? "alert" : "status"}>{message}</p></div>; }
+const selectClass = "min-h-11 w-full rounded-control border border-input bg-surface px-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20";
 const stringValue = (value: unknown) => typeof value === "string" ? value : "";
 const text = (data: FormData, key: string) => String(data.get(key) ?? "").trim();
 const optionalText = (data: FormData, key: string) => text(data, key) || undefined;

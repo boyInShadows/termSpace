@@ -80,7 +80,7 @@ export function Showroom() {
             </label>
             <label className="text-sm font-semibold">
               Product type
-              <select className="mt-2 min-h-11 w-full rounded-md border bg-surface px-3 text-sm">
+              <select className="mt-2 min-h-11 w-full rounded-control border border-input bg-surface px-3 text-sm">
                 <option>Skill</option>
                 <option>Agent</option>
                 <option>MCP server</option>
@@ -119,14 +119,14 @@ export function Showroom() {
               <Zap size={17} />
             </Button>
             <details className="relative">
-              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md border bg-secondary px-4 text-sm font-semibold">
+              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-control border bg-surface px-4 text-sm font-semibold shadow-sm">
                 Actions <ChevronDown size={15} />
               </summary>
-              <ul className="absolute z-50 mt-1 min-w-40 rounded-md border bg-surface p-1">
-                <li><button className="w-full rounded-none px-3 py-2 text-start text-sm hover:bg-muted focus:bg-muted">Edit listing</button></li>
-                <li><button className="w-full rounded-none px-3 py-2 text-start text-sm hover:bg-muted focus:bg-muted">View analytics</button></li>
+              <ul className="absolute z-50 mt-1 min-w-40 rounded-card border bg-surface p-1 shadow-panel">
+                <li><button className="w-full rounded-nav px-3 py-2 text-start text-sm hover:bg-muted focus:bg-muted">Edit listing</button></li>
+                <li><button className="w-full rounded-nav px-3 py-2 text-start text-sm hover:bg-muted focus:bg-muted">View analytics</button></li>
                 <li className="my-1 h-px bg-border" role="separator" />
-                <li><button className="w-full rounded-none px-3 py-2 text-start text-sm text-destructive hover:bg-muted focus:bg-muted">Unpublish</button></li>
+                <li><button className="w-full rounded-nav px-3 py-2 text-start text-sm text-destructive hover:bg-muted focus:bg-muted">Unpublish</button></li>
               </ul>
             </details>
             <Dialog.Root>
@@ -135,7 +135,7 @@ export function Showroom() {
               </Dialog.Trigger>
               <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-                <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(90vw,30rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-background p-6">
+                <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(90vw,30rem)] -translate-x-1/2 -translate-y-1/2 rounded-card border bg-background p-6 shadow-panel">
                   <Dialog.Title className="editorial text-2xl">
                     Publish this product?
                   </Dialog.Title>
@@ -167,7 +167,7 @@ export function Showroom() {
           {toast && (
             <div
               role="status"
-              className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-lg border bg-surface-raised p-4"
+              className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-card border bg-surface-raised p-4 shadow-panel"
             >
               <Check className="text-success" size={18} />
               <div>
@@ -225,7 +225,7 @@ export function Showroom() {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="animate-pulse rounded-lg border bg-surface p-4"
+                className="animate-pulse rounded-card border bg-surface p-4"
               >
                 <div className="h-4 w-20 rounded bg-muted" />
                 <div className="mt-5 h-6 w-3/4 rounded bg-muted" />
@@ -248,7 +248,7 @@ export function Showroom() {
         <Show title="Empty & error states">
           <div className="grid gap-4 md:grid-cols-2">
             <EmptyState />
-            <div className="border border-destructive/30 bg-surface px-6 py-12 text-center">
+            <div className="rounded-card border border-destructive/30 bg-surface px-6 py-12 text-center">
               <AlertTriangle className="mx-auto text-destructive" />
               <h3 className="editorial mt-4 text-2xl">
                 Something did not load
@@ -268,7 +268,7 @@ export function Showroom() {
               <button
                 key={`${x}-${i}`}
                 disabled={i === 0}
-                className={`min-h-10 min-w-10 rounded-md px-3 text-sm ${x === "1" ? "bg-primary text-primary-foreground" : "hover:bg-muted"} disabled:opacity-40`}
+                className={`min-h-10 min-w-10 rounded-control px-3 text-sm ${x === "1" ? "bg-primary text-primary-foreground" : "hover:bg-muted"} disabled:opacity-40`}
               >
                 {x}
               </button>
@@ -312,7 +312,7 @@ function Alert({
   copy: string;
 }) {
   return (
-    <div className="flex gap-3 rounded-lg border bg-surface p-4">
+    <div className="flex gap-3 rounded-control border bg-surface p-4">
       <Icon
         className={
           tone === "success"

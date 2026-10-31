@@ -60,7 +60,8 @@ test.describe("dashboard", () => {
       const links = page.locator("header nav").first().getByRole("link");
       await expect(links).toHaveCount(2);
       for (const height of await links.evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height))) {
-        expect(height).toBeLessThan(40);
+        // 44px pills on one line; taller means the row wrapped.
+        expect(height).toBeLessThanOrEqual(44);
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(768);
     });

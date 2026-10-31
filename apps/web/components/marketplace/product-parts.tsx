@@ -164,7 +164,7 @@ export function TrustStrip({
       <dt className="text-muted-foreground">{labels.permissionsLabel}</dt>
       <dd className="ts-bidi text-foreground">
         {permissions ?? (
-          <span className="inline-block rounded-sm border border-destructive/60 px-1.5 font-semibold text-destructive">
+          <span className="inline-block rounded-chip border border-destructive/60 px-1.5 font-semibold text-destructive">
             {labels.notDeclared}
           </span>
         )}
