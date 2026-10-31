@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getMarketplaceCreator, acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceCommunity, getMarketplaceHome, getMarketplaceInstallation, getMarketplaceProduct, getMarketplaceRelease, listMarketplaceCommunities, listMarketplaceFavorites, listMarketplaceItemTypes, listMarketplaceLibrary, listMarketplaceProducts, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
+import { getMarketplaceCreator, acquireMarketplaceProduct, addMarketplaceFavorite, getMarketplaceCommunity, getMarketplaceHome, getMarketplaceInstallation, getMarketplaceProduct, getMarketplaceRelease, listMarketplaceCommunities, listMarketplaceFavorites, listMarketplaceItemTypes, listMarketplaceLibrary, listMarketplaceProducts, recordMarketplaceProductView, removeMarketplaceFavorite } from "../controllers/marketplaceController.js";
 import { createOwnedCreatorProfile, getCreatorDashboard, getOwnedCreatorProfile, listOwnedMarketplaceReleases, updateOwnedCreatorProfile } from "../controllers/marketplaceCreatorController.js";
 import { transitionModeratedMarketplaceListing, transitionOwnedMarketplaceListing } from "../controllers/marketplaceLifecycleController.js";
 import { createOwnedMarketplaceDraft, getOwnedMarketplaceDraft, listMarketplaceDraftOptions, updateOwnedMarketplaceDraft } from "../controllers/marketplaceDraftController.js";
@@ -9,7 +9,7 @@ import { deleteReview, getMyReview, listProductReviewsForModeration, saveReview,
 import { getMarketplaceReportCase, listMarketplaceCaseEvents, listMarketplaceCaseReports, listMarketplaceReportCases, reportMarketplaceListing, triageMarketplaceReportCase } from "../controllers/marketplaceReportController.js";
 import { marketplaceReportSchema, moderationCaseQuerySchema, moderationCaseTriageSchema } from "../validation/schemas.js";
 import { requireMarketplaceRole, requireReader, requireVerifiedReader } from "../middleware/auth.js";
-import { reportWriteRateLimit, reviewWriteRateLimit, searchRateLimit } from "../middleware/security.js";
+import { reportWriteRateLimit, reviewWriteRateLimit, searchRateLimit, listingViewRateLimit } from "../middleware/security.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
 import { marketplaceCreatorQuerySchema, communityPlacementDecisionSchema, marketplaceAcquireSchema, releaseVersionSchema, reviewVisibilitySchema, reviewWriteSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
 
@@ -28,6 +28,7 @@ router.get("/communities/:slug", searchRateLimit, validate(marketplaceProductQue
 router.get("/draft-options", listMarketplaceDraftOptions);
 router.get("/products", searchRateLimit, validate(marketplaceProductQuerySchema, "query"), listMarketplaceProducts);
 router.get("/products/:slug", getMarketplaceProduct);
+router.post("/products/:slug/views", listingViewRateLimit, recordMarketplaceProductView);
 router.get("/products/:slug/releases/:version", getMarketplaceRelease);
 router.get("/creator/profile", requireReader, getOwnedCreatorProfile);
 router.post("/creator/profile", requireReader, requireVerifiedReader, validate(creatorOnboardingSchema), createOwnedCreatorProfile);

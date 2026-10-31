@@ -2,6 +2,61 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-01 — Listing views and reach (launch-readiness item 1)
+
+- **What a creator sees.** Each studio listing card gains a "Reach · last 30
+  days" block: total views, view→acquisition conversion, and a 30-day bar
+  sparkline. A listing with no views says so and draws no chart; acquisitions
+  that outnumber recorded views show a sentence instead of an invented
+  percentage. The "Last 30 days" acquisitions metric is renamed
+  "Acquisitions · 30 days" so the two windows do not read as one figure.
+- **How a view is counted.** A client beacon sends one `POST
+  /api/marketplace/products/:slug/views` per mount of a published listing
+  page. Server-side counting was rejected: the product page is cached 30 s and
+  prefetched by `Link`, so it would count prefetches and repeated renders. A
+  visitor sending `Do Not Track` or Global Privacy Control is not counted;
+  failures are ignored and never affect the page.
+- **What is stored.** New `MarketplaceListingViewDaily` with the composite key
+  `(productId, day)` and a `views` counter only — no IP, user agent, cookie,
+  session, account or per-visitor row. Days are UTC calendar days; the upsert
+  increments atomically and retries as an `update` if two first views of the
+  day race. Deleting a listing cascades its totals away. Migration
+  `202611010001_marketplace_listing_views` is additive.
+- **API.** The public endpoint is rate-limited per address (120/hour) and only
+  resolves published listings. The creator dashboard adds `viewsLast30Days`
+  and a fixed 30-entry `viewsDaily` series (oldest first, zero-filled), both
+  computed only from the caller's own listings.
+- **Privacy.** The policy gains a "Listing views" section in both locales
+  naming the daily totals, the absence of identifiers and the DNT/GPC opt-out.
+- **Shared surfaces touched:** `apps/api/prisma/schema.prisma`,
+  `apps/api/prisma/migrations/`, `apps/web/lib/api.ts`,
+  `apps/web/lib/types.ts`, `changelog.md`, `pending.md`. Files:
+  `marketplaceController.ts`, `marketplaceCreatorController.ts`,
+  `routes/marketplaceRoutes.ts`, `middleware/security.ts`, `app.test.ts`,
+  `creatorDashboard.integration.test.ts`, `app/products/[slug]/page.tsx`,
+  `features/product/view-tracker.tsx` (new),
+  `features/creator/creator-dashboard.tsx`, `workspace-copy.ts`,
+  `e2e/listing-views.spec.ts` (new), `e2e/studio-feedback.spec.ts`,
+  `e2e/mock-api.mjs`, `lib/legal.ts` and the test fixtures that carry the
+  dashboard listing shape.
+- **Verification.** Root typecheck, lint (0 errors, 2 pre-existing warnings) and
+  all three builds passed. API: 318 passed, 1 skipped (the Redis limiter case)
+  against a fresh disposable PostgreSQL 16 database with every migration,
+  including a unit test that asserts the written row's only keys are
+  `productId`/`day`/`views`, a race-retry test, and an integration test for the
+  30-day series and window boundaries. Web: 473 passed. E2E: the new
+  `listing-views` spec passes 6/6 (exactly one beacon with no body, DNT and GPC
+  suppress it); `studio-feedback` and `budget` pass. A first parallel run also
+  had a pagination strict-mode failure and a duplicate-label failure in
+  `studio-feedback` (Persian "۳۰ روز گذشته" matched both the metric and the
+  reach heading); the latter is fixed with an exact matcher, and both specs
+  pass serially. Focused `design-consistency`/`persian`/`dashboard-repairs`
+  batch: 58 passed, 12 device skips. Visual pass of the card in EN/FA,
+  light/dark at 320/768/1280; detector: no findings.
+- **Not covered.** Real-traffic calibration of the view limiter, the full E2E
+  suite, production email and maintainer approval of the new Persian copy.
+
+
 ## 2026-10-31 — Settings email preferences (launch-readiness item 1)
 
 - **What readers can do.** `/dashboard/settings` now has an "Email preferences"

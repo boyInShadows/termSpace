@@ -87,6 +87,14 @@ describe.skipIf(!databaseUrl)("creator dashboard reviews and acquisition trend o
     await review(buyers[4], mineId, "Hidden", 1, 0, { hiddenAt: new Date(), hiddenReason: "abuse", published: false });
     await review(buyers[5], mineId, "Draft", 1, 0, { published: false });
     await review(buyers[0], otherProductId, "Elsewhere", 5, 0);
+    // Views: two totals inside the 30-day window, one older, one on another creator's listing.
+    const utcDay = (daysAgo: number) => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() - daysAgo));
+    await prisma.marketplaceListingViewDaily.createMany({ data: [
+      { productId: mineId, day: utcDay(2), views: 30 },
+      { productId: mineId, day: utcDay(0), views: 12 },
+      { productId: mineId, day: utcDay(40), views: 500 },
+      { productId: otherProductId, day: utcDay(0), views: 99 },
+    ] });
   }, 60_000);
 
   afterAll(async () => {
@@ -116,6 +124,15 @@ describe.skipIf(!databaseUrl)("creator dashboard reviews and acquisition trend o
     expect(reviews[0]).toEqual({ id: expect.any(String), author: "Ada", rating: 5, body: "Ada says 5", createdAt: expect.any(String) });
     const raw = JSON.stringify(reviews);
     for (const hidden of ["Hidden", "Draft", "Elsewhere", "Old"]) expect(raw).not.toContain(hidden);
+  });
+
+  it("counts views as 30 daily totals and leaves older days out of the window", async () => {
+    const listing = (await dashboard(ownerCookie)).body.data.listings[0];
+    expect(listing.viewsLast30Days).toBe(42);
+    expect(listing.viewsDaily).toHaveLength(30);
+    expect(listing.viewsDaily.at(-1)).toBe(12);
+    expect(listing.viewsDaily.at(-3)).toBe(30);
+    expect(listing.viewsDaily.reduce((total: number, value: number) => total + value, 0)).toBe(42);
   });
 
   it("returns only the caller's own listings and keeps the empty case empty", async () => {

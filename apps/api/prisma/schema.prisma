@@ -566,6 +566,7 @@ model MarketplaceProduct {
   communityPlacements      MarketplaceCommunityPlacement[]
   compatibility            MarketplaceProductCompatibility[]
   moderationCases          MarketplaceModerationCase[]
+  viewDays                 MarketplaceListingViewDaily[]
 
   @@index([published, featured, usageCount])
   @@index([published, type])
@@ -576,6 +577,21 @@ model MarketplaceProduct {
   @@index([published, categoryId])
   @@index([published, verified])
   @@index([updatedAt])
+}
+
+/**
+ * Views are counted once per listing-page visit and stored as a daily total.
+ * There is deliberately no visitor, session, IP or user-agent column: the row
+ * is the whole record, so a view cannot be traced back to a person.
+ */
+model MarketplaceListingViewDaily {
+  productId String
+  day       DateTime @db.Date
+  views     Int      @default(0)
+  product   MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([productId, day])
+  @@index([day])
 }
 
 model MarketplaceProductCompatibility {

@@ -58,6 +58,12 @@ const REVIEW_EXCERPT_LENGTH = 280;
 const ACQUISITION_TREND_DAYS = 30;
 
 type DashboardReview = { id: string; author: string; rating: number; body: string; createdAt: Date };
+type DashboardListingStats = {
+  acquisitionsLast30Days: number;
+  recentReviews: DashboardReview[];
+  viewsLast30Days: number;
+  viewsDaily: number[];
+};
 
 /** The reader's own words are already public on the listing; the studio shows an excerpt. */
 const reviewExcerpt = (body: string) => body.length > REVIEW_EXCERPT_LENGTH ? `${body.slice(0, REVIEW_EXCERPT_LENGTH - 1).trimEnd()}…` : body;
@@ -66,8 +72,7 @@ function serializeDashboardListing(
   product: CreatorDashboardListingRecord,
   feedback: { action: string; reasonCode: string; publicReason: string | null; createdAt: Date } | undefined,
   archivedBy: string | undefined,
-  acquisitionsLast30Days: number,
-  recentReviews: DashboardReview[],
+  stats: DashboardListingStats,
 ) {
   return {
     id: product.id,
@@ -84,8 +89,11 @@ function serializeDashboardListing(
     rating: Number(product.rating),
     reviewCount: product.reviewCount,
     acquisitionCount: product._count.orders,
-    acquisitionsLast30Days,
-    recentReviews: recentReviews.map((review) => ({ id: review.id, author: review.author, rating: review.rating, body: reviewExcerpt(review.body), createdAt: review.createdAt })),
+    acquisitionsLast30Days: stats.acquisitionsLast30Days,
+    // Total views and one entry per day, oldest first; daily totals, never visitors.
+    viewsLast30Days: stats.viewsLast30Days,
+    viewsDaily: stats.viewsDaily,
+    recentReviews: stats.recentReviews.map((review) => ({ id: review.id, author: review.author, rating: review.rating, body: reviewExcerpt(review.body), createdAt: review.createdAt })),
     currentVersion: product.version,
     releaseCount: product._count.versions,
     latestRelease: product.versions[0] ?? null,
@@ -269,9 +277,13 @@ export async function getCreatorDashboard(req: Request, res: Response) {
   }) : [];
   const archivedByProduct = new Map(archiveEvents.map((event) => [event.productId, event.actorType]));
 
-  // Both read only the listings selected above, which are already this creator's.
+  // All of these read only the listings selected above, which are already this creator's.
   const trendStart = new Date(now - ACQUISITION_TREND_DAYS * 24 * 60 * 60 * 1000);
-  const [trendCounts, reviewsPerListing] = listingIds.length ? await Promise.all([
+  // Exactly the last 30 UTC calendar days, today last, so the series has a fixed length.
+  const today = new Date(now);
+  const viewDays = Array.from({ length: ACQUISITION_TREND_DAYS }, (_, index) => new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - (ACQUISITION_TREND_DAYS - 1 - index))));
+  const viewStart = viewDays[0];
+  const [trendCounts, reviewsPerListing, viewTotals, viewRows] = listingIds.length ? await Promise.all([
     prisma.marketplaceOrder.groupBy({ by: ["productId"], where: { productId: { in: listingIds }, status: "completed", createdAt: { gte: trendStart } }, _count: { _all: true } }),
     Promise.all(listingIds.map((productId) => prisma.marketplaceReview.findMany({
       where: { productId, published: true, hiddenAt: null },
@@ -279,9 +291,18 @@ export async function getCreatorDashboard(req: Request, res: Response) {
       take: RECENT_REVIEWS_PER_LISTING,
       select: { id: true, author: true, rating: true, body: true, createdAt: true },
     }))),
-  ]) : [[], []];
+    prisma.marketplaceListingViewDaily.groupBy({ by: ["productId"], where: { productId: { in: listingIds }, day: { gte: viewStart } }, _sum: { views: true } }),
+    prisma.marketplaceListingViewDaily.findMany({ where: { productId: { in: listingIds }, day: { gte: viewStart } }, select: { productId: true, day: true, views: true } }),
+  ]) : [[], [], [], []];
   const trendByProduct = new Map(trendCounts.map((row) => [row.productId, row._count._all]));
   const reviewsByProduct = new Map(listingIds.map((productId, index) => [productId, reviewsPerListing[index]]));
+  const viewsByProduct = new Map(viewTotals.map((row) => [row.productId, row._sum.views ?? 0]));
+  const seriesByProduct = new Map(listingIds.map((productId) => [productId, Array<number>(ACQUISITION_TREND_DAYS).fill(0)]));
+  for (const row of viewRows) {
+    const series = seriesByProduct.get(row.productId);
+    const dayIndex = viewDays.findIndex((day) => day.getTime() === row.day.getTime());
+    if (series && dayIndex >= 0) series[dayIndex] = row.views;
+  }
 
   res.json({
     data: {
@@ -290,7 +311,12 @@ export async function getCreatorDashboard(req: Request, res: Response) {
         acquisitionsLast7Days, acquisitionsPrevious7Days,
         ...reviewWeightedRating(ratedListings),
       },
-      listings: listings.map((listing) => serializeDashboardListing(listing, feedbackByProduct.get(listing.id), archivedByProduct.get(listing.id), trendByProduct.get(listing.id) ?? 0, reviewsByProduct.get(listing.id) ?? [])),
+      listings: listings.map((listing) => serializeDashboardListing(listing, feedbackByProduct.get(listing.id), archivedByProduct.get(listing.id), {
+        acquisitionsLast30Days: trendByProduct.get(listing.id) ?? 0,
+        recentReviews: reviewsByProduct.get(listing.id) ?? [],
+        viewsLast30Days: viewsByProduct.get(listing.id) ?? 0,
+        viewsDaily: seriesByProduct.get(listing.id) ?? Array<number>(ACQUISITION_TREND_DAYS).fill(0),
+      })),
     },
     meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
   });

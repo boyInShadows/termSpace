@@ -20,6 +20,7 @@ export interface CreatorDashboardListing {
   state: string; lifecycleVersion: number; published: boolean; rating: number; reviewCount: number;
   restoreTarget: { state: string; published: boolean } | null;
   acquisitionCount: number; acquisitionsLast30Days: number; recentReviews: CreatorDashboardReview[];
+  viewsLast30Days: number; viewsDaily: number[];
   currentVersion: string; releaseCount: number;
   latestRelease: { version: string; releasedAt: string } | null;
   moderationFeedback: CreatorModerationFeedback | null; recentUpdates: CreatorDashboardEvent[]; updatedAt: string;

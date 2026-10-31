@@ -45,7 +45,7 @@ function dashboardResult(page = 1) {
       listings: [{
         id: `product-${page}`, slug: "owned-skill", name: "Owned Skill", type: "Skill", typeKey: "skill",
         state: "changes_requested", lifecycleVersion: 3, published: true, restoreTarget: null as { state: string; published: boolean } | null, rating: 4.5, reviewCount: 2,
-        acquisitionCount: 7, acquisitionsLast30Days: 0, recentReviews: [], currentVersion: "1.1.0", releaseCount: 2,
+        acquisitionCount: 7, acquisitionsLast30Days: 0, recentReviews: [], viewsLast30Days: 0, viewsDaily: Array(30).fill(0), currentVersion: "1.1.0", releaseCount: 2,
         latestRelease: { version: "1.1.0", releasedAt: "2026-09-15T10:00:00.000Z" },
         moderationFeedback: { action: "changes_requested", reasonCode: "PERMISSIONS_UNCLEAR", message: "Clarify network access.", createdAt: "2026-09-16T09:00:00.000Z" },
         recentUpdates: [{ id: `event-${page}`, action: "changes_requested", state: "changes_requested", message: "Clarify network access.", createdAt: "2026-09-16T09:00:00.000Z" }],
@@ -356,6 +356,38 @@ describe("CreatorDashboard", () => {
       expect(screen.getByText("Ada")).toBeInTheDocument();
       expect(screen.getByText("5 / 5", { selector: "bdi" })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: hub.readAllReviews })).toHaveAttribute("href", "/products/owned-skill#reviews");
+    });
+
+    it("shows views, conversion and a 30-day sparkline for a listing that has been seen", async () => {
+      withListing({
+        viewsLast30Days: 120,
+        acquisitionsLast30Days: 5,
+        viewsDaily: [...Array(29).fill(0), 120],
+      });
+      render(<CreatorDashboard />);
+      await screen.findByRole("heading", { name: "Owned Skill" });
+      const hub = creatorWorkspace.en.creatorHub;
+      expect(screen.getByText(hub.reachLast30Days)).toBeInTheDocument();
+      expect(screen.getByText("120", { selector: "bdi" })).toBeInTheDocument();
+      expect(screen.getByText("4% of views led to an acquisition")).toBeInTheDocument();
+      expect(screen.getByText(hub.viewsPrivacy)).toBeInTheDocument();
+      expect(screen.getByRole("img", { name: `${hub.viewTrendLabel}: 120` })).toBeInTheDocument();
+    });
+
+    it("says there are no views yet and draws nothing it cannot back with data", async () => {
+      withListing({ viewsLast30Days: 0, acquisitionsLast30Days: 0 });
+      render(<CreatorDashboard />);
+      await screen.findByRole("heading", { name: "Owned Skill" });
+      const hub = creatorWorkspace.en.creatorHub;
+      expect(screen.getByText(hub.viewsNoData)).toBeInTheDocument();
+      expect(screen.queryByRole("img", { name: new RegExp(hub.viewTrendLabel) })).not.toBeInTheDocument();
+    });
+
+    it("does not invent a percentage when acquisitions outnumber recorded views", async () => {
+      withListing({ viewsLast30Days: 2, acquisitionsLast30Days: 5 });
+      render(<CreatorDashboard />);
+      await screen.findByRole("heading", { name: "Owned Skill" });
+      expect(screen.getByText(creatorWorkspace.en.creatorHub.conversionMoreAcquisitions)).toBeInTheDocument();
     });
 
     it("says so when a published listing has no reviews, and stays quiet for an unpublished one", async () => {

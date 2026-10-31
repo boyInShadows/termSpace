@@ -343,6 +343,45 @@ export async function getMarketplaceCommunity(req: Request, res: Response) {
   });
 }
 
+/** The UTC calendar day, so a listing's totals do not shift with the server's timezone. */
+function utcDay(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
+/**
+ * Counts one listing-page visit. A repeat request is a repeat visit: nothing
+ * identifies the visitor, so there is nothing to deduplicate against. The
+ * beacon is only sent for a published listing, never for a prefetch.
+ */
+export async function recordMarketplaceProductView(req: Request, res: Response) {
+  const product = await prisma.marketplaceProduct.findFirst({
+    where: { slug: String(req.params.slug), published: true },
+    select: { id: true },
+  });
+  if (!product) { res.status(404).json({ error: { code: "NOT_FOUND", message: "Product not found" } }); return; }
+
+  const day = utcDay(new Date());
+  try {
+    await prisma.marketplaceListingViewDaily.upsert({
+      where: { productId_day: { productId: product.id, day } },
+      create: { productId: product.id, day },
+      update: { views: { increment: 1 } },
+    });
+  } catch (error) {
+    // Two first visits of the day can race the create; the row exists by now.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      await prisma.marketplaceListingViewDaily.update({
+        where: { productId_day: { productId: product.id, day } },
+        data: { views: { increment: 1 } },
+      });
+    } else {
+      throw error;
+    }
+  }
+
+  res.status(204).send();
+}
+
 export async function getMarketplaceProduct(req: Request, res: Response) {
   const product = await prisma.marketplaceProduct.findFirst({
     where: { slug: String(req.params.slug), published: true },

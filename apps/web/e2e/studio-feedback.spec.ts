@@ -21,12 +21,16 @@ for (const locale of ["en", "fa"] as const) {
       await context.addCookies([{ name: "e2e_persona", value: "creator", url: baseURL! }]);
       await page.goto(`${prefix}/dashboard/studio`);
       const card = page.getByRole("article").filter({ hasText: "PR Reviewer" });
-      await expect(card.getByText(hub.acquisitionsLast30Days)).toBeVisible();
+      await expect(card.getByText(hub.acquisitionsLast30Days, { exact: true })).toBeVisible();
+      await expect(card.getByText(hub.reachLast30Days)).toBeVisible();
+      await expect(card.getByText(hub.viewsPrivacy)).toBeVisible();
+      await expect(card.getByRole("img", { name: new RegExp(hub.viewTrendLabel) })).toBeVisible();
       await expect(card.getByRole("heading", { name: hub.recentReviews })).toBeVisible();
       await expect(card.getByText("Saved me an afternoon of review churn.")).toBeVisible();
       await expect(card.getByRole("link", { name: hub.readAllReviews })).toHaveAttribute("href", `${prefix}/products/fixture-listing-1#reviews`);
       // A listing that is not live yet has nothing to show, so it shows nothing.
       await expect(page.getByRole("article").filter({ hasText: "Schema Linter" }).getByRole("heading", { name: hub.recentReviews })).toHaveCount(0);
+      await expect(page.getByRole("article").filter({ hasText: "Schema Linter" }).getByRole("img", { name: new RegExp(hub.viewTrendLabel) })).toHaveCount(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     });
   });

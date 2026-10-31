@@ -266,13 +266,32 @@ function ListingCard({ listing, submitting, feedback, action, onReview, onCancel
       {!feedback.success && <Button className="ms-2" size="sm" variant="secondary" disabled={submitting} onClick={onRefresh}>{hub.retry}</Button>}
     </div>}
 
-    <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 border-y py-4 sm:grid-cols-5">
+    <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 border-t pt-4 sm:grid-cols-5">
       <Metric label={hub.rating} value={listing.reviewCount ? `${number.format(listing.rating)} / ${number.format(5)}` : hub.noRating} icon={<Star />} />
       <Metric label={hub.reviews} value={number.format(listing.reviewCount)} />
       <Metric label={hub.acquisitions} value={number.format(listing.acquisitionCount)} icon={<Download />} />
       <Metric label={hub.acquisitionsLast30Days} value={number.format(listing.acquisitionsLast30Days)} />
       <Metric label={hub.releases} value={number.format(listing.releaseCount)} icon={<Layers3 />} />
     </dl>
+
+    <div className="mt-4 border-t pt-4">
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0 max-w-prose">
+          <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{hub.reachLast30Days}</h4>
+          <p className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-semibold tabular-nums"><bdi dir="ltr">{number.format(listing.viewsLast30Days)}</bdi></span>
+            <span className="text-sm text-muted-foreground">{hub.views}</span>
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {listing.viewsLast30Days === 0 ? hub.viewsNoData
+              : listing.acquisitionsLast30Days > listing.viewsLast30Days ? hub.conversionMoreAcquisitions
+              : hub.conversion.replace("{percent}", number.format(Math.round((listing.acquisitionsLast30Days / listing.viewsLast30Days) * 100)))}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{hub.viewsPrivacy}</p>
+        </div>
+        {listing.viewsLast30Days > 0 && <ViewSparkline values={lastThirtyDays(listing.viewsDaily)} label={`${hub.viewTrendLabel}: ${number.format(listing.viewsLast30Days)}`} />}
+      </div>
+    </div>
 
     {listing.moderationFeedback?.message && <div className="mt-5 rounded-card border border-amber-500/30 bg-amber-500/5 p-4">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-800 dark:text-amber-300">{hub.moderationFeedback}</p>
@@ -316,4 +335,21 @@ function Metric({ label, value, icon }: { label: string; value: string; icon?: R
     <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">{icon && <span aria-hidden="true" className="[&>svg]:size-3.5">{icon}</span>}{label}</dt>
     <dd className="mt-1 font-semibold tabular-nums"><bdi dir="ltr">{value}</bdi></dd>
   </div>;
+}
+
+/** The API sends exactly 30 daily totals; pad only to keep an older cached shape from breaking the chart. */
+function lastThirtyDays(values: number[]) {
+  const recent = values.slice(-30);
+  return [...Array<number>(30 - recent.length).fill(0), ...recent];
+}
+
+/** Thirty daily bars with no axes: the shape is the message, the accessible name carries the total. */
+function ViewSparkline({ values, label }: { values: number[]; label: string }) {
+  const max = Math.max(1, ...values);
+  return <svg role="img" aria-label={label} viewBox={`0 0 ${values.length * 4 - 1} 32`} className="h-10 w-[9.25rem] shrink-0">
+    {values.map((value, index) => {
+      const height = value === 0 ? 1 : Math.max(3, Math.round((value / max) * 30));
+      return <rect key={index} x={index * 4} y={32 - height} width={3} height={height} rx={1.5} className="fill-primary/70" />;
+    })}
+  </svg>;
 }

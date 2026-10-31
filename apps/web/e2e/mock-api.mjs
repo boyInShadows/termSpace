@@ -63,6 +63,10 @@ function listing(index) {
     reviewCount: state === "published" ? 12 : 0,
     acquisitionCount: state === "published" ? 48 : 0,
     acquisitionsLast30Days: state === "published" ? 9 : 0,
+    viewsLast30Days: state === "published" ? 126 : 0,
+    viewsDaily: state === "published"
+      ? [2, 3, 5, 2, 8, 4, 6, 0, 7, 9, 3, 4, 1, 6, 2, 5, 8, 0, 4, 7, 3, 6, 9, 5, 2, 1, 4, 6, 3, 1]
+      : Array(30).fill(0),
     recentReviews: state === "published" ? [
       { id: "review-1", author: "Ada Lovelace", rating: 5, body: "Saved me an afternoon of review churn.", createdAt: ago(2 * DAY) },
       { id: "review-2", author: "Lin", rating: 4, body: "Good defaults, a little noisy on large diffs.", createdAt: ago(5 * DAY) },
@@ -157,6 +161,8 @@ async function handle(request, response) {
     const product = productDetail(decodeURIComponent(detail[1]));
     return product ? send(response, 200, { data: product }) : send(response, 404, error("NOT_FOUND", "No such listing"));
   }
+  // The view beacon is fire-and-forget and carries no body.
+  if (/^POST \/api\/marketplace\/products\/[^/]+\/views$/.test(route)) return send(response, 204);
 
   if (route === "POST /api/readers/login") {
     const { email = "" } = await readJson(request);

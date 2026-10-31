@@ -87,6 +87,8 @@ export async function getProducts(filters: ProductFilters = {}, signal?: AbortSi
   return request<ProductPageResult>(`/api/marketplace/products?${params}`, { signal, headers: forward, revalidate: publicRevalidate(filters) });
 }
 export async function getProduct(slug: string, signal?: AbortSignal) { return (await request<{ data: ProductDetail }>(`/api/marketplace/products/${encodeURIComponent(slug)}`, { signal, revalidate: PUBLIC_REVALIDATE_SECONDS })).data; }
+/** Counts one listing-page view; it carries nothing that identifies the visitor. */
+export async function recordListingView(slug: string) { await request<void>(`/api/marketplace/products/${encodeURIComponent(slug)}/views`, { method: "POST" }); }
 export async function getProductRelease(slug: string, version: string, signal?: AbortSignal) { return (await request<{ data: ProductRelease }>(`/api/marketplace/products/${encodeURIComponent(slug)}/releases/${encodeURIComponent(version)}`, { signal })).data; }
 export type MarketplaceRole = "creator" | "moderator" | "administrator";
 export type ReaderSession = { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } | { authenticated: false };

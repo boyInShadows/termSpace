@@ -30,6 +30,7 @@ const prismaMock = vi.hoisted(() => ({
   marketplaceListingLifecycleEvent: { create: vi.fn(), findMany: vi.fn() },
   marketplaceReview: { findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), aggregate: vi.fn() },
   marketplaceOrder: { count: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), groupBy: vi.fn() },
+  marketplaceListingViewDaily: { upsert: vi.fn(), update: vi.fn(), groupBy: vi.fn(), findMany: vi.fn() },
   marketplaceCreator: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceRoleGrant: { findUnique: vi.fn(), create: vi.fn() },
   marketplaceRoleEvent: { create: vi.fn() },
@@ -531,6 +532,53 @@ describe("API", () => {
     expect(invalid.body.error.code).toBe("VALIDATION_ERROR");
     expect(prismaMock.newsletterSubscriber.upsert).not.toHaveBeenCalled();
     expect(prismaMock.newsletterSubscriber.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("counts a published listing view as a daily total with no visitor identifier", async () => {
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue({ id: "product-1" });
+    prismaMock.marketplaceListingViewDaily.upsert.mockResolvedValue({});
+
+    const response = await request(createApp())
+      .post("/api/marketplace/products/fixture-skill/views")
+      .set("Origin", "http://localhost:3000")
+      // A client cannot smuggle an identifier into the counter.
+      .send({ ip: "203.0.113.9", email: "reader@example.com", userAgent: "fixture" });
+
+    expect(response.status).toBe(204);
+    expect(prismaMock.marketplaceProduct.findFirst).toHaveBeenCalledWith({ where: { slug: "fixture-skill", published: true }, select: { id: true } });
+    const call = prismaMock.marketplaceListingViewDaily.upsert.mock.calls[0][0];
+    expect(Object.keys(call.create).sort()).toEqual(["day", "productId"]);
+    expect(call.update).toEqual({ views: { increment: 1 } });
+    expect(JSON.stringify(call)).not.toContain("203.0.113.9");
+    expect(JSON.stringify(call)).not.toContain("reader@example.com");
+  });
+
+  it("does not count a view for an unknown or unpublished listing", async () => {
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue(null);
+    const response = await request(createApp())
+      .post("/api/marketplace/products/missing/views")
+      .set("Origin", "http://localhost:3000");
+
+    expect(response.status).toBe(404);
+    expect(prismaMock.marketplaceListingViewDaily.upsert).not.toHaveBeenCalled();
+  });
+
+  it("still counts when two first views of the day race the upsert", async () => {
+    prismaMock.marketplaceProduct.findFirst.mockResolvedValue({ id: "product-1" });
+    prismaMock.marketplaceListingViewDaily.upsert.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", { code: "P2002", clientVersion: "test" }),
+    );
+    prismaMock.marketplaceListingViewDaily.update.mockResolvedValue({});
+
+    const response = await request(createApp())
+      .post("/api/marketplace/products/fixture-skill/views")
+      .set("Origin", "http://localhost:3000");
+
+    expect(response.status).toBe(204);
+    expect(prismaMock.marketplaceListingViewDaily.update).toHaveBeenCalledWith({
+      where: { productId_day: { productId: "product-1", day: expect.any(Date) } },
+      data: { views: { increment: 1 } },
+    });
   });
 
   it("rejects oversized JSON payloads with 413", async () => {
@@ -1142,6 +1190,12 @@ describe("API", () => {
       publicReason: "Clarify network access.", createdAt: new Date("2026-09-16T09:00:00.000Z"),
     }]);
     prismaMock.marketplaceOrder.groupBy.mockResolvedValue([{ productId: "product-1", _count: { _all: 2 } }]);
+    prismaMock.marketplaceListingViewDaily.groupBy.mockResolvedValue([{ productId: "product-1", _sum: { views: 42 } }]);
+    prismaMock.marketplaceListingViewDaily.findMany.mockResolvedValue([{
+      productId: "product-1",
+      day: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate())),
+      views: 7,
+    }]);
     prismaMock.marketplaceReview.findMany.mockResolvedValue([
       { id: "review-1", author: "Ada", rating: 5, body: "x".repeat(400), createdAt: new Date("2026-09-17T10:00:00.000Z") },
       { id: "review-2", author: "Lin", rating: 3, body: "Fine.", createdAt: new Date("2026-09-16T10:00:00.000Z") },
@@ -1160,8 +1214,11 @@ describe("API", () => {
       id: "product-1", typeKey: "skill", state: "changes_requested", acquisitionCount: 7,
       releaseCount: 2, moderationFeedback: { reasonCode: "PERMISSIONS_UNCLEAR", message: "Clarify network access." },
 
-      acquisitionsLast30Days: 2,
+      acquisitionsLast30Days: 2, viewsLast30Days: 42,
     });
+    const dailyViews = response.body.data.listings[0].viewsDaily;
+    expect(dailyViews).toHaveLength(30);
+    expect(dailyViews.reduce((total: number, value: number) => total + value, 0)).toBe(7);
     const [first, second] = response.body.data.listings[0].recentReviews;
     expect(first).toMatchObject({ id: "review-1", author: "Ada", rating: 5 });
     expect(first.body).toHaveLength(280);
@@ -1169,6 +1226,9 @@ describe("API", () => {
     expect(second.body).toBe("Fine.");
     expect(prismaMock.marketplaceOrder.groupBy).toHaveBeenCalledWith(expect.objectContaining({
       by: ["productId"], where: { productId: { in: ["product-1"] }, status: "completed", createdAt: { gte: expect.any(Date) } },
+    }));
+    expect(prismaMock.marketplaceListingViewDaily.groupBy).toHaveBeenCalledWith(expect.objectContaining({
+      by: ["productId"], where: { productId: { in: ["product-1"] }, day: { gte: expect.any(Date) } }, _sum: { views: true },
     }));
     expect(prismaMock.marketplaceReview.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { productId: "product-1", published: true, hiddenAt: null }, take: 3,
@@ -1212,6 +1272,8 @@ describe("API", () => {
     prismaMock.marketplaceProduct.count.mockResolvedValue(cases.length);
     prismaMock.marketplaceOrder.count.mockResolvedValue(0);
     prismaMock.marketplaceOrder.groupBy.mockResolvedValue([]);
+    prismaMock.marketplaceListingViewDaily.groupBy.mockResolvedValue([]);
+    prismaMock.marketplaceListingViewDaily.findMany.mockResolvedValue([]);
     prismaMock.marketplaceReview.findMany.mockResolvedValue([]);
     prismaMock.marketplaceListingLifecycleEvent.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce(cases.filter((item) => item.actor).map((item) => ({ productId: item.id, actorType: item.actor })));
     const response = await request(createApp()).get("/api/marketplace/creator/dashboard?page=1&limit=12")
