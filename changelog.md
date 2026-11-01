@@ -13,8 +13,12 @@ Project changes completed from `pending.md` should be recorded here with the dat
 - **Shared surfaces.** `schema.prisma`, migration `202611010003_marketplace_external_link_source`
   (two enum values, `sourceOriginalAuthor`, acquisition trigger accepts `LINK_ONLY`),
   `apps/web/lib/types.ts`, `apps/web/lib/i18n/`, `changelog.md`.
-- **Verified.** Root typecheck, all workspace tests, web lint, and the real-database
-  journey for a link listing (draft, submit, approve, publish, acquire, install).
+- **Verified.** Root typecheck, all workspace tests, web lint, build, and the real-database
+  journey for a link listing (draft, submit, approve, publish, acquire, install). Playwright:
+  491 passed, 18 failed on the full run; on rerun 13 passed, 4 were a stale spec (fixed, slug
+  field moved in the simplified form) and 1 reporting spec passed 12 of 12 repeats.
+  Not verified: Lighthouse crashed on the Windows machine. No Playwright spec covers the link
+  fields in the editor yet, and the rendered UI was not reviewed in both themes or in RTL.
 
 ## 2026-11-01 — Smaller Docker images (API 3.28 GB → 685 MB, web/blog 3.1 → 1.06 GB)
 
