@@ -6,7 +6,7 @@ import type { Locale } from "@/lib/i18n";
  * Legal entity and contact address come from LEGAL_ENTITY_NAME / LEGAL_CONTACT_EMAIL
  * (runtime env, required by docker-compose.yml) so no placeholder ships.
  */
-export const LEGAL_UPDATED = "2026-10-28";
+export const LEGAL_UPDATED = "2026-11-01";
 
 export const legalEntity = () => process.env.LEGAL_ENTITY_NAME?.trim() || "TermSpace";
 export const legalContact = () => process.env.LEGAL_CONTACT_EMAIL?.trim() || undefined;
@@ -27,6 +27,7 @@ export const legalDocs: Record<Locale, Record<LegalSlug, LegalDoc>> = {
       sections: [
         { heading: "What we hold", list: [
           "Account data: your email address, a salted hash of your password (never the password itself), and whether your email is verified. If you sign in with Google, we receive your email address and the basic profile details Google provides.",
+          "Private profile details: the role, goal, coding tools and starting preference you provide during onboarding or in Dashboard → Profile. You can edit these answers in Profile; they are included in your account export and erased when you delete your account.",
           "What you do while signed in: favourites, your library and installs, reviews and ratings, bookmarks and reading progress, and your creator profile and submissions if you publish.",
           "What you send us: newsletter sign-ups, comments, and any message you write to us.",
           "Server logs: request time, path, status, duration and IP address. Cookies and authorization headers are redacted, and request bodies are not logged.",
@@ -93,6 +94,7 @@ export const legalDocs: Record<Locale, Record<LegalSlug, LegalDoc>> = {
       sections: [
         { heading: "داده‌هایی که نگهداری می‌کنیم", list: [
           "داده‌های حساب: نشانی ایمیل، چکیدهٔ نمک‌دار گذرواژه (نه خود گذرواژه) و وضعیت تأیید ایمیل. اگر با گوگل وارد شوید، نشانی ایمیل و اطلاعات پایهٔ نمایه‌ای را که گوگل ارائه می‌کند دریافت می‌کنیم.",
+          "اطلاعات خصوصی پروفایل: نقش، هدف، ابزارهای کدنویسی و نقطهٔ شروعی که هنگام راه‌اندازی حساب یا در پیشخوان ← پروفایل وارد می‌کنید. می‌توانید پاسخ‌ها را در پروفایل ویرایش کنید؛ این پاسخ‌ها در خروجی داده‌های حساب قرار می‌گیرند و با حذف حساب پاک می‌شوند.",
           "فعالیت شما پس از ورود: علاقه‌مندی‌ها، کتابخانه و نصب‌ها، نقدها و امتیازها، نشانک‌ها و پیشرفت مطالعه و در صورت انتشار، نمایهٔ سازنده و ارسال‌های شما.",
           "آنچه برای ما می‌فرستید: عضویت در خبرنامه، دیدگاه‌ها و هر پیامی که به ما می‌نویسید.",
           "گزارش‌های کارگزار: زمان درخواست، مسیر، وضعیت، مدت پاسخ و نشانی IP. کوکی‌ها و سرایندهای احراز هویت پنهان می‌شوند و متن درخواست‌ها ثبت نمی‌شود.",

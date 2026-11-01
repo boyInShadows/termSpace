@@ -128,6 +128,16 @@ export const readerCredentialsSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters").max(128),
 });
 
+export const readerOnboardingSchema = z.object({
+  role: z.enum(["developer", "designer", "student", "founder", "other"]),
+  goal: z.enum(["discover", "workflow", "learn", "share"]),
+  tools: z.array(z.enum(["claude_code", "codex", "cursor", "vscode", "chatgpt", "gemini", "other", "getting_started"]))
+    .min(1).max(8)
+    .refine((tools) => new Set(tools).size === tools.length, "Choose each tool only once")
+    .refine((tools) => !tools.includes("getting_started") || tools.length === 1, "Choose your tools or just getting started"),
+  intent: z.enum(["explore", "create"]),
+}).strict();
+
 export const readerPasswordChangeSchema = z.object({
   currentPassword: z.string().min(1).max(128).optional(),
   newPassword: z.string().min(8, "New password must be at least 8 characters").max(128),

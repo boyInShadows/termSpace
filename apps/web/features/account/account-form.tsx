@@ -21,17 +21,17 @@ export function AccountForm() {
   const router = useRouter(); const params = useSearchParams(); const session = useMarketplaceSession();
   if (session.email) return <SignedInAccount email={session.email} />;
 
-  async function finishSignIn(verificationRequired = false) {
+  async function finishSignIn(onboardingRequired = false) {
     await session.refresh();
     const next = params.get("next");
     const destination = next?.startsWith("/") && URL.canParse(next, window.location.origin) ? new URL(next, window.location.origin) : null;
-    router.replace(verificationRequired ? localePath("/account/verify-email", locale) : destination?.origin === window.location.origin ? `${destination.pathname}${destination.search}${destination.hash}` : localePath("/", locale));
+    router.replace(onboardingRequired ? localePath("/onboarding", locale) : destination?.origin === window.location.origin ? `${destination.pathname}${destination.search}${destination.hash}` : localePath("/", locale));
     router.refresh();
   }
 
   async function signInWithGoogle(credential: string) {
     setSubmitting(true); setError(null); setStatus(null);
-    try { await loginWithGoogle(credential); await finishSignIn(); }
+    try { const { data } = await loginWithGoogle(credential); await finishSignIn(data?.authenticated && data.user.onboardingRequired); }
     catch (cause) { setError(cause instanceof ApiError ? cause.message : t.serviceError); }
     finally { setSubmitting(false); }
   }
@@ -67,8 +67,8 @@ export function AccountForm() {
         setStatus(t.registerAccepted);
         return;
       }
-      await login(email, password);
-      await finishSignIn();
+      const { data: signedIn } = await login(email, password);
+      await finishSignIn(signedIn?.authenticated && signedIn.user.onboardingRequired);
     } catch (cause) {
       if (!(cause instanceof ApiError)) setError(t.serviceError);
       else if (cause.code === "INVALID_CREDENTIALS") setError(t.invalidCredentials);

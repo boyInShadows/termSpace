@@ -50,6 +50,7 @@ export async function exportReaderData(_req: Request, res: Response) {
     where: { id: userId },
     select: {
       email: true, createdAt: true, emailVerifiedAt: true, passwordHash: true, googleSubject: true,
+      onboardingRole: true, onboardingGoal: true, onboardingTools: true, onboardingIntent: true,
       marketplaceRoleGrants: { select: { role: true, grantedAt: true, revokedAt: true }, orderBy: { grantedAt: "asc" } },
       bookmarks: { select: { createdAt: true, article: { select: { slug: true, title: true } } }, orderBy: { createdAt: "asc" } },
       progress: { select: { percentage: true, visitedAt: true, article: { select: { slug: true, title: true } } }, orderBy: { visitedAt: "asc" } },
@@ -87,6 +88,7 @@ export async function exportReaderData(_req: Request, res: Response) {
       reviews: rest.marketplaceReviews.map(({ product, ...review }) => ({ ...product, ...review })),
       reportsFiled: marketplaceReports.map(({ case: moderationCase, ...report }) => ({ reason: moderationCase.reason, ...report })),
       creatorProfile: rest.marketplaceCreator,
+      profileDetails: { role: rest.onboardingRole, goal: rest.onboardingGoal, tools: rest.onboardingTools, intent: rest.onboardingIntent },
     },
   });
 }
@@ -149,7 +151,7 @@ export async function deleteReaderAccount(req: Request, res: Response) {
       await tx.newsletterSubscriber.updateMany({ where: { email: user.email }, data: { active: false } });
       await tx.readerUser.update({
         where: { id: userId },
-        data: { email: `deleted-${userId}@deleted.invalid`, passwordHash: null, googleSubject: null, emailVerifiedAt: null, deletedAt: new Date() },
+        data: { email: `deleted-${userId}@deleted.invalid`, passwordHash: null, googleSubject: null, emailVerifiedAt: null, deletedAt: new Date(), onboardingRole: null, onboardingGoal: null, onboardingTools: [], onboardingIntent: null, onboardingRequired: false },
       });
     });
   } catch (error) {

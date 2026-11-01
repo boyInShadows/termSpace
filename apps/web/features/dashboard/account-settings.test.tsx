@@ -1,16 +1,18 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { copy } from "@/lib/i18n";
-const mocks = vi.hoisted(() => ({ get: vi.fn(), reader: vi.fn(), replace: vi.fn(), logout: vi.fn(), update: vi.fn(), sessionRefresh: vi.fn(), preferences: vi.fn() }));
+const mocks = vi.hoisted(() => ({ get: vi.fn(), reader: vi.fn(), replace: vi.fn(), logout: vi.fn(), update: vi.fn(), sessionRefresh: vi.fn(), preferences: vi.fn(), onboarding: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: mocks.replace, refresh: vi.fn() }) }));
 vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: "fa", t: copy.fa }) }));
 vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => ({ email: "creator@example.test", marketplaceRoles: [], refresh: mocks.sessionRefresh }) }));
 vi.mock("@/lib/account-api", async (original) => ({ ...await original<typeof import("@/lib/account-api")>(), getEmailPreferences: mocks.preferences }));
+vi.mock("@/lib/onboarding-api", async (original) => ({ ...await original<typeof import("@/lib/onboarding-api")>(), getOnboarding: mocks.onboarding }));
 vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), getOwnedCreatorProfile: mocks.get, getReaderProfile: mocks.reader, logout: mocks.logout, updateOwnedCreatorProfile: mocks.update }));
 const { ApiError } = await import("@/lib/api");
 const { AccountSettings } = await import("./account-settings");
 const creator = { handle: "ellisnorth", name: "Ellis North", bio: "Builds careful agentic coding tools.", accessActive: true };
 const { accountSecurityCopy } = await import("./account-security-copy");
+beforeEach(() => mocks.onboarding.mockResolvedValue({ required: false, role: null, goal: null, tools: [], intent: null }));
 
 describe("account profile state", () => {
   afterEach(cleanup);

@@ -167,7 +167,7 @@ async function handle(request, response) {
   if (route === "POST /api/readers/login") {
     const { email = "" } = await readJson(request);
     const chosen = String(email).startsWith("empty") ? "empty" : "creator";
-    return send(response, 200, { data: { authenticated: true } }, {
+    return send(response, 200, { data: { authenticated: true, user: { id: `reader-${chosen}`, email: PERSONAS[chosen].email, emailVerified: true, marketplaceRoles: ["creator"], onboardingRequired: false } } }, {
       "Set-Cookie": `${COOKIE}=${chosen}; Path=/; HttpOnly; SameSite=Lax`,
     });
   }
@@ -205,6 +205,8 @@ async function handle(request, response) {
   if (route === "GET /api/readers/profile") return send(response, 200, {
     data: { email: PERSONAS[persona].email, createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false, emailVerified: true },
   });
+  if (route === "GET /api/readers/onboarding") return send(response, 200, { data: { required: false, role: null, goal: null, tools: [], intent: null } });
+  if (route === "PUT /api/readers/onboarding") return send(response, 200, { data: { ...await readJson(request), required: false } });
   // Stateless default: tests that need persistence intercept this route themselves.
   if (route === "GET /api/readers/preferences") return send(response, 200, { data: { newsletter: true, moderation: true } });
   if (route === "PATCH /api/readers/preferences") {

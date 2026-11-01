@@ -36,6 +36,7 @@ type ReaderAccessUser = {
   id: string;
   email: string;
   emailVerifiedAt: Date | null;
+  onboardingRequired: boolean;
   marketplaceRoleGrants: { role: MarketplaceRole }[];
 };
 
@@ -49,6 +50,7 @@ function publicReader(user: ReaderAccessUser) {
     id: user.id,
     email: user.email,
     emailVerified: Boolean(user.emailVerifiedAt),
+    onboardingRequired: user.onboardingRequired,
     marketplaceRoles: user.marketplaceRoleGrants.map(({ role }) => toPublicMarketplaceRole(role)),
   };
 }
@@ -289,7 +291,7 @@ export async function loginReaderWithGoogle(req: Request, res: Response) {
   try {
     let user = await prisma.readerUser.findFirst({
       where: { OR: [{ googleSubject: payload.sub }, { email }] },
-      select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
+      select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, onboardingRequired: true, marketplaceRoleGrants: activeMarketplaceRoles },
     });
     if (user) {
       if (user.googleSubject && user.googleSubject !== payload.sub) {
@@ -302,7 +304,7 @@ export async function loginReaderWithGoogle(req: Request, res: Response) {
             where: { id: user.id },
             // Discard an unverified signup's password when its real email owner claims it.
             data: { googleSubject: payload.sub, emailVerifiedAt: new Date(), ...(!user.emailVerifiedAt ? { passwordHash: null } : {}) },
-            select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
+            select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, onboardingRequired: true, marketplaceRoleGrants: activeMarketplaceRoles },
           }),
           prisma.readerSession.deleteMany({ where: { userId: user.id } }),
         ]);
@@ -311,13 +313,13 @@ export async function loginReaderWithGoogle(req: Request, res: Response) {
         user = await prisma.readerUser.update({
           where: { id: user.id },
           data: { emailVerifiedAt: new Date() },
-          select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
+          select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, onboardingRequired: true, marketplaceRoleGrants: activeMarketplaceRoles },
         });
       }
     } else {
       user = await prisma.readerUser.create({
         data: { email, googleSubject: payload.sub, emailVerifiedAt: new Date() },
-        select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, marketplaceRoleGrants: activeMarketplaceRoles },
+        select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, onboardingRequired: true, marketplaceRoleGrants: activeMarketplaceRoles },
       });
     }
     await createSession(res, user);

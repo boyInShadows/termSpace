@@ -95,7 +95,7 @@ test("a creator edits the public profile in Settings", async ({ page }) => {
   await page.goto("/dashboard/settings");
   await page.getByLabel(copy.en.creatorHub.name).fill("Ellis N North");
   await page.getByLabel(copy.en.creatorHub.bio).fill("Builds careful agentic coding tools for teams.");
-  await page.getByRole("button", { name: copy.en.creatorHub.save }).click();
+  await page.getByRole("button", { name: copy.en.creatorHub.save, exact: true }).click();
   await expect(page.getByText(copy.en.creatorHub.saved)).toBeVisible();
 });
 

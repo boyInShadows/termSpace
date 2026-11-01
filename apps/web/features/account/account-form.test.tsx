@@ -83,6 +83,22 @@ describe("password sign-in and signup", () => {
     expect(session.refresh).toHaveBeenCalled();
   });
 
+  it("starts onboarding after a new password account signs in", async () => {
+    params.next = "/dashboard/library";
+    login.mockResolvedValueOnce({ data: { authenticated: true, user: { onboardingRequired: true } } });
+    render(<AccountForm />);
+    credentials();
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/onboarding"));
+  });
+
+  it("starts onboarding after a new Google account signs in", async () => {
+    loginWithGoogle.mockResolvedValueOnce({ data: { authenticated: true, user: { onboardingRequired: true } } });
+    render(<AccountForm />);
+    fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/onboarding"));
+  });
+
   it.each(["//evil.example", "/\\evil.example", "/\n/evil.example", "https://evil.example"])("keeps the redirect on this site for %j", async (next) => {
     params.next = next;
     render(<AccountForm />);

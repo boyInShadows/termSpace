@@ -31,7 +31,9 @@ for (const locale of ["en", "fa"] as const) {
       await page.getByLabel(text.passwordLabel).fill("correct-password");
       await remove.click();
       await expect(page).toHaveURL(new RegExp(`${prefix}/?$`));
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await expect(async () => {
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      }).toPass();
     });
 
     test("sends a creator with live listings to the studio", async ({ page, context, baseURL }) => {

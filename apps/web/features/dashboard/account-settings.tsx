@@ -15,6 +15,7 @@ import { accountSecurityCopy } from "./account-security-copy";
 import { AccountPreferences } from "./account-preferences";
 import { AccountData } from "./account-data";
 import { AccountEmail } from "./account-email";
+import { AccountOnboarding } from "@/features/account/account-onboarding";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -105,7 +106,9 @@ export function AccountSettings() {
         </Row>
       </section>
 
-      <AccountPreferences />
+        <AccountOnboarding />
+
+        <AccountPreferences />
 
       {status === "ready" && profile && <section id="creator-profile" className="scroll-mt-40 rounded-card border border-border bg-surface p-5 [&_input]:scroll-mt-32 [&_button]:scroll-mt-32" aria-labelledby="creator-profile-title">
         {profile.accessActive
