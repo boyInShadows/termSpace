@@ -19,6 +19,7 @@ import { productPageLabels, type ProductPageLabels } from "@/lib/i18n/product-pa
 import { getLocale } from "@/lib/serverLocale";
 import type { ProductDetail } from "@/lib/types";
 import { ListingReport } from "@/features/reporting/listing-report";
+import { ListingViewTracker } from "@/features/product/view-tracker";
 import { SITE_URL } from "@/lib/site";
 import { formatNumber, intlLocale } from "@/lib/format";
 
@@ -112,6 +113,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData(product) }} />
+      <ListingViewTracker slug={product.slug} />
       <main id="content" tabIndex={-1} className="container-page py-8">
         <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground">
           <Link href={localePath("/explore", locale)} className="-my-3.5 inline-block py-3.5 hover:text-foreground">{l.explore}</Link> / {typeLabel} /{" "}

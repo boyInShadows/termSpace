@@ -253,6 +253,8 @@ model ReaderUser {
   emailVerifiedAt        DateTime?
   // Set when the owner deletes the account; the row stays as an anonymized tombstone.
   deletedAt              DateTime?
+  // Moderation-decision email. Security mail is not controlled here.
+  notifyModerationEmail  Boolean                                @default(true)
   createdAt              DateTime                               @default(now())
   updatedAt              DateTime                               @updatedAt
   sessions               ReaderSession[]
@@ -275,6 +277,7 @@ model ReaderUser {
   requestedSourceChecks  MarketplaceSourceCheckJob[]
   marketplaceReports     MarketplaceReport[]
   moderationCaseEvents   MarketplaceModerationCaseEvent[]
+  notifications          MarketplaceNotification[]
 }
 
 enum TransactionalEmailStatus {
@@ -336,6 +339,7 @@ model TransactionalEmailOutbox {
   passwordResetId String?                 @unique
   emailChangeId  String?                  @unique
   emailChangeNoticeId String?             @unique
+  notificationId String?                  @unique
   correlationId  String                   @unique
   status         TransactionalEmailStatus @default(PENDING)
   attempts       Int                      @default(0)
@@ -350,6 +354,7 @@ model TransactionalEmailOutbox {
   passwordReset  ReaderPasswordReset?     @relation(fields: [passwordResetId], references: [id], onDelete: Cascade)
   emailChange    ReaderEmailChange?       @relation("EmailChangeConfirmation", fields: [emailChangeId], references: [id], onDelete: Cascade)
   emailChangeNotice ReaderEmailChange?    @relation("EmailChangeNotice", fields: [emailChangeNoticeId], references: [id], onDelete: Cascade)
+  notification   MarketplaceNotification? @relation(fields: [notificationId], references: [id], onDelete: Cascade)
 
   @@index([status, nextAttemptAt])
   @@index([lockedAt])
@@ -566,6 +571,8 @@ model MarketplaceProduct {
   communityPlacements      MarketplaceCommunityPlacement[]
   compatibility            MarketplaceProductCompatibility[]
   moderationCases          MarketplaceModerationCase[]
+  viewDays                 MarketplaceListingViewDaily[]
+  notifications            MarketplaceNotification[]
 
   @@index([published, featured, usageCount])
   @@index([published, type])
@@ -576,6 +583,21 @@ model MarketplaceProduct {
   @@index([published, categoryId])
   @@index([published, verified])
   @@index([updatedAt])
+}
+
+/**
+ * Views are counted once per listing-page visit and stored as a daily total.
+ * There is deliberately no visitor, session, IP or user-agent column: the row
+ * is the whole record, so a view cannot be traced back to a person.
+ */
+model MarketplaceListingViewDaily {
+  productId String
+  day       DateTime @db.Date
+  views     Int      @default(0)
+  product   MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([productId, day])
+  @@index([day])
 }
 
 model MarketplaceProductCompatibility {
@@ -761,6 +783,34 @@ model MarketplaceProductVersion {
 
   @@unique([productId, version])
   @@index([productId, releasedAt])
+}
+
+enum MarketplaceNotificationType {
+  LISTING_APPROVED
+  LISTING_CHANGES_REQUESTED
+  LISTING_REJECTED
+}
+
+/**
+ * One staff decision about one listing, addressed to its owner. The public
+ * reason is copied at decision time; the internal note is deliberately absent.
+ * The email is a separate outbox row so a failed send never loses the in-app
+ * record.
+ */
+model MarketplaceNotification {
+  id           String                      @id @default(cuid())
+  userId       String
+  type         MarketplaceNotificationType
+  productId    String
+  publicReason String?
+  readAt       DateTime?
+  createdAt    DateTime                    @default(now())
+  user         ReaderUser                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product      MarketplaceProduct          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  outbox       TransactionalEmailOutbox?
+
+  @@index([userId, readAt, createdAt])
+  @@index([productId, createdAt])
 }
 
 enum MarketplaceItemType {

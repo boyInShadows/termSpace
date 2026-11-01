@@ -91,9 +91,9 @@ export function AccountSecurity({ onProfileState }: { onProfileState?: (state: P
         {state.profile.hasPassword ? <form className="mt-5 max-w-xl space-y-4" onSubmit={submit} aria-label={copy.savePassword}>
           <p id="password-change-help" className="text-sm text-muted-foreground">{copy.intro}</p>
           <fieldset disabled={busy} className="space-y-4" aria-describedby="password-change-help">
-            <label className="block text-sm font-medium">{copy.currentPassword}<Input name="currentPassword" type="password" required maxLength={128} autoComplete="current-password" className="mt-2 rounded-none" /></label>
-            <label className="block text-sm font-medium">{t.newPassword}<Input name="newPassword" type="password" required minLength={8} maxLength={128} autoComplete="new-password" className="mt-2 rounded-none" /></label>
-            <label className="block text-sm font-medium">{t.confirmPassword}<Input name="confirmPassword" type="password" required minLength={8} maxLength={128} autoComplete="new-password" className="mt-2 rounded-none" /></label>
+            <label className="block text-sm font-medium">{copy.currentPassword}<Input name="currentPassword" type="password" required maxLength={128} autoComplete="current-password" className="mt-2" /></label>
+            <label className="block text-sm font-medium">{t.newPassword}<Input name="newPassword" type="password" required minLength={8} maxLength={128} autoComplete="new-password" className="mt-2" /></label>
+            <label className="block text-sm font-medium">{t.confirmPassword}<Input name="confirmPassword" type="password" required minLength={8} maxLength={128} autoComplete="new-password" className="mt-2" /></label>
             <Button type="submit">{busy ? t.wait : copy.savePassword}</Button>
           </fieldset>
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

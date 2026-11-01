@@ -7,29 +7,14 @@ This file tracks known improvement work that has not been completed yet. When an
 Source: 2026-10-28 review of `/dashboard/studio`, `/dashboard/library` and
 `/dashboard/settings` (code, API routes and the 2026-10-25 E2E evidence; not
 rendered signed in). Items are in the suggested order; each is one reviewable
-phase. Items 1 and 5 add API routes or migrations, so they touch shared surfaces
-(`apps/api/src/app.ts`, `schema.prisma`, `migrations/`, `lib/api.ts`,
-`lib/types.ts`, `lib/i18n/`) and need a written plan first.
+phase. Items that add routes, storage or worker paths name the shared surfaces
+they touch and need a written plan first.
 
-1. **Notification and newsletter preferences.** Settings has no opt-out for
-   the newsletter or future notifications. Add a preferences section backed by
-   the existing newsletter subscription data; extend it when item 4 ships.
-   Acceptance: unsubscribe reflected in the newsletter API, both locales.
-2. **Studio onboarding and feedback.** Give a creator with no listings a short
-   guide (profile, first draft, source check, submit). Show review feedback
-   and per-listing analytics (views, acquisitions over time) on the listing
-   card; this overlaps the privacy-conscious analytics item below, so build
-   them together. Acceptance: empty-state E2E, no personal data exposed.
-3. **Creator notifications for moderation decisions.** Creators currently have
-    to return to the dashboard to see approvals, rejections and change
-    requests. Notify on each decision (in dashboard and by email) and let item
-    1 control delivery. Acceptance: API test per decision type, email worker
-    coverage.
-4. **Consolidate creator copy.** `creator-hub.tsx` and
-    `provider-connections.tsx` merge `t.creatorHub`/`t.creatorReleases` with
-    `creatorWorkspace[locale]`. Collapse to one source so English and Persian
-    cannot drift. Acceptance: key-parity test passes, no behaviour change.
-5. **Set up Cloudflare Email Sending and test the email flows (needs the
+1. **Consolidate creator copy.** `creator-hub.tsx` and
+   `provider-connections.tsx` merge `t.creatorHub`/`t.creatorReleases` with
+   `creatorWorkspace[locale]`. Collapse to one source so English and Persian
+   cannot drift. Acceptance: key-parity test passes, no behaviour change.
+2. **Set up Cloudflare Email Sending and test the email flows (needs the
    domain).** Blocked until a domain is on the Cloudflare account. Steps:
    onboard the domain under Email Sending and add the SPF, DKIM and DMARC
    records it lists; create an API token with the "Email Sending: Edit"
@@ -48,7 +33,7 @@ phase. Items 1 and 5 add API routes or migrations, so they touch shared surfaces
    tier would also cover the volume but needs a provider adapter (not built).
    Acceptance: each flow delivers a real email and the link or code works;
    record evidence in `changelog.md`.
-6. **Rate limiting can silently turn off at API startup.** Found 2026-10-28 in
+3. **Rate limiting can silently turn off at API startup.** Found 2026-10-28 in
    the Docker stack: with the machine under load, every limiter logged
    "async error during store initialization: Command timed out" (Redis
    `commandTimeout` is 1 s in `lib/redis.ts`), `passOnStoreError` then let all
@@ -58,7 +43,7 @@ phase. Items 1 and 5 add API routes or migrations, so they touch shared surfaces
    loudly and expose it on the health check when a limiter's store is down.
    Acceptance: a test that starts the app with a slow Redis and still counts,
    plus a documented failure mode.
-7. **Signed-in verification pass (final gate).** Seed a verified account and a
+4. **Signed-in verification pass (final gate).** Seed a verified account and a
     verified creator, then check all three pages and their sub-routes in light
     and dark, English and Persian RTL, 320–1280 px, keyboard focus, and every
     loading/error/empty state. Also cover what automated tests could not:
@@ -86,3 +71,13 @@ phase. Items 1 and 5 add API routes or migrations, so they touch shared surfaces
   starting the API and the email worker that include the email change feature:
   the worker's claim query selects the new outbox columns. The change is
   additive; the old check is replaced in the same migration.
+- Apply migration `202611010001_marketplace_listing_views` (new
+  `MarketplaceListingViewDaily` table) before starting the API that counts
+  views: the new endpoint and the creator dashboard read that table. The change
+  is additive; old API versions keep working after the migration.
+- Apply migration `202611010002_moderation_notifications`
+  (`ReaderUser.notifyModerationEmail`, the `MarketplaceNotification` table and
+  the new outbox `notificationId` target) before starting the API and email
+  worker that include creator notifications: reader queries select the new
+  column and the worker claims the new outbox target. The change is additive;
+  old API versions keep working after the migration.

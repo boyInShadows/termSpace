@@ -169,7 +169,7 @@ export function ConsoleSearch({
             "relative flex items-center transition-colors",
             isHero
               ? "rounded-full border border-border-strong bg-background pe-1.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/25"
-              : "rounded-xl border border-border-strong bg-surface/90 shadow-soft backdrop-blur focus-within:border-transparent",
+              : "rounded-control border border-border-strong bg-surface/90 shadow-panel backdrop-blur focus-within:border-transparent",
           )}
         >
           <Search
@@ -237,7 +237,7 @@ export function ConsoleSearch({
                 ? t.homePage.recentSearches
                 : t.homePage.popularSearches
             }
-            className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-xl border border-border bg-surface shadow-lift"
+            className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-card border border-border bg-surface shadow-panel"
           >
             <li className="eyebrow px-4 pb-1 pt-3">
               {recent.length > 0

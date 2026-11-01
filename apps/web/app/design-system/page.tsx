@@ -5,16 +5,16 @@ import { Logo } from "@/components/layout/logo";
 import { Showroom } from "./showroom";
 export const metadata: Metadata = { title: "Design system", robots: { index: false } };
 const colors = [
-  ["Void", "bg-background", "oklch(14.5% .022 286)"],
-  ["Surface", "bg-surface", "oklch(18.5% .026 286)"],
-  ["Raised", "bg-surface-raised", "oklch(23% .03 288)"],
-  ["Foreground", "bg-foreground", "oklch(96% .01 286)"],
-  ["Muted", "bg-muted", "oklch(26% .026 286)"],
-  ["Accent / primary", "bg-primary", "oklch(68% .195 292)"],
-  ["Information", "bg-accent", "oklch(80% .135 196)"],
-  ["Verified", "bg-success", "oklch(82% .175 152)"],
-  ["Caution", "bg-warning", "oklch(83% .15 85)"],
-  ["Alert", "bg-destructive", "oklch(66% .205 22)"],
+  ["Background", "bg-background", "oklch(14.5% .018 262)"],
+  ["Surface", "bg-surface", "oklch(19% .02 262)"],
+  ["Raised", "bg-surface-raised", "oklch(23.5% .024 262)"],
+  ["Foreground", "bg-foreground", "oklch(96% .008 262)"],
+  ["Muted", "bg-muted", "oklch(26.5% .02 262)"],
+  ["Signal / primary", "bg-primary", "oklch(68% .16 262)"],
+  ["Information", "bg-accent", "oklch(78% .11 220)"],
+  ["Verified", "bg-success", "oklch(80% .16 152)"],
+  ["Caution", "bg-warning", "oklch(83% .145 85)"],
+  ["Alert", "bg-destructive", "oklch(68% .19 22)"],
 ];
 const checks = [
   "Brand fit",
@@ -35,7 +35,7 @@ export default function DesignSystemPage() {
     <>
       <main id="content" tabIndex={-1}>
         <section className="container-page py-16">
-          <p className="eyebrow">termspace design language · the datasheet</p>
+          <p className="eyebrow">termspace design language · paper &amp; signal</p>
           <div className="mt-5 grid gap-8 md:grid-cols-[1fr_.7fr]">
             <h1 className="editorial text-5xl font-medium leading-[1.02] sm:text-6xl">
               Signal for the craft.
@@ -45,7 +45,7 @@ export default function DesignSystemPage() {
             <p className="self-end text-base leading-7 text-muted-foreground">
               A shared community-library and dashboard system built to make technical resources
               understandable, comparable, and worthy of trust — on a
-              ruled page with clear typography and explicit product states.
+              cool paper ground with rounded panels, navy ink and one blue signal.
             </p>
           </div>
         </section>
@@ -142,23 +142,24 @@ export default function DesignSystemPage() {
                 </p>
               </div>
               <div>
-                <p className="eyebrow">Square geometry</p>
-                <div className="mt-5 flex gap-3">
-                  {["rounded-sm", "rounded-md", "rounded-lg", "rounded-xl"].map(
+                <p className="eyebrow">Radius scale</p>
+                <div className="mt-5 flex items-end gap-3">
+                  {["rounded-sm", "rounded-md", "rounded-control", "rounded-card", "rounded-chip"].map(
                     (x) => (
                       <span
                         key={x}
-                        className={`size-14 border-2 border-primary ${x}`}
+                        className={`size-12 border-2 border-primary bg-surface ${x}`}
                       />
                     ),
                   )}
                 </div>
               </div>
               <div>
-                <p className="eyebrow">Ruled surfaces</p>
+                <p className="eyebrow">Panel elevation</p>
                 <div className="mt-5 flex gap-4">
-                  <span className="size-14 border border-border bg-background" />
-                  <span className="size-14 border border-foreground/60 bg-background" />
+                  <span className="size-14 rounded-card border border-border bg-surface shadow-panel" />
+                  <span className="size-14 rounded-card border border-border bg-tint-sage" />
+                  <span className="size-14 rounded-card border border-border bg-tint-lavender" />
                 </div>
               </div>
             </div>
@@ -172,17 +173,17 @@ export default function DesignSystemPage() {
                   Is this the right shelf for the work?
                 </h2>
                 <p className="mt-5 leading-7 text-muted-foreground">
-                  The system is recognizable through its ruled sections, a
-                  restrained accent, technical mono data, and
+                  The system is recognizable through its rounded panels, one blue
+                  signal, pastel feature tints, technical mono data, and
                   product-information-first composition. Trust comes from
                   explicit compatibility, permissions, versioning, and scan
                   status—not decorative security claims.
                 </p>
                 <p className="mt-4 leading-7 text-muted-foreground">
-                  Primary actions use ink. Accent marks focus and selection.
-                  Green identifies reviewed or successful states; amber and red
-                  identify caution, errors or absence. Labels carry the meaning
-                  alongside color, in both themes.
+                  Primary actions use navy ink. The blue signal marks focus,
+                  links and selection. Green identifies reviewed or successful
+                  states; amber and red identify caution, errors or absence.
+                  Labels carry the meaning alongside color, in both themes.
                 </p>
                 <div className="mt-7 grid gap-5 sm:grid-cols-2">
                   <Decision

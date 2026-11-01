@@ -97,6 +97,7 @@ describe.skipIf(!databaseUrl)("reader account export and deletion on a real data
         await prisma.marketplaceProduct.deleteMany({ where: { id: productId } });
         await prisma.marketplaceCreator.deleteMany({ where: { id: creatorId } });
         await prisma.readerUser.deleteMany({ where: { id: { in: userIds } } });
+        await prisma.newsletterSubscriber.deleteMany({ where: { email: { endsWith: "@account-delete.test" } } });
       } catch { /* a leftover fixture row never fails the suite */ }
       await prisma.$disconnect();
     }
@@ -145,6 +146,7 @@ describe.skipIf(!databaseUrl)("reader account export and deletion on a real data
   it("requires the current password and then anonymizes the account", async () => {
     const buyer = await reader("delete-buyer");
     const other = await reader("delete-other");
+    await prisma.newsletterSubscriber.create({ data: { email: buyer.email } });
     await prisma.marketplaceOrder.create({ data: { userId: buyer.id, productId, idempotencyKey: `delete-${run}`, amountMinor: 0, currency: "USD", status: "completed" } });
     await prisma.marketplaceFavorite.create({ data: { userId: buyer.id, productId } });
     await prisma.marketplaceReview.deleteMany({ where: { productId } });
@@ -168,6 +170,7 @@ describe.skipIf(!databaseUrl)("reader account export and deletion on a real data
     expect(await prisma.marketplaceFavorite.count({ where: { userId: buyer.id } })).toBe(0);
     expect(await prisma.marketplaceReview.count({ where: { userId: buyer.id } })).toBe(0);
     expect(await prisma.marketplaceOrder.count({ where: { userId: buyer.id } })).toBe(1);
+    expect((await prisma.newsletterSubscriber.findUniqueOrThrow({ where: { email: buyer.email } })).active).toBe(false);
     expect(await rating()).toEqual({ rating: 1, reviewCount: 1 });
 
     expect((await client.get("/api/readers/profile")).status).toBe(401);

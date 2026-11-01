@@ -52,8 +52,8 @@ export function ProductCard({
     <article
       aria-labelledby={titleId}
       className={cn(
-          "group relative flex h-full min-w-0 flex-col border border-border-strong bg-background p-5 transition-colors duration-200",
-          "hover:border-foreground/60 focus-within:border-primary",
+          "group relative flex h-full min-w-0 flex-col rounded-card border border-border bg-surface p-5 shadow-panel transition-[border-color] duration-200",
+          "hover:border-foreground/30 focus-within:border-primary",
         isList && "sm:flex-row sm:items-stretch sm:gap-6",
       )}
     >
@@ -93,7 +93,7 @@ export function ProductCard({
           <ListingLink
             href={href}
             listingId={product.id}
-            className="inline-block rounded-sm transition-colors group-hover:text-primary after:absolute after:inset-0 after:rounded-lg after:content-['']"
+            className="inline-block rounded-sm transition-colors group-hover:text-primary after:absolute after:inset-0 after:rounded-card after:content-['']"
           >
             {product.name}
           </ListingLink>
@@ -121,7 +121,7 @@ export function ProductCard({
               <Link
                 key={community.slug}
                 href={localePath(`/communities/${community.slug}`, locale)}
-                className="relative z-10 inline-flex min-h-6 items-center rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="relative z-10 inline-flex min-h-6 items-center rounded-chip focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Badge variant="outline">{fa ? community.nameFa ?? community.nameEn : community.nameEn}</Badge>
               </Link>

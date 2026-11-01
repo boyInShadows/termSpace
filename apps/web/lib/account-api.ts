@@ -5,6 +5,13 @@ import type { MarketplaceItemTypeKey, MarketplaceLibraryEntry, Product } from ".
 export async function requestEmailChange(newEmail: string, currentPassword: string) { return request<{ data: { accepted: true } }>("/api/readers/profile/email", { method: "POST", body: JSON.stringify({ newEmail, currentPassword }) }); }
 export async function confirmEmailChange(token: string) { return request<{ data: { changed: true } }>("/api/readers/profile/email/confirm", { method: "POST", body: JSON.stringify({ token }) }); }
 export async function revokeOtherSessions() { return (await request<{ data: { revoked: number } }>("/api/readers/sessions/revoke-others", { method: "POST" })).data; }
+export type EmailPreferences = { newsletter: boolean; moderation: boolean };
+export async function getEmailPreferences(signal?: AbortSignal) {
+  return (await request<{ data: EmailPreferences }>("/api/readers/preferences", { signal })).data;
+}
+export async function setEmailPreferences(patch: Partial<EmailPreferences>) {
+  return (await request<{ data: EmailPreferences }>("/api/readers/preferences", { method: "PATCH", body: JSON.stringify(patch) })).data;
+}
 export type LibrarySort = "newest" | "oldest" | "name";
 export type LibraryFilters = { q?: string; type?: MarketplaceItemTypeKey; sort?: LibrarySort };
 export async function getMarketplaceLibrary(page = 1, limit = 24, signal?: AbortSignal, filters: LibraryFilters = {}) {

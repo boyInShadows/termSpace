@@ -14,11 +14,14 @@ export interface CreatorDashboardEvent {
 export interface CreatorModerationFeedback {
   action: string; reasonCode: string; message: string | null; createdAt: string;
 }
+export interface CreatorDashboardReview { id: string; author: string; rating: number; body: string; createdAt: string; }
 export interface CreatorDashboardListing {
   id: string; slug: string; name: string; type: ProductType; typeKey: MarketplaceItemTypeKey | null;
   state: string; lifecycleVersion: number; published: boolean; rating: number; reviewCount: number;
   restoreTarget: { state: string; published: boolean } | null;
-  acquisitionCount: number; currentVersion: string; releaseCount: number;
+  acquisitionCount: number; acquisitionsLast30Days: number; recentReviews: CreatorDashboardReview[];
+  viewsLast30Days: number; viewsDaily: number[];
+  currentVersion: string; releaseCount: number;
   latestRelease: { version: string; releasedAt: string } | null;
   moderationFeedback: CreatorModerationFeedback | null; recentUpdates: CreatorDashboardEvent[]; updatedAt: string;
 }

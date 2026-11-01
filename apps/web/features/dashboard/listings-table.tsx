@@ -84,7 +84,7 @@ function ListingRows({ rows, now }: { rows: CreatorDashboardListing[]; now: numb
                       className="flex min-h-8 min-w-0 flex-col items-start justify-center gap-1 py-1.5 sm:flex-row sm:items-center sm:gap-2 sm:py-0"
                     >
                       <span className="max-w-full break-words font-medium sm:truncate" title={row.name}>{row.name}</span>
-                      <span className="shrink-0 rounded-none bg-primary-soft px-1.5 py-0.5 font-mono text-[11px] uppercase text-foreground/80">
+                      <span className="shrink-0 rounded-nav bg-primary-soft px-1.5 py-0.5 font-mono text-[11px] uppercase text-foreground/80">
                         {row.type}
                       </span>
                     </Link>
@@ -136,7 +136,7 @@ function ListingRows({ rows, now }: { rows: CreatorDashboardListing[]; now: numb
 function EmptyListings({ title, cta, href }: { title: string; cta: string; href: string }) {
   return (
     <div className="flex flex-col items-center gap-4 border-t border-border/60 px-5 py-12 text-center">
-      <span className="grid size-10 place-items-center rounded-none border border-border text-muted-foreground" aria-hidden>
+      <span className="grid size-10 place-items-center rounded-control border border-border text-muted-foreground" aria-hidden>
         <Store className="size-4" />
       </span>
       <p className="text-sm text-muted-foreground">{title}</p>

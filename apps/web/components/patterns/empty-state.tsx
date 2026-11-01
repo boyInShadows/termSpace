@@ -15,7 +15,7 @@ export function EmptyState({ onReset, query, filtered = false, filters = [] }: {
   const copy = t.discovery;
   const [before, after] = copy.emptySearch.split("{query}");
   return (
-    <div className="col-span-full border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
+    <div className="col-span-full rounded-card border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
       <SearchX className="mx-auto text-muted-foreground" />
       <h3 className="editorial mt-4 text-2xl font-semibold">
         {copy.emptyTitle}

@@ -56,7 +56,7 @@ export function DashboardSidebar() {
                   href={href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "relative flex h-9 items-center gap-3 rounded-none px-3 text-sm transition-colors duration-[var(--duration-fast)]",
+                    "relative flex h-9 items-center gap-3 rounded-nav px-3 text-sm transition-colors duration-[var(--duration-fast)]",
                     active
                       ? "bg-primary-soft text-foreground"
                       : "text-muted-foreground hover:bg-surface hover:text-foreground",
@@ -72,13 +72,13 @@ export function DashboardSidebar() {
         </nav>
 
         <div className="my-3 border-t border-border" />
-        <PublishLink className="h-9 rounded-none" />
+        <PublishLink className="h-9 rounded-control" />
 
         <Link
           href={localePath("/dashboard/settings", locale)}
-          className="mt-auto flex items-center gap-3 rounded-none p-2 transition-colors hover:bg-surface"
+          className="mt-auto flex items-center gap-3 rounded-nav p-2 transition-colors hover:bg-surface"
         >
-          <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-none bg-primary-soft text-sm font-semibold ring-1 ring-border">
+          <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-control bg-primary-soft text-sm font-semibold ring-1 ring-border">
             {initial}
           </span>
           <span className="min-w-0">
@@ -120,7 +120,7 @@ export function DashboardTabBar() {
           </li>
         ))}
         <li className="flex items-center justify-center px-1">
-          <PublishLink iconOnly className="min-h-11 w-full rounded-none px-1" />
+          <PublishLink iconOnly className="min-h-11 w-full rounded-control px-1" />
         </li>
       </ul>
     </nav>

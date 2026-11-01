@@ -98,7 +98,7 @@ export async function exportReaderData(_req: Request, res: Response) {
 export async function deleteReaderAccount(req: Request, res: Response) {
   const userId = res.locals.reader.id as string;
   try {
-    const user = await prisma.readerUser.findUnique({ where: { id: userId }, select: { passwordHash: true, googleSubject: true, deletedAt: true } });
+    const user = await prisma.readerUser.findUnique({ where: { id: userId }, select: { email: true, passwordHash: true, googleSubject: true, deletedAt: true } });
     if (!user || user.deletedAt) throw new AccountError(404, "NOT_FOUND", "Reader account not found");
 
     if (user.passwordHash) {
@@ -143,7 +143,10 @@ export async function deleteReaderAccount(req: Request, res: Response) {
       await tx.marketplaceFavorite.deleteMany({ where: { userId } });
       await tx.readerEmailVerification.deleteMany({ where: { userId } });
       await tx.readerPasswordReset.deleteMany({ where: { userId } });
+      await tx.marketplaceNotification.deleteMany({ where: { userId } });
       await tx.marketplaceRoleGrant.deleteMany({ where: { userId } });
+      // The newsletter row belongs to the address, not the tombstone; stop delivery.
+      await tx.newsletterSubscriber.updateMany({ where: { email: user.email }, data: { active: false } });
       await tx.readerUser.update({
         where: { id: userId },
         data: { email: `deleted-${userId}@deleted.invalid`, passwordHash: null, googleSubject: null, emailVerifiedAt: null, deletedAt: new Date() },

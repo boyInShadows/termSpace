@@ -1,21 +1,22 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { copy } from "@/lib/i18n";
-const mocks = vi.hoisted(() => ({ get: vi.fn(), reader: vi.fn(), replace: vi.fn(), logout: vi.fn() }));
+const mocks = vi.hoisted(() => ({ get: vi.fn(), reader: vi.fn(), replace: vi.fn(), logout: vi.fn(), update: vi.fn(), sessionRefresh: vi.fn(), preferences: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: mocks.replace, refresh: vi.fn() }) }));
 vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: "fa", t: copy.fa }) }));
-vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => ({ email: "creator@example.test", marketplaceRoles: [], refresh: vi.fn() }) }));
-vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), getOwnedCreatorProfile: mocks.get, getReaderProfile: mocks.reader, logout: mocks.logout }));
+vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => ({ email: "creator@example.test", marketplaceRoles: [], refresh: mocks.sessionRefresh }) }));
+vi.mock("@/lib/account-api", async (original) => ({ ...await original<typeof import("@/lib/account-api")>(), getEmailPreferences: mocks.preferences }));
+vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), getOwnedCreatorProfile: mocks.get, getReaderProfile: mocks.reader, logout: mocks.logout, updateOwnedCreatorProfile: mocks.update }));
 const { ApiError } = await import("@/lib/api");
 const { AccountSettings } = await import("./account-settings");
+const creator = { handle: "ellisnorth", name: "Ellis North", bio: "Builds careful agentic coding tools.", accessActive: true };
 const { accountSecurityCopy } = await import("./account-security-copy");
 
 describe("account profile state", () => {
   afterEach(cleanup);
-  beforeEach(() => { vi.clearAllMocks(); mocks.reader.mockResolvedValue({ createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false }); });
-  it("does not claim a missing profile while loading, recovers a failure and isolates Latin identity", async () => {
+  beforeEach(() => { vi.clearAllMocks(); mocks.reader.mockResolvedValue({ createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false }); mocks.preferences.mockResolvedValue({ newsletter: true, moderation: true }); });  it("does not claim a missing profile while loading, recovers a failure and isolates Latin identity", async () => {
     let reject!: (cause: Error) => void;
-    mocks.get.mockReturnValueOnce(new Promise((_, fail) => { reject = fail; })).mockResolvedValue({ handle: "ellisnorth" });
+    mocks.get.mockReturnValueOnce(new Promise((_, fail) => { reject = fail; })).mockResolvedValue(creator);
     render(<AccountSettings />);
     expect(screen.getAllByRole("status").some((status) => status.textContent === copy.fa.creatorHub.loading)).toBe(true);
     expect(screen.queryByText(copy.fa.settingsNoCreator)).not.toBeInTheDocument();
@@ -25,7 +26,33 @@ describe("account profile state", () => {
     fireEvent.click(screen.getByRole("button", { name: copy.fa.creatorHub.retry }));
     expect(await screen.findByText("@ellisnorth")).toHaveAttribute("dir", "ltr");
     expect(screen.getByText("creator@example.test")).toHaveAttribute("dir", "ltr");
-    expect(screen.getByRole("link", { name: copy.fa.creatorHub.editTitle })).toHaveAttribute("href", "/fa/dashboard/studio#creator-profile");
+    expect(screen.queryByRole("link", { name: copy.fa.creatorHub.editTitle })).not.toBeInTheDocument();
+  });
+  it("edits the creator profile here and keeps the permanent handle read-only", async () => {
+    mocks.get.mockResolvedValue(creator);
+    mocks.update.mockResolvedValue({ ...creator, name: "Ellis N", bio: "A new biography that is long enough." });
+    render(<AccountSettings />);
+    const form = await screen.findByRole("form", { name: copy.fa.creatorHub.editTitle });
+    expect(within(form).getByLabelText(copy.fa.creatorHub.name)).toHaveValue("Ellis North");
+    expect(within(form).getByLabelText(copy.fa.creatorHub.handle)).toBeDisabled();
+    fireEvent.change(within(form).getByLabelText(copy.fa.creatorHub.name), { target: { value: "Ellis N" } });
+    fireEvent.change(within(form).getByLabelText(copy.fa.creatorHub.bio), { target: { value: "A new biography that is long enough." } });
+    fireEvent.click(within(form).getByRole("button", { name: copy.fa.creatorHub.save }));
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledWith({ name: "Ellis N", bio: "A new biography that is long enough." }));
+    expect(await screen.findByText(copy.fa.creatorHub.saved)).toBeVisible();
+    expect(mocks.sessionRefresh).not.toHaveBeenCalled();
+  });
+  it("shows revoked creator access instead of an editable form", async () => {
+    mocks.get.mockResolvedValue({ ...creator, accessActive: false });
+    render(<AccountSettings />);
+    expect(await screen.findByText(copy.fa.creatorHub.accessRevoked)).toBeVisible();
+    expect(screen.queryByRole("form", { name: copy.fa.creatorHub.editTitle })).not.toBeInTheDocument();
+  });
+  it("points a reader without a creator profile to the studio to create one", async () => {
+    mocks.get.mockRejectedValue(new ApiError(404, "CREATOR_PROFILE_NOT_FOUND", "missing"));
+    render(<AccountSettings />);
+    expect(await screen.findByRole("link", { name: copy.fa.creatorHub.title })).toHaveAttribute("href", "/fa/dashboard/studio");
+    expect(screen.queryByRole("form", { name: copy.fa.creatorHub.editTitle })).not.toBeInTheDocument();
   });
   it("reserves the empty profile message for a confirmed missing profile", async () => {
     mocks.get.mockRejectedValue(new ApiError(404, "CREATOR_PROFILE_NOT_FOUND", "missing"));

@@ -18,7 +18,7 @@ import { isEditable, lifecycleActionLabel, listingStateLabel, listingStatusClass
 const PAGE_SIZE = 12;
 type SubmissionFeedback = { id: string; message: string; sourceRequired?: boolean; refreshRequired?: boolean; success?: boolean } | null;
 
-export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
+export function CreatorDashboard() {
   const { locale, t } = useLocale();
   const hub = { ...t.creatorHub, ...creatorWorkspace[locale].creatorHub };
   const [page, setPage] = useState(1);
@@ -31,7 +31,6 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
   const [reviewing, setReviewing] = useState<{ id: string; action: CreatorListingAction } | null>(null);
   const mutationPending = useRef(false);
 
-  useEffect(() => { if (!loading) onReady?.(); }, [loading, onReady]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -92,13 +91,13 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
   }
 
   if (loading && !result) {
-    return <section className="rounded-none border bg-surface p-8" aria-busy="true">
+    return <section className="rounded-card border bg-surface p-8" aria-busy="true">
       <p className="text-sm text-muted-foreground" role="status">{hub.dashboardLoading}</p>
     </section>;
   }
 
   if (error && !result) {
-    return <section className="rounded-none border border-destructive/30 bg-surface p-8">
+    return <section className="rounded-card border border-destructive/30 bg-surface p-8">
       <p className="text-sm text-destructive" role="alert">{hub.dashboardLoadError}</p>
       <Button className="mt-5" variant="secondary" onClick={retry}>
         <RotateCcw aria-hidden="true" className="size-4" />{hub.retry}
@@ -136,14 +135,25 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
       {loading && <span className="text-xs text-muted-foreground" role="status">{hub.dashboardLoading}</span>}
     </div>
 
-    {error && result && <div className="mt-4 flex items-center justify-between gap-4 rounded-none border border-destructive/30 bg-destructive/5 p-4">
+    {error && result && <div className="mt-4 flex items-center justify-between gap-4 rounded-card border border-destructive/30 bg-destructive/5 p-4">
       <p className="text-sm text-destructive" role="alert">{hub.dashboardLoadError}</p>
       <Button size="sm" variant="secondary" onClick={retry}>{hub.retry}</Button>
     </div>}
 
-    {listings.length === 0 ? <div className="mt-5 rounded-none border border-dashed bg-muted/25 p-10 text-center">
+    {listings.length === 0 ? <div className="mt-5 rounded-card border border-dashed bg-muted/25 p-6 sm:p-10">
       <h3 className="font-semibold text-2xl">{hub.noListings}</h3>
-      <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">{hub.noListingsIntro}</p>
+      <p className="mt-2 max-w-xl text-sm text-muted-foreground">{hub.noListingsIntro}</p>
+      <ol className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label={hub.noListings}>
+        {[{ title: hub.onboardingTitle1, body: hub.onboardingBody1 }, { title: hub.onboardingTitle2, body: hub.onboardingBody2 }, { title: hub.onboardingTitle3, body: hub.onboardingBody3 }, { title: hub.onboardingTitle4, body: hub.onboardingBody4 }].map((step, index) => <li key={step.title} className="border bg-surface p-4">
+          <span className="text-xs font-semibold text-muted-foreground tabular-nums">{number.format(index + 1)}</span>
+          <h4 className="mt-1 font-semibold">{step.title}</h4>
+          <p className="mt-1 text-sm text-muted-foreground">{step.body}</p>
+        </li>)}
+      </ol>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link className={buttonVariants()} href={localePath("/dashboard/studio/listings/new", locale)}><Plus aria-hidden="true" className="size-4" />{hub.newListing}</Link>
+        <Link className={buttonVariants({ variant: "secondary" })} href={localePath("/dashboard/settings", locale)}>{hub.connectSource}</Link>
+      </div>
     </div> : <div className="mt-5 space-y-4">
       {listings.map((listing) => <ListingCard
         key={listing.id}
@@ -173,7 +183,7 @@ export function CreatorDashboard({ onReady }: { onReady?: () => void } = {}) {
 }
 
 function SummaryCard({ label, value, icon }: { label: string; value: string; icon: React.ReactElement }) {
-  return <div className="rounded-none border bg-surface p-5">
+  return <div className="rounded-card border bg-surface p-5">
     <dt className="flex min-h-10 items-start gap-2 text-xs font-medium leading-5 text-muted-foreground">
       <span className="text-primary [&>svg]:size-4" aria-hidden="true">{icon}</span>{label}
     </dt>
@@ -216,7 +226,7 @@ function ListingCard({ listing, submitting, feedback, action, onReview, onCancel
     trigger.current?.focus();
   }
 
-  return <article className="rounded-none border bg-surface p-5 sm:p-6 [&_button]:scroll-mt-32 [&_button]:scroll-mb-[calc(6rem+env(safe-area-inset-bottom))]">
+  return <article className="rounded-card border bg-surface p-5 sm:p-6 [&_button]:scroll-mt-32 [&_button]:scroll-mb-[calc(6rem+env(safe-area-inset-bottom))]">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
@@ -256,17 +266,53 @@ function ListingCard({ listing, submitting, feedback, action, onReview, onCancel
       {!feedback.success && <Button className="ms-2" size="sm" variant="secondary" disabled={submitting} onClick={onRefresh}>{hub.retry}</Button>}
     </div>}
 
-    <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 border-y py-4 sm:grid-cols-4">
+    <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 border-t pt-4 sm:grid-cols-5">
       <Metric label={hub.rating} value={listing.reviewCount ? `${number.format(listing.rating)} / ${number.format(5)}` : hub.noRating} icon={<Star />} />
       <Metric label={hub.reviews} value={number.format(listing.reviewCount)} />
       <Metric label={hub.acquisitions} value={number.format(listing.acquisitionCount)} icon={<Download />} />
+      <Metric label={hub.acquisitionsLast30Days} value={number.format(listing.acquisitionsLast30Days)} />
       <Metric label={hub.releases} value={number.format(listing.releaseCount)} icon={<Layers3 />} />
     </dl>
 
-    {listing.moderationFeedback?.message && <div className="mt-5 rounded-none border border-amber-500/30 bg-amber-500/5 p-4">
+    <div className="mt-4 border-t pt-4">
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0 max-w-prose">
+          <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{hub.reachLast30Days}</h4>
+          <p className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-semibold tabular-nums"><bdi dir="ltr">{number.format(listing.viewsLast30Days)}</bdi></span>
+            <span className="text-sm text-muted-foreground">{hub.views}</span>
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {listing.viewsLast30Days === 0 ? hub.viewsNoData
+              : listing.acquisitionsLast30Days > listing.viewsLast30Days ? hub.conversionMoreAcquisitions
+              : hub.conversion.replace("{percent}", number.format(Math.round((listing.acquisitionsLast30Days / listing.viewsLast30Days) * 100)))}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{hub.viewsPrivacy}</p>
+        </div>
+        {listing.viewsLast30Days > 0 && <ViewSparkline values={lastThirtyDays(listing.viewsDaily)} label={`${hub.viewTrendLabel}: ${number.format(listing.viewsLast30Days)}`} />}
+      </div>
+    </div>
+
+    {listing.moderationFeedback?.message && <div className="mt-5 rounded-card border border-amber-500/30 bg-amber-500/5 p-4">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-800 dark:text-amber-300">{hub.moderationFeedback}</p>
       <p className="mt-2 text-sm">{listing.moderationFeedback.message}</p>
       <p className="mt-2 text-xs text-muted-foreground">{date.format(new Date(listing.moderationFeedback.createdAt))} · {listing.moderationFeedback.reasonCode.replaceAll("_", " ")}</p>
+    </div>}
+
+    {(listing.recentReviews.length > 0 || listing.published) && <div className="mt-5">
+      <div className="flex items-baseline justify-between gap-4">
+        <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{hub.recentReviews}</h4>
+        {listing.published && listing.reviewCount > 0 && <Link className="text-xs font-semibold underline underline-offset-4" href={`${localePath(`/products/${listing.slug}`, locale)}#reviews`}>{hub.readAllReviews}</Link>}
+      </div>
+      {listing.recentReviews.length ? <ul className="mt-2 divide-y border-y">
+        {listing.recentReviews.map((review) => <li key={review.id} className="py-3 text-sm">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <span className="flex items-center gap-1.5 font-semibold"><Star aria-hidden="true" className="size-3.5" /><bdi dir="ltr">{number.format(review.rating)} / {number.format(5)}</bdi><span className="font-normal text-muted-foreground"><bdi>{review.author}</bdi></span></span>
+            <time className="text-xs text-muted-foreground" dateTime={review.createdAt}>{date.format(new Date(review.createdAt))}</time>
+          </div>
+          <p className="mt-1 max-w-prose break-words text-muted-foreground">{review.body}</p>
+        </li>)}
+      </ul> : <p className="mt-2 text-sm text-muted-foreground">{hub.noReviewsYet}</p>}
     </div>}
 
     <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
@@ -289,4 +335,21 @@ function Metric({ label, value, icon }: { label: string; value: string; icon?: R
     <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">{icon && <span aria-hidden="true" className="[&>svg]:size-3.5">{icon}</span>}{label}</dt>
     <dd className="mt-1 font-semibold tabular-nums"><bdi dir="ltr">{value}</bdi></dd>
   </div>;
+}
+
+/** The API sends exactly 30 daily totals; pad only to keep an older cached shape from breaking the chart. */
+function lastThirtyDays(values: number[]) {
+  const recent = values.slice(-30);
+  return [...Array<number>(30 - recent.length).fill(0), ...recent];
+}
+
+/** Thirty daily bars with no axes: the shape is the message, the accessible name carries the total. */
+function ViewSparkline({ values, label }: { values: number[]; label: string }) {
+  const max = Math.max(1, ...values);
+  return <svg role="img" aria-label={label} viewBox={`0 0 ${values.length * 4 - 1} 32`} className="h-10 w-[9.25rem] shrink-0">
+    {values.map((value, index) => {
+      const height = value === 0 ? 1 : Math.max(3, Math.round((value / max) * 30));
+      return <rect key={index} x={index * 4} y={32 - height} width={3} height={height} rx={1.5} className="fill-primary/70" />;
+    })}
+  </svg>;
 }

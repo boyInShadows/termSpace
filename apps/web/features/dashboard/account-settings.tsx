@@ -9,8 +9,10 @@ import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
 import { ProviderConnections } from "@/features/creator/provider-connections";
+import { CreatorProfileForm } from "@/features/creator/creator-profile-form";
 import { AccountSecurity, type ProfileState } from "./account-security";
 import { accountSecurityCopy } from "./account-security-copy";
+import { AccountPreferences } from "./account-preferences";
 import { AccountData } from "./account-data";
 import { AccountEmail } from "./account-email";
 
@@ -50,6 +52,13 @@ export function AccountSettings() {
     void load();
   }, [load]);
 
+  // The studio's "Edit your profile" link lands here; the form only exists once the profile has loaded.
+  useEffect(() => {
+    if (status === "ready" && profile && window.location.hash === "#creator-profile") {
+      document.getElementById("creator-profile")?.scrollIntoView({ block: "start" });
+    }
+  }, [status, profile]);
+
   async function signOut() {
     setSignOutError(null);
     try {
@@ -76,7 +85,7 @@ export function AccountSettings() {
         <p className="mt-3 text-sm text-muted-foreground">{t.settingsIntro}</p>
       </header>
 
-      <section className="rounded-none border border-border bg-surface px-5">
+      <section className="rounded-card border border-border bg-surface px-5">
         <Row label={t.email}><bdi dir="ltr">{session.email}</bdi></Row>
         <Row label={t.settingsCreator}>
           {status === "loading" ? <p role="status">{t.creatorHub.loading}</p> : status === "error" ? <div>
@@ -86,13 +95,23 @@ export function AccountSettings() {
             <>
               <bdi dir="ltr" className="text-foreground">@{profile.handle}</bdi>
               <span className="mt-1 block text-xs">{t.settingsHandleFixed}</span>
-              <Link className="mt-2 inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={localePath("/dashboard/studio", locale) + "#creator-profile"}>{t.creatorHub.editTitle}</Link>
             </>
           ) : (
-            t.settingsNoCreator
+            <>
+              <span>{t.settingsNoCreator}</span>
+              <Link className="mt-1 inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={localePath("/dashboard/studio", locale)}>{t.creatorHub.title}</Link>
+            </>
           )}
         </Row>
       </section>
+
+      <AccountPreferences />
+
+      {status === "ready" && profile && <section id="creator-profile" className="scroll-mt-40 rounded-card border border-border bg-surface p-5 [&_input]:scroll-mt-32 [&_button]:scroll-mt-32" aria-labelledby="creator-profile-title">
+        {profile.accessActive
+          ? <CreatorProfileForm profile={profile} onSaved={setProfile} />
+          : <><h2 id="creator-profile-title" className="text-xl font-semibold">{t.creatorHub.editTitle}</h2><p className="mt-3 text-sm text-muted-foreground" role="status">{t.creatorHub.accessRevoked}</p></>}
+      </section>}
 
       <AccountSecurity onProfileState={setReaderProfile} />
 

@@ -5,17 +5,17 @@ export const buttonVariants = cva(
     // `focus-visible:outline-none` used to be the whole focus story here, which
   // cancelled the global focus ring and left every button — including the
   // icon-only ones — with no visible focus at all. The ring replaces it.
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-none px-4 text-sm font-semibold transition-colors duration-(--duration-hover) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-45",
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-control px-4 text-sm font-semibold transition-colors duration-(--duration-hover) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-45",
   {
     variants: {
       variant: {
         primary:
-          "bg-foreground text-background hover:opacity-85",
+          "bg-foreground text-background shadow-sm hover:opacity-85",
         secondary:
-          "border border-border-strong bg-surface text-foreground hover:bg-muted",
+          "border border-border-strong bg-surface text-foreground shadow-sm hover:bg-muted",
         ghost: "text-foreground hover:bg-muted",
         outline:
-          "border border-foreground/60 text-foreground hover:bg-muted",
+          "border border-foreground/60 text-foreground shadow-sm hover:bg-muted",
         destructive: "bg-destructive text-background hover:opacity-90",
       },
       size: {

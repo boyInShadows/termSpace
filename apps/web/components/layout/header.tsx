@@ -15,16 +15,10 @@ import { useStoredString } from "@/lib/hooks/use-stored-string";
 import { localePath } from "@/lib/i18n";
 
 /**
- * The header does two things beyond navigation.
- *
- * It condenses once you leave the hero — the announcement strip retracts and
- * the bar tightens — so the page gives its vertical space back to content as
- * soon as you have committed to reading.
- *
- * And it carries a plasma read-out of how far through the page you are.
- * Progress is written straight to a CSS custom property from a scroll
- * listener; routing the highest-frequency input on the page through React
- * state would make every frame a reconciliation.
+ * The header does one thing beyond navigation: it condenses once you leave the
+ * hero — the announcement strip retracts and the bar tightens — so the page
+ * gives its vertical space back to content as soon as you have committed to
+ * reading.
  */
 
 const ANNOUNCEMENT_KEY = "termspace:announcement-dismissed";
@@ -56,7 +50,6 @@ export function Header() {
   const [isCondensed, setIsCondensed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [dismissed, setDismissed] = useStoredString(ANNOUNCEMENT_KEY);
-  const progressRef = useRef<HTMLDivElement | null>(null);
   const headerRef = useRef<HTMLElement | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -105,16 +98,7 @@ export function Header() {
 
     const measure = () => {
       queued = false;
-      const scrolled = window.scrollY;
-      const scrollable = Math.max(
-        1,
-        document.documentElement.scrollHeight - window.innerHeight,
-      );
-      progressRef.current?.style.setProperty(
-        "--scrolled",
-        (scrolled / scrollable).toFixed(4),
-      );
-      setIsCondensed(scrolled > 80);
+      setIsCondensed(window.scrollY > 80);
     };
 
     const onScroll = () => {
@@ -186,7 +170,7 @@ export function Header() {
           </div>
 
           <nav
-            className="hidden items-center justify-self-center gap-5 whitespace-nowrap text-sm md:flex lg:gap-8"
+            className="hidden items-center justify-self-center gap-1 whitespace-nowrap text-sm md:flex lg:gap-2"
             aria-label={t.primary}
           >
             {NAV.map((item) => {
@@ -197,20 +181,11 @@ export function Header() {
                   href={localePath(item.href, locale)}
                   aria-current={current ? "page" : undefined}
                   className={cn(
-                    "group relative py-1 transition-colors hover:text-primary",
-                    current && "font-semibold text-primary",
+                    "inline-flex min-h-11 items-center rounded-nav px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                    current && "bg-primary-soft text-foreground",
                   )}
                 >
                   {item.label}
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "rule-plasma absolute inset-x-0 -bottom-0.5 h-px origin-left transition-transform duration-300",
-                      // The current route keeps its underline; the others grow
-                      // one on hover.
-                      current ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
-                    )}
-                  />
                 </Link>
               );
             })}
@@ -260,14 +235,6 @@ export function Header() {
             </Button>
           </div>
         </div>
-
-        {/* --- reading progress ------------------------------------------ */}
-        <div
-          ref={progressRef}
-          aria-hidden
-          className="rule-plasma absolute inset-x-0 bottom-0 h-px origin-left"
-          style={{ transform: "scaleX(var(--scrolled, 0))" }}
-        />
       </div>
 
       {/* --- mobile menu -------------------------------------------------- */}
@@ -281,8 +248,8 @@ export function Header() {
                 aria-current={isCurrent(item.href) ? "page" : undefined}
                 onClick={() => setIsMenuOpen(false)}
                 className={cn(
-                  "border-b border-border/60 py-3 text-sm last:border-0",
-                  isCurrent(item.href) && "font-semibold text-primary",
+                  "rounded-nav border-b border-border/60 px-2 py-3 text-sm last:border-0 hover:bg-muted",
+                  isCurrent(item.href) && "bg-primary-soft font-semibold text-foreground",
                 )}
               >
                 {item.label}
@@ -302,7 +269,7 @@ export function Header() {
                 <Link
                   href={localePath("/dashboard", locale)}
                   onClick={() => setIsMenuOpen(false)}
-                  className="border-t border-border/60 py-3 text-sm"
+                  className="rounded-nav border-t border-border/60 px-2 py-3 text-sm hover:bg-muted"
                 >
                   {t.dashboard}
                 </Link>
@@ -312,7 +279,7 @@ export function Header() {
                     setIsMenuOpen(false);
                     void signOut();
                   }}
-                  className="border-t border-border/60 py-3 text-start text-sm"
+                  className="rounded-nav border-t border-border/60 px-2 py-3 text-start text-sm hover:bg-muted"
                 >
                   {t.signOut}
                 </button>
@@ -321,7 +288,7 @@ export function Header() {
               <Link
                 href={localePath("/account", locale)}
                 onClick={() => setIsMenuOpen(false)}
-                className="border-t border-border/60 py-3 text-sm font-semibold"
+                className="rounded-nav border-t border-border/60 px-2 py-3 text-sm font-semibold hover:bg-muted"
               >
                 {t.signIn}
               </Link>
@@ -329,7 +296,7 @@ export function Header() {
             <a
               href={switchHref}
               lang={locale === "fa" ? "en" : "fa"}
-              className="inline-flex items-center gap-2 border-t border-border/60 py-3 text-sm"
+              className="inline-flex items-center gap-2 rounded-nav border-t border-border/60 px-2 py-3 text-sm hover:bg-muted"
             >
               <Globe size={15} aria-hidden />
               {t.language}

@@ -62,6 +62,15 @@ function listing(index) {
     rating: state === "published" ? 4.6 : 0,
     reviewCount: state === "published" ? 12 : 0,
     acquisitionCount: state === "published" ? 48 : 0,
+    acquisitionsLast30Days: state === "published" ? 9 : 0,
+    viewsLast30Days: state === "published" ? 126 : 0,
+    viewsDaily: state === "published"
+      ? [2, 3, 5, 2, 8, 4, 6, 0, 7, 9, 3, 4, 1, 6, 2, 5, 8, 0, 4, 7, 3, 6, 9, 5, 2, 1, 4, 6, 3, 1]
+      : Array(30).fill(0),
+    recentReviews: state === "published" ? [
+      { id: "review-1", author: "Ada Lovelace", rating: 5, body: "Saved me an afternoon of review churn.", createdAt: ago(2 * DAY) },
+      { id: "review-2", author: "Lin", rating: 4, body: "Good defaults, a little noisy on large diffs.", createdAt: ago(5 * DAY) },
+    ] : [],
     currentVersion: "1.2.0",
     releaseCount: 3,
     latestRelease: { version: "1.2.0", releasedAt: updatedAt },
@@ -152,6 +161,8 @@ async function handle(request, response) {
     const product = productDetail(decodeURIComponent(detail[1]));
     return product ? send(response, 200, { data: product }) : send(response, 404, error("NOT_FOUND", "No such listing"));
   }
+  // The view beacon is fire-and-forget and carries no body.
+  if (/^POST \/api\/marketplace\/products\/[^/]+\/views$/.test(route)) return send(response, 204);
 
   if (route === "POST /api/readers/login") {
     const { email = "" } = await readJson(request);
@@ -189,9 +200,17 @@ async function handle(request, response) {
   if (persona === "reader" && pathname.startsWith("/api/marketplace/creator/")) return send(response, 403, error("FORBIDDEN", "Creator access required"));
   if (route === "GET /api/marketplace/creator/provider-connections") return send(response, 200, { data: [] });
   if (route === "GET /api/marketplace/favorites") return send(response, 200, { data: [] });
+  if (route === "GET /api/marketplace/notifications") return send(response, 200, { data: { unread: 0, notifications: [] } });
+  if (route === "POST /api/marketplace/notifications/read") return send(response, 200, { data: { updated: 0, unread: 0 } });
   if (route === "GET /api/readers/profile") return send(response, 200, {
     data: { email: PERSONAS[persona].email, createdAt: "2026-01-01T00:00:00Z", hasPassword: true, connectedGoogle: false, emailVerified: true },
   });
+  // Stateless default: tests that need persistence intercept this route themselves.
+  if (route === "GET /api/readers/preferences") return send(response, 200, { data: { newsletter: true, moderation: true } });
+  if (route === "PATCH /api/readers/preferences") {
+    const body = await readJson(request);
+    return send(response, 200, { data: { newsletter: body.newsletter ?? true, moderation: body.moderation ?? true } });
+  }
   if (route === "POST /api/readers/profile/email") {
     const body = await readJson(request);
     if (body.currentPassword !== "correct-password") return send(response, 401, error("INVALID_CURRENT_PASSWORD", "Current password is incorrect"));
@@ -212,6 +231,7 @@ async function handle(request, response) {
     return send(response, 200, { data: [], meta: { page: 1, limit: 24, total: 0, totalPages: 0 } });
   }
   if (route === "GET /api/marketplace/creator/profile") return send(response, 200, { data: profile(persona) });
+  if (route === "PATCH /api/marketplace/creator/profile") return send(response, 200, { data: { ...profile(persona), ...(await readJson(request)) } });
   if (route === "GET /api/marketplace/creator/dashboard") return send(response, 200, dashboard(persona));
 
   // Loud, so a test that starts depending on a new endpoint says which one.

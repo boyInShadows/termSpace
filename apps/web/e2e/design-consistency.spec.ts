@@ -13,11 +13,15 @@ for (const locale of ["en", "fa"]) for (const theme of ["light", "dark"]) {
       const styles = await page.evaluate(() => {
         const style = getComputedStyle(document.querySelector("h1")!);
         const fields = [...document.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), textarea')];
-        const cards = [...document.querySelectorAll("article")];
+        // A card is an article framed on all sides; review entries are divided
+        // rules (border-bottom only) and are not cards.
+        const cards = [...document.querySelectorAll("article")]
+          .filter((card) => getComputedStyle(card).borderTopWidth !== "0px")
+          .map((card) => ({ radius: getComputedStyle(card).borderRadius, shadow: getComputedStyle(card).boxShadow }));
         return {
           headingFont: style.fontFamily,
           fields: fields.map((field) => getComputedStyle(field).borderRadius),
-          cards: cards.map((card) => ({ radius: getComputedStyle(card).borderRadius, shadow: getComputedStyle(card).boxShadow })),
+          cards,
           overflow: document.documentElement.scrollWidth > innerWidth,
         };
       });
@@ -27,8 +31,9 @@ for (const locale of ["en", "fa"]) for (const theme of ["light", "dark"]) {
       expect(styles.overflow, route).toBe(false);
       const isLanding = route === "/";
       if (!isLanding) {
-        expect(styles.fields.every((radius) => radius === "0px"), route).toBe(true);
-        expect(styles.cards.every((card) => card.radius === "0px" && card.shadow === "none"), route).toBe(true);
+        // One soft shape system: 12px controls, 16px cards with a panel shadow.
+        expect(styles.fields.every((radius) => radius === "12px"), route).toBe(true);
+        expect(styles.cards.every((card) => card.radius === "16px" && card.shadow !== "none"), route).toBe(true);
       }
     }
   });

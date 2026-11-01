@@ -32,6 +32,7 @@ describe.skipIf(!databaseUrl)("reader authentication on a real database", () => 
   afterAll(async () => {
     if (prisma) {
       await prisma.readerUser.deleteMany({ where: { email: { endsWith: suffix } } });
+      await prisma.newsletterSubscriber.deleteMany({ where: { email: { endsWith: suffix } } });
       await prisma.$disconnect();
     }
     vi.unstubAllEnvs();
@@ -138,5 +139,24 @@ describe.skipIf(!databaseUrl)("reader authentication on a real database", () => 
     await prisma.readerEmailVerification.update({ where: { id: verification.id }, data: { expiresAt: verification.expiresAt } });
     await request(app).post("/api/readers/email-verification/confirm").send({ token: tokens.createEmailVerificationToken(verification) }).expect(400);
     expect((await prisma.readerUser.findUniqueOrThrow({ where: { id: reader.id } })).emailVerifiedAt).toBeNull();
+  });
+
+  it("stores the newsletter preference on the shared subscriber list and revives it after unsubscribe", async () => {
+    const reader = await register("preferences");
+    expect((await reader.agent.get("/api/readers/preferences")).body).toEqual({ data: { newsletter: false } });
+
+    const subscribed = await reader.agent.patch("/api/readers/preferences").set("Origin", origin).send({ newsletter: true });
+    expect(subscribed.status).toBe(200);
+    expect(subscribed.body).toEqual({ data: { newsletter: true } });
+    expect((await prisma.newsletterSubscriber.findUniqueOrThrow({ where: { email: reader.email } })).active).toBe(true);
+
+    const unsubscribed = await reader.agent.patch("/api/readers/preferences").set("Origin", origin).send({ newsletter: false });
+    expect(unsubscribed.body).toEqual({ data: { newsletter: false } });
+    expect((await prisma.newsletterSubscriber.findUniqueOrThrow({ where: { email: reader.email } })).active).toBe(false);
+    expect((await reader.agent.get("/api/readers/preferences")).body.data.newsletter).toBe(false);
+
+    // The public form and Settings share one row: opting out here can be undone there.
+    expect((await request(app).post("/api/newsletter/subscribers").set("Origin", origin).send({ email: reader.email })).status).toBe(202);
+    expect((await prisma.newsletterSubscriber.findUniqueOrThrow({ where: { email: reader.email } })).active).toBe(true);
   });
 });

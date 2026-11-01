@@ -144,6 +144,16 @@ export const readerEmailChangeSchema = z.object({
   currentPassword: z.string().min(1).max(128),
 });
 
+// Only preferences that exist today. Add fields here as each channel ships.
+const preferenceFields = {
+  newsletter: z.boolean().optional(),
+  moderation: z.boolean().optional(),
+};
+export const readerPreferencesSchema = z.object(preferenceFields).strict().refine(
+  (value) => value.newsletter !== undefined || value.moderation !== undefined,
+  { message: "Choose at least one preference" },
+);
+
 export const readerPasswordResetRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address").max(320),
 });
@@ -241,6 +251,11 @@ export const reviewVisibilitySchema = z.object({
 export const moderationNoteSchema = z.object({
   expectedVersion: z.number().int().min(0),
   note: z.string().trim().min(2).max(4000),
+}).strict();
+
+export const notificationReadSchema = z.object({
+  // Omitted means every unread notification; an empty list is a no-op.
+  ids: z.array(z.string().trim().min(1).max(64)).max(50).optional(),
 }).strict();
 
 export const communityPlacementDecisionSchema = z.object({

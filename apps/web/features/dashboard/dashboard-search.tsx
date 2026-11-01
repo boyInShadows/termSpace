@@ -26,7 +26,7 @@ export function DashboardSearch() {
   }, []);
 
   return (
-    <form role="search" action={localePath("/explore", locale)} className="mb-6 w-full sm:ms-auto sm:max-w-md">
+    <form role="search" action={localePath("/explore", locale)} className="w-full min-w-0 sm:ms-auto sm:max-w-md">
       <label htmlFor="dashboard-search" className="sr-only">
         {t.dashboardHome.searchLabel}
       </label>
@@ -38,7 +38,7 @@ export function DashboardSearch() {
           name="q"
           type="search"
           placeholder={t.dashboardHome.searchPlaceholder}
-          className="h-11 w-full rounded-none border border-border bg-surface pe-16 ps-9 text-base placeholder:text-muted-foreground"
+          className="h-11 w-full rounded-control border border-border bg-surface pe-16 ps-9 text-base placeholder:text-muted-foreground"
         />
         <kbd
           aria-hidden

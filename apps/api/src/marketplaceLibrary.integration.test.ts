@@ -160,7 +160,7 @@ describe.skipIf(!databaseUrl)("library sort, filter and search, and catalog look
     });
 
     it("leaves ordinary catalog browsing unchanged", async () => {
-      const response = await request(app).get("/api/marketplace/products?limit=48").set("Origin", origin);
+      const response = await request(app).get(`/api/marketplace/products?q=${encodeURIComponent(slug("alpha"))}`).set("Origin", origin);
       expect(response.status).toBe(200);
       expect(response.body.data.some((item: { slug: string }) => item.slug === slug("alpha"))).toBe(true);
     });

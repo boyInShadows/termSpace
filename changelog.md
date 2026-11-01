@@ -2,6 +2,229 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-01 — Creator notifications for moderation decisions
+
+- **What the creator gets.** An approval, a change request or a rejection now
+  creates one in-app notification for the listing owner and, unless they opted
+  out, one email. The dashboard header gains a bell with an unread count;
+  opening it refreshes the feed. Each row names the listing, the decision, the
+  public reviewer note and the date, and links to the studio. "Mark all as
+  read" clears the badge; using a row's link clears that row. Empty, loading,
+  failure and retry states are kept, and the panel closes on Escape, outside
+  click and route change.
+- **What is stored and sent.** `MarketplaceNotification` copies the decision
+  type and the public reason only — never the internal note. Email is a second
+  `TransactionalEmailOutbox` row with a new `notificationId` target, so a failed
+  delivery cannot lose the in-app record. The worker re-checks the preference
+  and cancels with `NOTIFICATION_OPTED_OUT`; a missing row cancels with
+  `NOTIFICATION_INACTIVE`. Creator-initiated transitions, internal notes and
+  community-placement decisions create nothing. Account deletion removes the
+  reader's notification rows with the rest of their personal data.
+- **Preference.** `ReaderUser.notifyModerationEmail` defaults to on and sits
+  beside the newsletter switch in Settings → Email preferences; in-app
+  notifications are always on. The two switches save independently and the API
+  accepts either field.
+- **API.** `GET /api/marketplace/notifications` returns the caller's newest 12
+  rows plus an unread count; `POST /api/marketplace/notifications/read` marks
+  all or the supplied ids, always scoped by the session. `GET`/`PATCH
+  /api/readers/preferences` add `moderation` beside `newsletter`.
+- **Migration.** `202611010002_moderation_notifications` adds the reader column,
+  the notification table and the outbox target, and widens
+  `TransactionalEmailOutbox_exactly_one_target`. Additive; applied to the local
+  database.
+- **Shared surfaces touched:** `apps/api/prisma/schema.prisma`,
+  `apps/api/prisma/migrations/`, `changelog.md`, `pending.md`. Files:
+  `marketplaceLifecycleController.ts`, `marketplaceNotificationController.ts`
+  (new), `readerPreferencesController.ts`, `readerAccountController.ts`,
+  `validation/schemas.ts`,
+  `routes/marketplaceRoutes.ts`, `lib/cloudflareEmail.ts`,
+  `jobs/sendTransactionalEmails.ts`, `lib/account-api.ts`,
+  `lib/notification-api.ts` (new),
+  `features/dashboard/notification-menu.tsx` (new),
+  `features/dashboard/notifications-copy.ts` (new), `dashboard-shell.tsx`,
+  `dashboard-search.tsx`, `components/layout/header.tsx`,
+  `account-preferences.tsx` and its copy/tests,
+  `e2e/notifications.spec.ts` (new), `e2e/mock-api.mjs` and
+  `e2e/account-preferences.spec.ts`. `lib/i18n/`, `lib/types.ts` and
+  `lib/api.ts` were not touched.
+- **Budget.** The bell's code loads after hydration (a manual `import()` in the
+  dashboard shell) instead of in the dashboard's first paint. The decorative
+  reading-progress line was removed from the shared header; with the new client
+  module in the graph, the FA detail page had reached 0.2 kB over its 165 kB
+  gate. Both changes are presentation-only.
+- **Verification.** Root typecheck; all tests (API, web 478, blog 17); web lint
+  (0 errors, 2 pre-existing warnings); all builds; the migration applied to the
+  local database and checked by running a real staff decision (a notification
+  and one single-target outbox row were created, then removed with the temporary
+  demo change). The first full serialized E2E run passed 505 with 46 intentional
+  skips and four first-load-JS budget failures (dashboard 1.3 kB and FA detail
+  0.2 kB over). After the lazy bell and the header trim, the budget,
+  notifications and shared-navigation specs passed (42 passed, 6 skips); the
+  remaining full suite was not re-run after that final presentation-only change.
+  The panel was inspected against the local stack in EN/FA, light/dark,
+  including RTL. Not verified: real Cloudflare delivery (the provider is not
+  configured locally) and real-phone testing.
+- **Out of scope / follow-ups.** Suspension decisions can reuse the same model.
+  Transactional email copy is English, like the other account mail; a Persian
+  email needs a stored locale or a bilingual template. Real delivery remains
+  blocked on the Cloudflare Email Sending item in `pending.md`.
+
+## 2026-11-01 — Listing views and reach (launch-readiness item 1)
+
+- **What a creator sees.** Each studio listing card gains a "Reach · last 30
+  days" block: total views, view→acquisition conversion, and a 30-day bar
+  sparkline. A listing with no views says so and draws no chart; acquisitions
+  that outnumber recorded views show a sentence instead of an invented
+  percentage. The "Last 30 days" acquisitions metric is renamed
+  "Acquisitions · 30 days" so the two windows do not read as one figure.
+- **How a view is counted.** A client beacon sends one `POST
+  /api/marketplace/products/:slug/views` per mount of a published listing
+  page. Server-side counting was rejected: the product page is cached 30 s and
+  prefetched by `Link`, so it would count prefetches and repeated renders. A
+  visitor sending `Do Not Track` or Global Privacy Control is not counted;
+  failures are ignored and never affect the page.
+- **What is stored.** New `MarketplaceListingViewDaily` with the composite key
+  `(productId, day)` and a `views` counter only — no IP, user agent, cookie,
+  session, account or per-visitor row. Days are UTC calendar days; the upsert
+  increments atomically and retries as an `update` if two first views of the
+  day race. Deleting a listing cascades its totals away. Migration
+  `202611010001_marketplace_listing_views` is additive.
+- **API.** The public endpoint is rate-limited per address (120/hour) and only
+  resolves published listings. The creator dashboard adds `viewsLast30Days`
+  and a fixed 30-entry `viewsDaily` series (oldest first, zero-filled), both
+  computed only from the caller's own listings.
+- **Privacy.** The policy gains a "Listing views" section in both locales
+  naming the daily totals, the absence of identifiers and the DNT/GPC opt-out.
+- **Shared surfaces touched:** `apps/api/prisma/schema.prisma`,
+  `apps/api/prisma/migrations/`, `apps/web/lib/api.ts`,
+  `apps/web/lib/types.ts`, `changelog.md`, `pending.md`. Files:
+  `marketplaceController.ts`, `marketplaceCreatorController.ts`,
+  `routes/marketplaceRoutes.ts`, `middleware/security.ts`, `app.test.ts`,
+  `creatorDashboard.integration.test.ts`, `app/products/[slug]/page.tsx`,
+  `features/product/view-tracker.tsx` (new),
+  `features/creator/creator-dashboard.tsx`, `workspace-copy.ts`,
+  `e2e/listing-views.spec.ts` (new), `e2e/studio-feedback.spec.ts`,
+  `e2e/mock-api.mjs`, `lib/legal.ts` and the test fixtures that carry the
+  dashboard listing shape.
+- **Verification.** Root typecheck, lint (0 errors, 2 pre-existing warnings) and
+  all three builds passed. API: 318 passed, 1 skipped (the Redis limiter case)
+  against a fresh disposable PostgreSQL 16 database with every migration,
+  including a unit test that asserts the written row's only keys are
+  `productId`/`day`/`views`, a race-retry test, and an integration test for the
+  30-day series and window boundaries. Web: 473 passed. E2E: the new
+  `listing-views` spec passes 6/6 (exactly one beacon with no body, DNT and GPC
+  suppress it); `studio-feedback` and `budget` pass. A first parallel run also
+  had a pagination strict-mode failure and a duplicate-label failure in
+  `studio-feedback` (Persian "۳۰ روز گذشته" matched both the metric and the
+  reach heading); the latter is fixed with an exact matcher, and both specs
+  pass serially. Focused `design-consistency`/`persian`/`dashboard-repairs`
+  batch: 58 passed, 12 device skips. Visual pass of the card in EN/FA,
+  light/dark at 320/768/1280; detector: no findings.
+- **Not covered.** Real-traffic calibration of the view limiter, the full E2E
+  suite, production email and maintainer approval of the new Persian copy.
+
+
+## 2026-10-31 — Settings email preferences (launch-readiness item 1)
+
+- **What readers can do.** `/dashboard/settings` now has an "Email preferences"
+  section with a "Weekly newsletter" switch: current state as words (On/Off),
+  a saving state, a live success announcement, and named recovery for a
+  rate-limited (429), expired session (401), offline/service failure and a
+  failed initial load (with Retry, never a guessed state). English and Persian,
+  RTL-aware, keyboard operable. The section only lists channels that exist;
+  creator notification mail will extend it.
+- **One source of truth, no migration.** The reader's newsletter state is the
+  existing `NewsletterSubscriber` row keyed by the account email, so the public
+  sign-up form and Settings cannot disagree. New
+  `GET`/`PATCH /api/readers/preferences` (`requireReader`, zod boolean, new
+  `readerPreferencesRateLimit`) read it; unsubscribing sets `active:false`
+  with `updateMany` (it never creates a row for someone who never subscribed)
+  and subscribing upserts `active:true` while keeping `subscribedAt`.
+- **Consistency fixes this exposed.** The public sign-up form now reactivates
+  an existing inactive row (before, a duplicate returned 202 but left the
+  address unsubscribed forever). Changing the account email moves the
+  subscription row to the new address inside the existing transaction,
+  reviving an inactive row there; deleting the account deactivates the row for
+  that address. The privacy policy's "Your choices" now names Settings as the
+  place to change the newsletter subscription (EN/FA).
+- **Lane note.** Settings is Ramtin's presentation lane; entered because
+  `pending.md` item 1 assigned this work and the owner explicitly asked for it.
+  Shared surfaces touched: `changelog.md`, `pending.md`. Files:
+  `apps/api/src/controllers/readerPreferencesController.ts` (new),
+  `newsletterController.ts`, `readerEmailController.ts`,
+  `readerAccountController.ts`, `routes/readerRoutes.ts`,
+  `middleware/security.ts`, `validation/schemas.ts`, `app.test.ts`,
+  `readerFlow`/`readerEmail`/`readerAccount` integration tests;
+  `apps/web/features/dashboard/account-preferences.tsx` and its copy/test
+  (new), `account-settings.tsx`, `account-settings.test.tsx`,
+  `lib/account-api.ts`, `lib/legal.ts`, `e2e/account-preferences.spec.ts` (new),
+  `e2e/mock-api.mjs`.
+- **Verification.** Root typecheck, lint (0 errors, 2 pre-existing warnings) and
+  all three builds passed. API: 314 passed, 1 skipped (the Redis limiter case)
+  against a fresh disposable PostgreSQL 16 database with every migration
+  applied, including new integration coverage for subscribe → unsubscribe →
+  resubscribe via the public form, email change moving the row, and deletion
+  deactivating it. Web: 470 passed. E2E `account-preferences` 12/12 (EN/FA,
+  desktop and mobile, Space-key toggle, persistence across reload, failed save,
+  failed load + Retry). Focused settings/design batch: 120 passed; eight
+  `dashboard-repairs`/`account-data` failures under parallel load all passed on
+  a serial re-run (44 passed, 12 device skips), i.e. load flakiness rather than
+  regressions. Visual pass of the new section in EN/FA, light/dark at
+  320/768/1280 px; fixed a dark-theme thumb that inherited the surface colour
+  and an early row wrap at tablet widths. Impeccable detector: no findings.
+- **Not covered.** The full E2E suite, real email delivery (the Cloudflare
+  domain is still missing) and maintainer approval of the new Persian copy.
+
+
+## 2026-10-31 — Soft direction: navy/paper tokens and shared components
+
+Phase 1 of the design-direction change requested by Ramtin: soften TermSpace
+toward the calm, card-led feel of anicards.ir. Inspired by, not copied — no logo,
+copy, imagery or illustration was taken from that site. The "Datasheet" rules
+(square controls, ruled-only structure, no shadows) are retired.
+
+- **Tokens.** Light theme retuned to a cool paper ground, white surfaces, navy
+  ink, one blue signal and the anicards state palette (success `#047857`,
+  warning `#b45309`, danger `#be123c`), converted to OKLCH. Dark theme keeps its
+  structure but moves from violet 286–292 to a blue 262 hue with softer borders,
+  so both themes share one brand. Added pastel tints (`--tint-sage/paper/mist/
+  lavender`), a navy-tinted `--panel-shadow`/`--promo-shadow`, and the
+  8/12/16/pill radius scale (`rounded-nav`, `rounded-control`, `rounded-card`,
+  `rounded-chip`; `lg`/`xl`/`2xl` all resolve to the 16px panel step).
+- **Globals.** Wired radii, tints and shadows into `@theme`, replaced the broken
+  self-referential `--shadow-soft/lift/plasma/signal` aliases, and removed the
+  dashboard's blanket zero-radius override. The dashboard now applies a
+  control-radius fallback through `:where()` (zero specificity) so explicit
+  utilities still win. The global focus outline no longer forces a 2px corner.
+- **Shared components.** `Button` (12px, navy primary, `shadow-sm`), `Input`
+  (12px, white field), `Badge` (pill), `ProductCard`/`CompactProductCard`
+  (16px, hairline border, panel shadow, border-only hover), skeletons,
+  `EmptyState`, `ContextHelp`, the header nav pills, account menu, dashboard nav
+  and the shared creator/dashboard panels. Swept all 48 `rounded-none`
+  occurrences; removed the old glow/lift shadow utilities from the landing
+  process and search components.
+- **Docs.** Rewrote `apps/web/DESIGN.md` as "Paper & Signal" with the new colour,
+  shape, elevation and component contract, an explicit inspiration credit, and
+  the retained type/density/state rules. Updated the local `/design-system`
+  swatches and radius/elevation samples.
+- **Verification.** Root typecheck; `npm test -w apps/web` 466 passed; web lint
+  (0 errors, 2 pre-existing warnings); `npm run build` passed. Full E2E under
+  parallel load: 455 passed, 32 failed; every failing spec was re-run serially
+  (`--workers=1`) and all 254 re-run tests passed, confirming load flakiness
+  rather than regressions. `design-consistency.spec` now asserts the new
+  contract (12px fields, 16px shadowed cards) instead of zero radius, and the
+  768px header check allows the new 44px nav pills. `budget.spec` (first-load
+  JS) passed after dropping an unused `tint` prop from `ProductCard`. LHCI could
+  not complete: Lighthouse's Chrome temp directory returns `EPERM` on cleanup
+  on this Windows host after three attempts (including a redirected temp path),
+  so it failed before assertions could run; no audit score regressed. Visual
+  pass against the production mock build inspected home, explore, product,
+  dashboard and 404 in EN/FA, light/dark, 390/768/1280px; contrast was computed
+  for every text/surface pair (lowest 4.86:1). Detector: 7 advisory findings
+  (Geist overused, Newsreader in OG-card CSS, spring easing), all documented in
+  `DESIGN.md` and unchanged by this phase. Session `/usage` is not exposed by
+  this harness.
+
 ## 2026-10-30 — GitHub presentation review
 
 - Condense the public README into purpose, status, real fixture captures, implemented
@@ -30,6 +253,54 @@ Project changes completed from `pending.md` should be recorded here with the dat
   Hosted checks are recorded with the PR, not inferred from workflow-file presence.
 
 ## 2026-10-28
+
+- **Move the creator profile form from the studio to Settings.** The studio
+  keeps only the first step, creating the profile (with its permanent handle),
+  and hands straight over to the studio dashboard once it exists; Settings now
+  edits the public name and biography in its own "Your creator profile"
+  section, with the handle read-only, a revoked-access message instead of the
+  form, and a "Become a TermSpace creator" link for readers without a profile.
+  The studio shows an "Edit your profile" link to `/dashboard/settings#creator-profile`
+  (Settings scrolls to it once the profile has loaded). One shared
+  `CreatorProfileForm` serves both places, and the form is now labelled by its
+  heading. A profile edit no longer reloads the session: only creating the
+  profile grants the creator role, and the reload swapped the page for its
+  skeleton and erased the "saved" message (found by the new E2E). Removed the
+  unused `onReady` prop from `CreatorDashboard`. No API change, no shared
+  surface touched.
+  - Verification: root typecheck, lint (two existing warnings), creator and
+    dashboard unit tests 145 (hub tests rewritten, four new Settings tests,
+    four new hub tests); E2E dashboard-repairs, capabilities, studio-feedback,
+    account-security, dashboard and budget 113 passed. The `context-help`
+    tooltip check now waits for the page to settle (the panel repositions on
+    scroll and the Settings page now has a help button further down); 66 of 66
+    over three repeats. Not run: the full suites and the full E2E for the
+    studio batch.
+
+- **Studio onboarding and listing feedback (launch-readiness item).** The
+  empty studio told new creators that draft creation was "the next part of the
+  workspace" although the New listing button works; it now shows a four-step
+  guide (describe it, link the source, submit for review, publish and learn)
+  with New listing and "Connect a source in Settings" actions. Each listing
+  card gains an "acquisitions in the last 30 days" metric and up to three
+  recent reader reviews (rating, author name, 280-character excerpt, date)
+  with a link to all reviews for published listings. The dashboard API adds
+  `acquisitionsLast30Days` (completed orders, one grouped query) and
+  `recentReviews` (published, not hidden, newest first, per listing); both
+  read only the listings already selected for the caller. New copy is
+  feature-local in `workspace-copy.ts` (English and Persian; the Persian needs
+  maintainer approval) and overrides the stale shared `noListingsIntro`; the
+  shared i18n files were not touched. Listing views and trends are queued as
+  their own item because nothing records views yet.
+  - Verification: root typecheck; API 4 new integration tests on the scratch
+    database (30-day window, pending orders excluded, newest three visible
+    reviews, hidden/unpublished/other creators' reviews never shown, empty
+    creator) plus the mocked dashboard tests updated (134 pass); 7 new web unit
+    tests and fixtures updated (153 pass across creator and dashboard); E2E
+    new `studio-feedback` spec and neighbouring dashboard, repairs and budget
+    specs: 92 passed, with one `context-help` mobile case that flakes in
+    parallel and passes alone (22 of 22). Not run: full suites and the full E2E
+    for this item. Shared surfaces: `pending.md`, `changelog.md`.
 
 - **Library depth (launch-readiness item).** `GET /api/marketplace/library`
   now takes `q` (name search, 80 characters, `%` and `_` treated literally),

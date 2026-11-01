@@ -87,7 +87,8 @@ export const sessionRevokeRateLimit = authRateLimit("session-revoke");
 export const emailChangeRequestRateLimit = authRateLimit("email-change");
 export const accountExportRateLimit = authRateLimit("account-export");
 export const accountDeleteRateLimit = authRateLimit("account-delete");
-export const authRateLimiters = [loginRateLimit, adminLoginRateLimit, registerRateLimit, googleSignInRateLimit, passwordChangeRateLimit, sessionRevokeRateLimit, emailChangeRequestRateLimit, accountExportRateLimit, accountDeleteRateLimit];
+export const readerPreferencesRateLimit = authRateLimit("reader-preferences");
+export const authRateLimiters = [loginRateLimit, adminLoginRateLimit, registerRateLimit, googleSignInRateLimit, passwordChangeRateLimit, sessionRevokeRateLimit, emailChangeRequestRateLimit, accountExportRateLimit, accountDeleteRateLimit, readerPreferencesRateLimit];
 
 /**
  * Text search runs LIKE/full-text scans, so it gets a tighter budget than plain browsing.
@@ -104,6 +105,8 @@ const accepted = (_req: unknown, res: { status(code: number): { json(body: unkno
 
 export const reportWriteRateLimit = limiter("report-write", { windowMs: HOUR, limit: 20 });
 export const reviewWriteRateLimit = limiter("review-write", { windowMs: HOUR, limit: 20 });
+/** One beacon per listing-page visit; generous enough for real browsing, tight enough to cap scripted inflation. */
+export const listingViewRateLimit = limiter("listing-view", { windowMs: HOUR, limit: 120 });
 export const emailVerificationRequestRateLimit = limiter("email-verification-request", { windowMs: HOUR, limit: 12, handler: accepted });
 export const emailVerificationAttemptRateLimit = limiter("email-verification-attempt", { windowMs: HOUR, limit: 12 });
 export const passwordResetRequestRateLimit = limiter("password-reset-request", { windowMs: HOUR, limit: 5, handler: accepted });

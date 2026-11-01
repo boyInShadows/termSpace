@@ -76,6 +76,7 @@ describe.skipIf(!databaseUrl)("changing a reader email on a real database", () =
   afterAll(async () => {
     if (prisma) {
       await prisma.readerUser.deleteMany({ where: { id: { in: userIds } } });
+      await prisma.newsletterSubscriber.deleteMany({ where: { email: { endsWith: "@email-change.test" } } });
       await prisma.$disconnect();
     }
     vi.unstubAllEnvs();
@@ -104,6 +105,10 @@ describe.skipIf(!databaseUrl)("changing a reader email on a real database", () =
   it("changes the email only after the link in the new inbox is opened, then signs out and notifies the old address", async () => {
     const member = await reader("flow");
     const target = newAddress("flow");
+    // The newsletter list is keyed by address: the subscription must move, and revive an
+    // existing inactive row for the new address instead of dropping the preference.
+    await prisma.newsletterSubscriber.create({ data: { email: member.email } });
+    await prisma.newsletterSubscriber.create({ data: { email: target, active: false } });
     const asked = await as(member.cookie).post("/api/readers/profile/email", { newEmail: target.toUpperCase(), currentPassword: password });
     expect(asked.status).toBe(202);
     expect((await prisma.readerUser.findUniqueOrThrow({ where: { id: member.id } })).email).toBe(member.email);
@@ -119,6 +124,8 @@ describe.skipIf(!databaseUrl)("changing a reader email on a real database", () =
     expect(updated.email).toBe(target);
     expect(updated.emailVerifiedAt).toBeInstanceOf(Date);
     expect((await as(member.cookie).get("/api/readers/profile")).status).toBe(401);
+    expect(await prisma.newsletterSubscriber.count({ where: { email: member.email } })).toBe(0);
+    expect((await prisma.newsletterSubscriber.findUniqueOrThrow({ where: { email: target } })).active).toBe(true);
 
     const login = await request(app).post("/api/readers/login").set("Origin", origin).send({ email: target, password });
     expect(login.status).toBe(200);

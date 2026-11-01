@@ -73,6 +73,14 @@ export async function confirmReaderEmailChange(req: Request, res: Response) {
       const claimed = await tx.readerEmailChange.updateMany({ where: { id: change.id, consumedAt: null }, data: { consumedAt: now, previousEmail: change.user.email } });
       if (claimed.count !== 1) throw new Error("EMAIL_CHANGE_ALREADY_USED");
       await tx.readerUser.update({ where: { id: change.userId }, data: { email: change.newEmail, emailVerifiedAt: now } });
+      // The newsletter list is keyed by address, so the subscription follows the account.
+      const previous = await tx.newsletterSubscriber.findUnique({ where: { email: change.user.email }, select: { active: true } });
+      if (previous) {
+        await tx.newsletterSubscriber.delete({ where: { email: change.user.email } });
+        if (previous.active) {
+          await tx.newsletterSubscriber.upsert({ where: { email: change.newEmail }, create: { email: change.newEmail }, update: { active: true } });
+        }
+      }
       await tx.readerSession.deleteMany({ where: { userId: change.userId } });
       await tx.transactionalEmailOutbox.create({ data: { correlationId: randomUUID(), emailChangeNoticeId: change.id } });
     });

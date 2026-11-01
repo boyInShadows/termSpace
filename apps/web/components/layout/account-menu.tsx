@@ -24,7 +24,7 @@ export function useSignOut() {
 }
 
 const itemClass =
-  "flex min-h-10 w-full items-center rounded-md px-3 text-start text-sm text-foreground transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none";
+  "flex min-h-10 w-full items-center rounded-nav px-3 text-start text-sm text-foreground transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none";
 
 /**
  * A disclosure, not an ARIA menu: a button that shows a short list of links
@@ -85,7 +85,7 @@ export function AccountMenu({ email }: { email: string }) {
       {open && (
         <div
           id={panelId}
-          className="absolute end-0 top-full z-50 mt-2 w-60 rounded-lg border border-border bg-surface p-1"
+          className="absolute end-0 top-full z-50 mt-2 w-60 rounded-card border border-border bg-surface p-1 shadow-panel"
         >
           <p
             dir="auto"
