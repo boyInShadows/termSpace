@@ -2,6 +2,28 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-01 — Smaller Docker images (API 3.28 GB → 685 MB, web/blog 3.1 → 1.06 GB)
+
+- **What changed.** `docker/Dockerfile.{api,web,blog}` now install only the
+  workspace they build (`npm ci --workspace …`), compile in a build stage, and
+  copy a separate `npm ci --omit=dev` tree into the runtime stage. `COPY --chown`
+  replaces the `RUN chown -R /app` step that duplicated every layer; npm's download
+  cache is a BuildKit cache mount. `docker-compose.yml`: `migrate`, `scheduler`,
+  `email-worker` and `marketplace-source-worker` reuse one `termspace-api:latest`
+  image (built by `api`, `pull_policy: never`) instead of building it five times.
+  Shared surface touched: `docker-compose.yml`.
+- **Operational change.** The production API image no longer contains `tsx`, so
+  role grants run the compiled script (`node apps/api/dist/scripts/manageMarketplaceRole.js`);
+  documented in `docs/marketplace-roles.md`. Build `api` before `up`/`run` of
+  the worker services.
+- **Verified.** Built all three images locally; `docker compose config` valid;
+  migrations applied to a fresh Postgres 16, API served `/api/health` 200 with Redis,
+  scheduler job exited 0, blog 200 against the API, web `/`, `/explore`, `/fa` 200,
+  `sharp` and the Prisma CLI load, role script prints its usage. Not run: the
+  repo-wide typecheck/tests (no source changed), Playwright, Lighthouse.
+- **Not done.** Next `output: "standalone"` would cut web/blog further but changes
+  how `.next/compressed-assets.json` and `proxy.ts` are served; left for a separate phase.
+
 ## 2026-11-01 — Simpler listing editor (5 steps → 4; 39 fields → 16 visible, 20 optional hidden)
 
 - **What changed.** The creator listing form (`creator-draft-editor.tsx`) now has

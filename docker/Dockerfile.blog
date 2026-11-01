@@ -1,38 +1,42 @@
-FROM node:22-bookworm-slim AS build
-
+# syntax=docker/dockerfile:1
+FROM node:22-bookworm-slim AS manifests
 WORKDIR /app
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/blog/package.json apps/blog/package.json
+COPY apps/web/package.json apps/web/package.json
+
+# Full install (TypeScript, build tooling) only to compile the blog.
+FROM manifests AS build
+RUN --mount=type=cache,target=/root/.npm npm ci --workspace @termspace/blog
 ARG API_URL=http://localhost:4001
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=
 ARG NEXT_PUBLIC_IMAGE_HOSTS=images.unsplash.com
 # Inlined at build time: canonicals, sitemap, robots, RSS and social cards.
 ARG NEXT_PUBLIC_SITE_URL=http://localhost:3001
-ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 # Footer links to the privacy policy, terms and content policy on the main site.
 ARG NEXT_PUBLIC_WEB_URL=http://localhost:3000
-ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
 ENV API_URL=$API_URL
 ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ENV NEXT_PUBLIC_IMAGE_HOSTS=$NEXT_PUBLIC_IMAGE_HOSTS
-COPY package.json package-lock.json ./
-COPY apps/api/package.json apps/api/package.json
-COPY apps/blog/package.json apps/blog/package.json
-COPY apps/web/package.json apps/web/package.json
-RUN npm ci
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
 COPY apps/blog apps/blog
-ARG API_URL=http://localhost:4001
-ENV API_URL=$API_URL
 RUN npm run build --workspace @termspace/blog
+
+# Runtime dependencies only.
+FROM manifests AS prod-deps
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev --workspace @termspace/blog
 
 FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=build /app/package.json /app/package-lock.json ./
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/apps/blog/package.json apps/blog/package.json
-COPY --from=build /app/apps/blog/next.config.mjs apps/blog/next.config.mjs
-COPY --from=build /app/apps/blog/.next apps/blog/.next
-COPY --from=build /app/apps/blog/public apps/blog/public
-RUN chown -R node:node /app
+COPY --chown=node:node package.json package-lock.json ./
+COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/apps/blog/package.json apps/blog/package.json
+COPY --from=build --chown=node:node /app/apps/blog/next.config.mjs apps/blog/next.config.mjs
+COPY --from=build --chown=node:node /app/apps/blog/.next apps/blog/.next
+COPY --from=build --chown=node:node /app/apps/blog/public apps/blog/public
 
 EXPOSE 3001
 USER node
