@@ -151,6 +151,7 @@ export async function enqueueOwnedSourceCheck(req: Request, res: Response) {
       const release = product.proposedSnapshot?.releaseManifest;
       if (!release) throw new SourceCheckRequestError(409, "RELEASE_MANIFEST_REQUIRED", "Save a release draft before verifying its source");
       if (release.publishedAt) throw new SourceCheckRequestError(409, "PUBLISHED_RELEASE_IMMUTABLE", "Create a new release draft to change or re-verify this source");
+      if (release.sourceKind === "EXTERNAL_LINK") throw new SourceCheckRequestError(409, "SOURCE_CHECK_NOT_APPLICABLE", "A link listing has nothing to verify");
       const provider = providerForSourceKind(release.sourceKind);
       const connection = await tx.marketplaceProviderConnection.findUnique({
         where: { creatorId_provider: { creatorId: product.creator.id, provider } },

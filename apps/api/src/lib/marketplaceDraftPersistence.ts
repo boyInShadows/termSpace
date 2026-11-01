@@ -18,6 +18,18 @@ function normalizedSource(source: MarketplaceManifestV1["release"]["source"]) {
     sourcePath: source.assetName,
     providerIntegrityDigest: source.assetDigest ?? null,
   };
+  // Never fetched by the server: the moderator opens the link. Ownership stays unproven.
+  if (source.kind === "external_link") return {
+    sourceKind: "EXTERNAL_LINK" as const,
+    sourceUrl: source.url,
+    sourceRef: "link",
+    sourcePath: null,
+    providerIntegrityDigest: null,
+    sourceOriginalAuthor: source.authorship === "third_party" ? source.originalAuthor ?? null : null,
+    resolvedInstallationUrl: source.url,
+    sourceResolvedAt: new Date(),
+    sourceCheckStatus: "LINK_ONLY" as const,
+  };
   return {
     sourceKind: "NPM" as const,
     sourceUrl: `https://registry.npmjs.org/${source.packageName}`,

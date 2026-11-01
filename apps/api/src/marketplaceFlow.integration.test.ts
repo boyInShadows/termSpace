@@ -99,4 +99,51 @@ describe.skipIf(!databaseUrl)("marketplace journey on a real database", () => {
     const product = await request(app).get(`/api/marketplace/products/${slug}`);
     expect(product.body.data).toMatchObject({ rating: 4, reviewCount: 1, published: true });
   });
+
+  it("takes a plain link listing from draft to acquisition without any provider token", async () => {
+    const linkSlug = `${slug}-link`;
+    const url = "https://example.com/shared-project";
+    const creator = await reader("linker");
+    expect((await creator.agent.post("/api/marketplace/creator/profile").set("Origin", origin)
+      .send({ name: "Link Creator", handle: `link-${run}`, bio: "Shares useful projects for the smoke test." })).status).toBe(201);
+    const draft = await creator.agent.post("/api/marketplace/creator/products").set("Origin", origin).send({ manifest: {
+      manifestVersion: 1,
+      type: "skill",
+      listing: { slug: linkSlug, name: { en: "Shared Skill" }, outcome: { en: "Proves the link journey" }, description: { en: "Shared by the smoke test." }, categorySlug: "development", communitySlugs: [], tags: [], screenshots: [] },
+      release: {
+        version: "1.0.0",
+        source: { kind: "external_link", url, authorship: "third_party", originalAuthor: "A. Author" },
+        releaseNotes: "Initial release",
+        compatibility: [{ platform: "claude-code", models: [] }],
+        installation: { method: "manual", instructions: ["Follow the project's install guide"] },
+        requirements: { runtimes: [], accounts: [], operatingSystems: [], dependencies: [], environmentVariables: [] },
+        permissions: [],
+        license: { identifier: "MIT" },
+      },
+      typeDetails: { format: "SKILL.md", entryPath: "SKILL.md", activation: "Install in the skills directory", bundledExecutables: false, inputs: [], outputs: [] },
+    } });
+    expect(draft.status).toBe(201);
+    const productId = draft.body.data.id as string;
+
+    const check = await creator.agent.post(`/api/marketplace/creator/products/${productId}/source-check`).set("Origin", origin).send({ expectedVersion: 1 });
+    expect(check.body.error.code).toBe("SOURCE_CHECK_NOT_APPLICABLE");
+    expect((await creator.agent.post(`/api/marketplace/creator/products/${productId}/lifecycle`).set("Origin", origin)
+      .send({ expectedVersion: 1, action: "SUBMIT" })).status).toBe(200);
+
+    const release = await prisma.marketplaceReleaseManifest.findFirstOrThrow({ where: { productVersion: { productId } } });
+    expect(release).toMatchObject({ sourceCheckStatus: "LINK_ONLY", ownershipVerifiedAt: null, sourceOriginalAuthor: "A. Author" });
+
+    const moderator = await reader("linkmod");
+    await prisma.marketplaceRoleGrant.create({ data: { userId: moderator.userId, role: "MODERATOR" } });
+    for (const [expectedVersion, action] of [[2, "APPROVE"], [3, "PUBLISH"]] as const) {
+      expect((await moderator.agent.post(`/api/marketplace/moderation/products/${productId}/lifecycle`).set("Origin", origin)
+        .send({ expectedVersion, action })).status).toBe(200);
+    }
+
+    const product = await request(app).get(`/api/marketplace/products/${linkSlug}`);
+    expect(product.body.data.release.source).toMatchObject({ kind: "external_link", status: "link_only", url, originalAuthor: "A. Author" });
+    const buyer = await reader("linkbuyer");
+    expect((await buyer.agent.post(`/api/marketplace/products/${linkSlug}/acquire`).set("Origin", origin).set("Idempotency-Key", `link-acquire-${run}-0000`)).status).toBe(201);
+    expect((await buyer.agent.get(`/api/marketplace/products/${linkSlug}/installation`)).status).toBe(200);
+  });
 });

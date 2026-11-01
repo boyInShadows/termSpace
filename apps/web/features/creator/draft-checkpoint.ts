@@ -4,7 +4,7 @@ export type DraftCheckpoint = {
   version: number | null;
   step: number;
   type: MarketplaceItemTypeKey;
-  sourceKind: "github_repository" | "github_release" | "npm";
+  sourceKind: "external_link" | "github_repository" | "github_release" | "npm";
   customLicense: boolean;
   fields: [string, string][];
 };
@@ -15,7 +15,7 @@ export function parseDraftCheckpoint(raw: string): DraftCheckpoint {
   if (!value || (value.version !== null && (!Number.isInteger(value.version) || value.version < 1))
     || !Number.isInteger(value.step) || value.step < 0 || value.step > 4
     || !["skill", "agent", "mcp_server", "integration", "rule", "prompt", "hook", "template", "workflow"].includes(value.type)
-    || !["github_repository", "github_release", "npm"].includes(value.sourceKind)
+    || !["external_link", "github_repository", "github_release", "npm"].includes(value.sourceKind)
     || typeof value.customLicense !== "boolean"
     || !Array.isArray(value.fields) || !value.fields.every((field) => Array.isArray(field) && field.length === 2 && field.every((cell) => typeof cell === "string"))) {
     throw new Error("Invalid draft checkpoint");

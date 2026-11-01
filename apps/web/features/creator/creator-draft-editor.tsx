@@ -22,7 +22,7 @@ import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { parseDraftCheckpoint, type DraftCheckpoint } from "./draft-checkpoint";
 import { formatNumber } from "@/lib/format";
 
-type SourceKind = "github_repository" | "github_release" | "npm";
+type SourceKind = "external_link" | "github_repository" | "github_release" | "npm";
 type FieldKind = "text" | "textarea" | "list" | "boolean" | "select" | "stages";
 type DetailField = { key: string; en: string; fa: string; kind: FieldKind; required?: boolean; options?: string[] };
 type ManifestLike = {
@@ -122,7 +122,7 @@ const detailFields: Record<MarketplaceItemTypeKey, DetailField[]> = {
 const lastStep = 3;
 const stepParam = /^[1-4]$/;
 // Delivery method that matches each source kind; the creator can still change it.
-const installMethodFor: Record<SourceKind, string> = { github_repository: "git", github_release: "download", npm: "npm" };
+const installMethodFor: Record<SourceKind, string> = { external_link: "manual", github_repository: "git", github_release: "download", npm: "npm" };
 const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 160);
 
 const isPrimaryDetail = (field: DetailField) => Boolean(field.required) || field.kind === "boolean";
@@ -147,7 +147,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
   const [itemTypes, setItemTypes] = useState<MarketplaceItemType[]>([]);
   const [record, setRecord] = useState<MarketplaceDraftRecord | null>(null);
   const [type, setType] = useState<MarketplaceItemTypeKey>("skill");
-  const [sourceKind, setSourceKind] = useState<SourceKind>("github_repository");
+  const [sourceKind, setSourceKind] = useState<SourceKind>("external_link");
   const [customLicense, setCustomLicense] = useState(false);
   const [methodOverride, setMethodOverride] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -172,7 +172,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
         const manifest = draftRecord.draft?.content as ManifestLike | undefined;
         if (manifest?.type) setType(manifest.type);
         const nextSource = manifest?.release?.source?.kind;
-        if (nextSource === "github_repository" || nextSource === "github_release" || nextSource === "npm") setSourceKind(nextSource);
+        if (nextSource === "external_link" || nextSource === "github_repository" || nextSource === "github_release" || nextSource === "npm") setSourceKind(nextSource);
         setCustomLicense(Boolean(manifest?.release?.license?.customUrl));
       }
       let nextStep = 0;
@@ -422,7 +422,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
       </div>
       <div data-draft-step="1" hidden={step !== 1} className="space-y-6">
       <FormSection title={copy.releaseTitle} intro={copy.releaseIntro}>
-        <Field label={copy.sourceKind} help="source"><select name="sourceKind" value={sourceKind} onChange={(event) => { setSourceKind(event.target.value as SourceKind); setMethodOverride(null); }} className={selectClass}><option value="github_repository">GitHub repository</option><option value="github_release">GitHub release</option><option value="npm">npm</option></select></Field>
+        <Field label={copy.sourceKind} help="source"><select name="sourceKind" value={sourceKind} onChange={(event) => { setSourceKind(event.target.value as SourceKind); setMethodOverride(null); }} className={selectClass}><option value="external_link">{copy.sourceLink}</option><option value="github_repository">GitHub repository</option><option value="github_release">GitHub release</option><option value="npm">npm</option></select></Field>
         <SourceFields key={sourceKind} kind={sourceKind} source={source} copy={copy} />
         <div className="mt-5"><ChoiceRows name="compatibility" label={copy.compatibility} help="compatibility" hint={copy.platformsHint} required messages={copy} onChange={markDirty} choices={platformChoices} initialRows={compatibility.map((item) => [item.platform, item.models.join(", "), item.notes ?? ""])} extras={[{ cell: 1, label: copy.models, optional: true }, { cell: 2, label: copy.notes, optional: true }]} /></div>
         <div className="mt-5"><Field label={copy.installationInstructions} help="installation" hint={copy.lineHint}><Textarea name="installationInstructions" required defaultValue={listValue(installation.instructions)} /></Field></div>
@@ -497,8 +497,18 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
 function SourceFields({ kind, source, copy }: { kind: SourceKind; source: Record<string, unknown>; copy: Record<string, string> }) {
   const { locale } = useLocale();
   const hints = helpHints[locale];
+  if (kind === "external_link") return <LinkSourceFields source={source} copy={copy} />;
   if (kind === "npm") return <div className="mt-5 grid gap-5 sm:grid-cols-3"><Field label={copy.packageName} help="npmRef"><Input name="packageName" required defaultValue={stringValue(source.packageName)} dir="ltr" /></Field><Field label={copy.npmVersion} help="npmRef" hint={hints.npmVersion}><Input name="npmVersion" required defaultValue={stringValue(source.version)} dir="ltr" /></Field><Field label={copy.integrity} help="integrity" hint={hints.integrity}><Input name="integrity" required defaultValue={stringValue(source.integrity)} dir="ltr" /></Field></div>;
   return <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.repositoryUrl} help="source"><Input name="repositoryUrl" type="url" required defaultValue={stringValue(source.repositoryUrl)} dir="ltr" /></Field>{kind === "github_repository" ? <Field label={copy.commitSha} help="githubRef" hint={hints.sha}><Input name="commitSha" required minLength={40} maxLength={40} defaultValue={stringValue(source.commitSha)} dir="ltr" /></Field> : <><Field label={copy.releaseTag} help="githubRef" hint={hints.sha}><Input name="releaseTag" required defaultValue={stringValue(source.tag)} dir="ltr" /></Field><Field label={copy.releaseCommitSha} help="githubRef" hint={hints.sha}><Input name="releaseCommitSha" required minLength={40} maxLength={40} defaultValue={stringValue(source.releaseCommitSha)} dir="ltr" /></Field><Field label={copy.assetName} help="source"><Input name="assetName" required defaultValue={stringValue(source.assetName)} dir="ltr" /></Field></>}</div>;
+}
+
+function LinkSourceFields({ source, copy }: { source: Record<string, unknown>; copy: Record<string, string> }) {
+  const [authorship, setAuthorship] = useState(stringValue(source.authorship) || "own");
+  return <div className="mt-5 grid gap-5 sm:grid-cols-2">
+    <Field label={copy.projectUrl} hint={copy.projectUrlHint}><Input name="projectUrl" type="url" required defaultValue={stringValue(source.url)} dir="ltr" /></Field>
+    <Field label={copy.authorship}><select name="authorship" value={authorship} onChange={(event) => setAuthorship(event.target.value)} className={selectClass}><option value="own">{copy.authorshipOwn}</option><option value="third_party">{copy.authorshipThirdParty}</option></select></Field>
+    {authorship === "third_party" && <Field label={copy.originalAuthor}><Input name="originalAuthor" required defaultValue={stringValue(source.originalAuthor)} /></Field>}
+  </div>;
 }
 
 // Source fields the API treats as optional live with the other release details.
@@ -546,7 +556,9 @@ function localized(en: string, fa: string) { return fa ? { en, fa } : { en }; }
 function optionalLocalized(en: string, fa: string) { return { ...(en ? { en } : {}), ...(fa ? { fa } : {}) }; }
 
 export function buildManifest(data: FormData, type: MarketplaceItemTypeKey, sourceKind: SourceKind, customLicense: boolean) {
-  const source = sourceKind === "github_repository" ? {
+  const source = sourceKind === "external_link" ? {
+    kind: sourceKind, url: text(data, "projectUrl"), authorship: text(data, "authorship"), ...(text(data, "authorship") === "third_party" ? { originalAuthor: text(data, "originalAuthor") } : {}),
+  } : sourceKind === "github_repository" ? {
     kind: sourceKind, repositoryUrl: text(data, "repositoryUrl"), commitSha: text(data, "commitSha"), ...(optionalText(data, "repositoryPath") ? { path: optionalText(data, "repositoryPath") } : {}),
   } : sourceKind === "github_release" ? {
     kind: sourceKind, repositoryUrl: text(data, "repositoryUrl"), tag: text(data, "releaseTag"), releaseCommitSha: text(data, "releaseCommitSha"), assetName: text(data, "assetName"), ...(optionalText(data, "assetDigest") ? { assetDigest: optionalText(data, "assetDigest") } : {}),

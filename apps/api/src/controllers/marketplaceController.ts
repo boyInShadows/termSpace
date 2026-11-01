@@ -2,6 +2,8 @@ import type { Request, Response } from "express";
 import { Prisma, type MarketplacePermissionCapability } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import {
+  AVAILABLE_SOURCE_STATUSES,
+  isAvailableSourceStatus,
   MARKETPLACE_DATABASE_ITEM_TYPES,
   MARKETPLACE_ITEM_TYPES,
   MARKETPLACE_ITEM_TYPE_REGISTRY,
@@ -142,6 +144,7 @@ function trustedInstallationUrl(sourceKind: string, value: string | null): boole
   try {
     const url = new URL(value);
     if (url.protocol !== "https:") return false;
+    if (sourceKind === "EXTERNAL_LINK") return true;
     if (sourceKind === "NPM") return url.hostname === "registry.npmjs.org";
     if (["GITHUB_REPOSITORY", "GITHUB_RELEASE"].includes(sourceKind)) return url.hostname === "github.com";
     return false;
@@ -151,7 +154,7 @@ function trustedInstallationUrl(sourceKind: string, value: string | null): boole
 }
 
 function serializeReleaseSource(release: {
-  sourceKind: string; sourceUrl: string; sourceRef: string; sourcePath: string | null;
+  sourceKind: string; sourceUrl: string; sourceRef: string; sourcePath: string | null; sourceOriginalAuthor: string | null;
   providerIntegrityDigest: string | null; artifactSizeBytes: number | null;
   sourceCheckStatus: string; sourceCheckedAt: Date | null;
 }) {
@@ -160,6 +163,7 @@ function serializeReleaseSource(release: {
     url: release.sourceUrl,
     ref: release.sourceRef,
     path: release.sourcePath,
+    originalAuthor: release.sourceOriginalAuthor,
     integrityDigest: release.providerIntegrityDigest,
     artifactSizeBytes: release.artifactSizeBytes,
     status: release.sourceCheckStatus.toLowerCase(),
@@ -174,10 +178,10 @@ function serializeReleaseSource(release: {
  */
 async function findPublicRelease(productId: string, version?: string) {
   const release = await prisma.marketplaceReleaseManifest.findFirst({
-    where: { productVersion: version === undefined ? { productId } : { productId, version }, publishedAt: { not: null }, sourceCheckStatus: { in: ["VERIFIED", "STALE"] } },
+    where: { productVersion: version === undefined ? { productId } : { productId, version }, publishedAt: { not: null }, sourceCheckStatus: { in: [...AVAILABLE_SOURCE_STATUSES] } },
     orderBy: { publishedAt: "desc" },
     select: {
-      sourceKind: true, sourceUrl: true, sourceRef: true, sourcePath: true,
+      sourceKind: true, sourceUrl: true, sourceRef: true, sourcePath: true, sourceOriginalAuthor: true,
       providerIntegrityDigest: true, artifactSizeBytes: true, sourceCheckStatus: true, sourceCheckedAt: true,
       resolvedInstallationUrl: true, installationMethod: true, licenseIdentifier: true, customLicenseUrl: true,
       productVersion: { select: { version: true } },
@@ -468,14 +472,14 @@ export async function listMarketplaceLibrary(req: Request, res: Response) {
     } : null,
     installationAvailable: Boolean(order.product.published
       && order.releaseManifest
-      && ["VERIFIED", "STALE"].includes(order.releaseManifest.sourceCheckStatus)),
+      && isAvailableSourceStatus(order.releaseManifest.sourceCheckStatus)),
   })), meta: { page, limit, total, totalPages: Math.ceil(total / limit) } });
 }
 
 /** The release a reader named, only if it passes the same gates as the approved one. */
 async function findAcquirableRelease(productId: string, version: string) {
   const release = await prisma.marketplaceReleaseManifest.findFirst({
-    where: { productVersion: { productId, version }, publishedAt: { not: null }, sourceCheckStatus: { in: ["VERIFIED", "STALE"] } },
+    where: { productVersion: { productId, version }, publishedAt: { not: null }, sourceCheckStatus: { in: [...AVAILABLE_SOURCE_STATUSES] } },
     orderBy: { publishedAt: "desc" },
     select: { id: true, publishedAt: true, sourceCheckStatus: true, sourceKind: true, resolvedInstallationUrl: true },
   });
@@ -531,6 +535,7 @@ export async function getMarketplaceInstallation(req: Request, res: Response) {
         sourceUrl: true,
         sourceRef: true,
         sourcePath: true,
+        sourceOriginalAuthor: true,
         providerIntegrityDigest: true,
         artifactSizeBytes: true,
         resolvedInstallationUrl: true,
@@ -559,7 +564,7 @@ export async function getMarketplaceInstallation(req: Request, res: Response) {
   const available = entitlement.product.published
     && release?.publishedAt
     && release.productVersion.productId === entitlement.product.id
-    && ["VERIFIED", "STALE"].includes(release.sourceCheckStatus)
+    && isAvailableSourceStatus(release.sourceCheckStatus)
     && trustedInstallationUrl(release.sourceKind, release.resolvedInstallationUrl);
   if (!available || !release) {
     res.status(409).json({ error: { code: "INSTALLATION_UNAVAILABLE", message: "Installation is unavailable while this resource or its pinned release is restricted" } });
@@ -625,7 +630,7 @@ export async function acquireMarketplaceProduct(req: Request, res: Response) {
     return;
   }
   const releaseManifest = requested === undefined ? product.approvedSnapshot?.releaseManifest : named;
-  if (!releaseManifest?.publishedAt || !["VERIFIED", "STALE"].includes(releaseManifest.sourceCheckStatus)) {
+  if (!releaseManifest?.publishedAt || !isAvailableSourceStatus(releaseManifest.sourceCheckStatus)) {
     res.status(409).json({ error: { code: "RELEASE_UNAVAILABLE", message: "This resource does not have an approved release available for acquisition" } });
     return;
   }

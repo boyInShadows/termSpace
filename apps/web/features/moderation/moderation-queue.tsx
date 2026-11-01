@@ -132,7 +132,7 @@ export function ModerationQueue() {
             <Fact label={m.release} value={listing.releaseVersion ?? "—"} mono />
             <Fact label={m.communities} value={number.format(listing.communityRequestCount)} />
             <Fact label={m.sourceResolved} value={listing.sourceResolved ? m.sourceOk : m.checkPending} pending={!listing.sourceResolved} />
-            <Fact label={m.ownershipVerified} value={listing.ownershipVerified ? m.ownerOk : m.checkPending} pending={!listing.ownershipVerified} />
+            <Fact label={m.ownershipVerified} value={listing.ownershipVerified ? m.ownerOk : listing.linkOnly ? m.ownerNotClaimed : m.checkPending} pending={!listing.ownershipVerified} />
           </dl>
         </li>;
       })}

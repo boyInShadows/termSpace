@@ -2,6 +2,20 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-01 — Plain link listings, so creators no longer need GitHub or npm
+
+- **What changed.** New `external_link` source: an HTTPS link plus "I made this" or
+  "I'm sharing someone else's project" with the original author. Status `LINK_ONLY`
+  passes the submit/publish gate with `ownershipVerifiedAt` left null. The server never
+  fetches the URL. It is the editor's default source. Product page, install dialog,
+  creator releases and moderation all label it as not verified. GitHub and npm flows are
+  unchanged. ADR 0004 amended; content policy updated (EN/FA).
+- **Shared surfaces.** `schema.prisma`, migration `202611010003_marketplace_external_link_source`
+  (two enum values, `sourceOriginalAuthor`, acquisition trigger accepts `LINK_ONLY`),
+  `apps/web/lib/types.ts`, `apps/web/lib/i18n/`, `changelog.md`.
+- **Verified.** Root typecheck, all workspace tests, web lint, and the real-database
+  journey for a link listing (draft, submit, approve, publish, acquire, install).
+
 ## 2026-11-01 — Smaller Docker images (API 3.28 GB → 685 MB, web/blog 3.1 → 1.06 GB)
 
 - **What changed.** `docker/Dockerfile.{api,web,blog}` now install only the

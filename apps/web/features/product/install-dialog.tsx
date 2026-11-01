@@ -16,11 +16,13 @@ export function InstallDialogContent({ installation, onOpenChange, trigger }: { 
   const copy = fa ? {
     title: "نصب نسخهٔ دریافت‌شده", intro: "این اطلاعات به همان نسخه‌ای متصل است که به کتابخانهٔ شما افزوده شد.", close: "بستن",
     exactVersion: "نسخهٔ دقیق", sourceStatus: "وضعیت منبع", immutableRef: "مرجع تغییرناپذیر", checked: "آخرین بررسی",
+    linkOnly: "این نسخه فقط یک پیوند است. مالکیت تأیید نشده و محتوا ممکن است پس از بررسی تغییر کرده باشد.",
     stale: "بررسی ارائه‌دهنده موقتاً قدیمی است؛ آخرین مرجع تأییدشده بدون تغییر باقی مانده است.", steps: "مراحل نصب",
     openPackage: "باز کردن بستهٔ تأییدشده", copyUrl: "کپی پیوند", copied: "پیوند کپی شد.", failed: "کپی خودکار انجام نشد. متن را انتخاب کنید و Ctrl+C را بزنید.",
   } : {
     title: "Install acquired release", intro: "These details are pinned to the exact version added to your library.", close: "Close",
     exactVersion: "Exact version", sourceStatus: "Source status", immutableRef: "Immutable reference", checked: "Last checked",
+    linkOnly: "This release is a plain link. Ownership is not verified, and the content may have changed since review.",
     stale: "The provider check is temporarily stale; the last verified reference remains unchanged.", steps: "Installation steps",
     openPackage: "Open verified package", copyUrl: "Copy link", copied: "Link copied.", failed: "Couldn’t copy automatically. Select the text and press Ctrl+C.",
   };
@@ -40,9 +42,10 @@ export function InstallDialogContent({ installation, onOpenChange, trigger }: { 
           <div className="mt-6 grid gap-3 rounded-xl border bg-surface p-4 text-sm sm:grid-cols-2">
             <InstallFact label={copy.exactVersion} value={`v${release.version}`} />
             <InstallFact label={copy.sourceStatus} value={release.source.status} />
-            <InstallFact label={copy.immutableRef} value={release.source.ref} mono />
+            {release.source.kind !== "external_link" && <InstallFact label={copy.immutableRef} value={release.source.ref} mono />}
             <InstallFact label={copy.checked} value={release.source.checkedAt ? new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" }).format(new Date(release.source.checkedAt)) : "—"} />
           </div>
+          {release.source.status === "link_only" && <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-800 dark:text-amber-300">{copy.linkOnly}</p>}
           {release.source.status === "stale" && <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-800 dark:text-amber-300">{copy.stale}</p>}
           <div className="mt-6">
             <p className="eyebrow">{copy.steps}</p>

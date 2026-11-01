@@ -52,8 +52,15 @@ instead of using one ambiguous `verified` badge.
 
 Any authenticated user with a verified email may create a creator profile.
 Identity verification is optional unless required by a later high-risk
-distribution policy. Source ownership verification is required before a listing can be
-submitted for moderation.
+distribution policy.
+
+Amended 2026-11-01: source ownership verification is no longer required to submit.
+Not every creator is a developer or uses GitHub or npm, and development is one
+category of eight. A listing may use a plain HTTPS link (`external_link`) with status
+`LINK_ONLY`: ownership stays unverified, the release is not pinned, the server never
+fetches the URL, and the public page says so. Someone sharing another person's project
+must name the original author. Staff approval is still required, and GitHub and npm
+listings keep every check below as the stronger signal.
 
 ## Roles and separation of duties
 

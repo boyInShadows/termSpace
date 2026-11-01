@@ -90,7 +90,9 @@ Marketplace moderators and administrators can request changes, approve,
 publish, reject, suspend, reinstate, archive, and restore. Staff cannot moderate
 a listing owned by their own reader account. Change requests, rejection, and
 suspension require a bounded public-safe reason. Publication and reinstatement
-recheck the exact release's source and ownership state.
+recheck the exact release's source and ownership state. A plain link release is
+`link_only` instead: it passes these gates without a provider token or ownership
+proof, gets no source job, and is labelled not verified everywhere it appears.
 
 The transition endpoints are:
 

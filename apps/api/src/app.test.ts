@@ -419,7 +419,7 @@ describe("API", () => {
 
       expect(response.status).toBe(200);
       expect(prismaMock.marketplaceReleaseManifest.findFirst).toHaveBeenCalledWith(expect.objectContaining({
-        where: { productVersion: { productId: "product-1" }, publishedAt: { not: null }, sourceCheckStatus: { in: ["VERIFIED", "STALE"] } },
+        where: { productVersion: { productId: "product-1" }, publishedAt: { not: null }, sourceCheckStatus: { in: ["VERIFIED", "STALE", "LINK_ONLY"] } },
       }));
       expect(response.body.data.release).toMatchObject({
         version: "1.2.3",
@@ -2287,6 +2287,29 @@ describe("API", () => {
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe("SOURCE_VERIFICATION_REQUIRED");
     expect(prismaMock.marketplaceProduct.update).not.toHaveBeenCalled();
+  });
+
+  it("lets a plain link listing through the source gate without ownership proof", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "creator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      id: "product-1", slug: "linked-skill", published: false, lifecycleState: "DRAFT", lifecycleVersion: 0,
+      lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: null, proposedSnapshotId: "snapshot-1",
+      proposedSnapshot: { releaseManifest: { sourceResolvedAt: new Date(), ownershipVerifiedAt: null, sourceCheckStatus: "LINK_ONLY" } }, approvedSnapshot: null,
+      creator: { ownerUserId: "reader-1" },
+    });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/creator/products/product-1/lifecycle")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ action: "SUBMIT", expectedVersion: 0 });
+
+    expect(response.body.error?.code).not.toBe("SOURCE_VERIFICATION_REQUIRED");
   });
 
   it("prevents staff from moderating their own listing", async () => {
