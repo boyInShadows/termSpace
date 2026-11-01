@@ -2,6 +2,43 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-01 — Simpler listing editor (5 steps → 4; 39 fields → 16 visible, 20 optional hidden)
+
+- **What changed.** The creator listing form (`creator-draft-editor.tsx`) now has
+  About → Source & install → Access & details → Review. For a skill from a GitHub
+  repository, 16 fields show by default (name, type, category, outcome,
+  description; source kind, repository, commit, platforms, install steps, license;
+  permissions and the required type details). Everything else sits in collapsed
+  sections that open themselves when they hold data or contain an invalid field:
+  web address (slug), translations, tags, communities, screenshots, links; version,
+  release notes, install method and optional source fields; optional type details,
+  runtimes/accounts/OS/dependencies and env vars. The slug follows the name until
+  edited. Install method follows the source kind. A new draft starts at version
+  1.0.0 with release notes "Initial release". License is one field: an `https://`
+  value is saved as a custom license URL, anything else as an SPDX identifier.
+  Platforms and permissions are tick-lists (`choice-rows.tsx`, plain-language
+  labels in `permission-labels.ts`) that still submit the same manifest rows. The
+  duplicate progress bar and help paragraph are gone; the step strip is the one
+  progress indicator. Release-level docs/support URLs are no longer shown but
+  existing values are preserved as hidden inputs.
+- **Not done (needs API work, owner decision).** Saving a draft to the account
+  before the last step: the API validates the whole manifest, so partial saves
+  still go to the browser only. Resolving the commit SHA and npm integrity from a
+  pasted URL, and relaxing required type-detail fields, were left out on purpose.
+  Outcome and description are both still asked for; merging them would put the same
+  sentence on the listing twice.
+- **Verification.** `npm run typecheck -w apps/web`; `npm test -w apps/web` (new
+  `choice-rows` and slug/disclosure tests); lint clean for the changed files;
+  Playwright `context-help` and `dashboard-repairs` specs on desktop and mobile,
+  updated for four steps and the collapsed fields (including a custom-license-URL
+  save check). Rendered step screenshots were checked once in dark theme, English
+  desktop and mobile, before the second round of cuts. **Not yet checked:** a fresh
+  look at the final layout, light theme and Persian RTL by eye (the specs ran in
+  both), `npm run lhci`, root `npm run build`.
+- **Shared surfaces touched:** `changelog.md` only. Copy lives in
+  `features/creator/workspace-copy.ts`; `lib/i18n` still carries now-unused step
+  and license keys.
+
 ## 2026-11-01 — Creator notifications for moderation decisions
 
 - **What the creator gets.** An approval, a change request or a rejection now

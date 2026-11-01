@@ -21,25 +21,24 @@ describe("draft editor navigation and recovery", { timeout: 15_000 }, () => {
     mocks.types.mockResolvedValue([{ key: "skill", en: "Skill", fa: "مهارت" }]);
   });
 
-  it("shows one of five freely navigable steps and retains hidden input", async () => {
+  it("shows one of four freely navigable steps and retains hidden input", async () => {
     render(<CreatorDraftEditor messages={copy.en.creatorDraft} />);
-    const slug = await screen.findByRole("textbox", { name: copy.en.creatorDraft.slug });
+    const slug = await screen.findByRole("textbox", { name: copy.en.creatorDraft.nameEn });
     fireEvent.change(slug, { target: { value: "keep-across-steps" } });
-    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "0");
-    fireEvent.click(screen.getByRole("button", { name: /^Release —/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Source & install —/ }));
     expect(slug).not.toBeVisible();
-    expect(screen.getByRole("textbox", { name: copy.en.creatorDraft.version })).toBeVisible();
+    expect(screen.getByRole("textbox", { name: copy.en.creatorDraft.installationInstructions })).toBeVisible();
     expect(window.location.search).toBe("?step=2");
-    fireEvent.click(screen.getByRole("button", { name: /^Basics —/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^About —/ }));
     expect(slug).toHaveValue("keep-across-steps");
     expect(slug).toBeVisible();
   });
 
   it("saves an incomplete draft locally and resumes at the saved step", async () => {
     const first = render(<CreatorDraftEditor messages={copy.en.creatorDraft} />);
-    const slug = await screen.findByRole("textbox", { name: copy.en.creatorDraft.slug });
+    const slug = await screen.findByRole("textbox", { name: copy.en.creatorDraft.nameEn });
     fireEvent.change(slug, { target: { value: "unfinished-work" } });
-    fireEvent.click(screen.getByRole("button", { name: /^Release —/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Source & install —/ }));
     fireEvent.change(screen.getByRole("textbox", { name: copy.en.creatorDraft.version }), { target: { value: "1.2.0" } });
     fireEvent.click(screen.getByRole("button", { name: "Save for later" }));
     expect(screen.getByText(creatorWorkspace.en.creatorDraft.localSaved)).toBeVisible();
@@ -49,13 +48,13 @@ describe("draft editor navigation and recovery", { timeout: 15_000 }, () => {
     render(<CreatorDraftEditor messages={copy.en.creatorDraft} />);
     await screen.findByText(creatorWorkspace.en.creatorDraft.localRestored);
     expect(screen.getByRole("textbox", { name: copy.en.creatorDraft.version })).toHaveValue("1.2.0");
-    fireEvent.click(screen.getByRole("button", { name: /^Basics —/ }));
-    expect(screen.getByRole("textbox", { name: copy.en.creatorDraft.slug })).toHaveValue("unfinished-work");
+    fireEvent.click(screen.getByRole("button", { name: /^About —/ }));
+    expect(screen.getByRole("textbox", { name: copy.en.creatorDraft.nameEn })).toHaveValue("unfinished-work");
   });
 
   it("retains dirty work and the navigation guard when browser storage fails", async () => {
     render(<CreatorDraftEditor messages={copy.en.creatorDraft} />);
-    fireEvent.change(await screen.findByRole("textbox", { name: copy.en.creatorDraft.slug }), { target: { value: "keep-on-failure" } });
+    fireEvent.change(await screen.findByRole("textbox", { name: copy.en.creatorDraft.nameEn }), { target: { value: "keep-on-failure" } });
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("Quota exceeded"); });
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     fireEvent.click(screen.getByRole("button", { name: "Save for later" }));
@@ -66,7 +65,7 @@ describe("draft editor navigation and recovery", { timeout: 15_000 }, () => {
 
   it("reveals and focuses an invalid field from another step before saving", async () => {
     render(<CreatorDraftEditor messages={copy.en.creatorDraft} />);
-    const slug = await screen.findByRole("textbox", { name: copy.en.creatorDraft.slug });
+    const slug = await screen.findByRole("textbox", { name: copy.en.creatorDraft.nameEn });
     fireEvent.click(screen.getByRole("button", { name: /^Review —/ }));
     fireEvent.click(screen.getByRole("button", { name: copy.en.creatorDraft.save }));
     await waitFor(() => expect(slug).toHaveFocus());
@@ -90,7 +89,7 @@ describe("draft editor navigation and recovery", { timeout: 15_000 }, () => {
   it("keeps dirty input when an internal exit is cancelled and allows discard", async () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     render(<CreatorDraftEditor messages={copy.en.creatorDraft} />);
-    const slug = await screen.findByRole("textbox", { name: copy.en.creatorDraft.slug });
+    const slug = await screen.findByRole("textbox", { name: copy.en.creatorDraft.nameEn });
     fireEvent.change(slug, { target: { value: "retain-this-draft" } });
     const exit = screen.getByRole("link", { name: copy.en.creatorDraft.cancel });
     const cancelled = new MouseEvent("click", { bubbles: true, cancelable: true });
@@ -114,5 +113,29 @@ describe("draft editor navigation and recovery", { timeout: 15_000 }, () => {
     fireEvent.click(screen.getByRole("button", { name: copy.en.creatorHub.retry }));
     await screen.findByRole("textbox", { name: copy.en.creatorDraft.slug });
     await waitFor(() => expect(mocks.get).toHaveBeenCalledTimes(2));
+  });
+
+  it("fills the web address from the name until the creator edits it", async () => {
+    render(<CreatorDraftEditor messages={copy.en.creatorDraft} />);
+    const name = await screen.findByRole("textbox", { name: copy.en.creatorDraft.nameEn });
+    const slug = screen.getByRole("textbox", { name: copy.en.creatorDraft.slug });
+    fireEvent.input(name, { target: { value: "Code Review Helper" } });
+    expect(slug).toHaveValue("code-review-helper");
+    fireEvent.input(name, { target: { value: "Code Review Helper 2" } });
+    expect(slug).toHaveValue("code-review-helper-2");
+    fireEvent.change(slug, { target: { value: "my-own-address" } });
+    fireEvent.input(name, { target: { value: "Something else" } });
+    expect(slug).toHaveValue("my-own-address");
+  });
+
+  it("keeps an existing draft's web address and hides optional fields until asked", async () => {
+    mocks.get.mockResolvedValue({ id: "draft-1", version: 1, draft: { content: { listing: { slug: "kept-address", name: { en: "Different Name" } } } } });
+    render(<CreatorDraftEditor productId="draft-1" messages={copy.en.creatorDraft} />);
+    const name = await screen.findByRole("textbox", { name: copy.en.creatorDraft.nameEn });
+    fireEvent.input(name, { target: { value: "Renamed" } });
+    expect(screen.getByRole("textbox", { name: copy.en.creatorDraft.slug })).toHaveValue("kept-address");
+    expect(screen.queryByRole("textbox", { name: copy.en.creatorDraft.tags })).not.toBeVisible();
+    fireEvent.click(screen.getByText(creatorWorkspace.en.creatorDraft.moreAbout));
+    expect(screen.getByRole("textbox", { name: copy.en.creatorDraft.tags })).toBeVisible();
   });
 });
