@@ -40,7 +40,7 @@ const installation: MarketplaceInstallation = {
 const acquirable: ProductDetail = {
   ...productDetail,
   release: {
-    version: "1.0.0", current: true, source: installation.release.source,
+    version: "1.0.0", reviewedAt: "2026-10-01T00:00:00.000Z", current: true, source: installation.release.source,
     installation: { method: "manual", url: installation.release.installation.url },
     permissions: [], environment: [], license: "MIT", mcp: null,
   },

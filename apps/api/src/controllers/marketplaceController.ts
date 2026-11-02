@@ -184,6 +184,7 @@ async function findPublicRelease(productId: string, version?: string) {
       sourceKind: true, sourceUrl: true, sourceRef: true, sourcePath: true, sourceOriginalAuthor: true,
       providerIntegrityDigest: true, artifactSizeBytes: true, sourceCheckStatus: true, sourceCheckedAt: true,
       resolvedInstallationUrl: true, installationMethod: true, licenseIdentifier: true, customLicenseUrl: true,
+      reviewedAt: true,
       productVersion: { select: { version: true } },
       permissions: { select: { capability: true, required: true, scope: true, destinations: true, purpose: true } },
       environmentVariables: { select: { name: true, purpose: true, required: true, sensitive: true } },
@@ -193,6 +194,7 @@ async function findPublicRelease(productId: string, version?: string) {
   if (!release || !trustedInstallationUrl(release.sourceKind, release.resolvedInstallationUrl)) return null;
   return {
     version: release.productVersion.version,
+    reviewedAt: release.reviewedAt,
     source: serializeReleaseSource(release),
     installation: { method: release.installationMethod.toLowerCase(), url: release.resolvedInstallationUrl },
     permissions: release.permissions.map((item) => ({ ...item, capability: item.capability.toLowerCase() })),

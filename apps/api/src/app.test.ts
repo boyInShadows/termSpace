@@ -18,7 +18,7 @@ const prismaMock = vi.hoisted(() => ({
   marketplaceNotification: { create: vi.fn(), findMany: vi.fn(), count: vi.fn(), updateMany: vi.fn() },
   marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), groupBy: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceProductVersion: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
-  marketplaceReleaseManifest: { create: vi.fn(), update: vi.fn(), findFirst: vi.fn() },
+  marketplaceReleaseManifest: { create: vi.fn(), update: vi.fn(), updateMany: vi.fn(), findFirst: vi.fn() },
   marketplaceProviderConnection: { findMany: vi.fn(), findUnique: vi.fn(), upsert: vi.fn(), updateMany: vi.fn() },
   marketplaceSourceCheckJob: { findFirst: vi.fn(), create: vi.fn() },
   marketplaceSkillReleaseDetails: { create: vi.fn() },
@@ -404,6 +404,7 @@ describe("API", () => {
       providerIntegrityDigest: "sha512-abc", artifactSizeBytes: 2048, sourceCheckStatus: "VERIFIED", sourceCheckedAt: new Date("2026-10-01T00:00:00Z"),
       resolvedInstallationUrl: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz", installationMethod: "NPM",
       licenseIdentifier: "MIT", customLicenseUrl: null, installationInstructions: ["private installation step"],
+      reviewedAt: new Date("2026-11-01T10:00:00Z"),
       productVersion: { version: "1.2.3" },
       permissions: [{ capability: "NETWORK_ACCESS", required: true, scope: null, destinations: ["api.acme.test"], purpose: "Calls the Acme API" }],
       environmentVariables: [{ name: "ACME_TOKEN", purpose: "Auth", required: true, sensitive: true }],
@@ -423,6 +424,7 @@ describe("API", () => {
       }));
       expect(response.body.data.release).toMatchObject({
         version: "1.2.3",
+        reviewedAt: "2026-11-01T10:00:00.000Z",
         source: { kind: "npm", url: "https://registry.npmjs.org/@acme/tool", ref: "1.2.3", status: "verified", integrityDigest: "sha512-abc" },
         installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz" },
         permissions: [{ capability: "network_access", destinations: ["api.acme.test"] }],
@@ -1014,7 +1016,7 @@ describe("API", () => {
       lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: null, proposedSnapshotId: "snapshot-1",
       proposedSnapshot: {
         content: marketplaceManifestFixture(), schemaVersion: 1,
-        releaseManifest: { id: "release-1", publishedAt: null, sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date(), sourceCheckStatus: "VERIFIED" },
+        releaseManifest: { id: "release-1", publishedAt: null, sourceResolvedAt: new Date(), ownershipVerifiedAt: new Date(), sourceCheckStatus: "VERIFIED", reviewedAt: new Date("2026-11-01T10:00:00Z") },
       },
       approvedSnapshot: null,
       lifecycleEvents: [],
@@ -1041,9 +1043,52 @@ describe("API", () => {
       where: { id: "release-1" },
       data: { publishedAt: expect.any(Date) },
     });
+    // The public badge mirrors the reviewed release; publication cannot invent a review.
+    expect(prismaMock.marketplaceProduct.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ published: true, verified: true }),
+    }));
     expect(prismaMock.marketplaceListingLifecycleEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({
       snapshotId: "snapshot-1", action: "PUBLISHED", internalNote: "Source and declared permissions reviewed.",
     }) });
+  });
+
+  it("records the review on the exact release at approval, not at publication", async () => {
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "MODERATOR" }] },
+    });
+    prismaMock.marketplaceProduct.findUnique.mockResolvedValue({
+      id: "product-1", slug: "owned-skill", name: "Owned Skill", published: false, lifecycleState: "SUBMITTED", lifecycleVersion: 3,
+      lifecycleResumeState: null, lifecycleResumePublished: null, approvedSnapshotId: null, proposedSnapshotId: "snapshot-1",
+      proposedSnapshot: { content: marketplaceManifestFixture(), schemaVersion: 1, releaseManifest: { id: "release-1", reviewedAt: null } },
+      approvedSnapshot: null, lifecycleEvents: [],
+      creator: { ownerUserId: "reader-1", owner: { notifyModerationEmail: false } },
+    });
+    prismaMock.marketplaceProduct.update.mockResolvedValue({
+      id: "product-1", slug: "owned-skill", lifecycleState: "APPROVED", lifecycleVersion: 4, published: false,
+      approvedSnapshotId: null, proposedSnapshotId: "snapshot-1",
+    });
+    prismaMock.marketplaceReleaseManifest.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.marketplaceListingLifecycleEvent.create.mockResolvedValue({});
+    prismaMock.marketplaceNotification.create.mockResolvedValue({ id: "notification-1" });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+
+    const response = await request(createApp())
+      .post("/api/marketplace/moderation/products/product-1/lifecycle")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send({ action: "APPROVE", expectedVersion: 3 });
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.marketplaceReleaseManifest.updateMany).toHaveBeenCalledWith({
+      where: { id: "release-1", reviewedAt: null },
+      data: { reviewedAt: expect.any(Date), reviewedByUserId: "moderator-1" },
+    });
+    // Approval is not publication: the badge stays hidden until the listing is public.
+    expect(prismaMock.marketplaceProduct.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.not.objectContaining({ verified: expect.anything() }),
+    }));
   });
 
   it.each([

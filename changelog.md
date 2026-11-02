@@ -2,6 +2,49 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-02 — Review is a recorded moderation decision, not a dead flag
+
+- **Scope / ownership notice.** Shared surfaces: `apps/api/prisma/schema.prisma`,
+  `apps/api/prisma/migrations/` and `changelog.md`. Adds
+  `MarketplaceReleaseManifest.reviewedAt`/`reviewedByUserId` in
+  `202611020001_release_review_state`. No permission, route or creator-flow
+  change: the existing moderator **approve** action now records the review.
+- **Problem.** `MarketplaceProduct.verified` defaulted to false and no API path
+  ever wrote it, so every creator-submitted listing said "Not yet reviewed"
+  forever, including after approval and publication. The only writer was the
+  seed script.
+- **Behaviour.** Approval (`APPROVE`, SUBMITTED → APPROVED) stamps the exact
+  immutable release the submitted snapshot pins, with the reviewer's user id and
+  timestamp; the first review is kept, so re-approving the same release cannot
+  make it look fresh. Publication copies the fact into the listing's public
+  `verified` projection and never invents one: a release with no recorded
+  review stays unreviewed. The public review row now belongs to the release
+  block, so it follows the version selected in the reader's release picker and
+  shows the review date; the card keeps reading the projection.
+- **Data.** The migration backfills releases behind published listings from the
+  newest staff `APPROVED`/`PUBLISHED` lifecycle event and re-aligns
+  `verified` from the release. System bootstrap publications are excluded, so
+  seeded fixtures stay unreviewed rather than borrowing an approval. The
+  published-release immutability trigger is disabled only for that backfill
+  statement and re-enabled in the same transaction.
+- **Docs / copy.** `docs/marketplace-listing-lifecycle.md` gains a "Release
+  review" section. No new English or Persian label: the existing
+  "Review / Reviewed / Not yet reviewed" vocabulary now describes the release.
+- **Verification.** Root typecheck; API 301 passed / 44 integration skips; web
+  494 passed (the local Node 26 runtime defines a `localStorage` global that
+  shadows jsdom's, so the suite must run with
+  `NODE_OPTIONS=--no-experimental-webstorage`; without it three unrelated files
+  fail identically on the pre-change tree). Web lint: zero errors, two
+  pre-existing warnings. All production builds. Migration applied to the local
+  Postgres and its backfill exercised on a real moderator-approved listing.
+  Full Playwright suite at CI's two workers: 519 passed, 46 intentional skips,
+  no failures. Unthrottled local parallelism produced six failures in
+  `reporting.spec.ts` and `shared-navigation.spec.ts`; both pass in isolation
+  and the reporting spec passes on the pre-change tree, so they are
+  timing-sensitive rather than regressions. Lighthouse: home, dashboard and
+  product detail, nine mobile runs; every assertion passed on the unchanged
+  budgets.
+
 ## 2026-11-01 — Account onboarding and editable profile details
 
 - **Scope / ownership notice.** Owner-requested signup onboarding crosses into

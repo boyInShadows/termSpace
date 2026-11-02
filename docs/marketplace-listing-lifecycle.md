@@ -94,6 +94,18 @@ recheck the exact release's source and ownership state. A plain link release is
 `link_only` instead: it passes these gates without a provider token or ownership
 proof, gets no source job, and is labelled not verified everywhere it appears.
 
+### Release review
+
+Approval is the review. When staff approve a submitted snapshot, the release it
+pins gets `reviewedAt` and `reviewedByUserId`; the first review is kept, so
+re-approving the same immutable release cannot make it look freshly reviewed.
+Publication copies that fact into the listing's public `verified` projection,
+which the listing card, the title block and the "Reviewed only" filter read.
+Publication never invents a review: a release approved before this signal
+existed stays unreviewed. The public review row names the date and follows the
+version selected in the reader's release picker, so a listing cannot claim one
+release's review for another.
+
 The transition endpoints are:
 
 - `POST /api/marketplace/creator/products/:id/lifecycle`

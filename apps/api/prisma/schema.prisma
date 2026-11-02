@@ -283,6 +283,7 @@ model ReaderUser {
   marketplaceReports     MarketplaceReport[]
   moderationCaseEvents   MarketplaceModerationCaseEvent[]
   notifications          MarketplaceNotification[]
+  releaseReviews         MarketplaceReleaseManifest[]             @relation("MarketplaceReleaseReviewer")
 }
 
 enum TransactionalEmailStatus {
@@ -943,8 +944,13 @@ model MarketplaceReleaseManifest {
   supportUrl               String?
   releaseNotes             String
   publishedAt              DateTime?
+  // Staff review of this exact immutable release. Set once, at APPROVE, so a
+  // review date always names the person and moment that cleared the release.
+  reviewedAt               DateTime?
+  reviewedByUserId         String?
   createdAt                DateTime                                @default(now())
   productVersion           MarketplaceProductVersion               @relation(fields: [productVersionId], references: [id], onDelete: Restrict)
+  reviewedBy               ReaderUser?                             @relation("MarketplaceReleaseReviewer", fields: [reviewedByUserId], references: [id], onDelete: Restrict)
   compatibility            MarketplaceReleaseCompatibility[]
   permissions              MarketplaceReleasePermission[]
   environmentVariables     MarketplaceReleaseEnvironmentVariable[]
@@ -968,6 +974,7 @@ model MarketplaceReleaseManifest {
   @@index([sourceKind, sourceUrl])
   @@index([sourceCheckStatus, sourceNextCheckAt])
   @@index([verifiedConnectionId])
+  @@index([reviewedAt])
 }
 
 model MarketplaceProviderConnection {

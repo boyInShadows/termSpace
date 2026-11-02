@@ -5,6 +5,7 @@ import type { ProductRelease } from "@/lib/types";
 
 const release: ProductRelease = {
   version: "1.2.3",
+  reviewedAt: null,
   current: true,
   source: { kind: "npm", url: "https://registry.npmjs.org/@acme/tool", ref: "1.2.3", path: null, integrityDigest: "sha512-abc", artifactSizeBytes: null, status: "verified", checkedAt: "2026-10-01T00:00:00Z" },
   installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz" },
