@@ -4,7 +4,7 @@ import type { ProductRelease } from "@/lib/types";
 import { ReleaseFacts } from "./release-facts";
 
 const release: ProductRelease = {
-  version: "2.3.0", current: false,
+  version: "2.3.0", reviewedAt: "2026-10-02T00:00:00.000Z", current: false,
   source: { kind: "npm", url: "https://registry.npmjs.org/@acme/tool", ref: "2.3.0", path: null, integrityDigest: "sha512-abc", artifactSizeBytes: null, status: "verified", checkedAt: null },
   installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-2.3.0.tgz" },
   permissions: [
@@ -15,6 +15,20 @@ const release: ProductRelease = {
 };
 
 describe("ReleaseFacts", () => {
+  it("names the review date for the release it describes", () => {
+    render(<dl><ReleaseFacts release={release} locale="en" /></dl>);
+
+    expect(screen.getByText(/^Reviewed/)).toBeInTheDocument();
+    expect(screen.getByText(/Oct 2, 2026/)).toBeInTheDocument();
+  });
+
+  it("says a release was not reviewed instead of implying it was", () => {
+    render(<dl><ReleaseFacts release={{ ...release, reviewedAt: null }} locale="en" /></dl>);
+
+    expect(screen.getByText("Not yet reviewed")).toBeInTheDocument();
+    expect(screen.queryByText(/^Reviewed/)).not.toBeInTheDocument();
+  });
+
   it("describes an earlier release from its own declarations", () => {
     render(<dl><ReleaseFacts release={release} locale="en" /></dl>);
 

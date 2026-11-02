@@ -131,6 +131,8 @@ export interface MyReviewState { eligibility: ReviewEligibility; review: OwnRevi
 export interface ReviewInput { rating: number; displayName: string; body: string }
 export interface ProductRelease {
   version: string;
+  /** When staff reviewed this exact release; null until a moderator approves it. */
+  reviewedAt: string | null;
   /** False for an earlier release shown from the version picker. */
   current: boolean;
   source: MarketplaceInstallation["release"]["source"];

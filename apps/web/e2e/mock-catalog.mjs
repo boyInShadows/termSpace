@@ -147,6 +147,9 @@ export function releaseOf(slug, version) {
   const ref = current ? "0123456789abcdef0123456789abcdef01234567" : older.ref;
   return {
     version,
+    // Mirrors the reviewed release; the seeded catalogue marks the last listing
+    // as unreviewed so both states stay reachable in the browser.
+    reviewedAt: product.verified ? product.updatedAt : null,
     current,
     source: {
       kind: "github_repository", url: `https://github.com/termspace-fixtures/${product.slug}`, ref,

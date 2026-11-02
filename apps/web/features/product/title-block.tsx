@@ -8,11 +8,11 @@ import { SelectedRelease } from "./release-selection";
 
 const text = {
   en: {
-    uses: "uses", platforms: "Platforms", models: "Models", review: "Review", reviewed: "Reviewed",
+    uses: "uses", platforms: "Platforms", models: "Models", review: "Review",
     notReviewed: "Not yet reviewed", notStated: "Not stated", noRelease: "No approved release", release: "Release", keyFacts: "Key facts",
   },
   fa: {
-    uses: "استفاده", platforms: "پلتفرم‌ها", models: "مدل‌ها", review: "بررسی", reviewed: "بررسی‌شده",
+    uses: "استفاده", platforms: "پلتفرم‌ها", models: "مدل‌ها", review: "بررسی",
     notReviewed: "هنوز بررسی نشده", notStated: "ذکر نشده", noRelease: "نسخهٔ تأییدشده‌ای نیست", release: "نسخه", keyFacts: "اطلاعات کلیدی",
   },
 };
@@ -53,15 +53,15 @@ export function ProductFacts({ product, locale }: { product: ProductDetail; loca
       <dl className="border-b border-border">
         <Fact label={t.platforms}>{product.compatibility.platforms.join(" · ") || t.notStated}</Fact>
         {product.compatibility.models.length > 0 && <Fact label={t.models}>{product.compatibility.models.join(" · ")}</Fact>}
-        <Fact label={t.review}>
-          {product.verified
-            ? <span className="font-semibold text-verified">{t.reviewed}</span>
-            : <Absent>{t.notReviewed}</Absent>}
-        </Fact>
         <SelectedRelease view="facts" slug={product.slug} locale={locale}>
           {product.release
             ? <ReleaseFacts release={product.release} locale={locale} summary={{ permissions: product.permissions, license: product.license }} />
-            : <Fact label={t.release}><Absent>{t.noRelease}</Absent></Fact>}
+            : (
+              <>
+                <Fact label={t.review}><Absent>{t.notReviewed}</Absent></Fact>
+                <Fact label={t.release}><Absent>{t.noRelease}</Absent></Fact>
+              </>
+            )}
         </SelectedRelease>
       </dl>
     </section>

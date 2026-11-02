@@ -1,15 +1,18 @@
 import type { ReactNode } from "react";
 import type { Locale } from "@/lib/i18n";
+import { intlLocale } from "@/lib/format";
 import type { ProductRelease } from "@/lib/types";
 import { capabilityLabel } from "./release-provenance";
 
 const text = {
   en: {
+    review: "Review", reviewed: "Reviewed", notReviewed: "Not yet reviewed",
     permissions: "Permissions", licence: "Licence", release: "Release", pinned: "Pinned to", digest: "Digest",
     notDeclared: "Not declared", notStated: "Not stated", noDigest: "Not provided by the source",
     verified: "source verified", stale: "source check overdue", linkOnly: "link, not verified",
   },
   fa: {
+    review: "بررسی", reviewed: "بررسی‌شده", notReviewed: "هنوز بررسی نشده",
     permissions: "دسترسی‌ها", licence: "مجوز", release: "نسخه", pinned: "متصل به", digest: "چکیدهٔ یکپارچگی",
     notDeclared: "اعلام نشده", notStated: "ذکر نشده", noDigest: "منبع آن را ارائه نکرده",
     verified: "منبع تأییدشده", stale: "بررسی منبع عقب افتاده", linkOnly: "پیوند، تأییدنشده",
@@ -41,8 +44,18 @@ export function ReleaseFacts({ release, locale, summary }: { release: ProductRel
   const permissions = summary ? summary.permissions : release.permissions.map((item) => capabilityLabel(locale, item.capability)).join(" · ") || null;
   const license = summary ? summary.license : release.license;
   const { source } = release;
+  // UTC on both server and client: a date rendered in two timezones is a
+  // hydration mismatch, and the review time is a UTC timestamp anyway.
+  const reviewed = release.reviewedAt
+    ? new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium", timeZone: "UTC" }).format(new Date(release.reviewedAt))
+    : null;
   return (
     <>
+      <Fact label={t.review}>
+        {reviewed
+          ? <span className="font-semibold text-verified">{t.reviewed}<span className="font-normal text-muted-foreground"> · {reviewed}</span></span>
+          : <Absent>{t.notReviewed}</Absent>}
+      </Fact>
       <Fact label={t.permissions}>{permissions ?? <Absent>{t.notDeclared}</Absent>}</Fact>
       <Fact label={t.licence}>{license ?? t.notStated}</Fact>
       <Fact label={t.release}>

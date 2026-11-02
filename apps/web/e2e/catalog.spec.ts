@@ -36,8 +36,11 @@ test.describe("product detail", () => {
     // React keeps a hidden copy of the content beside the visible one, which a
     // strict text locator counts twice. Wait for the copy to go.
     await expect(page.locator('[id^="S:"][hidden]')).toHaveCount(0);
-    for (const claim of ["Reviewed", "Reads the current selection · no network access", "MIT"]) {
-      await expect(page.getByRole("region", { name: "Key facts" }).getByText(claim, { exact: true })).toBeVisible();
+    // The review row names the release it describes, so it carries a date.
+    const facts = page.getByRole("region", { name: "Key facts" });
+    await expect(facts.getByText(/^Reviewed · /)).toBeVisible();
+    for (const claim of ["Reads the current selection · no network access", "MIT"]) {
+      await expect(facts.getByText(claim, { exact: true })).toBeVisible();
     }
     const details = page.locator("#details dl");
     for (const label of ["Requirements", "Updated", "Package", "Updates"]) {

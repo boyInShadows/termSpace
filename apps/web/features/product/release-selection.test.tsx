@@ -31,6 +31,7 @@ const versions: ProductVersion[] = [
 function release(version: string, ref: string, current: boolean): ProductRelease {
   return {
     version,
+    reviewedAt: null,
     current,
     source: { kind: "github_repository", url: "https://github.com/example/tool", ref, path: null, integrityDigest: null, artifactSizeBytes: null, status: "verified", checkedAt: "2026-10-01T00:00:00.000Z" },
     installation: { method: "git", url: `https://github.com/example/tool/archive/${ref}.tar.gz` },

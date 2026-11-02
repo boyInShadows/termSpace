@@ -30,7 +30,7 @@ const productLifecycleSelect = {
   approvedSnapshotId: true,
   proposedSnapshotId: true,
   proposedSnapshot: {
-    select: { content: true, schemaVersion: true, releaseManifest: { select: { id: true, publishedAt: true, sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true } } },
+    select: { content: true, schemaVersion: true, releaseManifest: { select: { id: true, publishedAt: true, sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true, reviewedAt: true } } },
   },
   approvedSnapshot: {
     select: { schemaVersion: true, releaseManifest: { select: { sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true } } },
@@ -132,6 +132,19 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
       const proposedSnapshotId = transition.proposedSnapshot === "clear" ? null : product.proposedSnapshotId;
       const correlationId = randomUUID();
       let publicationProjection = {};
+      let publicationReview: { verified?: boolean } = {};
+      if (action === "APPROVE") {
+        // Review is the staff decision on this exact immutable release. Keeping
+        // the first review date means re-approving the same release cannot make
+        // it look freshly reviewed.
+        const releaseId = product.proposedSnapshot?.releaseManifest?.id;
+        if (releaseId) {
+          await tx.marketplaceReleaseManifest.updateMany({
+            where: { id: releaseId, reviewedAt: null },
+            data: { reviewedAt: new Date(), reviewedByUserId: userId },
+          });
+        }
+      }
       if (action === "PUBLISH") {
         if (!product.proposedSnapshot) throw new LifecycleRequestError(409, "PROPOSED_SNAPSHOT_REQUIRED", "Approved publication candidate is missing");
         let manifest;
@@ -151,6 +164,10 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
             data: { publishedAt: new Date() },
           });
         }
+        // The public badge mirrors the release it describes, never the listing's
+        // own claim, so a release approved before this signal existed stays
+        // unreviewed rather than silently borrowing an approval.
+        publicationReview = { verified: Boolean(releaseManifest.reviewedAt) };
       }
 
       const next = await tx.marketplaceProduct.update({
@@ -164,6 +181,7 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
           approvedSnapshotId,
           proposedSnapshotId,
           ...publicationProjection,
+          ...publicationReview,
         },
         select: { id: true, slug: true, lifecycleState: true, lifecycleVersion: true, published: true, approvedSnapshotId: true, proposedSnapshotId: true },
       });
