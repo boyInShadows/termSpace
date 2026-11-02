@@ -2,6 +2,68 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-01 — Account onboarding and editable profile details
+
+- **Scope / ownership notice.** Owner-requested signup onboarding crosses into
+  `apps/api/src/controllers/readerController.ts`, `readerOnboardingController.ts`,
+  `readerAccountController.ts`, `routes/readerRoutes.ts` and
+  `validation/schemas.ts` because private answers must persist per account,
+  export with account data and be erased on deletion. Shared surfaces:
+  `apps/api/prisma/schema.prisma`, `apps/api/prisma/migrations/`,
+  `apps/web/lib/api.ts` and `changelog.md`. The work is tracked in the ignored
+  `ramtin-pending.md`; no other maintainer queue item is being claimed.
+- **Behavior.** Four questions collect role, goal, coding tools (multiple) and
+  starting preference. New password/Google accounts enter `/onboarding` after
+  sign-in; a successful save routes explorers to `/explore` and creators to
+  `/dashboard/studio`. Profile has the same editable details and both links for
+  all members. The existing public creator profile and permission checks remain.
+- **Storage.** Additive migration `202611010003_reader_onboarding` preserves
+  existing members' voluntary setup and defaults new accounts to onboarding.
+  Strict input validation, authenticated account scoping, CSRF protection and
+  the existing preference write limiter protect the private endpoints.
+- **API / privacy.** `GET` and `PUT /api/readers/onboarding` return the caller's
+  four private answers and whether onboarding is required. Password and Google
+  sign-in responses add `user.onboardingRequired`. Survey answers do not grant
+  marketplace roles. Account export includes `profileDetails`; account deletion
+  clears all four fields. `apps/web/lib/legal.ts` documents collection, editing,
+  export and deletion in both languages.
+- **Local database.** Client generated and migration applied locally; the API
+  was briefly restarted to release its Windows Prisma engine lock, and its
+  health endpoint returned `ok` afterwards. The local deployment also applied
+  five already-pending migrations: marketplace report cases, account deletion,
+  email change, listing views and moderation notifications. No production
+  database was changed. Apply `202611010003_reader_onboarding` before deploying
+  this API/client: reader queries need the new columns.
+- **Verification.** Root typecheck; all tests (API 298 passed / 43 integration
+  skips, blog 17 passed, web 487 passed); web lint (zero errors, two pre-existing
+  warnings); all production builds, with the final web build repeated by E2E.
+  Two additional real-database tests passed: password/Google onboarding flags,
+  persistence, account isolation, no automatic role grant, export and erasure.
+  Google token verification was stubbed; no real Google credential was used.
+- **Browser gates.** The full suite ran: 514 passed, 46 intentional skips and
+  four failures in two pre-existing tests on desktop/phone. The new personal
+  save button made the public-creator save selector ambiguous; it now matches
+  exactly. The deletion geometry assertion raced navigation; it now retries
+  until the page can be measured. After those test fixes and phone focus-margin
+  styling, the final build's onboarding, account data, dashboard repair and JS
+  budget specs passed: 60 passed, 18 intentional skips. The remaining suite was
+  not repeated after those final changes. All ten onboarding browser scenarios
+  passed, including EN/FA destinations, persisted Profile edits, completed-flow
+  redirects, password sign-in entry, themes, RTL, 320/768/1280 widths, the skip
+  link and keyboard focus above the phone tabs.
+- **Rendered review / performance.** Inspected onboarding and Profile captures
+  in EN/FA and light/dark at desktop and phone widths; no page errors. Impeccable
+  detector: no findings. Lighthouse passed every unchanged assertion for home,
+  dashboard and product detail (nine runs). The first Lighthouse launch hit a
+  Windows temporary-profile cleanup `EPERM`; collection succeeded against a
+  separate task-owned Chrome profile on D:, using the same budgets. Evidence
+  and local launch helpers stay under ignored `docs/artifacts/`. Manual second
+  diff review used in place of a separate harness review command; no remaining
+  code findings. Harness token/cost usage was not available.
+- **Remaining acceptance.** Real Google browser sign-in, physical phones and
+  maintainer review of Persian onboarding/privacy wording remain in the ignored
+  local queue. Completed implementation tasks were removed from that queue.
+
 ## 2026-11-01 — Creator notifications for moderation decisions
 
 - **What the creator gets.** An approval, a change request or a rejection now

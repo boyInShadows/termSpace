@@ -3,10 +3,11 @@ import { addBookmark, changeReaderPassword, confirmReaderEmailVerification, conf
 import { confirmReaderEmailChange, requestReaderEmailChange } from "../controllers/readerEmailController.js";
 import { deleteReaderAccount, exportReaderData, revokeOtherReaderSessions } from "../controllers/readerAccountController.js";
 import { getReaderPreferences, updateReaderPreferences } from "../controllers/readerPreferencesController.js";
+import { getReaderOnboarding, saveReaderOnboarding } from "../controllers/readerOnboardingController.js";
 import { optionalReader, requireReader } from "../middleware/auth.js";
 import { accountDeleteRateLimit, accountExportRateLimit, emailChangeRequestRateLimit, sessionRevokeRateLimit, emailVerificationAttemptRateLimit, emailVerificationRequestRateLimit, googleSignInRateLimit, loginRateLimit, passwordChangeRateLimit, passwordResetAttemptRateLimit, passwordResetRequestRateLimit, readerPreferencesRateLimit, registerRateLimit } from "../middleware/security.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
-import { emailVerificationConfirmSchema, googleCredentialSchema, readerAccountDeleteSchema, readerCredentialsSchema, readerEmailChangeSchema, readerLibrarySyncSchema, readerPasswordChangeSchema, readerPasswordResetConfirmSchema, readerPasswordResetRequestSchema, readerPreferencesSchema, readerProgressSchema, routeSlugSchema } from "../validation/schemas.js";
+import { emailVerificationConfirmSchema, googleCredentialSchema, readerAccountDeleteSchema, readerCredentialsSchema, readerEmailChangeSchema, readerLibrarySyncSchema, readerOnboardingSchema, readerPasswordChangeSchema, readerPasswordResetConfirmSchema, readerPasswordResetRequestSchema, readerPreferencesSchema, readerProgressSchema, routeSlugSchema } from "../validation/schemas.js";
 
 const router = Router();
 router.param("slug", validateRouteParam("slug", routeSlugSchema));
@@ -16,6 +17,8 @@ router.post("/google", googleSignInRateLimit, validate(googleCredentialSchema), 
 router.post("/logout", logoutReader);
 router.get("/session", optionalReader, getReaderSession);
 router.get("/profile", requireReader, getReaderProfile);
+router.get("/onboarding", requireReader, getReaderOnboarding);
+router.put("/onboarding", requireReader, readerPreferencesRateLimit, validate(readerOnboardingSchema), saveReaderOnboarding);
 router.post("/sessions/revoke-others", requireReader, sessionRevokeRateLimit, revokeOtherReaderSessions);
 router.post("/profile/email", requireReader, emailChangeRequestRateLimit, validate(readerEmailChangeSchema), requestReaderEmailChange);
 router.post("/profile/email/confirm", emailVerificationAttemptRateLimit, validate(emailVerificationConfirmSchema), confirmReaderEmailChange);

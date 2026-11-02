@@ -91,10 +91,10 @@ export async function getProduct(slug: string, signal?: AbortSignal) { return (a
 export async function recordListingView(slug: string) { await request<void>(`/api/marketplace/products/${encodeURIComponent(slug)}/views`, { method: "POST" }); }
 export async function getProductRelease(slug: string, version: string, signal?: AbortSignal) { return (await request<{ data: ProductRelease }>(`/api/marketplace/products/${encodeURIComponent(slug)}/releases/${encodeURIComponent(version)}`, { signal })).data; }
 export type MarketplaceRole = "creator" | "moderator" | "administrator";
-export type ReaderSession = { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[] } } | { authenticated: false };
+export type ReaderSession = { authenticated: true; user: { id: string; email: string; emailVerified: boolean; marketplaceRoles: MarketplaceRole[]; onboardingRequired?: boolean } } | { authenticated: false };
 export async function getSession(init?: RequestInit) { return request<{ data: ReaderSession }>("/api/readers/session", init); }
-export async function login(email: string, password: string) { return request("/api/readers/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
-export async function loginWithGoogle(credential: string) { return request("/api/readers/google", { method: "POST", body: JSON.stringify({ credential }) }); }
+export async function login(email: string, password: string) { return request<{ data: ReaderSession }>("/api/readers/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
+export async function loginWithGoogle(credential: string) { return request<{ data: ReaderSession }>("/api/readers/google", { method: "POST", body: JSON.stringify({ credential }) }); }
 export async function register(email: string, password: string) { return request<{ data: { accepted: true } }>("/api/readers/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function requestPasswordReset(email: string) { return request<{ data: { accepted: true } }>("/api/readers/password-reset/request", { method: "POST", body: JSON.stringify({ email }) }); }
 export async function confirmPasswordReset(email: string, code: string, newPassword: string) { return request<{ data: { reset: true } }>("/api/readers/password-reset/confirm", { method: "POST", body: JSON.stringify({ email, code, newPassword }) }); }

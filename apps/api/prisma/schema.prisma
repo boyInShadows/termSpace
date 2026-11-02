@@ -255,6 +255,11 @@ model ReaderUser {
   deletedAt              DateTime?
   // Moderation-decision email. Security mail is not controlled here.
   notifyModerationEmail  Boolean                                @default(true)
+  onboardingRequired     Boolean                                @default(true)
+  onboardingRole         String?
+  onboardingGoal         String?
+  onboardingTools        String[]                               @default([])
+  onboardingIntent       String?
   createdAt              DateTime                               @default(now())
   updatedAt              DateTime                               @updatedAt
   sessions               ReaderSession[]
