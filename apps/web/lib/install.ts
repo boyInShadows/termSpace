@@ -31,6 +31,13 @@ function npmPackage(release: ProductRelease): { name: string; version: string } 
 
 /** The human-facing page for a release's source, or null if it is not a recognised host. */
 export function sourcePageUrl(release: ProductRelease): string | null {
+  if (release.source.kind === "external_link") {
+    try {
+      return new URL(release.source.url).protocol === "https:" ? release.source.url : null;
+    } catch {
+      return null;
+    }
+  }
   if (release.source.kind === "npm") {
     const pkg = npmPackage(release);
     return pkg ? `https://www.npmjs.com/package/${pkg.name}` : null;

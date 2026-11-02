@@ -99,6 +99,7 @@ export async function listMarketplaceModerationQueue(req: Request, res: Response
         proposedRevision: product.proposedSnapshot?.revision ?? null,
         releaseVersion: product.proposedSnapshot?.releaseManifest?.productVersion.version ?? declaredReleaseVersion(liveContent.get(product.id)),
         sourceResolved: Boolean(product.proposedSnapshot?.releaseManifest?.sourceResolvedAt),
+        linkOnly: product.proposedSnapshot?.releaseManifest?.sourceCheckStatus === "LINK_ONLY",
         ownershipVerified: Boolean(product.proposedSnapshot?.releaseManifest?.ownershipVerifiedAt && product.proposedSnapshot.releaseManifest.sourceCheckStatus === "VERIFIED"),
         communityRequestCount: product.proposedSnapshot?._count.communityRequests ?? 0,
         capabilities: declaredCapabilities(product.proposedSnapshot?.content ?? liveContent.get(product.id)),
@@ -119,7 +120,7 @@ export async function getMarketplaceModerationPreview(req: Request, res: Respons
       proposedSnapshot: { select: {
         id: true, revision: true, schemaVersion: true, digestSha256: true, content: true, createdAt: true,
         releaseManifest: { select: {
-          id: true, sourceKind: true, sourceUrl: true, sourceRef: true, sourcePath: true,
+          id: true, sourceKind: true, sourceUrl: true, sourceRef: true, sourcePath: true, sourceOriginalAuthor: true,
           providerIntegrityDigest: true, sourceResolvedAt: true, ownershipVerifiedAt: true, sourceCheckStatus: true,
           sourceCheckedAt: true, lastSourceErrorCode: true, publishedAt: true,
         } },

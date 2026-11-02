@@ -64,6 +64,83 @@ Project changes completed from `pending.md` should be recorded here with the dat
   maintainer review of Persian onboarding/privacy wording remain in the ignored
   local queue. Completed implementation tasks were removed from that queue.
 
+## 2026-11-01 — Plain link listings, so creators no longer need GitHub or npm
+
+- **What changed.** New `external_link` source: an HTTPS link plus "I made this" or
+  "I'm sharing someone else's project" with the original author. Status `LINK_ONLY`
+  passes the submit/publish gate with `ownershipVerifiedAt` left null. The server never
+  fetches the URL. It is the editor's default source. Product page, install dialog,
+  creator releases and moderation all label it as not verified. GitHub and npm flows are
+  unchanged. ADR 0004 amended; content policy updated (EN/FA).
+- **Shared surfaces.** `schema.prisma`, migration `202611010003_marketplace_external_link_source`
+  (two enum values, `sourceOriginalAuthor`, acquisition trigger accepts `LINK_ONLY`),
+  `apps/web/lib/types.ts`, `apps/web/lib/i18n/`, `changelog.md`.
+- **Verified.** Root typecheck, all workspace tests, web lint, build, and the real-database
+  journey for a link listing (draft, submit, approve, publish, acquire, install). Playwright:
+  491 passed, 18 failed on the full run; on rerun 13 passed, 4 were a stale spec (fixed, slug
+  field moved in the simplified form) and 1 reporting spec passed 12 of 12 repeats.
+  Not verified: Lighthouse crashed on the Windows machine. No Playwright spec covers the link
+  fields in the editor yet, and the rendered UI was not reviewed in both themes or in RTL.
+
+## 2026-11-01 — Smaller Docker images (API 3.28 GB → 685 MB, web/blog 3.1 → 1.06 GB)
+
+- **What changed.** `docker/Dockerfile.{api,web,blog}` now install only the
+  workspace they build (`npm ci --workspace …`), compile in a build stage, and
+  copy a separate `npm ci --omit=dev` tree into the runtime stage. `COPY --chown`
+  replaces the `RUN chown -R /app` step that duplicated every layer; npm's download
+  cache is a BuildKit cache mount. `docker-compose.yml`: `migrate`, `scheduler`,
+  `email-worker` and `marketplace-source-worker` reuse one `termspace-api:latest`
+  image (built by `api`, `pull_policy: never`) instead of building it five times.
+  Shared surface touched: `docker-compose.yml`.
+- **Operational change.** The production API image no longer contains `tsx`, so
+  role grants run the compiled script (`node apps/api/dist/scripts/manageMarketplaceRole.js`);
+  documented in `docs/marketplace-roles.md`. Build `api` before `up`/`run` of
+  the worker services.
+- **Verified.** Built all three images locally; `docker compose config` valid;
+  migrations applied to a fresh Postgres 16, API served `/api/health` 200 with Redis,
+  scheduler job exited 0, blog 200 against the API, web `/`, `/explore`, `/fa` 200,
+  `sharp` and the Prisma CLI load, role script prints its usage. Not run: the
+  repo-wide typecheck/tests (no source changed), Playwright, Lighthouse.
+- **Not done.** Next `output: "standalone"` would cut web/blog further but changes
+  how `.next/compressed-assets.json` and `proxy.ts` are served; left for a separate phase.
+
+## 2026-11-01 — Simpler listing editor (5 steps → 4; 39 fields → 16 visible, 20 optional hidden)
+
+- **What changed.** The creator listing form (`creator-draft-editor.tsx`) now has
+  About → Source & install → Access & details → Review. For a skill from a GitHub
+  repository, 16 fields show by default (name, type, category, outcome,
+  description; source kind, repository, commit, platforms, install steps, license;
+  permissions and the required type details). Everything else sits in collapsed
+  sections that open themselves when they hold data or contain an invalid field:
+  web address (slug), translations, tags, communities, screenshots, links; version,
+  release notes, install method and optional source fields; optional type details,
+  runtimes/accounts/OS/dependencies and env vars. The slug follows the name until
+  edited. Install method follows the source kind. A new draft starts at version
+  1.0.0 with release notes "Initial release". License is one field: an `https://`
+  value is saved as a custom license URL, anything else as an SPDX identifier.
+  Platforms and permissions are tick-lists (`choice-rows.tsx`, plain-language
+  labels in `permission-labels.ts`) that still submit the same manifest rows. The
+  duplicate progress bar and help paragraph are gone; the step strip is the one
+  progress indicator. Release-level docs/support URLs are no longer shown but
+  existing values are preserved as hidden inputs.
+- **Not done (needs API work, owner decision).** Saving a draft to the account
+  before the last step: the API validates the whole manifest, so partial saves
+  still go to the browser only. Resolving the commit SHA and npm integrity from a
+  pasted URL, and relaxing required type-detail fields, were left out on purpose.
+  Outcome and description are both still asked for; merging them would put the same
+  sentence on the listing twice.
+- **Verification.** `npm run typecheck -w apps/web`; `npm test -w apps/web` (new
+  `choice-rows` and slug/disclosure tests); lint clean for the changed files;
+  Playwright `context-help` and `dashboard-repairs` specs on desktop and mobile,
+  updated for four steps and the collapsed fields (including a custom-license-URL
+  save check). Rendered step screenshots were checked once in dark theme, English
+  desktop and mobile, before the second round of cuts. **Not yet checked:** a fresh
+  look at the final layout, light theme and Persian RTL by eye (the specs ran in
+  both), `npm run lhci`, root `npm run build`.
+- **Shared surfaces touched:** `changelog.md` only. Copy lives in
+  `features/creator/workspace-copy.ts`; `lib/i18n` still carries now-unused step
+  and license keys.
+
 ## 2026-11-01 — Creator notifications for moderation decisions
 
 - **What the creator gets.** An approval, a change request or a rejection now

@@ -28,11 +28,11 @@ for (const locale of ["en", "fa"] as const) {
       const helpName = locale === "fa" ? /^راهنما:/ : /^Help:/;
       await page.goto(`${prefix}/dashboard/studio/listings/new`);
       await expect(page.locator("html")).toHaveClass(new RegExp(theme));
-      const slug = page.locator('[name="slug"]');
+      const slug = page.locator('[name="nameEn"]');
       await expect(slug).toBeVisible();
       await slug.fill("preserve-help-input");
       const steps = page.locator('nav[aria-label] button[aria-current="step"]').locator("..").locator("..").getByRole("button");
-      for (let step = 0; step < 5; step++) {
+      for (let step = 0; step < 4; step++) {
         if (step > 0) await steps.nth(step).click();
         const panel = page.locator(`[data-draft-step="${step}"]`);
         await expect(panel).toBeVisible();
@@ -67,7 +67,7 @@ for (const locale of ["en", "fa"] as const) {
     test.skip(testInfo.project.name.startsWith("mobile"), "Hover is a mouse interaction.");
     await page.setViewportSize({ width: 768, height: 800 });
     await page.goto(`${locale === "fa" ? "/fa" : ""}/dashboard/studio/listings/new`);
-    const help = page.getByRole("button", { name: `${locale === "fa" ? "راهنما" : "Help"}: ${copy[locale].creatorDraft.slug}`, exact: true });
+    const help = page.getByRole("button", { name: `${locale === "fa" ? "راهنما" : "Help"}: ${copy[locale].creatorDraft.itemType}`, exact: true });
     await help.hover();
     const tooltip = page.getByRole("tooltip");
     await expect(tooltip).toBeVisible();
@@ -100,8 +100,8 @@ for (const locale of ["en", "fa"] as const) {
   test(`landscape help stays clear of its field and keyboard dismissal works: ${locale}`, async ({ page }) => {
     await page.setViewportSize({ width: 812, height: 375 });
     await page.goto(`${locale === "fa" ? "/fa" : ""}/dashboard/studio/listings/new`);
-    const slug = page.locator('[name="slug"]');
-    const help = page.getByRole("button", { name: `${locale === "fa" ? "راهنما" : "Help"}: ${copy[locale].creatorDraft.slug}`, exact: true });
+    const slug = page.locator('[name="itemType"]');
+    const help = page.getByRole("button", { name: `${locale === "fa" ? "راهنما" : "Help"}: ${copy[locale].creatorDraft.itemType}`, exact: true });
     await help.click();
     const tooltip = page.getByRole("tooltip");
     await expect(tooltip).toBeVisible();
@@ -116,7 +116,7 @@ for (const locale of ["en", "fa"] as const) {
   test(`save help clears the whole sticky action bar: ${locale}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
     await page.goto(`${locale === "fa" ? "/fa" : ""}/dashboard/studio/listings/new`);
-    await page.locator('[name="slug"]').fill("keep-help-draft");
+    await page.locator('[name="nameEn"]').fill("keep-help-draft");
     const actions = page.locator("[data-draft-actions]");
     await actions.locator("button[aria-label]").click();
     const tooltip = page.getByRole("tooltip");

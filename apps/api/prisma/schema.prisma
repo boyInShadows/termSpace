@@ -834,6 +834,7 @@ enum MarketplaceSourceKind {
   GITHUB_REPOSITORY
   GITHUB_RELEASE
   NPM
+  EXTERNAL_LINK
 }
 
 enum MarketplaceProvider {
@@ -847,6 +848,7 @@ enum MarketplaceSourceCheckStatus {
   STALE
   RESTRICTED
   FAILED
+  LINK_ONLY
 }
 
 enum MarketplaceSourceCheckOutcome {
@@ -917,6 +919,7 @@ model MarketplaceReleaseManifest {
   sourceUrl                String
   sourceRef                String
   sourcePath               String?
+  sourceOriginalAuthor     String?
   providerIntegrityDigest  String?
   artifactSizeBytes        Int?
   resolvedInstallationUrl  String?

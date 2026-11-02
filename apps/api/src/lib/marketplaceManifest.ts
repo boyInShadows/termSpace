@@ -81,6 +81,10 @@ export const permissionCapabilities = [
   "browser_automation", "external_account_access", "persistent_storage", "background_execution", "code_modification", "telemetry",
 ] as const;
 
+// Source states that may be shown and acquired. LINK_ONLY is a plain link nobody checked.
+export const AVAILABLE_SOURCE_STATUSES = ["VERIFIED", "STALE", "LINK_ONLY"] as const;
+export const isAvailableSourceStatus = (status: string) => (AVAILABLE_SOURCE_STATUSES as readonly string[]).includes(status);
+
 const listingSchema = z.object({
   slug,
   name: englishName,
@@ -98,6 +102,7 @@ const listingSchema = z.object({
 const sourceSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("github_repository"), repositoryUrl: httpsUrl.refine((value) => new URL(value).hostname === "github.com", "Repository must be hosted on github.com"), commitSha: z.string().regex(/^[a-f0-9]{40}$/), path: repositoryPath.optional() }).strict(),
   z.object({ kind: z.literal("github_release"), repositoryUrl: httpsUrl.refine((value) => new URL(value).hostname === "github.com", "Repository must be hosted on github.com"), tag: boundedText(1, 100), releaseCommitSha: z.string().regex(/^[a-f0-9]{40}$/), assetName: boundedText(1, 255).refine((value) => !value.includes("/") && !value.includes("\\"), "Asset name must not contain path separators"), assetDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/).optional() }).strict(),
+  z.object({ kind: z.literal("external_link"), url: httpsUrl, authorship: z.enum(["own", "third_party"]), originalAuthor: boundedText(1, 160).optional() }).strict(),
   z.object({ kind: z.literal("npm"), packageName: z.string().regex(/^(?:@[a-z0-9._~-]+\/)?[a-z0-9._~-]+$/).max(214), version: z.string().regex(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/), integrity: z.string().regex(/^sha512-[A-Za-z0-9+/]+={0,2}$/) }).strict(),
 ]);
 
@@ -120,6 +125,9 @@ const releaseSchema = z.object({
   documentationUrl: httpsUrl.optional(),
   supportUrl: httpsUrl.optional(),
 }).strict().superRefine((release, ctx) => {
+  if (release.source.kind === "external_link" && release.source.authorship === "third_party" && !release.source.originalAuthor) {
+    ctx.addIssue({ code: "custom", path: ["source", "originalAuthor"], message: "Name the original author when sharing someone else's project" });
+  }
   const uniqueFields: Array<[string, string[]]> = [
     ["compatibility", release.compatibility.map((entry) => entry.platform)],
     ["permissions", release.permissions.map((entry) => entry.capability)],

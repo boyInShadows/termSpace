@@ -110,6 +110,7 @@ async function transitionListing(req: Request, res: Response, creatorRequest: bo
           && product.lifecycleResumePublished
           && sourceSnapshot?.schemaVersion === 0;
         const sourceVerified = restoringGrandfatheredLegacyPublication
+          || Boolean(sourceSnapshot?.releaseManifest?.sourceResolvedAt && sourceSnapshot.releaseManifest.sourceCheckStatus === "LINK_ONLY")
           || Boolean(sourceSnapshot?.releaseManifest?.sourceResolvedAt
             && sourceSnapshot.releaseManifest.ownershipVerifiedAt
             && sourceSnapshot.releaseManifest.sourceCheckStatus === "VERIFIED");

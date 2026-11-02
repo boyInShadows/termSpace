@@ -28,6 +28,13 @@ npm run marketplace:role --workspace @termspace/api -- grant \
   --reason "Approved creator access"
 ```
 
+In a deployed container the production image has no `tsx`; run the compiled
+script instead (same arguments after the script name):
+
+```bash
+docker compose exec api node apps/api/dist/scripts/manageMarketplaceRole.js grant \n  --email creator@example.com --role creator --actor ops:initials --reason "Approved creator access"
+```
+
 Valid roles are `creator`, `moderator`, and `administrator`. Use a non-email
 operator identifier for `--actor`; it is stored in the append-only role event.
 

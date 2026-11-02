@@ -1,0 +1,31 @@
+// Plain-language names for the capability keys the API accepts.
+export const permissionLabels: Record<"en" | "fa", Record<string, string>> = {
+  en: {
+    filesystem_read: "Read files",
+    filesystem_write: "Write or change files",
+    process_execution: "Run commands",
+    network_access: "Use the network",
+    environment_access: "Read environment variables",
+    secret_access: "Access secrets or keys",
+    browser_automation: "Control a browser",
+    external_account_access: "Use your external accounts",
+    persistent_storage: "Store data between runs",
+    background_execution: "Run in the background",
+    code_modification: "Modify your code",
+    telemetry: "Send usage data",
+  },
+  fa: {
+    filesystem_read: "خواندن فایل‌ها",
+    filesystem_write: "نوشتن یا تغییر فایل‌ها",
+    process_execution: "اجرای دستورها",
+    network_access: "دسترسی به شبکه",
+    environment_access: "خواندن متغیرهای محیطی",
+    secret_access: "دسترسی به رازها و کلیدها",
+    browser_automation: "کنترل مرورگر",
+    external_account_access: "استفاده از حساب‌های بیرونی",
+    persistent_storage: "ذخیرهٔ داده بین اجراها",
+    background_execution: "اجرا در پس‌زمینه",
+    code_modification: "تغییر کد شما",
+    telemetry: "ارسال داده‌های استفاده",
+  },
+};

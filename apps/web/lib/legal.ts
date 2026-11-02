@@ -72,7 +72,7 @@ export const legalDocs: Record<Locale, Record<LegalSlug, LegalDoc>> = {
       sections: [
         { heading: "How a listing is reviewed", list: [
           "A creator submits a listing with a manifest that declares its source, ownership and the capabilities it uses, such as secret access, running processes, writing files or network access.",
-          "We check that the declared source is a public repository or package and that the submitter controls it. We do not run submitted code on our servers.",
+          "A listing can point to a public repository or package the submitter proves they control, or to a plain link. Link listings are marked as not verified, are not pinned to one version, and can change after review. Anyone sharing someone else's project must credit the real author. We do not run submitted code on our servers.",
           "A moderator reviews the listing and the declared capabilities before it appears publicly. The listing page shows those permissions.",
           "Reviewed means a person looked at what the listing declares. It is not a guarantee that the code is safe.",
         ] },
@@ -139,7 +139,7 @@ export const legalDocs: Record<Locale, Record<LegalSlug, LegalDoc>> = {
       sections: [
         { heading: "بررسی یک فهرست", list: [
           "سازنده فهرست را همراه مانیفستی ارسال می‌کند که منبع، مالکیت و قابلیت‌های مورد استفاده، مانند دسترسی به رازها، اجرای فرایندها، نوشتن فایل یا دسترسی به شبکه را اعلام می‌کند.",
-          "بررسی می‌کنیم که منبع اعلام‌شده یک مخزن یا بستهٔ عمومی باشد و ارسال‌کننده آن را در اختیار داشته باشد. کد ارسال‌شده را روی کارگزارهای خود اجرا نمی‌کنیم.",
+          "فهرست می‌تواند به مخزن یا بستهٔ عمومی‌ای اشاره کند که ارسال‌کننده در اختیار داشتنش را ثابت می‌کند، یا به یک پیوند ساده. فهرست‌های پیوندی با برچسب تأییدنشده نمایش داده می‌شوند، به نسخهٔ مشخصی قفل نیستند و ممکن است پس از بررسی تغییر کنند. هر کس پروژهٔ دیگری را معرفی می‌کند باید نام سازندهٔ واقعی را بیاورد. کد ارسال‌شده را روی کارگزارهای خود اجرا نمی‌کنیم.",
           "یک ناظر پیش از نمایش عمومی، فهرست و قابلیت‌های اعلام‌شده را بررسی می‌کند. صفحهٔ فهرست این مجوزها را نشان می‌دهد.",
           "«بررسی‌شده» یعنی فردی آنچه فهرست اعلام کرده را دیده است؛ ضمانت ایمن‌بودن کد نیست.",
         ] },

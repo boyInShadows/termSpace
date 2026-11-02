@@ -15,11 +15,14 @@ import { ContextHelp } from "@/components/ui/context-help";
 import { helpHints } from "@/components/ui/context-help-hints";
 import type { HelpTopic } from "@/components/ui/context-help-copy";
 import { DeclarationRows } from "./declaration-rows";
+import { ChoiceRows } from "./choice-rows";
+import { FormDisclosure } from "./form-disclosure";
+import { permissionLabels } from "./permission-labels";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { parseDraftCheckpoint, type DraftCheckpoint } from "./draft-checkpoint";
 import { formatNumber } from "@/lib/format";
 
-type SourceKind = "github_repository" | "github_release" | "npm";
+type SourceKind = "external_link" | "github_repository" | "github_release" | "npm";
 type FieldKind = "text" | "textarea" | "list" | "boolean" | "select" | "stages";
 type DetailField = { key: string; en: string; fa: string; kind: FieldKind; required?: boolean; options?: string[] };
 type ManifestLike = {
@@ -116,6 +119,14 @@ const detailFields: Record<MarketplaceItemTypeKey, DetailField[]> = {
   ],
 };
 
+const lastStep = 3;
+const stepParam = /^[1-4]$/;
+// Delivery method that matches each source kind; the creator can still change it.
+const installMethodFor: Record<SourceKind, string> = { external_link: "manual", github_repository: "git", github_release: "download", npm: "npm" };
+const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 160);
+
+const isPrimaryDetail = (field: DetailField) => Boolean(field.required) || field.kind === "boolean";
+
 const permissionCapabilities = ["filesystem_read", "filesystem_write", "process_execution", "network_access", "environment_access", "secret_access", "browser_automation", "external_account_access", "persistent_storage", "background_execution", "code_modification", "telemetry"];
 
 export function CreatorDraftEditor({ productId, messages }: { productId?: string; messages: DraftMessages }) {
@@ -127,7 +138,8 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
   const storageKey = email ? `termspace:draft:${encodeURIComponent(email)}:${productId ?? "new"}` : null;
   const formRef = useRef<HTMLFormElement>(null);
   const [step, setStep] = useState(0);
-  const [completed, setCompleted] = useState<boolean[]>([false, false, false, false]);
+  const [completed, setCompleted] = useState<boolean[]>([false, false, false]);
+  const lastAutoSlug = useRef("");
   const [formRevision, setFormRevision] = useState(0);
   const [checkpoint, setCheckpoint] = useState<ReturnType<typeof buildManifest> | null>(null);
   const [localStatus, setLocalStatus] = useState<string | null>(null);
@@ -135,8 +147,9 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
   const [itemTypes, setItemTypes] = useState<MarketplaceItemType[]>([]);
   const [record, setRecord] = useState<MarketplaceDraftRecord | null>(null);
   const [type, setType] = useState<MarketplaceItemTypeKey>("skill");
-  const [sourceKind, setSourceKind] = useState<SourceKind>("github_repository");
+  const [sourceKind, setSourceKind] = useState<SourceKind>("external_link");
   const [customLicense, setCustomLicense] = useState(false);
+  const [methodOverride, setMethodOverride] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -159,7 +172,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
         const manifest = draftRecord.draft?.content as ManifestLike | undefined;
         if (manifest?.type) setType(manifest.type);
         const nextSource = manifest?.release?.source?.kind;
-        if (nextSource === "github_repository" || nextSource === "github_release" || nextSource === "npm") setSourceKind(nextSource);
+        if (nextSource === "external_link" || nextSource === "github_repository" || nextSource === "github_release" || nextSource === "npm") setSourceKind(nextSource);
         setCustomLicense(Boolean(manifest?.release?.license?.customUrl));
       }
       let nextStep = 0;
@@ -175,14 +188,14 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
               setType(resume.type);
               setSourceKind(resume.sourceKind);
               setCustomLicense(resume.customLicense);
-              nextStep = resume.step;
+              nextStep = Math.min(resume.step, lastStep);
               setLocalStatus(copy.localRestored);
             } else setLocalStatus(copy.localStale);
           }
         } catch { setLocalStatus(copy.localRestoreError); }
       }
       const requestedStep = new URLSearchParams(window.location.search).get("step");
-      if (requestedStep && /^[1-5]$/.test(requestedStep)) nextStep = Number(requestedStep) - 1;
+      if (requestedStep && stepParam.test(requestedStep)) nextStep = Number(requestedStep) - 1;
       setStep(nextStep);
     }).catch((cause) => {
       if (active) setError(cause instanceof ApiError ? cause.message : copy.loadError);
@@ -194,7 +207,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
     const form = formRef.current;
     if (!form) return;
     const data = new FormData(form);
-    setCompleted([0, 1, 2, 3].map((index) => {
+    setCompleted([0, 1, 2].map((index) => {
       const fields = form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[data-draft-step="${index}"] input, [data-draft-step="${index}"] select, [data-draft-step="${index}"] textarea`);
       return Array.from(fields).every((field) => !field.willValidate || field.validity.valid)
         && (index !== 0 || Boolean(text(data, "descriptionEn") || text(data, "descriptionFa")));
@@ -204,7 +217,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
   useEffect(() => {
     const onBack = () => {
       const value = new URLSearchParams(window.location.search).get("step");
-      setStep(value && /^[1-5]$/.test(value) ? Number(value) - 1 : 0);
+      setStep(value && stepParam.test(value) ? Number(value) - 1 : 0);
     };
     window.addEventListener("popstate", onBack);
     return () => window.removeEventListener("popstate", onBack);
@@ -282,6 +295,8 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
     }
     const invalid = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input, select, textarea")).find((field) => field.willValidate && !field.validity.valid);
     if (!invalid) return true;
+    // An invalid optional-looking field may sit in a closed "more" section; open it so it can take focus.
+    for (let node = invalid.parentElement; node; node = node.parentElement) if (node instanceof HTMLDetailsElement) node.open = true;
     goToStep(Number(invalid.closest<HTMLElement>("[data-draft-step]")?.dataset.draftStep ?? 0));
     requestAnimationFrame(() => { invalid.focus(); invalid.reportValidity(); });
     return false;
@@ -332,9 +347,33 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
   const compatibility = Array.isArray(release.compatibility) ? release.compatibility as Array<{ platform: string; models: string[]; notes?: string }> : [];
   const environmentVariables = Array.isArray(requirements.environmentVariables) ? requirements.environmentVariables as Array<{ name: string; purpose: string; required: boolean; sensitive: boolean }> : [];
   const permissions = Array.isArray(release.permissions) ? release.permissions as Array<{ capability: string; required: boolean; scope?: string; destinations: string[]; purpose: string }> : [];
-  const steps = [copy.stepBasics, copy.stepRelease, copy.stepAccess, copy.stepDetails, copy.stepReview];
+  const steps = [copy.stepBasics, copy.stepRelease, copy.stepAccess, copy.stepReview];
   const stepCompletion = [...completed, Boolean(preview)];
-  const percent = stepCompletion.filter(Boolean).length * 20;
+  const primaryLang = locale === "fa" ? "Fa" : "En";
+  const otherLang = locale === "fa" ? "En" : "Fa";
+  const descriptionOf = localized(listing.description);
+  const translationsFilled = Boolean(descriptionOf[otherLang.toLowerCase()] || localized(listing.outcome).fa);
+  const defaultMethod = source.kind === sourceKind && stringValue(installation.method) ? stringValue(installation.method) : installMethodFor[sourceKind];
+  const moreAboutFilled = translationsFilled || Boolean((Array.isArray(listing.tags) && listing.tags.length) || (listing.communitySlugs as string[] | undefined)?.length || screenshots.length || listing.documentationUrl || listing.supportUrl || listing.issueTrackerUrl);
+  const moreRequirementsFilled = Boolean(["runtimes", "accounts", "operatingSystems", "dependencies"].some((key) => Array.isArray(requirements[key as keyof typeof requirements]) && (requirements[key as keyof typeof requirements] as unknown[]).length) || environmentVariables.length);
+  const optionalDetailFilled = detailFields[type].some((field) => !isPrimaryDetail(field) && (Array.isArray(details[field.key]) ? (details[field.key] as unknown[]).length > 0 : Boolean(details[field.key])));
+  const moreDetailsFilled = optionalDetailFilled || moreRequirementsFilled;
+  const renderDetail = (field: DetailField) => field.kind === "stages" ? <DeclarationRows messages={copy} key={`${type}-${field.key}`} name={`detail_${field.key}`} label={locale === "fa" ? field.fa : field.en} help="stages" required={field.required} onChange={markDirty} initialRows={Array.isArray(details[field.key]) ? (details[field.key] as Array<{ name: string; description: string; humanApproval: boolean }>).map((stage) => [stage.name, stage.description, String(stage.humanApproval)]) : []} columns={[{ label: copy.stageName }, { label: copy.stageDescription }, { label: copy.humanApproval, type: "checkbox" }]} /> : <DetailInput key={`${type}-${field.key}`} field={field} locale={locale} value={details[field.key]} />;
+  const platformChoices = options.platforms.map((item) => ({ value: item.key, label: (locale === "fa" && item.nameFa) || item.nameEn || item.key }));
+  const permissionChoices = permissionCapabilities.map((key) => ({ value: key, label: permissionLabels[locale][key] ?? key.replaceAll("_", " ") }));
+  const installMethod = methodOverride ?? defaultMethod;
+  const descriptionField = (lang: "En" | "Fa", hint?: string) => <Field key={lang} label={lang === "En" ? copy.descriptionEn : copy.descriptionFa} hint={hint}>
+    <Textarea name={`description${lang}`} defaultValue={descriptionOf[lang.toLowerCase()]} {...(lang === "En" ? { lang: "en", dir: "ltr" } : { dir: "rtl" })} onInput={(event) => clearDescriptionValidity(event.currentTarget.form)} />
+  </Field>;
+  function nameInput(event: FormEvent<HTMLInputElement>) {
+    const slugField = event.currentTarget.form?.elements.namedItem("slug");
+    if (!(slugField instanceof HTMLInputElement)) return;
+    // Follow the name until the creator edits the web address themselves.
+    if (slugField.value === "" || slugField.value === lastAutoSlug.current) {
+      lastAutoSlug.current = slugify(event.currentTarget.value);
+      slugField.value = lastAutoSlug.current;
+    }
+  }
 
     return <div className="mx-auto max-w-5xl pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-4">
     <Link className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground" href={localePath("/dashboard/studio", locale)}>
@@ -346,82 +385,80 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
       {record && <p className="mt-3 text-sm text-muted-foreground">{copy.revision.replace("{revision}", String(record.draft?.revision ?? 0)).replace("{version}", String(record.version))}</p>}
     </header>
 
-      <div className="mt-6 border-y border-border py-4">
-        <div className="flex items-center justify-between gap-3 text-sm"><span className="flex items-center gap-2">{copy.progress}<ContextHelp label={copy.progress} topic="progress" /></span><span className="font-mono tabular-nums">{formatNumber(percent / 100, locale, { style: "percent" })}</span></div>
-        <div role="progressbar" aria-label={copy.progress} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent} className="mt-3 h-1 bg-muted"><div className="h-full bg-primary" style={{ width: `${percent}%` }} /></div>
-      </div>
-      <nav className="mt-4" aria-label={copy.sections}>
-        <ol className="grid grid-cols-5 gap-2">{steps.map((title, index) => <li key={title}><button type="button" onClick={() => goToStep(index)} aria-current={step === index ? "step" : undefined} className={`flex min-h-11 w-full items-center justify-center gap-2 border px-3 py-2 text-start text-sm sm:justify-start ${step === index ? "border-primary font-semibold text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
+      <nav className="mt-6" aria-label={copy.sections}>
+        <ol className="grid grid-cols-4 gap-2">{steps.map((title, index) => <li key={title}><button type="button" onClick={() => goToStep(index)} aria-current={step === index ? "step" : undefined} className={`flex min-h-11 w-full items-center justify-center gap-2 border px-3 py-2 text-start text-sm sm:justify-start ${step === index ? "border-primary font-semibold text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
           {stepCompletion[index] ? <Check className="size-4 shrink-0" aria-hidden="true" /> : <span className="font-mono tabular-nums" aria-hidden="true">{formatNumber(index + 1, locale)}</span>}<span className="sr-only sm:not-sr-only">{title}<span className="sr-only"> — {stepCompletion[index] ? copy.complete : copy.incomplete}</span></span>
         </button></li>)}</ol>
       </nav>
-      <p className="mt-3 text-sm text-muted-foreground">{copy.localHelp}</p>
-      <p className="mt-2 text-sm text-muted-foreground" role="status">{saving ? copy.saving : dirty ? copy.unsaved : localStatus ?? (saved ? copy.saved : "")}</p>
+      <p className="mt-3 text-sm text-muted-foreground" role="status">{saving ? copy.saving : dirty ? copy.unsaved : localStatus ?? (saved ? copy.saved : "")}</p>
       {dirty && localStatus && <p role="alert" className="mt-2 text-sm text-destructive">{localStatus}</p>}
-      <h2 id="draft-step-heading" tabIndex={-1} className="mt-6 scroll-mt-40 text-lg font-semibold">{copy.stepCounter.replace("{step}", formatNumber(step + 1, locale)).replace("{total}", formatNumber(5, locale))} · {steps[step]}</h2>
+      <h2 id="draft-step-heading" tabIndex={-1} className="mt-6 scroll-mt-40 text-lg font-semibold">{copy.stepCounter.replace("{step}", formatNumber(step + 1, locale)).replace("{total}", formatNumber(steps.length, locale))} · {steps[step]}</h2>
       <form ref={formRef} className="mt-4 space-y-6" noValidate onSubmit={submit} onChange={markDirty}>
       <div data-draft-step="0" hidden={step !== 0} className="space-y-6">
       <FormSection title={copy.identityTitle} intro={copy.identityIntro}>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label={copy.slug} help="slug" hint={hints.slug}><Input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={stringValue(listing.slug)} dir="ltr" /></Field>
-            <Field label={copy.itemType} help="itemType"><select name="itemType" required value={type} onChange={(event) => setType(event.target.value as MarketplaceItemTypeKey)} className={selectClass}>
+          <div className="sm:col-span-2"><Field label={copy.nameEn} hint={copy.nameHelp}><Input name="nameEn" required pattern="(?=.*[A-Za-z])[\x20-\x7E]+" defaultValue={localized(listing.name).en} lang="en" dir="ltr" onInput={nameInput} /></Field></div>
+          <Field label={copy.itemType} help="itemType"><select name="itemType" required value={type} onChange={(event) => setType(event.target.value as MarketplaceItemTypeKey)} className={selectClass}>
             {itemTypes.map((item) => <option key={item.key} value={item.key}>{locale === "fa" ? item.fa : item.en}</option>)}
           </select></Field>
-          <Field label={copy.nameEn} hint={copy.nameHelp}><Input name="nameEn" required pattern="(?=.*[A-Za-z])[\x20-\x7E]+" defaultValue={localized(listing.name).en} lang="en" dir="ltr" /></Field>
-          <Field label={copy.outcomeEn}><Input name="outcomeEn" required defaultValue={localized(listing.outcome).en} /></Field>
-          <Field label={copy.outcomeFa}><Input name="outcomeFa" defaultValue={localized(listing.outcome).fa} dir="rtl" /></Field>
-        </div>
-        <div className="mt-5 grid gap-5 lg:grid-cols-2">
-            <Field label={copy.descriptionEn} hint={copy.descriptionRequired}><Textarea name="descriptionEn" defaultValue={localized(listing.description).en} lang="en" dir="ltr" onInput={(event) => clearDescriptionValidity(event.currentTarget.form)} /></Field>
-            <Field label={copy.descriptionFa} hint={copy.descriptionRequired}><Textarea name="descriptionFa" defaultValue={localized(listing.description).fa} dir="rtl" onInput={(event) => clearDescriptionValidity(event.currentTarget.form)} /></Field>
-        </div>
-        <div className="mt-5 grid gap-5 sm:grid-cols-2">
           <Field label={copy.category}><select name="categorySlug" required defaultValue={stringValue(listing.categorySlug)} className={selectClass}><option value="">{copy.choose}</option>{options.categories.map((category) => <option key={category.slug} value={category.slug}>{category.name}</option>)}</select></Field>
-          <Field label={copy.tags} hint={copy.listHint}><Input name="tags" required defaultValue={Array.isArray(listing.tags) ? listing.tags.join(", ") : ""} /></Field>
         </div>
-        <fieldset className="mt-5"><legend className="w-full text-sm font-semibold"><span className="flex items-center justify-between gap-2">{copy.communities}<ContextHelp label={copy.communities} topic="communities" /></span></legend><p className="mt-1 text-xs text-muted-foreground">{copy.communitiesHint}</p><div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <div className="mt-5"><Field label={copy.outcomeEn}><Input name="outcomeEn" required defaultValue={localized(listing.outcome).en} /></Field></div>
+        <div className="mt-5">{descriptionField(primaryLang, copy.descriptionRequired)}</div>
+      </FormSection>
+
+      <FormDisclosure summary={copy.moreAbout} defaultOpen={moreAboutFilled}>
+        <Field label={copy.slug} help="slug" hint={hints.slug}><Input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={stringValue(listing.slug)} dir="ltr" /></Field>
+        {descriptionField(otherLang)}
+        <Field label={copy.outcomeFa}><Input name="outcomeFa" defaultValue={localized(listing.outcome).fa} dir="rtl" /></Field>
+        <Field label={copy.tags} hint={copy.listHint}><Input name="tags" defaultValue={Array.isArray(listing.tags) ? listing.tags.join(", ") : ""} /></Field>
+        <fieldset><legend className="w-full text-sm font-semibold"><span className="flex items-center justify-between gap-2">{copy.communities}<ContextHelp label={copy.communities} topic="communities" /></span></legend><p className="mt-1 text-xs text-muted-foreground">{copy.communitiesHint}</p><div className="mt-3 grid gap-3 sm:grid-cols-2">
           {options.communities.map((community) => <label key={community.slug} className="flex min-h-11 items-start gap-3 rounded-control border p-3 text-sm"><input className="mt-1" type="checkbox" name="communitySlugs" value={community.slug} defaultChecked={(listing.communitySlugs as string[] | undefined)?.includes(community.slug)} /><span><strong className="block">{locale === "fa" ? community.nameFa ?? community.nameEn : community.nameEn}</strong><span className="text-xs text-muted-foreground">{locale === "fa" ? community.descriptionFa ?? community.descriptionEn : community.descriptionEn}</span></span></label>)}
         </div></fieldset>
-      </FormSection>
-
-      <FormSection title={copy.presentationTitle} intro={copy.presentationIntro}>
-          <DeclarationRows messages={copy} name="screenshots" label={copy.screenshots} onChange={markDirty} initialRows={screenshots.map((item) => [item.url, item.alt.en, item.alt.fa ?? ""])} columns={[{ label: copy.imageUrl, type: "url" }, { label: copy.altEn }, { label: copy.altFa, optional: true }]} />
-        <div className="mt-5 grid gap-5 sm:grid-cols-3"><Field label={copy.documentationUrl}><Input name="documentationUrl" type="url" defaultValue={stringValue(listing.documentationUrl)} dir="ltr" /></Field><Field label={copy.supportUrl}><Input name="supportUrl" type="url" defaultValue={stringValue(listing.supportUrl)} dir="ltr" /></Field><Field label={copy.issueTrackerUrl}><Input name="issueTrackerUrl" type="url" defaultValue={stringValue(listing.issueTrackerUrl)} dir="ltr" /></Field></div>
-      </FormSection>
+        <DeclarationRows messages={copy} name="screenshots" label={copy.screenshots} onChange={markDirty} initialRows={screenshots.map((item) => [item.url, item.alt.en, item.alt.fa ?? ""])} columns={[{ label: copy.imageUrl, type: "url" }, { label: copy.altEn }, { label: copy.altFa, optional: true }]} />
+        <div className="grid gap-5 sm:grid-cols-3"><Field label={copy.documentationUrl}><Input name="documentationUrl" type="url" defaultValue={stringValue(listing.documentationUrl)} dir="ltr" /></Field><Field label={copy.supportUrl}><Input name="supportUrl" type="url" defaultValue={stringValue(listing.supportUrl)} dir="ltr" /></Field><Field label={copy.issueTrackerUrl}><Input name="issueTrackerUrl" type="url" defaultValue={stringValue(listing.issueTrackerUrl)} dir="ltr" /></Field></div>
+      </FormDisclosure>
 
       </div>
-      <div data-draft-step="1" hidden={step !== 1}>
+      <div data-draft-step="1" hidden={step !== 1} className="space-y-6">
       <FormSection title={copy.releaseTitle} intro={copy.releaseIntro}>
-        <div className="grid gap-5 sm:grid-cols-2"><Field label={copy.version} help="version" hint={hints.version}><Input name="releaseVersion" required defaultValue={stringValue(release.version)} dir="ltr" /></Field><Field label={copy.sourceKind} help="source"><select name="sourceKind" value={sourceKind} onChange={(event) => setSourceKind(event.target.value as SourceKind)} className={selectClass}><option value="github_repository">GitHub repository</option><option value="github_release">GitHub release</option><option value="npm">npm</option></select></Field></div>
+        <Field label={copy.sourceKind} help="source"><select name="sourceKind" value={sourceKind} onChange={(event) => { setSourceKind(event.target.value as SourceKind); setMethodOverride(null); }} className={selectClass}><option value="external_link">{copy.sourceLink}</option><option value="github_repository">GitHub repository</option><option value="github_release">GitHub release</option><option value="npm">npm</option></select></Field>
         <SourceFields key={sourceKind} kind={sourceKind} source={source} copy={copy} />
-        <div className="mt-5"><Field label={copy.releaseNotes}><Textarea name="releaseNotes" required defaultValue={stringValue(release.releaseNotes)} /></Field></div>
-          <DeclarationRows messages={copy} name="compatibility" label={copy.compatibility} help="compatibility" required onChange={markDirty} initialRows={compatibility.map((item) => [item.platform, item.models.join(", "), item.notes ?? ""])} columns={[{ label: copy.platform, options: options.platforms.map((item) => item.key) }, { label: copy.models }, { label: copy.notes, optional: true }]} />
-        <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.installationMethod} help="installation"><select name="installationMethod" required defaultValue={stringValue(installation.method) || "manual"} className={selectClass}>{["manual", "npm", "git", "download", "container", "hosted"].map((item) => <option key={item}>{item}</option>)}</select></Field><Field label={copy.installationInstructions} help="installation" hint={copy.lineHint}><Textarea name="installationInstructions" required defaultValue={listValue(installation.instructions)} /></Field></div>
+        <div className="mt-5"><ChoiceRows name="compatibility" label={copy.compatibility} help="compatibility" hint={copy.platformsHint} required messages={copy} onChange={markDirty} choices={platformChoices} initialRows={compatibility.map((item) => [item.platform, item.models.join(", "), item.notes ?? ""])} extras={[{ cell: 1, label: copy.models, optional: true }, { cell: 2, label: copy.notes, optional: true }]} /></div>
+        <div className="mt-5"><Field label={copy.installationInstructions} help="installation" hint={copy.lineHint}><Textarea name="installationInstructions" required defaultValue={listValue(installation.instructions)} /></Field></div>
+        <div className="mt-5"><Field label={copy.licenseField} help="license" hint={copy.licenseHint}><Input name="license" required defaultValue={customLicense ? stringValue(license.customUrl) : stringValue(license.identifier)} dir="ltr" onInput={(event) => setCustomLicense(event.currentTarget.value.trim().startsWith("https://"))} /></Field></div>
+        <div className="mt-5"><FormDisclosure summary={copy.moreRelease} defaultOpen={Boolean(productId)}>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label={copy.version} help="version" hint={hints.version}><Input name="releaseVersion" required defaultValue={stringValue(release.version) || (productId ? "" : "1.0.0")} dir="ltr" /></Field>
+            <Field label={copy.installationMethod} help="installation"><select name="installationMethod" required value={installMethod} onChange={(event) => setMethodOverride(event.target.value)} className={selectClass}>{["manual", "npm", "git", "download", "container", "hosted"].map((item) => <option key={item}>{item}</option>)}</select></Field>
+            <SourceOptionalFields key={sourceKind} kind={sourceKind} source={source} copy={copy} />
+          </div>
+          <Field label={copy.releaseNotes}><Textarea name="releaseNotes" required defaultValue={stringValue(release.releaseNotes) || (productId ? "" : copy.defaultReleaseNotes)} /></Field>
+        </FormDisclosure></div>
+        <input type="hidden" name="releaseDocumentationUrl" defaultValue={stringValue(release.documentationUrl)} />
+        <input type="hidden" name="releaseSupportUrl" defaultValue={stringValue(release.supportUrl)} />
       </FormSection>
 
       </div>
       <div data-draft-step="2" hidden={step !== 2} className="space-y-6">
-      <FormSection title={copy.requirementsTitle} help="requirements" intro={copy.requirementsIntro}>
-        <div className="grid gap-5 sm:grid-cols-2"><Field label={copy.runtimes} hint={copy.lineHint}><Textarea name="runtimes" defaultValue={listValue(requirements.runtimes)} /></Field><Field label={copy.accounts} hint={copy.lineHint}><Textarea name="accounts" defaultValue={listValue(requirements.accounts)} /></Field><Field label={copy.operatingSystems} hint={copy.lineHint}><Textarea name="operatingSystems" defaultValue={listValue(requirements.operatingSystems)} /></Field><Field label={copy.dependencies} hint={copy.lineHint}><Textarea name="dependencies" defaultValue={listValue(requirements.dependencies)} /></Field></div>
-          <DeclarationRows messages={copy} name="environmentVariables" label={copy.environmentVariables} help="environment" hint={hints.environment} onChange={markDirty} initialRows={environmentVariables.map((item) => [item.name, item.purpose, String(item.required), String(item.sensitive)])} columns={[{ label: copy.variableName }, { label: copy.purpose }, { label: copy.required, type: "checkbox" }, { label: copy.sensitive, type: "checkbox" }]} />
-          <DeclarationRows messages={copy} name="permissions" label={copy.permissions} help="permissions" onChange={markDirty} initialRows={permissions.map((item) => [item.capability, String(item.required), item.scope ?? "", item.destinations.join(", "), item.purpose])} columns={[{ label: copy.capability, options: permissionCapabilities }, { label: copy.required, type: "checkbox" }, { label: copy.scope, optional: true }, { label: copy.destinations, optional: true }, { label: copy.purpose }]} />
+      <FormSection title={copy.touchesTitle} intro={copy.touchesIntro}>
+        <ChoiceRows name="permissions" label={copy.permissions} help="permissions" messages={copy} onChange={markDirty} choices={permissionChoices} initialRows={permissions.map((item) => [item.capability, String(item.required), item.scope ?? "", item.destinations.join(", "), item.purpose])} extras={[{ cell: 4, label: copy.purpose, wide: true }, { cell: 1, label: copy.required, type: "checkbox", defaultValue: "true" }, { cell: 2, label: copy.scope, optional: true }, { cell: 3, label: copy.destinations, optional: true }]} />
       </FormSection>
 
-      <FormSection title={copy.licenseTitle} help="license" intro={copy.licenseIntro}>
-        <label className="flex min-h-11 items-center gap-3 text-sm font-medium"><input type="checkbox" checked={customLicense} onChange={(event) => setCustomLicense(event.target.checked)} />{copy.customLicense}</label>
-        <div className="mt-4"><Field label={customLicense ? copy.customLicenseUrl : copy.licenseIdentifier} hint={hints.license}><Input key={customLicense ? "custom" : "spdx"} name="license" required defaultValue={customLicense ? stringValue(license.customUrl) : stringValue(license.identifier)} dir="ltr" /></Field></div>
-        <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.releaseDocumentationUrl}><Input name="releaseDocumentationUrl" type="url" defaultValue={stringValue(release.documentationUrl)} dir="ltr" /></Field><Field label={copy.releaseSupportUrl}><Input name="releaseSupportUrl" type="url" defaultValue={stringValue(release.supportUrl)} dir="ltr" /></Field></div>
-      </FormSection>
-
-      </div>
-      <div data-draft-step="3" hidden={step !== 3}>
       <FormSection title={copy.typeDetailsTitle} help="details" intro={copy.typeDetailsIntro}>
           <p className="mb-4 text-sm text-muted-foreground">{hints.public}</p>
-          <div className="grid gap-5 sm:grid-cols-2">{detailFields[type].map((field) => field.kind === "stages" ? <DeclarationRows messages={copy} key={`${type}-${field.key}`} name={`detail_${field.key}`} label={locale === "fa" ? field.fa : field.en} help="stages" required={field.required} onChange={markDirty} initialRows={Array.isArray(details[field.key]) ? (details[field.key] as Array<{ name: string; description: string; humanApproval: boolean }>).map((stage) => [stage.name, stage.description, String(stage.humanApproval)]) : []} columns={[{ label: copy.stageName }, { label: copy.stageDescription }, { label: copy.humanApproval, type: "checkbox" }]} /> : <DetailInput key={`${type}-${field.key}`} field={field} locale={locale} value={details[field.key]} />)}</div>
+          <div className="grid gap-5 sm:grid-cols-2">{detailFields[type].filter(isPrimaryDetail).map(renderDetail)}</div>
       </FormSection>
 
+      <FormDisclosure summary={copy.moreDetails} defaultOpen={moreDetailsFilled}>
+        <div className="grid gap-5 sm:grid-cols-2">{detailFields[type].filter((field) => !isPrimaryDetail(field)).map(renderDetail)}</div>
+        <div className="grid gap-5 sm:grid-cols-2"><Field label={copy.runtimes} hint={copy.lineHint}><Textarea name="runtimes" defaultValue={listValue(requirements.runtimes)} /></Field><Field label={copy.accounts} hint={copy.lineHint}><Textarea name="accounts" defaultValue={listValue(requirements.accounts)} /></Field><Field label={copy.operatingSystems} hint={copy.lineHint}><Textarea name="operatingSystems" defaultValue={listValue(requirements.operatingSystems)} /></Field><Field label={copy.dependencies} hint={copy.lineHint}><Textarea name="dependencies" defaultValue={listValue(requirements.dependencies)} /></Field></div>
+        <DeclarationRows messages={copy} name="environmentVariables" label={copy.environmentVariables} help="environment" hint={hints.environment} onChange={markDirty} initialRows={environmentVariables.map((item) => [item.name, item.purpose, String(item.required), String(item.sensitive)])} columns={[{ label: copy.variableName }, { label: copy.purpose }, { label: copy.required, type: "checkbox" }, { label: copy.sensitive, type: "checkbox" }]} />
+      </FormDisclosure>
+
       </div>
-      <div data-draft-step="4" hidden={step !== 4}>
+
+      <div data-draft-step="3" hidden={step !== 3}>
         <FormSection title={copy.reviewTitle} help="review" intro={copy.reviewIntro}>
           <Button type="button" variant="secondary" onClick={(event) => {
             const form = event.currentTarget.form;
@@ -450,8 +487,8 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
         {error && <p id="draft-errors" tabIndex={-1} className="flex scroll-mt-40 items-start gap-2 text-sm text-destructive" role="alert"><AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />{error}</p>}
         {saved && <p className="text-sm text-success" role="status">{copy.saved}</p>}
         <div data-draft-actions data-help-anchor className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center justify-between gap-3 border bg-surface p-3 lg:bottom-4">
-          <div className="flex gap-2"><Button type="button" variant="secondary" disabled={step === 0 || saving} onClick={() => goToStep(step - 1)}>{copy.previousStep}</Button>{step < 4 && <Button type="button" disabled={saving} onClick={() => goToStep(step + 1)}>{copy.nextStep}</Button>}</div>
-          <div className="flex flex-wrap gap-1"><ContextHelp label={`${copy.saveLater} / ${copy.save}`} topic="saves" /><Link className={buttonVariants({ variant: "ghost" })} href={localePath("/dashboard/studio", locale)}>{copy.cancel}</Link><Button type="button" variant="secondary" disabled={saving || !storageKey} onClick={saveForLater}>{localStatus === copy.localSaved ? <><Check className="size-4" aria-hidden="true" />{copy.savedLater}</> : copy.saveLater}</Button>{step === 4 && <Button disabled={saving}><Save className="size-4" aria-hidden="true" />{saving ? copy.saving : copy.save}</Button>}</div>
+          <div className="flex gap-2"><Button type="button" variant="secondary" disabled={step === 0 || saving} onClick={() => goToStep(step - 1)}>{copy.previousStep}</Button>{step < lastStep && <Button type="button" disabled={saving} onClick={() => goToStep(step + 1)}>{copy.nextStep}</Button>}</div>
+          <div className="flex flex-wrap gap-1"><ContextHelp label={`${copy.saveLater} / ${copy.save}`} topic="saves" /><Link className={buttonVariants({ variant: "ghost" })} href={localePath("/dashboard/studio", locale)}>{copy.cancel}</Link><Button type="button" variant="secondary" disabled={saving || !storageKey} onClick={saveForLater}>{localStatus === copy.localSaved ? <><Check className="size-4" aria-hidden="true" />{copy.savedLater}</> : copy.saveLater}</Button>{step === lastStep && <Button disabled={saving}><Save className="size-4" aria-hidden="true" />{saving ? copy.saving : copy.save}</Button>}</div>
       </div>
     </form>
   </div>;
@@ -460,8 +497,27 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
 function SourceFields({ kind, source, copy }: { kind: SourceKind; source: Record<string, unknown>; copy: Record<string, string> }) {
   const { locale } = useLocale();
   const hints = helpHints[locale];
+  if (kind === "external_link") return <LinkSourceFields source={source} copy={copy} />;
   if (kind === "npm") return <div className="mt-5 grid gap-5 sm:grid-cols-3"><Field label={copy.packageName} help="npmRef"><Input name="packageName" required defaultValue={stringValue(source.packageName)} dir="ltr" /></Field><Field label={copy.npmVersion} help="npmRef" hint={hints.npmVersion}><Input name="npmVersion" required defaultValue={stringValue(source.version)} dir="ltr" /></Field><Field label={copy.integrity} help="integrity" hint={hints.integrity}><Input name="integrity" required defaultValue={stringValue(source.integrity)} dir="ltr" /></Field></div>;
-  return <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.repositoryUrl} help="source"><Input name="repositoryUrl" type="url" required defaultValue={stringValue(source.repositoryUrl)} dir="ltr" /></Field>{kind === "github_repository" ? <><Field label={copy.commitSha} help="githubRef" hint={hints.sha}><Input name="commitSha" required minLength={40} maxLength={40} defaultValue={stringValue(source.commitSha)} dir="ltr" /></Field><Field label={copy.repositoryPath} help="repositoryPath"><Input name="repositoryPath" defaultValue={stringValue(source.path)} dir="ltr" /></Field></> : <><Field label={copy.releaseTag} help="githubRef" hint={hints.sha}><Input name="releaseTag" required defaultValue={stringValue(source.tag)} dir="ltr" /></Field><Field label={copy.releaseCommitSha} help="githubRef" hint={hints.sha}><Input name="releaseCommitSha" required minLength={40} maxLength={40} defaultValue={stringValue(source.releaseCommitSha)} dir="ltr" /></Field><Field label={copy.assetName} help="source"><Input name="assetName" required defaultValue={stringValue(source.assetName)} dir="ltr" /></Field><Field label={copy.assetDigest} help="integrity" hint={hints.assetDigest}><Input name="assetDigest" defaultValue={stringValue(source.assetDigest)} dir="ltr" /></Field></>}</div>;
+  return <div className="mt-5 grid gap-5 sm:grid-cols-2"><Field label={copy.repositoryUrl} help="source"><Input name="repositoryUrl" type="url" required defaultValue={stringValue(source.repositoryUrl)} dir="ltr" /></Field>{kind === "github_repository" ? <Field label={copy.commitSha} help="githubRef" hint={hints.sha}><Input name="commitSha" required minLength={40} maxLength={40} defaultValue={stringValue(source.commitSha)} dir="ltr" /></Field> : <><Field label={copy.releaseTag} help="githubRef" hint={hints.sha}><Input name="releaseTag" required defaultValue={stringValue(source.tag)} dir="ltr" /></Field><Field label={copy.releaseCommitSha} help="githubRef" hint={hints.sha}><Input name="releaseCommitSha" required minLength={40} maxLength={40} defaultValue={stringValue(source.releaseCommitSha)} dir="ltr" /></Field><Field label={copy.assetName} help="source"><Input name="assetName" required defaultValue={stringValue(source.assetName)} dir="ltr" /></Field></>}</div>;
+}
+
+function LinkSourceFields({ source, copy }: { source: Record<string, unknown>; copy: Record<string, string> }) {
+  const [authorship, setAuthorship] = useState(stringValue(source.authorship) || "own");
+  return <div className="mt-5 grid gap-5 sm:grid-cols-2">
+    <Field label={copy.projectUrl} hint={copy.projectUrlHint}><Input name="projectUrl" type="url" required defaultValue={stringValue(source.url)} dir="ltr" /></Field>
+    <Field label={copy.authorship}><select name="authorship" value={authorship} onChange={(event) => setAuthorship(event.target.value)} className={selectClass}><option value="own">{copy.authorshipOwn}</option><option value="third_party">{copy.authorshipThirdParty}</option></select></Field>
+    {authorship === "third_party" && <Field label={copy.originalAuthor}><Input name="originalAuthor" required defaultValue={stringValue(source.originalAuthor)} /></Field>}
+  </div>;
+}
+
+// Source fields the API treats as optional live with the other release details.
+function SourceOptionalFields({ kind, source, copy }: { kind: SourceKind; source: Record<string, unknown>; copy: Record<string, string> }) {
+  const { locale } = useLocale();
+  const hints = helpHints[locale];
+  if (kind === "github_repository") return <Field label={copy.repositoryPath} help="repositoryPath"><Input name="repositoryPath" defaultValue={stringValue(source.path)} dir="ltr" /></Field>;
+  if (kind === "github_release") return <Field label={copy.assetDigest} help="integrity" hint={hints.assetDigest}><Input name="assetDigest" defaultValue={stringValue(source.assetDigest)} dir="ltr" /></Field>;
+  return null;
 }
 
 function DetailInput({ field, locale, value }: { field: DetailField; locale: "en" | "fa"; value: unknown }) {
@@ -500,7 +556,9 @@ function localized(en: string, fa: string) { return fa ? { en, fa } : { en }; }
 function optionalLocalized(en: string, fa: string) { return { ...(en ? { en } : {}), ...(fa ? { fa } : {}) }; }
 
 export function buildManifest(data: FormData, type: MarketplaceItemTypeKey, sourceKind: SourceKind, customLicense: boolean) {
-  const source = sourceKind === "github_repository" ? {
+  const source = sourceKind === "external_link" ? {
+    kind: sourceKind, url: text(data, "projectUrl"), authorship: text(data, "authorship"), ...(text(data, "authorship") === "third_party" ? { originalAuthor: text(data, "originalAuthor") } : {}),
+  } : sourceKind === "github_repository" ? {
     kind: sourceKind, repositoryUrl: text(data, "repositoryUrl"), commitSha: text(data, "commitSha"), ...(optionalText(data, "repositoryPath") ? { path: optionalText(data, "repositoryPath") } : {}),
   } : sourceKind === "github_release" ? {
     kind: sourceKind, repositoryUrl: text(data, "repositoryUrl"), tag: text(data, "releaseTag"), releaseCommitSha: text(data, "releaseCommitSha"), assetName: text(data, "assetName"), ...(optionalText(data, "assetDigest") ? { assetDigest: optionalText(data, "assetDigest") } : {}),

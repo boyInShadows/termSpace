@@ -7,10 +7,11 @@ import type { ProductRelease } from "@/lib/types";
 const text = {
   en: {
     title: "Source & provenance",
-    sources: { npm: "npm package", github_repository: "GitHub repository", github_release: "GitHub release" } as Record<string, string>,
+    sources: { external_link: "Link", npm: "npm package", github_repository: "GitHub repository", github_release: "GitHub release" } as Record<string, string>,
     source: "Source",
     checked: "Last source check", never: "Not yet checked",
-    verified: "Check passed", stale: "Check overdue",
+    verified: "Check passed", stale: "Check overdue", linkOnly: "Not checked", madeBy: "Made by",
+    linkNote: "This listing links to the project. Ownership is not verified, and what the link shows can change after review.",
     staleNote: "The last source check is overdue. The pinned release may have changed or been removed upstream.",
     permissions: "Declared permissions", none: "No permissions declared", required: "Required", optional: "Optional",
     environment: "Environment variables", secret: "secret",
@@ -27,10 +28,11 @@ const text = {
   },
   fa: {
     title: "منبع و اصالت",
-    sources: { npm: "بستهٔ npm", github_repository: "مخزن گیت‌هاب", github_release: "انتشار گیت‌هاب" } as Record<string, string>,
+    sources: { external_link: "پیوند", npm: "بستهٔ npm", github_repository: "مخزن گیت‌هاب", github_release: "انتشار گیت‌هاب" } as Record<string, string>,
     source: "منبع",
     checked: "آخرین بررسی منبع", never: "هنوز بررسی نشده",
-    verified: "بررسی موفق", stale: "بررسی عقب‌افتاده",
+    verified: "بررسی موفق", stale: "بررسی عقب‌افتاده", linkOnly: "بررسی نشده", madeBy: "سازنده",
+    linkNote: "این فهرست به پروژه پیوند می‌دهد. مالکیت تأیید نشده است و محتوای پیوند ممکن است پس از بررسی تغییر کند.",
     staleNote: "بررسی منبع عقب افتاده است. ممکن است نسخهٔ قفل‌شده در مبدأ تغییر کرده یا حذف شده باشد.",
     permissions: "مجوزهای اعلام‌شده", none: "مجوزی اعلام نشده", required: "الزامی", optional: "اختیاری",
     environment: "متغیرهای محیطی", secret: "محرمانه",
@@ -75,10 +77,12 @@ export function ReleaseProvenance({ release, slug, locale }: { release: ProductR
           {t.sources[source.kind] ?? source.kind}
           {page && <> · <a href={page} target="_blank" rel="noopener noreferrer" className="break-all font-mono text-xs text-primary hover:underline" dir="ltr">{page.replace("https://", "")}</a></>}
         </Fact>
+        {source.originalAuthor && <Fact label={t.madeBy}><bdi>{source.originalAuthor}</bdi></Fact>}
         <Fact label={t.checked}>
-          {source.checkedAt ? date.format(new Date(source.checkedAt)) : t.never} · {source.status === "stale" ? t.stale : t.verified}
+          {source.checkedAt ? date.format(new Date(source.checkedAt)) : t.never} · {source.status === "link_only" ? t.linkOnly : source.status === "stale" ? t.stale : t.verified}
         </Fact>
       </dl>
+      {source.status === "link_only" && <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-800 dark:text-amber-300">{t.linkNote}</p>}
       {source.status === "stale" && <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-800 dark:text-amber-300">{t.staleNote}</p>}
 
       <div>

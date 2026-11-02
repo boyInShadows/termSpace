@@ -110,4 +110,13 @@ describe("marketplace manifest v1", () => {
     expect(LEGACY_ITEM_TYPE_MAP["AI tool"]).toBeNull();
     expect(LEGACY_ITEM_TYPE_MAP["Developer utility"]).toBeNull();
   });
+
+  it("accepts a plain link and requires the author when it is someone else's project", () => {
+    const withSource = (source: unknown) => { const value = structuredClone(manifest("skill")) as { release: { source: unknown } }; value.release.source = source; return value; };
+    const url = "https://example.com/project";
+    expect(marketplaceManifestV1Schema.safeParse(withSource({ kind: "external_link", url, authorship: "own" })).success).toBe(true);
+    expect(marketplaceManifestV1Schema.safeParse(withSource({ kind: "external_link", url, authorship: "third_party", originalAuthor: "A. Author" })).success).toBe(true);
+    expect(marketplaceManifestV1Schema.safeParse(withSource({ kind: "external_link", url, authorship: "third_party" })).success).toBe(false);
+    expect(marketplaceManifestV1Schema.safeParse(withSource({ kind: "external_link", url: "http://example.com", authorship: "own" })).success).toBe(false);
+  });
 });

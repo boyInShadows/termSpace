@@ -1,36 +1,39 @@
-FROM node:22-bookworm-slim AS build
-
+# syntax=docker/dockerfile:1
+# One image for the API and every worker that runs API code (migrate, scheduler,
+# email-worker, marketplace-source-worker); docker-compose.yml builds it once.
+FROM node:22-bookworm-slim AS base
 WORKDIR /app
 RUN apt-get update \
   && apt-get install -y --no-install-recommends openssl \
   && rm -rf /var/lib/apt/lists/*
 
+FROM base AS manifests
 COPY package.json package-lock.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/blog/package.json apps/blog/package.json
 COPY apps/web/package.json apps/web/package.json
-RUN npm ci
 
+# Full install (TypeScript, Prisma generator) only to compile the API.
+FROM manifests AS build
+RUN --mount=type=cache,target=/root/.npm npm ci --workspace @termspace/api
 COPY apps/api apps/api
 RUN npm run prisma:generate --workspace @termspace/api \
   && npm run build --workspace @termspace/api
 
-FROM node:22-bookworm-slim AS runtime
+# Runtime dependencies only. The Prisma CLI stays: the migrate service runs it.
+FROM manifests AS prod-deps
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev --workspace @termspace/api
 
-WORKDIR /app
+FROM base AS runtime
 ENV NODE_ENV=production
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends openssl \
-  && rm -rf /var/lib/apt/lists/*
-
-COPY --from=build /app/package.json /app/package-lock.json ./
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/apps/api/package.json apps/api/package.json
-COPY --from=build /app/apps/api/node_modules apps/api/node_modules
-COPY --from=build /app/apps/api/dist apps/api/dist
-COPY --from=build /app/apps/api/prisma apps/api/prisma
-RUN mkdir -p apps/api/uploads \
-  && chown -R node:node /app
+COPY --chown=node:node package.json package-lock.json ./
+COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=node:node /app/apps/api/node_modules apps/api/node_modules
+COPY --from=build --chown=node:node /app/apps/api/node_modules/.prisma apps/api/node_modules/.prisma
+COPY --from=build --chown=node:node /app/apps/api/package.json apps/api/package.json
+COPY --from=build --chown=node:node /app/apps/api/dist apps/api/dist
+COPY --from=build --chown=node:node /app/apps/api/prisma apps/api/prisma
+RUN mkdir -p apps/api/uploads && chown node:node apps/api/uploads
 
 EXPOSE 4001
 USER node

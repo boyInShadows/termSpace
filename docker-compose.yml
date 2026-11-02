@@ -31,9 +31,8 @@ services:
   # migrations are forward-only. Keeping it out of the API start command stops
   # replicas racing each other and lets node run as PID 1 to receive SIGTERM.
   migrate:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.api
+    image: termspace-api:latest
+    pull_policy: never
     restart: "no"
     environment:
       NODE_ENV: production
@@ -44,6 +43,7 @@ services:
     command: ["npm", "run", "prisma:deploy", "--workspace", "@termspace/api"]
 
   api:
+    image: termspace-api:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.api
@@ -136,9 +136,8 @@ services:
       - "127.0.0.1:${BLOG_HOST_PORT:-3001}:3001"
 
   scheduler:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.api
+    image: termspace-api:latest
+    pull_policy: never
     init: true
     restart: unless-stopped
     environment:
@@ -152,9 +151,8 @@ services:
   # Runs by default: password accounts cannot verify or reset without it. It exits
   # (and restarts visibly) while misconfigured instead of failing queued mail.
   email-worker:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.api
+    image: termspace-api:latest
+    pull_policy: never
     init: true
     restart: unless-stopped
     environment:
@@ -173,9 +171,8 @@ services:
     command: ["sh", "-c", "while node apps/api/dist/jobs/sendTransactionalEmails.js; do sleep 30; done"]
 
   marketplace-source-worker:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.api
+    image: termspace-api:latest
+    pull_policy: never
     init: true
     restart: unless-stopped
     environment:

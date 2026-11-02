@@ -17,7 +17,7 @@ test.describe("performance wiring", () => {
       await page.route("**/api/marketplace/draft-options", (route) => route.fulfill({ json: { data: { categories: [], communities: [], platforms: [] } } }));
       await page.goto(path);
       const messages = copy[path.startsWith("/fa") ? "fa" : "en"].creatorDraft;
-      await expect(page.getByRole("textbox", { name: messages.slug, exact: true })).toBeVisible();
+      await expect(page.getByRole("textbox", { name: messages.nameEn, exact: true })).toBeVisible();
     });
   }
 

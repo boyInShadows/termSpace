@@ -53,8 +53,8 @@ export interface MarketplaceDraftRecord {
 export interface CreatorReleaseRecord {
   id: string; productVersionId: string; version: string; notes: string; revision: number;
   status: "published" | "proposed" | "superseded_draft";
-  source: { kind: string; url: string; ref: string; path: string | null; integrityDigest: string | null; artifactSizeBytes: number | null; installationUrl: string | null };
-  sourceCheckStatus: "pending" | "verified" | "stale" | "restricted" | "failed";
+  source: { kind: string; url: string; ref: string; path: string | null; originalAuthor?: string | null; integrityDigest: string | null; artifactSizeBytes: number | null; installationUrl: string | null };
+  sourceCheckStatus: "pending" | "verified" | "stale" | "restricted" | "failed" | "link_only";
   sourceCheckedAt: string | null; sourceNextCheckAt: string | null; sourceFailureCount: number; lastSourceErrorCode: string | null;
   sourceResolvedAt: string | null; ownershipVerifiedAt: string | null; publishedAt: string | null;
   createdAt: string; listingRevision: number | null; isCurrent: boolean; acquisitionCount: number;
@@ -70,7 +70,7 @@ export interface CreatorReleaseHistory {
 export interface MarketplaceModerationQueueListing {
   id: string; slug: string; name: string; type: ProductType; typeKey: MarketplaceItemTypeKey | null;
   state: string; version: number; published: boolean; creator: { name: string; handle: string }; selfOwned: boolean;
-  proposedRevision: number | null; releaseVersion: string | null; sourceResolved: boolean; ownershipVerified: boolean;
+  proposedRevision: number | null; releaseVersion: string | null; sourceResolved: boolean; ownershipVerified: boolean; linkOnly?: boolean;
   communityRequestCount: number; updatedAt: string;
   /** What the proposed release declares it touches, so the queue can show risk before the preview is opened. */
   capabilities: Array<{ capability: string; required: boolean }>;
@@ -95,7 +95,7 @@ export interface MarketplaceModerationPreview {
     id: string; revision: number; schemaVersion: number; digestSha256: string; content: Record<string, unknown>; createdAt: string;
     releaseManifest: null | {
       id: string; sourceKind: string; sourceUrl: string; sourceRef: string; sourcePath: string | null;
-      providerIntegrityDigest: string | null; sourceResolvedAt: string | null; ownershipVerifiedAt: string | null;
+      sourceOriginalAuthor?: string | null; providerIntegrityDigest: string | null; sourceResolvedAt: string | null; ownershipVerifiedAt: string | null;
       sourceCheckStatus: string; sourceCheckedAt: string | null; lastSourceErrorCode: string | null; publishedAt: string | null;
     };
     communityRequests: Array<{
@@ -157,8 +157,8 @@ export interface MarketplaceInstallation {
   release: {
     id: string; version: string;
     source: {
-      kind: string; url: string; ref: string; path: string | null; integrityDigest: string | null;
-      artifactSizeBytes: number | null; status: "verified" | "stale"; checkedAt: string | null;
+      kind: string; url: string; ref: string; path: string | null; originalAuthor?: string | null; integrityDigest: string | null;
+      artifactSizeBytes: number | null; status: "verified" | "stale" | "link_only"; checkedAt: string | null;
     };
     installation: { method: string; url: string; instructions: string[] };
     requirements: { runtimes: string[]; accounts: string[]; operatingSystems: string[]; dependencies: string[] };

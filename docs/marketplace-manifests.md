@@ -45,7 +45,9 @@ digest. Version 1 has three sections:
 Unknown fields, unknown versions or types, non-HTTPS URLs, unpinned GitHub
 repository references, inexact npm versions, and environment-variable values
 are rejected. The accepted source identities are a GitHub repository commit, a
-GitHub release, or an exact npm package version with provider integrity.
+GitHub release, an exact npm package version with provider integrity, or a plain
+HTTPS link (`external_link` with `url`, `authorship` of `own` or `third_party`, and
+`originalAuthor` for `third_party`). Links are not pinned or verified.
 
 Validated data is normalized into `MarketplaceReleaseManifest` and its child
 tables. `MarketplaceManifestSnapshot` keeps the audit copy and digest. Database

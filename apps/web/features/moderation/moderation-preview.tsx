@@ -152,7 +152,8 @@ export function ModerationPreview({ productId }: { productId: string }) {
   const screenshots = Array.isArray(listing.screenshots) ? listing.screenshots as Array<{ url?: string; alt?: { en?: string; fa?: string } }> : [];
   const sourceResolved = Boolean(manifestRecord?.sourceResolvedAt);
   const ownershipVerified = Boolean(manifestRecord?.ownershipVerifiedAt && manifestRecord.sourceCheckStatus === "VERIFIED");
-  const actionBlocked = selected === "PUBLISH" && !(sourceResolved && ownershipVerified);
+  const linkOnly = manifestRecord?.sourceCheckStatus === "LINK_ONLY";
+  const actionBlocked = selected === "PUBLISH" && !(sourceResolved && (ownershipVerified || linkOnly));
   // While the page refreshes, or if refreshing failed, the version on screen is
   // not the listing's: deciding against it would only meet a version conflict.
   const stale = loading || loadError !== null;
@@ -205,7 +206,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
             {sourceFacts(manifestRecord, release.source, proposed?.digestSha256 ?? null, m).map((fact) => <Fact key={fact.label} label={fact.label} mono={fact.mono}>{fact.value}</Fact>)}
             {manifestRecord && <>
               <Fact label={m.sourceResolved}><Check ok={sourceResolved} yes={m.sourceOk} no={m.checkPending} /></Fact>
-              <Fact label={m.ownershipVerified}><Check ok={ownershipVerified} yes={m.ownerOk} no={m.checkPending} /></Fact>
+              <Fact label={m.ownershipVerified}><Check ok={ownershipVerified} yes={m.ownerOk} no={linkOnly ? m.ownerNotClaimed : m.checkPending} /></Fact>
             </>}
           </dl>
         </Panel>
@@ -342,8 +343,9 @@ function sourceFacts(record: NonNullable<MarketplaceModerationPreview["proposedS
   const rows: Array<{ label: string; value: string; mono?: boolean }> = [];
   const add = (label: string, value: string | null, mono = true) => { if (value) rows.push({ label, value, mono }); };
   add(m.sourceKind, kind ? (m.sourceKinds as Labels)[kind] ?? kind : null, false);
-  add(m.sourceAddress, pick(record?.sourceUrl, declared.repositoryUrl, declared.packageName));
-  add(m.sourceRef, pick(record?.sourceRef, declared.commitSha, declared.releaseCommitSha, declared.version, declared.tag));
+  add(m.sourceAddress, pick(record?.sourceUrl, declared.url, declared.repositoryUrl, declared.packageName));
+  add(m.originalAuthor, pick(record?.sourceOriginalAuthor, declared.originalAuthor), false);
+  if (kind !== "external_link") add(m.sourceRef, pick(record?.sourceRef, declared.commitSha, declared.releaseCommitSha, declared.version, declared.tag));
   add(m.sourcePath, pick(record?.sourcePath, declared.path, declared.assetName));
   add(m.sourceDigest, pick(record?.providerIntegrityDigest, declared.integrity, declared.assetDigest));
   add(m.snapshotDigest, snapshotDigest);

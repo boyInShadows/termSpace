@@ -7,12 +7,12 @@ const text = {
   en: {
     permissions: "Permissions", licence: "Licence", release: "Release", pinned: "Pinned to", digest: "Digest",
     notDeclared: "Not declared", notStated: "Not stated", noDigest: "Not provided by the source",
-    verified: "source verified", stale: "source check overdue",
+    verified: "source verified", stale: "source check overdue", linkOnly: "link, not verified",
   },
   fa: {
     permissions: "دسترسی‌ها", licence: "مجوز", release: "نسخه", pinned: "متصل به", digest: "چکیدهٔ یکپارچگی",
     notDeclared: "اعلام نشده", notStated: "ذکر نشده", noDigest: "منبع آن را ارائه نکرده",
-    verified: "منبع تأییدشده", stale: "بررسی منبع عقب افتاده",
+    verified: "منبع تأییدشده", stale: "بررسی منبع عقب افتاده", linkOnly: "پیوند، تأییدنشده",
   },
 };
 
@@ -47,7 +47,7 @@ export function ReleaseFacts({ release, locale, summary }: { release: ProductRel
       <Fact label={t.licence}>{license ?? t.notStated}</Fact>
       <Fact label={t.release}>
         <span className="font-mono" dir="ltr">v{release.version}</span>
-        <span className="text-muted-foreground"> · {source.status === "stale" ? t.stale : t.verified}</span>
+        <span className="text-muted-foreground"> · {source.status === "link_only" ? t.linkOnly : source.status === "stale" ? t.stale : t.verified}</span>
       </Fact>
       <Fact label={t.pinned}><span className="break-all font-mono text-xs" dir="ltr">{source.ref}</span></Fact>
       <Fact label={t.digest}>
