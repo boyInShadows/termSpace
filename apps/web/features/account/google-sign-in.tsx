@@ -95,7 +95,7 @@ export function GoogleSignIn({ locale, label, disabled, onCredential, onUnavaila
       </Button>
       <div
         ref={host}
-        className="absolute inset-0 opacity-[0.001]"
+        className="absolute inset-x-0 -bottom-0.5 top-0.5 opacity-[0.001]"
         inert={disabled}
         aria-busy={disabled}
         data-google-signin
