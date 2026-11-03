@@ -8,7 +8,6 @@ const PASSWORD_RESET_TTL_MS = 10 * 60 * 1000;
 export const PASSWORD_RESET_REQUEST_COOLDOWN_MS = 60 * 1000;
 export const PASSWORD_RESET_REQUEST_WINDOW_MS = 60 * 60 * 1000;
 export const PASSWORD_RESET_REQUEST_LIMIT = 5;
-export const PASSWORD_RESET_ATTEMPT_LIMIT = 5;
 
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
@@ -122,13 +121,20 @@ export function newEmailChangeData(newEmail: string, now = new Date()) {
   };
 }
 
-export function createPasswordResetCode(fields: VerificationFields): string {
-  return String(passwordResetDigest(fields).readUInt32BE(0) % 1_000_000).padStart(6, "0");
+export function createPasswordResetToken(fields: VerificationFields): string {
+  return `${fields.id}.${passwordResetDigest(fields).toString("base64url")}`;
 }
 
-export function verifyPasswordResetCode(code: string, fields: VerificationFields): boolean {
-  if (!/^\d{6}$/.test(code)) return false;
-  return timingSafeEqual(Buffer.from(code), Buffer.from(createPasswordResetCode(fields)));
+export function verifyPasswordResetToken(token: string, fields: VerificationFields): boolean {
+  const separator = token.indexOf(".");
+  if (separator < 1 || token.slice(0, separator) !== fields.id) return false;
+  try {
+    const supplied = Buffer.from(token.slice(separator + 1), "base64url");
+    const expected = passwordResetDigest(fields);
+    return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+  } catch {
+    return false;
+  }
 }
 
 export function newPasswordResetData(now = new Date()) {
@@ -152,3 +158,4 @@ function accountLink(pathname: string, token: string): string {
 
 export const verificationUrl = (token: string) => accountLink("/account/verify-email", token);
 export const emailChangeUrl = (token: string) => accountLink("/account/confirm-email", token);
+export const passwordResetUrl = (token: string) => accountLink("/account/reset-password", token);

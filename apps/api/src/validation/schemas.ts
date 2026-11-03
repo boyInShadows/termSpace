@@ -169,8 +169,7 @@ export const readerPasswordResetRequestSchema = z.object({
 });
 
 export const readerPasswordResetConfirmSchema = z.object({
-  email: z.string().trim().toLowerCase().email("Enter a valid email address").max(320),
-  code: z.string().regex(/^\d{6}$/, "Enter the six-digit code"),
+  token: z.string().min(40, "Invalid reset token").max(200).regex(/^[A-Za-z0-9._-]+$/, "Invalid reset token"),
   newPassword: z.string().min(8, "New password must be at least 8 characters").max(128),
 });
 

@@ -7,7 +7,7 @@ export const dashboard = {
       publish: "New listing",
       tabsLabel: "Dashboard sections",
       toAccount: "Account settings",
-      redirecting: "Taking you to sign in…",
+      redirecting: "Taking you to log in…",
       loading: "Loading your dashboard",
       eyebrow: "Overview",
       greetingMorning: "Good morning",

@@ -2,6 +2,47 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-03 — Signup, verification and password reset follow the inbox
+
+- **Scope / ownership notice.** Shared surfaces: `apps/api/src/controllers/readerController.ts`,
+  `apps/api/src/validation/schemas.ts`, `apps/api/src/routes/readerRoutes.ts`,
+  `apps/web/lib/api.ts`, `apps/web/lib/i18n/`, `docs/email-verification.md` and
+  `changelog.md`. One additive behaviour change in the auth flow; no schema
+  migration, no new dependency, no provider change.
+- **Signup.** Registering now replaces the card with a confirmation panel —
+  heading, the address, "we sent a verification link", "you can safely close
+  this window". No inputs, Google button or mode links remain. Registration
+  still starts no session.
+- **Verification.** Confirming a link now starts a session and sends the reader
+  straight to `/onboarding` when `onboardingRequired`, otherwise `/account`.
+  If another account is signed in, the API returns `409
+  SIGNED_IN_AS_OTHER_ACCOUNT` **without consuming the token**; the page offers
+  "Log out and continue", which signs out and retries the same in-memory token.
+  Reused and expired links still return `INVALID_OR_EXPIRED_VERIFICATION`.
+- **Password reset.** The six-digit code is gone. The request shows the same
+  inbox panel; the email carries a link to
+  `/account/reset-password#token=...`. The page asks for the new password and
+  its confirmation only, then signs the browser in and opens
+  `/dashboard/settings`. Tokens are HMAC-signed over the reset row, expire in
+  10 minutes, are single-use, and a successful reset revokes every existing
+  session before issuing the new one. A different signed-in account is refused
+  the same way as verification.
+- **Copy.** User-facing "Sign in" is now "Log in" and "Register/Sign up" is
+  "Create account" across the account, dashboard, creator, review, reporting,
+  preferences, onboarding and email-change surfaces; Persian already used
+  «ورود» / «ساخت حساب» and only the secondary lines changed.
+- **Security notes.** The verification link now signs the reader in; it remains
+  single-use and expires after 30 minutes, the same capability the reset link
+  already had. `SIGNED_IN_AS_OTHER_ACCOUNT` never consumes the token. The reset
+  confirmation panel keeps the neutral "if an account exists" wording because
+  the request endpoint is unauthenticated.
+- **Verification.** Root typecheck; API 304 passed / 44 integration skips; web
+  500 passed; web lint zero errors (two pre-existing warnings); all production
+  builds. Full Playwright suite at CI's two workers: 519 passed, 46 intentional
+  skips, no failures. The new account spec covers the signup panel, the
+  verification link landing on onboarding, and the reset link opening the
+  new-password form and landing in settings.
+
 ## 2026-11-02 — Review is a recorded moderation decision, not a dead flag
 
 - **Scope / ownership notice.** Shared surfaces: `apps/api/prisma/schema.prisma`,

@@ -11,6 +11,21 @@ application secret; the bearer signature is not stored in the database. Creating
 a replacement invalidates earlier links, and successful verification invalidates
 all remaining links atomically.
 
+Confirming a link signs the reader in and sends them straight to onboarding when
+their account still needs it. A link opened while another account is signed in
+is refused with `SIGNED_IN_AS_OTHER_ACCOUNT` and is not consumed; the reader can
+log out and open the same link again.
+
+## Password reset links
+
+Resets use `/account/reset-password#token=...` with the same shape: a
+database-backed reset row, an HMAC token over its id, user, and expiry, a
+10-minute lifetime, and single-use consumption. The form only asks for the new
+password and its confirmation. A successful reset revokes every session for the
+account and then signs the browser that used the link in, so the next page is
+`/dashboard/settings`. As with verification, a link opened under a different
+account is refused without consuming the token.
+
 ## Cloudflare Email Service setup
 
 1. Add and verify the sending domain in Cloudflare Email Service. The domain must
@@ -54,8 +69,8 @@ npm test -w apps/api -- src/readerFlow.integration.test.ts
 ```
 
 This covers registration, duplicate accounts, login/logout, the outbox and
-provider request, one-use verification, resend cooldowns, reset codes, attempt
-limits, and session revocation. Provider responses are simulated: a real inbox
+provider request, one-use verification, resend cooldowns, reset links, and
+session revocation. Provider responses are simulated: a real inbox
 delivery check still requires working Cloudflare credentials and a verified
 sender. Do not point integration tests at a production database.
 

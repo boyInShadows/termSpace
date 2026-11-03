@@ -84,10 +84,12 @@ describe("content validation", () => {
     expect(readerPasswordChangeSchema.safeParse({ currentPassword: "old-password", newPassword: "short" }).success).toBe(false);
   });
 
-  it("validates password-reset emails, OTPs, and replacement passwords", () => {
+  it("validates password-reset emails and replacement passwords", () => {
     expect(readerPasswordResetRequestSchema.parse({ email: " Reader@Example.com " })).toEqual({ email: "reader@example.com" });
-    expect(readerPasswordResetConfirmSchema.safeParse({ email: "reader@example.com", code: "123456", newPassword: "new-password" }).success).toBe(true);
-    expect(readerPasswordResetConfirmSchema.safeParse({ email: "reader@example.com", code: "12345a", newPassword: "short" }).success).toBe(false);
+    const token = `${"a".repeat(20)}.${"b".repeat(43)}`;
+    expect(readerPasswordResetConfirmSchema.safeParse({ token, newPassword: "new-password" }).success).toBe(true);
+    expect(readerPasswordResetConfirmSchema.safeParse({ token: "short", newPassword: "new-password" }).success).toBe(false);
+    expect(readerPasswordResetConfirmSchema.safeParse({ token, newPassword: "short" }).success).toBe(false);
   });
 
   it("normalizes valid creator handles and rejects unstable forms", () => {

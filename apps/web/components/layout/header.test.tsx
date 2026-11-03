@@ -143,9 +143,9 @@ describe("Header", () => {
     expect(switcher).toHaveTextContent("");
   });
 
-  it("offers Sign in rather than an account menu to a visitor", () => {
+  it("offers Log in rather than an account menu to a visitor", () => {
     render(<Header />);
-    expect(screen.getAllByRole("link", { name: "Sign in" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "Log in" }).length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "Your account" })).not.toBeInTheDocument();
   });
 

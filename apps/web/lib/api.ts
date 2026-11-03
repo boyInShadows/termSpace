@@ -97,14 +97,14 @@ export async function login(email: string, password: string) { return request<{ 
 export async function loginWithGoogle(credential: string) { return request<{ data: ReaderSession }>("/api/readers/google", { method: "POST", body: JSON.stringify({ credential }) }); }
 export async function register(email: string, password: string) { return request<{ data: { accepted: true } }>("/api/readers/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function requestPasswordReset(email: string) { return request<{ data: { accepted: true } }>("/api/readers/password-reset/request", { method: "POST", body: JSON.stringify({ email }) }); }
-export async function confirmPasswordReset(email: string, code: string, newPassword: string) { return request<{ data: { reset: true } }>("/api/readers/password-reset/confirm", { method: "POST", body: JSON.stringify({ email, code, newPassword }) }); }
+export async function confirmPasswordReset(token: string, newPassword: string) { return request<{ data: { reset: true; user: { onboardingRequired?: boolean } } }>("/api/readers/password-reset/confirm", { method: "POST", body: JSON.stringify({ token, newPassword }) }); }
 export async function logout() { return request("/api/readers/logout", { method: "POST" }); }
 export async function exportAccountData() { return (await request<{ data: unknown }>("/api/readers/profile/export")).data; }
 export async function deleteAccount(proof: { currentPassword?: string; credential?: string }) { return request("/api/readers/profile", { method: "DELETE", body: JSON.stringify(proof) }); }
 export async function getReaderProfile(signal?: AbortSignal) { return (await request<{ data: ReaderProfile }>("/api/readers/profile", { signal })).data; }
 export async function changeReaderPassword(currentPassword: string, newPassword: string) { return request<{ data: { updated: true } }>("/api/readers/profile/password", { method: "PUT", body: JSON.stringify({ currentPassword, newPassword }) }); }
 export async function requestEmailVerification() { return request<{ data: { accepted: true } }>("/api/readers/email-verification/request", { method: "POST" }); }
-export async function confirmEmailVerification(token: string) { return request<{ data: { verified: true } }>("/api/readers/email-verification/confirm", { method: "POST", body: JSON.stringify({ token }) }); }
+export async function confirmEmailVerification(token: string) { return request<{ data: { verified: true; user: { onboardingRequired?: boolean } } }>("/api/readers/email-verification/confirm", { method: "POST", body: JSON.stringify({ token }) }); }
 export async function getOwnedCreatorProfile(init?: RequestInit) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", init)).data; }
 export async function createOwnedCreatorProfile(input: { name: string; handle: string; bio: string }) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", { method: "POST", body: JSON.stringify(input) })).data; }
 export async function updateOwnedCreatorProfile(input: { name: string; bio: string }) { return (await request<{ data: OwnedCreatorProfile }>("/api/marketplace/creator/profile", { method: "PATCH", body: JSON.stringify(input) })).data; }

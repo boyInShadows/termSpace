@@ -2,7 +2,7 @@ import "dotenv/config";
 import { pathToFileURL } from "node:url";
 import { Prisma, type TransactionalEmailStatus } from "@prisma/client";
 import { emailConfig, sendEmailChangeEmail, sendEmailChangedNotice, sendModerationDecisionEmail, sendPasswordResetEmail, sendVerificationEmail } from "../lib/cloudflareEmail.js";
-import { createEmailChangeToken, createEmailVerificationToken, createPasswordResetCode, emailChangeUrl, verificationSecret, verificationUrl } from "../lib/emailVerification.js";
+import { createEmailChangeToken, createEmailVerificationToken, createPasswordResetToken, emailChangeUrl, passwordResetUrl, verificationSecret, verificationUrl } from "../lib/emailVerification.js";
 import { prisma } from "../lib/prisma.js";
 
 const MAX_ATTEMPTS = 5;
@@ -84,7 +84,7 @@ export async function processTransactionalEmailBatch(limit = Number(process.env.
       }
       result = await sendPasswordResetEmail({
         to: reset.user.email,
-        code: createPasswordResetCode(reset),
+        passwordResetUrl: passwordResetUrl(createPasswordResetToken(reset)),
         correlationId: job.correlationId,
       });
     } else if (job.emailChangeId) {

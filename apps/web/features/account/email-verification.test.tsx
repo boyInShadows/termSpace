@@ -6,7 +6,7 @@ const requestEmailVerification = vi.hoisted(() => vi.fn());
 const refresh = vi.hoisted(() => vi.fn());
 const logout = vi.hoisted(() => vi.fn());
 const replace = vi.hoisted(() => vi.fn());
-const session = vi.hoisted(() => ({ loading: false, email: "reader@example.com", emailVerified: false, refresh }));
+const session = vi.hoisted(() => ({ loading: false, identityLoading: false, email: "reader@example.com" as string | undefined, emailVerified: false, refresh }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
 
@@ -24,7 +24,8 @@ vi.mock("@/lib/locale-context", () => ({
       verificationChecking: "Verifying your email…", verificationComplete: "Your email is verified.",
       verificationInvalid: "Invalid link", verificationError: "Service unavailable", verificationInstructions: "Check your inbox",
       verifyEmail: "Verify your email", verificationSent: "Message queued", resendVerification: "Resend verification",
-      returnToAccount: "Return to account", signIn: "Sign in", signOut: "Sign out", wait: "Please wait…",
+      returnToAccount: "Return to account", signIn: "Log in", signOut: "Sign out", wait: "Please wait…",
+      signedInAsOther: "You're signed in as another account.", logOutAndContinue: "Log out and continue",
     },
   }),
 }));
@@ -35,26 +36,41 @@ describe("EmailVerification", () => {
   afterEach(() => { cleanup(); vi.useRealTimers(); });
   beforeEach(() => {
     vi.clearAllMocks();
+    session.email = "reader@example.com";
     session.emailVerified = false;
     window.history.replaceState({}, "", "/account/verify-email#token=verification.signature");
-    confirmEmailVerification.mockResolvedValue({ data: { verified: true } });
+    confirmEmailVerification.mockResolvedValue({ data: { verified: true, user: { onboardingRequired: true } } });
     refresh.mockResolvedValue(undefined);
   });
 
-  it("submits the fragment token, removes it from the URL, and reports success", async () => {
+  it("submits the fragment token, removes it from the URL, and opens onboarding", async () => {
     render(<EmailVerification />);
     await waitFor(() => expect(confirmEmailVerification).toHaveBeenCalledWith("verification.signature"));
     expect(window.location.hash).toBe("");
-    expect(await screen.findByText("Your email is verified.")).toBeInTheDocument();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/onboarding"));
     expect(refresh).toHaveBeenCalled();
   });
 
-  it("hides the inbox box and returns accepted sessions to the dashboard", async () => {
+  it("sends an already verified account to its account page when there is no link", async () => {
     session.emailVerified = true;
+    window.history.replaceState({}, "", "/account/verify-email");
     render(<EmailVerification />);
-    expect(screen.queryByRole("heading", { name: "Verify your email" })).not.toBeInTheDocument();
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/account"));
     expect(confirmEmailVerification).not.toHaveBeenCalled();
+  });
+
+  it("asks a signed-in reader for a different account to log out, then continues the same link", async () => {
+    const { ApiError } = await import("@/lib/api");
+    confirmEmailVerification
+      .mockRejectedValueOnce(new ApiError(409, "SIGNED_IN_AS_OTHER_ACCOUNT", "Sign out first"))
+      .mockResolvedValueOnce({ data: { verified: true, user: { onboardingRequired: true } } });
+    logout.mockResolvedValue(undefined);
+    render(<EmailVerification />);
+    expect(await screen.findByText(/signed in as another account/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Log out and continue" }));
+    await waitFor(() => expect(logout).toHaveBeenCalledOnce());
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/onboarding"));
+    expect(confirmEmailVerification).toHaveBeenCalledTimes(2);
   });
 
   it("allows another resend after the server cooldown", async () => {

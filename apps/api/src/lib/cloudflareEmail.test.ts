@@ -23,13 +23,13 @@ describe("Cloudflare transactional email", () => {
     expect(request.headers).toMatchObject({ "X-Correlation-ID": "correlation-1" });
   });
 
-  it("sends password reset OTPs through the same provider without logging message contents", async () => {
+  it("sends password reset links through the same provider without logging message contents", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ result: { delivered: ["reader@example.com"] } }), { status: 200 }));
-    const result = await sendPasswordResetEmail({ to: "reader@example.com", code: "123456", correlationId: "correlation-reset" }, fetchMock);
+    const result = await sendPasswordResetEmail({ to: "reader@example.com", passwordResetUrl: "https://termspace.example/account/reset-password#token=reset-1.signature", correlationId: "correlation-reset" }, fetchMock);
     expect(result).toEqual({ outcome: "sent", statusCode: 200 });
     const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
-    expect(body).toMatchObject({ subject: "Reset your TermSpace password", text: expect.stringContaining("123456"), html: expect.stringContaining("123456") });
-    expect(console.info).toHaveBeenCalledWith(expect.not.stringContaining("123456"));
+    expect(body).toMatchObject({ subject: "Reset your TermSpace password", text: expect.stringContaining("/account/reset-password#token="), html: expect.stringContaining("/account/reset-password#token=") });
+    expect(console.info).toHaveBeenCalledWith(expect.not.stringContaining("signature"));
   });
 
   it.each([429, 500, 503])("retries retryable HTTP %s failures", async (status) => {

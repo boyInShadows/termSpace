@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 const text = {
   en: {
-    title: "Your review", signIn: "Sign in to review this listing.", signInLink: "Sign in",
+    title: "Your review", signIn: "Log in to review this listing.", signInLink: "Log in",
     notAcquired: "Add this listing to your library to review it.", ownListing: "You can't review your own listing.",
     verify: "Verify your email to write a review.", loading: "Checking whether you can review this listing…",
     rating: "Your rating", needRating: "Choose a rating from 1 to 5.", stars: (n: number) => `${n} out of 5`, name: "Name shown with your review", nameHint: "This is not your email address.",

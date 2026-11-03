@@ -98,7 +98,7 @@ describe("ProductActions acquisition flow", () => {
   });
 
   it.each([
-    [new ApiError(401, "UNAUTHENTICATED", "x"), "Your session has ended. Sign in again to add this."],
+    [new ApiError(401, "UNAUTHENTICATED", "x"), "Your session has ended. Log in again to add this."],
     [new ApiError(429, "RATE_LIMITED", "x"), "Too many requests. Wait a minute and try again."],
     [new ApiError(409, "ALREADY_IN_LIBRARY", "x"), "This resource is already in your library."],
     [new ApiError(500, "FAILED", "x"), "Could not add this resource. Check your connection and try again."],
@@ -112,11 +112,11 @@ describe("ProductActions acquisition flow", () => {
   it("tells a signed-out visitor what signing in is for, and says nothing once signed in", () => {
     session.email = null;
     const { unmount } = render(<ProductActions product={acquirable} />);
-    expect(screen.getByText("Sign in to add or save this listing.")).toBeInTheDocument();
+    expect(screen.getByText("Log in to add or save this listing.")).toBeInTheDocument();
     unmount();
     session.email = "reader@example.com";
     render(<ProductActions product={acquirable} />);
-    expect(screen.queryByText("Sign in to add or save this listing.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Log in to add or save this listing.")).not.toBeInTheDocument();
   });
 
   it("loads an existing entitlement without creating another acquisition", async () => {

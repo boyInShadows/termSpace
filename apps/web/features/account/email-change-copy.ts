@@ -20,11 +20,11 @@ export const emailChangeCopy = {
     confirmTitle: "Confirm new email",
     noToken: "Open the confirmation link from your email to continue.",
     checking: "Confirming your new email address…",
-    changed: "Your email address was changed. You were signed out everywhere, so sign in again with the new address.",
+    changed: "Your email address was changed. You were signed out everywhere, so log in again with the new address.",
     invalid: "This confirmation link is invalid or has expired. Ask for a new one in Settings.",
     unavailable: "That email address is already in use. Choose a different one in Settings.",
     confirmFailed: "Your email could not be confirmed right now. Please try again.",
-    signIn: "Sign in",
+    signIn: "Log in",
     openSettings: "Open Settings",
   },
   fa: {

@@ -11,7 +11,7 @@ test.describe("dashboard", () => {
 
     await page.getByLabel("Email").fill("creator@e2e.test");
     await page.getByLabel("Password").fill("correct-horse-battery");
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.getByRole("button", { name: "Log in" }).click();
 
     await expect(page).toHaveURL(/\/dashboard$/);
     await expect(page.getByRole("table").locator("tbody tr td:first-child a span.font-medium")).toHaveCount(3);

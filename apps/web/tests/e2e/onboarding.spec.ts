@@ -73,7 +73,7 @@ test("a new password sign-in opens onboarding before its previous destination", 
   await page.goto("/account?next=%2Fdashboard%2Flibrary");
   await page.getByLabel("Email", { exact: true }).fill("new@e2e.test");
   await page.getByLabel("Password", { exact: true }).fill("test-password");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
   await expect(page).toHaveURL("/onboarding");
   await expect(page.getByRole("heading", { name: onboardingCopy.en.title })).toBeVisible();
 });

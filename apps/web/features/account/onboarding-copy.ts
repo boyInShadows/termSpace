@@ -13,9 +13,9 @@ export const onboardingCopy = {
     loading: "Loading your profile details…", saving: "Saving…", saved: "Your profile details have been saved.",
     retry: "Try again", choose: "Choose an answer to continue.", chooseTools: "Choose at least one tool, or select Just getting started.",
     offline: "Could not reach the service. Check your connection and try again.",
-    expired: "Your session has expired. Sign in again to save your answers.",
+    expired: "Your session has expired. Log in again to save your answers.",
     rateLimited: "Too many requests. Wait a moment and try again.", invalid: "Some answers are invalid. Check your selections and try again.",
-    failed: "Profile details are temporarily unavailable. Try again.", signIn: "Sign in", redirecting: "Opening your workspace…",
+    failed: "Profile details are temporarily unavailable. Try again.", signIn: "Log in", redirecting: "Opening your workspace…",
     step: (current: number) => `Question ${current} of 4`,
   },
   fa: {

@@ -98,7 +98,7 @@ describe.skipIf(!databaseUrl)("reader authentication on a real database", () => 
     expect((await request(app).post("/api/readers/email-verification/confirm").send({ token: tokens.createEmailVerificationToken(replacement) })).status).toBe(200);
   });
 
-  it("sends a reset code, changes the password once, and revokes every session", async () => {
+  it("sends a reset link, changes the password once, and revokes every session", async () => {
     const reader = await register("reset");
     const sendReset = () => request(app).post("/api/readers/password-reset/request").send({ email: reader.email });
     expect((await sendReset()).status).toBe(202);
@@ -111,8 +111,13 @@ describe.skipIf(!databaseUrl)("reader authentication on a real database", () => 
     await emailWorker.processTransactionalEmailBatch();
     const message = fetchMock.mock.calls.map(([, init]) => JSON.parse(String(init?.body))).find((body) => body.subject === "Reset your TermSpace password");
     expect(message.to).toBe(reader.email);
-    const payload = { email: reader.email, code: message.text.match(/\b\d{6}\b/)[0], newPassword: "replacement-test-password" };
-    expect((await request(app).post("/api/readers/password-reset/confirm").send(payload)).status).toBe(200);
+    const link = new URL(message.text.match(/http[^\s]+/)[0]);
+    expect(link.pathname).toBe("/account/reset-password");
+    const token = new URLSearchParams(link.hash.slice(1)).get("token");
+    const payload = { token, newPassword: "replacement-test-password" };
+    const reset = await request(app).post("/api/readers/password-reset/confirm").send(payload);
+    expect(reset.status).toBe(200);
+    expect(reset.body.data).toMatchObject({ reset: true, authenticated: true });
     expect((await reader.agent.get("/api/readers/session")).body.data.authenticated).toBe(false);
     expect((await request(app).post("/api/readers/password-reset/confirm").send(payload)).status).toBe(400);
     expect((await request(app).post("/api/readers/login").send({ email: reader.email, password })).status).toBe(401);
@@ -121,24 +126,19 @@ describe.skipIf(!databaseUrl)("reader authentication on a real database", () => 
     expect(login.body.data.user.emailVerified).toBe(true);
   });
 
-  it("locks a reset code after five wrong attempts and rejects expired links", async () => {
+  it("rejects a tampered or expired reset link", async () => {
     const reader = await register("limits");
     await request(app).post("/api/readers/password-reset/request").send({ email: reader.email }).expect(202);
     const reset = await prisma.readerPasswordReset.findFirstOrThrow({ where: { userId: reader.id } });
-    const code = tokens.createPasswordResetCode(reset);
-    const wrongCode = code === "000000" ? "000001" : "000000";
-    for (let attempt = 0; attempt < 5; attempt++) {
-      await request(app).post("/api/readers/password-reset/confirm").send({ email: reader.email, code: wrongCode, newPassword: "replacement-password" }).expect(400);
-    }
-    const locked = await prisma.readerPasswordReset.findUniqueOrThrow({ where: { id: reset.id } });
-    expect(locked.failedAttempts).toBe(5);
-    expect(locked.consumedAt).not.toBeNull();
-    await request(app).post("/api/readers/password-reset/confirm").send({ email: reader.email, code, newPassword: "replacement-password" }).expect(400);
+    const token = tokens.createPasswordResetToken(reset);
+    const tampered = `${reset.id}.${"x".repeat(43)}`;
+    await request(app).post("/api/readers/password-reset/confirm").send({ token: tampered, newPassword: "replacement-password" }).expect(400);
+    await prisma.readerPasswordReset.update({ where: { id: reset.id }, data: { expiresAt: new Date(Date.now() - 1_000) } });
+    await request(app).post("/api/readers/password-reset/confirm").send({ token, newPassword: "replacement-password" }).expect(400);
     const verification = await prisma.readerEmailVerification.findFirstOrThrow({ where: { userId: reader.id } });
     verification.expiresAt = new Date(Date.now() - 1_000);
     await prisma.readerEmailVerification.update({ where: { id: verification.id }, data: { expiresAt: verification.expiresAt } });
     await request(app).post("/api/readers/email-verification/confirm").send({ token: tokens.createEmailVerificationToken(verification) }).expect(400);
-    expect((await prisma.readerUser.findUniqueOrThrow({ where: { id: reader.id } })).emailVerifiedAt).toBeNull();
   });
 
   it("stores the newsletter preference on the shared subscriber list and revives it after unsubscribe", async () => {

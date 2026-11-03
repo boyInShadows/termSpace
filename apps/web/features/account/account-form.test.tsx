@@ -23,13 +23,14 @@ vi.mock("@/lib/api", async (importOriginal) => ({
 vi.mock("./google-sign-in", () => ({ GoogleSignIn: ({ onCredential, disabled }: { onCredential: (credential: string) => Promise<void>; disabled: boolean }) => <button disabled={disabled} onClick={() => void onCredential("test-google-credential")}>Continue with Google</button> }));
 vi.mock("./marketplace-session", () => ({ useMarketplaceSession: () => session }));
 vi.mock("@/lib/locale-context", () => ({ useLocale: () => ({ locale: "en", t: {
-  account: "Your account", signedInAs: "Signed in as", signOut: "Sign out", signIn: "Sign in", createAccount: "Create account",
-  forgotPassword: "Forgot password?", forgotPasswordIntro: "Enter your email", enterResetCode: "Enter reset code", resetCodeIntro: "Enter the code",
-  accountIntro: "Account intro", email: "Email", password: "Password", newPassword: "New password", resetCode: "Reset code", wait: "Please wait",
-  confirmPassword: "Confirm password", passwordMismatch: "Passwords do not match", invalidCredentials: "Invalid credentials", registerAccepted: "Check your inbox, then sign in",
-  resetCodeInvalid: "Invalid reset code", passwordUnchanged: "Password unchanged",
-  sendResetCode: "Send reset code", resetPassword: "Reset password", resetCodeSent: "Code sent", resetComplete: "Password reset complete",
-  needAccount: "Register", registered: "Sign in instead", backToSignIn: "Back to sign in", serviceError: "Service unavailable",
+  account: "Your account", signedInAs: "Signed in as", signOut: "Sign out", signIn: "Log in", createAccount: "Create account",
+  forgotPassword: "Forgot password?", forgotPasswordIntro: "Enter your email",
+  accountIntro: "Account intro", email: "Email", password: "Password", newPassword: "New password", wait: "Please wait",
+  confirmPassword: "Confirm password", passwordMismatch: "Passwords do not match", invalidCredentials: "Invalid credentials",
+  checkInbox: "Check your inbox", signupLinkSent: "We've sent a verification link to", signupLinkSentTail: "Open it to finish creating your account.",
+  resetLinkSent: "If an account exists for", resetLinkSentTail: "we've sent a password reset link.", closeWindowSafe: "You can safely close this window.",
+  sendResetLink: "Send reset link", invalidResetLink: "Invalid reset link",
+  needAccount: "New here? Create an account", registered: "Already have an account? Log in", backToSignIn: "Back to log in", serviceError: "Service unavailable",
   verifyEmail: "Verify your email", verificationInstructions: "Check your inbox",
 } }) }));
 
@@ -77,7 +78,7 @@ describe("password sign-in and signup", () => {
     params.next = "/dashboard?tab=listings";
     render(<AccountForm />);
     credentials();
-    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
     await waitFor(() => expect(replace).toHaveBeenCalledWith(params.next));
     expect(login).toHaveBeenCalledWith("reader@example.com", "correct-password");
     expect(session.refresh).toHaveBeenCalled();
@@ -88,7 +89,7 @@ describe("password sign-in and signup", () => {
     login.mockResolvedValueOnce({ data: { authenticated: true, user: { onboardingRequired: true } } });
     render(<AccountForm />);
     credentials();
-    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/onboarding"));
   });
 
@@ -103,13 +104,13 @@ describe("password sign-in and signup", () => {
     params.next = next;
     render(<AccountForm />);
     credentials();
-    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
   });
 
-  it("checks password confirmation, then asks the reader to verify and sign in without starting a session", async () => {
+  it("checks password confirmation, then replaces the form with the inbox message", async () => {
     render(<AccountForm />);
-    fireEvent.click(screen.getByRole("button", { name: "Register" }));
+    fireEvent.click(screen.getByRole("button", { name: "New here? Create an account" }));
     credentials();
     fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "different-password" } });
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
@@ -118,8 +119,11 @@ describe("password sign-in and signup", () => {
     fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "correct-password" } });
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
     await waitFor(() => expect(register).toHaveBeenCalledWith("reader@example.com", "correct-password"));
-    expect(await screen.findByRole("status")).toHaveTextContent("Check your inbox, then sign in");
-    expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Check your inbox" })).toBeInTheDocument();
+    expect(screen.getByText(/reader@example\.com/)).toBeInTheDocument();
+    expect(screen.getByText(/You can safely close this window/)).toBeInTheDocument();
+    // The form and its inputs are gone, and no session was started.
+    expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
     expect(session.refresh).not.toHaveBeenCalled();
   });
@@ -129,9 +133,9 @@ describe("password sign-in and signup", () => {
     login.mockRejectedValueOnce(new ApiError(401, "INVALID_CREDENTIALS", "Invalid email or password"));
     render(<AccountForm />);
     credentials();
-    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Invalid credentials");
-    expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Log in" })).toBeEnabled();
     expect(replace).not.toHaveBeenCalled();
   });
 
@@ -164,20 +168,17 @@ describe("password recovery", () => {
     confirmPasswordReset.mockResolvedValue({ data: { reset: true } });
   });
 
-  it("requests an OTP and resets the password without exposing account existence", async () => {
+  it("sends the reset link and replaces the form with the inbox message", async () => {
     render(<AccountForm />);
     fireEvent.click(screen.getByRole("button", { name: "Forgot password?" }));
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "reader@example.com" } });
-    fireEvent.click(screen.getByRole("button", { name: "Send reset code" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send reset link" }));
 
     await waitFor(() => expect(requestPasswordReset).toHaveBeenCalledWith("reader@example.com"));
-    expect(screen.getByRole("status")).toHaveTextContent("Code sent");
-    fireEvent.change(screen.getByLabelText("Reset code"), { target: { value: "123456" } });
-    fireEvent.change(screen.getByLabelText("New password"), { target: { value: "new-password" } });
-    fireEvent.click(screen.getByRole("button", { name: "Reset password" }));
-
-    await waitFor(() => expect(confirmPasswordReset).toHaveBeenCalledWith("reader@example.com", "123456", "new-password"));
-    expect(screen.getByRole("status")).toHaveTextContent("Password reset complete");
-    expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Check your inbox" })).toBeInTheDocument();
+    expect(screen.getByText(/If an account exists for/)).toBeInTheDocument();
+    expect(screen.getByText(/You can safely close this window/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Reset code")).not.toBeInTheDocument();
+    expect(confirmPasswordReset).not.toHaveBeenCalled();
   });
 });
