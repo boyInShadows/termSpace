@@ -2,6 +2,26 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-04 — New navbar mark and favicon
+
+- **Scope.** `apps/web/components/layout/logo.tsx`,
+  `apps/web/components/layout/header.tsx`, `apps/web/app/icon.svg`,
+  `changelog.md`. No copy, navigation or layout change.
+- **Navbar.** The global header replaces the text wordmark and caret with the
+  owner's `t|` mark in its rounded dark tile, 32px. Fixed brand colours
+  (`#1A1823`, `#F4F3F8`, `#2051CE`) mean it reads the same on paper and on the
+  dark ground. The link keeps `aria-label="termspace home"`. The footer keeps
+  the text wordmark, and `Logo` gains a `mark` concept without changing `pure`,
+  `cursor` or `block`.
+- **Favicon.** `app/icon.svg` is the modular block mark. It is wrapped in the
+  same dark rounded tile and scaled 1.4x about the centre: the supplied mark
+  uses near-white shapes, which disappear on light browser tab strips. The
+  owner may prefer the transparent version; it is a one-line change.
+- **Verification.** Web typecheck; lint zero errors (two pre-existing warnings);
+  header tests 15 passed; production build. Deployed v.3 at `55942de`. Live:
+  32x32 mark in the header at 1280 and 320, light and dark, English and Persian
+  RTL, no console errors; `/icon.svg` serves the committed asset byte for byte.
+
 ## 2026-11-04 — Google sign-in wears the site's button
 
 - **Scope / ownership notice.** Shared surfaces: `apps/web/lib/i18n/common.ts` and
