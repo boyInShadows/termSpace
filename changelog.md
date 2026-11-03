@@ -2,6 +2,36 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-04 — Google sign-in wears the site's button
+
+- **Scope / ownership notice.** Shared surfaces: `apps/web/lib/i18n/common.ts` and
+  `changelog.md`. Presentation only in `features/account/google-sign-in.tsx`,
+  `features/account/account-form.tsx` and `features/dashboard/account-data.tsx`.
+  No API, schema, permission or credential-flow change.
+- **Problem.** Enabling Google exposed its own iframe button: `outline` is a white
+  slab with 4px corners and Roboto; `filled_black` adds a white logo tile. Neither
+  can sit in the Paper & Signal system, and the 320px cap made it narrower than
+  the form.
+- **Behaviour.** The visible control is now the site's secondary `Button` (12px
+  radius, 44px, Geist, bordered surface, hover and focus ring) with Google's
+  official multicolour G and localized copy: "Continue with Google" /
+  «ادامه با گوگل». Google's iframe still opens the popup and returns the same
+  credential; it is pinned invisibly over the button. It must stay at
+  `opacity: 0.001`, not `0` — Chrome does not deliver clicks to an opacity-0
+  iframe. Its inline width/margin are re-pinned on the next frame and on load.
+- **Notes.** The register and login modes share one label; the heading already
+  says which action the account takes. The blog keeps Google's own button until
+  that app is deployed.
+- **Verification.** Root typecheck (after `prisma:generate`, which the pulled
+  schema required); web 499 tests; lint zero errors (two pre-existing warnings);
+  production build. Deployed v.3 at `985f1a2`. In Chrome at 1280 and 320px,
+  light and dark, EN and FA: the button matches the design tokens, no console
+  errors, and the iframe covers the control so top, bottom, left, right and
+  centre clicks all open Google's popup. Only the clipped 12px rounded corners
+  fall outside the clickable shape, matching what is painted.
+- **Remaining acceptance.** A real Google account sign-in is still the owner's
+  check (verification, onboarding redirect, `emailVerified`).
+
 ## 2026-11-03 — Signup, verification and password reset follow the inbox
 
 - **Scope / ownership notice.** Shared surfaces: `apps/api/src/controllers/readerController.ts`,
