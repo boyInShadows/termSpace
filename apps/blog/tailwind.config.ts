@@ -26,6 +26,11 @@ const config: Config = {
           soft: "#92400e",
           tint: "#fef3c7",
         },
+        action: {
+          DEFAULT: "#2563eb",
+          foreground: "#ffffff",
+          hover: "#1d4ed8",
+        },
         line: {
           DEFAULT: "#e5e1da",
           soft: "#efece6",

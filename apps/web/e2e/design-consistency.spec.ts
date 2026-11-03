@@ -18,11 +18,16 @@ for (const locale of ["en", "fa"]) for (const theme of ["light", "dark"]) {
         const cards = [...document.querySelectorAll("article")]
           .filter((card) => getComputedStyle(card).borderTopWidth !== "0px")
           .map((card) => ({ radius: getComputedStyle(card).borderRadius, shadow: getComputedStyle(card).boxShadow }));
+        const actions = [...document.querySelectorAll<HTMLElement>("button, a")]
+          .filter((element) => element.offsetWidth > 0 && element.offsetHeight > 0)
+          .filter((element) => element.classList.contains("bg-action") || (element instanceof HTMLButtonElement && element.form && element.type === "submit" && !element.classList.contains("bg-destructive")))
+          .map((element) => ({ background: getComputedStyle(element).backgroundColor, foreground: getComputedStyle(element).color }));
         return {
           headingFont: style.fontFamily,
           headingWeight: style.fontWeight,
           fields: fields.map((field) => getComputedStyle(field).borderRadius),
           cards,
+          actions,
           overflow: document.documentElement.scrollWidth > innerWidth,
         };
       });
@@ -31,6 +36,11 @@ for (const locale of ["en", "fa"]) for (const theme of ["light", "dark"]) {
       expect(styles.headingFont).not.toContain("Newsreader");
       expect(styles.headingWeight, route).toBe("600");
       expect(styles.overflow, route).toBe(false);
+      if (route === "/" || route.startsWith("/products/")) expect(styles.actions.length, route).toBeGreaterThan(0);
+      for (const action of styles.actions) {
+        expect(action.background, route).toBe("rgb(37, 99, 235)");
+        expect(action.foreground, route).toBe("rgb(255, 255, 255)");
+      }
       const isLanding = route === "/";
       if (!isLanding) {
         // One soft shape system: 12px controls, 16px cards with a panel shadow.
@@ -56,6 +66,11 @@ test("hero search keeps its prompt and keyboard focus exposes usable suggestions
   await expect(focused).toHaveAttribute("type", "submit");
   const focusVisible = await focused.evaluate((node) => getComputedStyle(node).outlineStyle !== "none");
   expect(focusVisible).toBe(true);
+  await expect(focused).toHaveCSS("background-color", "rgb(37, 99, 235)");
+  if (await page.evaluate(() => matchMedia("(hover: hover)").matches)) {
+    await focused.hover();
+    await expect(focused).toHaveCSS("background-color", "rgb(29, 78, 216)");
+  }
 });
 
 for (const locale of ["en", "fa"] as const) {

@@ -345,7 +345,7 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
         <button
           type="submit"
           disabled={saving}
-          className="rounded-lg bg-accent px-6 py-3 font-medium text-paper hover:bg-accent-soft disabled:opacity-50"
+          className="rounded-lg bg-action px-6 py-3 font-medium text-action-foreground hover:bg-action-hover disabled:opacity-50"
         >
           {saving ? "Saving…" : isEdit ? "Save changes" : "Create article"}
         </button>

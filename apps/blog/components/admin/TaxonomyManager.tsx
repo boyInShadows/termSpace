@@ -33,7 +33,7 @@ export function TaxonomyManager({ initialTags, initialSeries }: { initialTags: T
       <form onSubmit={create} className="flex flex-wrap gap-3 rounded-lg border border-line p-4">
         <label className="grid gap-2 text-sm font-medium">Type<select disabled={busy} value={kind} onChange={(event) => setKind(event.target.value as "tag" | "series")} className="rounded-lg border border-line-input px-3"><option value="tag">Tag</option><option value="series">Series</option></select></label>
         <label className="grid min-w-0 flex-1 gap-2 text-sm font-medium">Name<input disabled={busy} value={name} onChange={(event) => setName(event.target.value)} placeholder="Name" className="w-full min-w-0 rounded-lg border border-line-input px-3 py-2" required /></label>
-        <button disabled={busy} className="rounded-lg bg-accent px-5 py-2 text-paper">Add</button>
+        <button disabled={busy} className="rounded-lg bg-action px-5 py-2 text-action-foreground hover:bg-action-hover">Add</button>
       </form>
       {feedback && <p role={feedback.kind === "error" ? "alert" : "status"}>{feedback.text}</p>}
       <div className="grid gap-8 md:grid-cols-2">

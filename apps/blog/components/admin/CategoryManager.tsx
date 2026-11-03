@@ -117,7 +117,7 @@ export function CategoryManager({ categories: initial }: CategoryManagerProps) {
         <button
           type="submit"
           disabled={busy}
-          className="rounded-lg bg-accent px-6 py-2.5 font-medium text-paper hover:bg-accent-soft disabled:opacity-50"
+          className="rounded-lg bg-action px-6 py-2.5 font-medium text-action-foreground hover:bg-action-hover disabled:opacity-50"
         >
           {busy ? "Adding…" : "Add category"}
         </button>

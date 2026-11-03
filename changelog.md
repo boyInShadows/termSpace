@@ -2,6 +2,45 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-03 — Owner-selected blue action buttons
+
+- **Goal / files / shared surface.** Apply the owner's exact #2563EB to normal
+  submit actions and existing Ink Light/Ground Dark filled buttons. Use the
+  existing web Button/QuickAction and action tokens, blog submit control classes
+  and Tailwind palette. Update DESIGN, its preview metadata and dashboard brief.
+  Shared surface: `changelog.md`; blog form presentation is explicitly included
+  by the owner's submit-button instruction. Preserve unrelated brand assets and
+  the owner's uncommitted DESIGN table formatting.
+- **Acceptance / verification.** Blue fill/white text in both web themes and
+  both locales, darker blue hover, existing keyboard focus/disabled behavior.
+  Check generated blog styles and all normal form submits. Run root typecheck,
+  tests, production builds, web lint/E2E and unchanged Lighthouse budgets.
+- **Base.** Fetch failed because github.com could not resolve. The locally
+  recorded origin/main is already the parent of the existing repair commit;
+  continue locally without changing integration history or other queue items.
+- **Result.** Dedicated action tokens keep #2563EB/white consistent in both
+  themes, with #1D4ED8 hover. Update the shared Button, custom dashboard action,
+  keyboard skip control and three previously secondary normal submit actions.
+  All 12 blog submit buttons across 11 files use the matching action palette;
+  their submit logic is unchanged. Normal/hover white-text contrast is
+  5.17:1/6.70:1. The guide, dashboard brief, primary preview and W06 handoff now
+  reflect the owner's explicit replacement of ink-filled actions.
+- **Verification.** Root typecheck, all production builds and 844 unit/component
+  tests pass (44 existing integration skips); web lint has zero errors and two
+  existing warnings. Full E2E: 527 passed, 46 intentional skips. Browser checks
+  verify exact computed fill/label colors in EN/FA and light/dark, keyboard skip
+  navigation, and hover on hover-capable devices. Touch devices retain normal
+  fill. Nine Lighthouse runs pass all unchanged budgets; the existing local
+  Windows Chrome cleanup preload is used without altering audits/assertions.
+  Impeccable reports the same 13 web/2 blog contextual exclusions. Manual web
+  desktop/phone samples and generated blog CSS confirm the new colors.
+- **Limits / delivery.** Editorial live preview remains pending its earlier
+  automatic approval rejection ("blocked by policy"); no blocked launch/cleanup
+  was retried. Blog component tests, build and generated style checks pass.
+  Existing source-only editorial/real-device/provider acceptance stays in the
+  local queue. Preserve the owner's DESIGN table formatting and brand changes
+  outside this commit. No push while GitHub resolution is unavailable.
+
 ## 2026-11-03 — UI repairs; editorial rendered acceptance pending
 
 - **Owner scope / shared surfaces.** Execute all 42 audited issue groups using

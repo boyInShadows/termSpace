@@ -8,6 +8,7 @@ colors:
   surface-light: "oklch(100% 0 0)"
   ink-light: "oklch(23.53% 0.0707 262.7)"
   signal: "oklch(54.61% 0.2152 262.9)"
+  action: "#2563EB"
   ink-muted-light: "oklch(52% 0.04 257.4)"
   hairline-light: "oklch(92.88% 0.0126 255.5)"
   sage: "oklch(96.27% 0.0107 158.8)"
@@ -132,14 +133,15 @@ theme is a blue-black ground derived from the same hue.
 | border | `--border` hairline | low-contrast blue |
 | field border | `--input` | low-contrast blue |
 | signal (links, focus, current) | `--primary` blue | brighter blue |
-| action fill | `bg-foreground` navy | near-white ink |
+| action fill | `--action` #2563EB | same #2563EB / white text |
 | success / warning / danger | `--success` / `--warning` / `--destructive` | same roles, lifted for dark |
 
 Rules:
 
-- Buttons that perform the page's main action use **ink** (`bg-foreground` +
-  `text-background`), not the blue. Blue is the signal: links, focus rings,
-  current route, selected filters and the thin progress bar.
+- Primary and normal submit buttons use **#2563EB** with **white text** in
+  both themes (`bg-action text-action-foreground`). Hover uses #1D4ED8 through
+  `hover:bg-action-hover`. Links, focus, selection and progress keep their
+  existing theme-aware signal tokens; text and page backgrounds retain ink/paper.
 - Pastel tints (`--tint-sage`, `--tint-paper`, `--tint-mist`, `--tint-lavender`)
   are grounds for feature or summary cards, never for state. State stays
   success/warning/danger with a visible text label.
@@ -159,7 +161,7 @@ Rules:
 
 | Meaning | Visual role | Required distinction |
 | --- | --- | --- |
-| Main action | ink fill / background text | independent of blue link/selection |
+| Main action | action blue / white text | same fill in both themes |
 | Current route, selected filter, focus | blue signal | current/pressed/focus semantics as applicable |
 | Listing safety reviewed | reviewed/success accent | visible reviewed label |
 | Not yet safety reviewed | warning/caution accent | explicit unreviewed label, not a rejection |
@@ -167,7 +169,8 @@ Rules:
 | Creator identity or source ownership verified | its named identity/source indicator | never imply listing safety approval |
 
 Avoid hardcoded emerald/amber variants when an existing semantic role fits.
-In the blog, preserve the amber identity but use contrast-safe hover tones.
+In the blog, preserve amber for editorial accents. Normal submit buttons share
+the #2563EB action fill, white text and #1D4ED8 hover through its action palette.
 An editor-selected edition accent must not become arbitrary small-text color
 or button fill with an unchecked foreground across light and dark cover areas.
 
@@ -299,8 +302,8 @@ patterns.
 - `Button`: `rounded-control`, weight 600. Existing sizes are `sm` 36px/12px
   text, `md` 44px/14px, `lg` 48px/16px, and `icon` 44px square. The default and
   normal phone hit area is 44px; compact exceptions must remain usable and meet
-  target-size/spacing requirements. Primary is ink with background text and
-  `shadow-sm`; secondary is a bordered surface, outline is transparent with a
+  target-size/spacing requirements. Primary uses `bg-action text-action-foreground` and
+  `hover:bg-action-hover`, with `shadow-sm`; secondary is a bordered surface, outline is transparent with a
   stronger border, ghost stays quiet, destructive uses the danger role. Links
   styled as actions reuse `buttonVariants`. This size table describes the helper;
   verify computed styles where global CSS currently overrides it.
@@ -381,7 +384,7 @@ additional blog field-boundary finding (B23) have source repairs.
 | --- | --- |
 | Discovery | Measured sticky offset, unique named drawer filters, contained RTL thumb and keyboard suggestions. |
 | Typography / spacing | Shared sans/600 headings, consistent overview/peer ramps, Persian Estedad and restrained labels. |
-| Controls / colors | Ink primary actions, 12px fields, 16px panels and field text, semantic states, larger phone controls. |
+| Controls / colors | Blue primary actions, 12px fields, 16px panels and field text, semantic states, larger phone controls. |
 | Contrast | Web input boundaries measure 3.04–3.23:1 in light and 3.08:1 on dark surface. Blog fields use `line.input` (#8a847b), 3.29–3.71:1; invalid article fields use red-600. Blog faint text on warm paper is 4.73:1; amber/hover on white is 5.02/7.09:1. Nested code and arbitrary edition accents are corrected. |
 | Motion / state | Decorative reveals/lifts/carets/typing removed; stable theme hydration, retries and write/empty feedback added. |
 | Blog | Native modal, labeled fields, connected validation, wrapping actions, one main, current navigation and preserved locale query context. English admin scope is explicit. Native modal/phone editorial rendering awaits local fixture approval. |

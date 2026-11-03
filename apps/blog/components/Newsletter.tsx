@@ -73,7 +73,7 @@ export function Newsletter() {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-accent px-6 py-3 font-medium text-paper transition-colors hover:bg-accent-soft"
+              className="rounded-lg bg-action px-6 py-3 font-medium text-action-foreground transition-colors hover:bg-action-hover"
             >
               {submitting ? (fa ? "در حال ثبت…" : "Subscribing...") : (fa ? "عضویت" : "Subscribe")}
             </button>

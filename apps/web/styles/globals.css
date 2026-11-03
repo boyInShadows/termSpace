@@ -44,6 +44,9 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
+  --color-action: var(--action);
+  --color-action-foreground: var(--action-foreground);
+  --color-action-hover: var(--action-hover);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-soft: var(--accent-soft);
