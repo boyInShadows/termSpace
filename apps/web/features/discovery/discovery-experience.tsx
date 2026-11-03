@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useId, useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -47,6 +47,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
 }) {
   const { fa, t, locale } = useLocale();
   const d = t.discovery;
+  const filterId = useId();
   const router = useRouter();
   const pathname = usePathname() ?? "/explore";
   const searchParams = useSearchParams();
@@ -127,7 +128,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
     <div className="space-y-7">
       <label className="block text-sm font-semibold">
         {d.category}
-        <select value={category} onChange={(event) => change("category")(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+        <select value={category} onChange={(event) => change("category")(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-surface px-3 text-base">
           <option value="All">{d.all}</option>
           {categories.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
         </select>
@@ -137,7 +138,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
         <select
           value={community}
           onChange={(event) => change("community")(event.target.value)}
-          className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+          className="mt-3 min-h-11 w-full rounded-md border border-input bg-surface px-3 text-base"
         >
           <option value="All">{d.all}</option>
           {communities.map((item) => <option key={item.slug} value={item.slug}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
@@ -146,7 +147,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
       </label>}
       {!inDrawer && <label className="block text-sm font-semibold">
         {d.compatibility}
-        <select value={platform} onChange={(event) => change("platform")(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+        <select value={platform} onChange={(event) => change("platform")(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-surface px-3 text-base">
           <option value="All">{d.all}</option>
           {platforms.map((item) => <option key={item.key} value={item.key}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
         </select>
@@ -160,7 +161,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
       <div>
         <label className="block text-sm font-semibold">
           {fa ? "دسترسی اعلام‌شده" : "Declared access"}
-          <select value={permission} onChange={(event) => change("permission")(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+          <select value={permission} onChange={(event) => change("permission")(event.target.value)} className="mt-3 min-h-11 w-full rounded-md border border-input bg-surface px-3 text-base">
             <option value="All">{d.all}</option>
             {permissionOptions.map((item) => <option key={item.value} value={item.value}>{item[fa ? "fa" : "en"]}</option>)}
           </select>
@@ -168,16 +169,16 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
         <p className="mt-2 text-xs text-muted-foreground">{fa ? "شامل دسترسی‌های الزامی یا اختیاریِ اعلام‌شده در نسخه عمومی تأییدشده." : "Includes required or optional access declared in the approved public release."}</p>
       </div>
       <div className="flex items-center justify-between">
-        <label htmlFor="verified" className="text-sm font-medium">
+        <label htmlFor={`${filterId}-${inDrawer ? "drawer" : "sidebar"}-verified`} className="text-sm font-medium">
           {d.verifiedOnly}
         </label>
         <Switch.Root
-          id="verified"
+          id={`${filterId}-${inDrawer ? "drawer" : "sidebar"}-verified`}
           checked={verified}
           onCheckedChange={(value) => update({ verified: value })}
           className="relative h-6 w-11 rounded-full bg-border-strong p-0.5 after:absolute after:-inset-x-1 after:-inset-y-2.5 data-[state=checked]:bg-primary"
         >
-          <Switch.Thumb className="block size-5 rounded-full bg-background transition-transform data-[state=checked]:translate-x-5" />
+          <Switch.Thumb className="block size-5 rounded-full bg-background transition-transform data-[state=checked]:translate-x-5 rtl:data-[state=checked]:-translate-x-5" />
         </Switch.Root>
       </div>
     </div>
@@ -242,10 +243,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
           {/* The cards' titles are h3s; without this the outline went from the
               page's h1 straight to them. */}
           <h2 className="sr-only">{d.resultsHeading}</h2>
-          {/* Sticky, so the count and the controls stay in reach while
-              scrolling a page of results. At the very top: the site header
-              scrolls away with the page. */}
-          <div className="sticky top-0 z-20 -mx-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border bg-background px-2 py-3">
+          <div className="sticky top-[var(--site-header-height)] z-20 -mx-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border bg-background px-2 py-3">
             <p className="shrink-0 font-mono text-sm" role="status">
               <strong>{meta.total.toLocaleString(fa ? "fa-IR" : "en")}</strong> {meta.total === 1 ? d.product : d.products}
             </p>
@@ -257,7 +255,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
                 aria-label={d.compatibility}
                 value={platform}
                 onChange={(event) => change("platform")(event.target.value)}
-                className="min-h-11 min-w-0 max-w-[8.5rem] flex-1 rounded-md border bg-surface px-3 text-sm sm:w-[8.5rem] sm:flex-none lg:hidden"
+                className="min-h-11 min-w-0 max-w-[8.5rem] flex-1 rounded-control border border-input bg-surface px-3 text-base sm:w-[8.5rem] sm:flex-none lg:hidden"
               >
                 <option value="All">{d.compatibility}</option>
                 {platforms.map((item) => <option key={item.key} value={item.key}>{fa ? item.nameFa ?? item.nameEn : item.nameEn}</option>)}
@@ -293,7 +291,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
                         <select
                           value={sort}
                           onChange={(event) => update({ sort: event.target.value })}
-                          className="mt-3 min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+                          className="mt-3 min-h-11 w-full rounded-md border border-input bg-surface px-3 text-base"
                         >
                           {sortOptions}
                         </select>
@@ -312,7 +310,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
                 aria-label={d.sort}
                 value={sort}
                 onChange={(e) => update({ sort: e.target.value })}
-                className="hidden min-h-10 rounded-md border bg-surface px-3 text-sm sm:block"
+                className="hidden min-h-10 rounded-control border border-input bg-surface px-3 text-base sm:block"
               >
                 {sortOptions}
               </select>
@@ -425,6 +423,7 @@ function FilterGroup({
   setValue: (x: string) => void;
 }) {
   const { t } = useLocale();
+  const groupName = useId();
   return (
     <fieldset>
       <legend className="mb-3 text-sm font-semibold">{label}</legend>
@@ -436,7 +435,7 @@ function FilterGroup({
           >
             <input
               type="radio"
-              name={label}
+              name={groupName}
               value={o}
               checked={String(value) === String(o)}
               onChange={() => setValue(String(o))}

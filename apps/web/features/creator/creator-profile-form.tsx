@@ -53,7 +53,7 @@ export function CreatorProfileForm({ profile, onSaved, headingLevel = "h2", noti
 
   const shownError = error ?? notice ?? null;
   return <>
-    <Heading id="creator-profile-title" className="font-semibold mt-2 text-2xl">{profile ? t.creatorHub.editTitle : t.creatorHub.title}</Heading>
+    <Heading id="creator-profile-title" className="font-semibold mt-2 text-xl">{profile ? t.creatorHub.editTitle : t.creatorHub.title}</Heading>
     <p className="mt-3 text-muted-foreground">{profile ? t.creatorHub.editIntro : t.creatorHub.intro}</p>
     <form className="mt-7 space-y-5" onSubmit={submit} aria-labelledby="creator-profile-title">
       <div><label htmlFor="creator-name" className="block text-sm font-medium">{t.creatorHub.name}</label><Input id="creator-name" name="name" required minLength={2} maxLength={80} pattern="(?=.*[A-Za-z])[\x20-\x7E]+" defaultValue={profile?.name} autoComplete="name" lang="en" dir="ltr" aria-describedby="creator-name-help" className="mt-2" /><span id="creator-name-help" className="mt-1 block text-xs text-muted-foreground">{t.creatorHub.nameHelp}</span></div>
@@ -62,9 +62,9 @@ export function CreatorProfileForm({ profile, onSaved, headingLevel = "h2", noti
         <Input id="creator-handle" name="handle" required={!profile} disabled={Boolean(profile)} minLength={3} maxLength={40} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={profile?.handle} dir="ltr" autoComplete="off" aria-describedby="creator-handle-help" className="mt-2" />
         <span id="creator-handle-help" className="mt-1 block text-xs text-muted-foreground">{profile ? t.creatorHub.handleLocked : t.creatorHub.handleHelp}</span>
       </div>
-      <label className="block text-sm font-medium">{t.creatorHub.bio}<textarea name="bio" required minLength={20} maxLength={500} defaultValue={profile?.bio} className="mt-2 min-h-36 w-full rounded-control border border-input bg-surface px-3 py-3 text-sm placeholder:text-muted-foreground/75 hover:border-border-strong focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20" /></label>
+      <label className="block text-sm font-medium">{t.creatorHub.bio}<textarea name="bio" required minLength={20} maxLength={500} defaultValue={profile?.bio} className="mt-2 min-h-36 w-full rounded-control border border-input bg-surface px-3 py-3 text-base placeholder:text-muted-foreground/75 hover:border-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20" /></label>
       {shownError && <p role="alert" className="text-sm text-destructive">{shownError}</p>}
-      {saved && <p role="status" className="text-sm text-primary">{t.creatorHub.saved}</p>}
+      {saved && <p role="status" className="text-sm text-success">{t.creatorHub.saved}</p>}
       <Button disabled={submitting}>{submitting ? t.wait : profile ? t.creatorHub.save : t.creatorHub.create}</Button>
     </form>
   </>;

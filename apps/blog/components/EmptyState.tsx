@@ -4,6 +4,14 @@ interface EmptyStateProps {
   action?: React.ReactNode;
 }
 
+export function EmptyCollection({ locale }: { locale: Locale }) {
+  return <EmptyState
+    title={locale === "fa" ? "هنوز مطلبی در این بخش منتشر نشده است." : "Nothing has been published here yet."}
+    description={locale === "fa" ? "مطلب‌های تازه در راه‌اند. می‌توانید مقاله‌های دیگر را مرور کنید." : "New writing is on the way. Browse other articles while you wait."}
+    action={<Link className="inline-flex min-h-11 items-center rounded-lg bg-accent px-4 text-sm text-white hover:bg-accent-soft" href={localePath("/blog", locale)}>{copy[locale].allArticles}</Link>}
+  />;
+}
+
 export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
     <div className="rounded-2xl border border-line bg-paper-card p-10 text-center">
@@ -18,3 +26,5 @@ export function EmptyState({ title, description, action }: EmptyStateProps) {
     </div>
   );
 }
+import Link from "next/link";
+import { copy, localePath, type Locale } from "@/lib/i18n";

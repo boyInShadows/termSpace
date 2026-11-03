@@ -4,6 +4,7 @@ import { renderWithLocale as render } from "@/lib/test-render";
 import { describe, expect, it, vi } from "vitest";
 import { DiscoveryExperience } from "./discovery-experience";
 import { LocaleProvider } from "@/lib/locale-context";
+import userEvent from "@testing-library/user-event";
 
 const replace = vi.hoisted(() => vi.fn());
 
@@ -100,6 +101,20 @@ describe("DiscoveryExperience states", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("rate-limited");
     expect(screen.getByRole("button", { name: "Retry" })).toBeEnabled();
+  });
+
+  it("gives the drawer switch its own working label without duplicate IDs", async () => {
+    const user = userEvent.setup();
+    replace.mockClear();
+    renderDiscovery();
+    fireEvent.click(screen.getAllByRole("button", { name: /Filters/ })[0]);
+    const drawer = screen.getByRole("dialog");
+    const toggle = within(drawer).getByRole("switch", { name: "Reviewed only" });
+    const ids = [...document.querySelectorAll("[id]")].map((node) => node.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    await user.click(within(drawer).getByText("Reviewed only"));
+    expect(toggle).toHaveFocus();
+    expect(replace).toHaveBeenCalledWith("/explore?verified=true", { scroll: false });
   });
 
   it("shows each active filter as a chip that removes only itself", () => {

@@ -54,7 +54,7 @@ export function ReleaseFacts({ release, locale, summary }: { release: ProductRel
       <Fact label={t.review}>
         {reviewed
           ? <span className="font-semibold text-verified">{t.reviewed}<span className="font-normal text-muted-foreground"> · {reviewed}</span></span>
-          : <Absent>{t.notReviewed}</Absent>}
+          : <span className="font-semibold text-warning">{t.notReviewed}</span>}
       </Fact>
       <Fact label={t.permissions}>{permissions ?? <Absent>{t.notDeclared}</Absent>}</Fact>
       <Fact label={t.licence}>{license ?? t.notStated}</Fact>

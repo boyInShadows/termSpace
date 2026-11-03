@@ -38,7 +38,7 @@ export function NotFoundView({ locale, eyebrow, title, body }: { locale: Locale;
               placeholder={fa ? "از هوش مصنوعی چه می‌خواهید؟" : "What do you want AI to do better?"}
               className="h-14 min-w-0 flex-1 bg-transparent px-4 text-base placeholder:text-muted-foreground focus:outline-none"
             />
-            <button type="submit" className="me-2 h-11 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary-hover">
+            <button type="submit" className={`${buttonVariants()} me-2`}>
               {fa ? "جست‌وجو" : "Search"}
             </button>
           </div>

@@ -83,7 +83,7 @@ export function ContextHelp({ label, topic }: { label: string; topic: HelpTopic 
 
   return <>
     <button ref={trigger} type="button" aria-label={`${locale === "fa" ? "راهنما" : "Help"}: ${label}`} aria-describedby={open ? id : undefined}
-      className="inline-flex size-11 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="inline-flex size-11 shrink-0 items-center rounded-control justify-center text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       onPointerEnter={(event) => { cancelClose(); if (event.pointerType === "mouse") setOpen(true); }} onPointerLeave={leave}
       onPointerDown={(event) => { touchFocus.current = event.pointerType !== "mouse"; }}
       onFocus={() => { cancelClose(); if (!touchFocus.current) setOpen(true); }} onBlur={() => { touchFocus.current = false; if (!pinned.current) leave(); }}

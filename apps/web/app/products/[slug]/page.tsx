@@ -13,6 +13,7 @@ import { ApiError, getProduct } from "@/lib/api";
 import { copy, localePath, type Locale } from "@/lib/i18n";
 import { Fact } from "@/features/product/release-facts";
 import { ReleaseProvenance, provenanceTitle } from "@/features/product/release-provenance";
+import { reviewCopy } from "@/features/product/review-copy";
 import { ReviewComposer } from "@/features/product/review-composer";
 import { pageAlternates } from "@/lib/alternates";
 import { productPageLabels, type ProductPageLabels } from "@/lib/i18n/product-page";
@@ -130,7 +131,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
 
             <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-              <div className="space-y-4 lg:sticky lg:top-24">
+              {/* Once reporting starts, keep its rail in page flow through collapse/retry. */}
+              <div className="space-y-4 lg:sticky lg:top-[calc(var(--site-header-height)+1rem)] lg:has-[[open]]:static lg:has-[[data-activated]]:static">
                 {product.versions.length > 0 && <VersionPicker />}
                 <ProductActions product={product} />
                 <p className="text-xs leading-5 text-muted-foreground">{l.installNote}</p>
@@ -203,7 +205,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                       </div>
                       <div>
                         <p className="eyebrow">{l.output}</p>
-                        <div className="mt-2 border border-foreground/60 p-4">
+                        <div className="mt-2 rounded-card border border-border-strong p-4">
                           <p className="ts-bidi text-lg font-bold text-foreground">{product.exampleOutputTitle}</p>
                           <p className="ts-bidi mt-2 text-sm">{product.exampleOutputBody}</p>
                         </div>
@@ -213,7 +215,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 )}
 
                 <Section title={`${l.reviews} (${formatNumber(product.reviewCount, locale)})`} id="reviews">
-                  <ReviewComposer slug={product.slug} />
+                  <ReviewComposer slug={product.slug} messages={reviewCopy[locale]} />
                   {product.reviews.length === 0 ? (
                     <p>{l.noReviews}</p>
                   ) : (

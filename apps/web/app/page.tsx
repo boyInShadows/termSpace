@@ -120,8 +120,8 @@ async function FeaturedGrid({ locale }: { locale: Locale }) {
       ) : (
         <div className="grid gap-4 md:grid-cols-3">
           {featured.slice(0, 3).map((product) => (
-            <div key={product.id} className="ts-reveal">
-              <div className="ts-lift h-full rounded-lg">
+            <div key={product.id}>
+              <div className="h-full rounded-lg">
                 <CompactProductCard product={product} />
               </div>
             </div>
@@ -197,8 +197,8 @@ export default async function Home() {
           />
           <div className="container-page section-y">
             <div className="grid gap-12">
-              <div className="ts-reveal mx-auto flex max-w-2xl flex-col items-center text-center">
-                <span className="inline-flex items-center gap-2 rounded-full border border-verified/30 bg-verified/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-verified">
+              <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+                <span className="inline-flex items-center gap-2 rounded-full border border-verified/30 bg-verified/10 px-3 py-1.5 text-[11px] font-semibold text-verified">
                   <ShieldCheck size={13} />
                   {sections.trustBadge}
                 </span>
@@ -224,8 +224,8 @@ export default async function Home() {
                 {sections.trustFacts.map((fact, index) => {
                   const Icon = TRUST_ICONS[index];
                   return (
-                    <div key={fact.title} className="ts-reveal">
-                      <div className="ts-lift h-full rounded-xl border border-border bg-surface/70 p-6 backdrop-blur">
+                    <div key={fact.title}>
+                      <div className="h-full rounded-xl border border-border bg-surface/70 p-6 backdrop-blur">
                         <div className="flex flex-col items-center gap-4 text-center">
                           <span
                             className={cn(
@@ -253,7 +253,7 @@ export default async function Home() {
 
         {/* --- closing CTA --------------------------------------------------- */}
         <section className="container-page section-y">
-          <div className="ts-reveal">
+          <div>
             <div className="relative isolate overflow-hidden rounded-2xl border border-border px-6 py-12 sm:px-12">
               <div
                 aria-hidden

@@ -14,7 +14,7 @@ const config: Config = {
           DEFAULT: "#1a1a1a",
           soft: "#4a4a4a",
           muted: "#6b6b6b",
-          faint: "#8a8a8a",
+          faint: "#6b6b6b",
         },
         paper: {
           DEFAULT: "#faf9f7",
@@ -23,12 +23,13 @@ const config: Config = {
         },
         accent: {
           DEFAULT: "#b45309", // warm amber
-          soft: "#f59e0b",
+          soft: "#92400e",
           tint: "#fef3c7",
         },
         line: {
           DEFAULT: "#e5e1da",
           soft: "#efece6",
+          input: "#8a847b",
         },
       },
       fontFamily: {

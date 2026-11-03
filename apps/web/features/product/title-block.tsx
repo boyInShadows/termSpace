@@ -24,7 +24,7 @@ export function ProductHeader({ product, typeLabel, locale }: { product: Product
     <header className="min-w-0">
       {/* Shares its name with the card title, so the title travels from the card into this header on navigation. */}
       <h1
-        className="ts-listing-title ts-bidi max-w-3xl text-balance text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl"
+        className="ts-listing-title ts-bidi max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl"
         style={{ viewTransitionName: listingTransitionName(product.id) }}
         data-listing-header={product.id}
       >
@@ -34,7 +34,7 @@ export function ProductHeader({ product, typeLabel, locale }: { product: Product
       <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm tabular-nums text-muted-foreground">
         <span>{typeLabel}</span>
         <CreatorIdentity creator={product.creator} href={localePath(`/creators/${product.creator.handle}`, locale)} verifiedLabel={copy[locale].productCard.verifiedCreator} />
-        <Rating rating={product.rating} count={product.reviewCount} />
+        <Rating rating={product.rating} count={product.reviewCount} locale={locale} />
         <span>{formatNumber(product.usageCount, locale)} {t.uses}</span>
       </div>
     </header>
@@ -58,7 +58,7 @@ export function ProductFacts({ product, locale }: { product: ProductDetail; loca
             ? <ReleaseFacts release={product.release} locale={locale} summary={{ permissions: product.permissions, license: product.license }} />
             : (
               <>
-                <Fact label={t.review}><Absent>{t.notReviewed}</Absent></Fact>
+                <Fact label={t.review}><span className="font-semibold text-warning">{t.notReviewed}</span></Fact>
                 <Fact label={t.release}><Absent>{t.noRelease}</Absent></Fact>
               </>
             )}

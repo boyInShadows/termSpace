@@ -1,10 +1,19 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ArticleEngagement } from "./ArticleEngagement";
+import { api } from "@/lib/api";
+
+vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), api: { getReaderLibrary: vi.fn(), setReaderBookmark: vi.fn(), saveReaderProgress: vi.fn() } }));
 
 describe("ArticleEngagement", () => {
-  beforeEach(() => window.localStorage.clear());
+  afterEach(cleanup);
+  beforeEach(() => {
+    window.localStorage.clear();
+    vi.resetAllMocks();
+    vi.mocked(api.getReaderLibrary).mockRejectedValue(new Error("Signed out"));
+    Object.defineProperty(navigator, "share", { configurable: true, writable: true, value: undefined });
+  });
 
   it("stores and removes browser-local bookmarks", async () => {
     const user = userEvent.setup();
@@ -14,5 +23,33 @@ describe("ArticleEngagement", () => {
     expect(window.localStorage.getItem("termAcademy.bookmarks")).toContain("test-article");
     await user.click(screen.getByRole("button", { name: "Bookmarked" }));
     expect(window.localStorage.getItem("termAcademy.bookmarks")).toBe("[]");
+  });
+
+  it("announces a failed synchronized bookmark and restores the previous state", async () => {
+    vi.mocked(api.getReaderLibrary).mockResolvedValue({ data: { bookmarks: [], history: [] } });
+    vi.mocked(api.setReaderBookmark).mockRejectedValueOnce(new Error("unavailable"));
+    const user = userEvent.setup();
+    render(<ArticleEngagement slug="test-article" title="Test article" />);
+    await waitFor(() => expect(screen.queryByText("Sign in to sync")).not.toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Bookmark" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not save your bookmark");
+    expect(screen.getByRole("button", { name: "Bookmark" })).toHaveAttribute("aria-pressed", "false");
+    expect(window.localStorage.getItem("termAcademy.bookmarks")).toBe("[]");
+  });
+
+  it("confirms copying the article link", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue();
+    render(<ArticleEngagement slug="test-article" title="Test article" />);
+    await user.click(screen.getByRole("button", { name: "Share" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Link copied.");
+  });
+
+  it("does not announce native share cancellation as a failure", async () => {
+    Object.defineProperty(navigator, "share", { configurable: true, value: vi.fn().mockRejectedValue(new DOMException("Canceled", "AbortError")) });
+    const user = userEvent.setup();
+    render(<ArticleEngagement slug="test-article" title="Test article" />);
+    await user.click(screen.getByRole("button", { name: "Share" }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

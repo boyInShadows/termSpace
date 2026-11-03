@@ -120,7 +120,7 @@ function OverviewHeader({ state, now, name }: { state: OverviewState; now: numbe
     <header>
       {known && <p className="text-xs text-muted-foreground">{new Intl.DateTimeFormat(localeTag, { month: "long", year: "numeric" }).format(now)}</p>}
       {known ? (
-        <h1 className="font-semibold mt-2 text-3xl tracking-tight sm:text-2xl">
+        <h1 className="font-semibold mt-2 text-2xl tracking-tight sm:text-3xl">
           {greeting}
           {/* The name is often Latin inside a Persian sentence; isolate it
               so the bidi algorithm cannot carry the punctuation across. */}

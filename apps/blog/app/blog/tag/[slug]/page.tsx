@@ -1,3 +1,4 @@
+import { EmptyCollection } from "@/components/EmptyState";
 import {notFound} from "next/navigation";
 import {getTranslations} from "next-intl/server";
 import {api} from "@/lib/api";
@@ -39,7 +40,7 @@ export default async function TagPage({params, searchParams}: {params: Promise<{
       <h1 className="mt-3 font-serif text-4xl font-semibold">{tag.name}</h1>
       {tag.description && <p className="mt-4 text-ink-soft">{tag.description}</p>}
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {articles.data.map((article) => <ArticleCard key={article.id} article={article} />)}
+        {articles.data.length === 0 && <EmptyCollection locale={locale} />}{articles.data.map((article) => <ArticleCard key={article.id} article={article} />)}
       </div>
       {(articles.meta.hasPrevPage || articles.meta.hasNextPage) && <nav className="mt-10 flex justify-between" aria-label="Pagination">
         {articles.meta.hasPrevPage ? <a className="text-accent" href={`${localePath(`/blog/tag/${tag.slug}`, locale)}?page=${page - 1}`}>{locale === "fa" ? "قبلی" : "Previous"}</a> : <span />}

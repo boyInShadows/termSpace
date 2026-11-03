@@ -82,7 +82,7 @@ export function CategoryManager({ categories: initial }: CategoryManagerProps) {
               id="cat-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-line bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
+              className="w-full rounded-lg border border-line-input bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
             />
           </div>
           <div>
@@ -92,7 +92,7 @@ export function CategoryManager({ categories: initial }: CategoryManagerProps) {
                 id="cat-slug"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
-                className="w-full rounded-lg border border-line bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
+                className="w-full rounded-lg border border-line-input bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
               />
               <button
                 type="button"
@@ -111,7 +111,7 @@ export function CategoryManager({ categories: initial }: CategoryManagerProps) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="w-full rounded-lg border border-line bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
+            className="w-full rounded-lg border border-line-input bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
           />
         </div>
         <button
@@ -156,6 +156,7 @@ export function CategoryManager({ categories: initial }: CategoryManagerProps) {
       </div>
 
       <ConfirmDialog
+        error={error || undefined}
         open={Boolean(categoryToDelete)}
         title="Delete category"
         description={
