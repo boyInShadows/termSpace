@@ -9,7 +9,7 @@ export const accountDataCopy = {
     exportFailed: "Your data could not be exported. Please try again.",
     deleteTitle: "Delete account",
     deleteIntro: "Deleting your account is permanent. It signs you out everywhere and removes your sign-in, favourites, bookmarks, reading progress and reviews, and your listing ratings are recalculated.",
-    deleteKeeps: "We keep a record that an acquisition, report or moderation action happened, linked only to an anonymized account that cannot sign in. Creator profiles are anonymized.",
+    deleteKeeps: "We keep a record that an acquisition, report or moderation action happened, linked only to an anonymized account that cannot log in. Creator profiles are anonymized.",
     creatorNote: "Creators must first withdraw or archive submitted and published listings.",
     loading: "Loading account options…",
     loadError: "Account options could not be loaded. Use Retry in Account security above.",

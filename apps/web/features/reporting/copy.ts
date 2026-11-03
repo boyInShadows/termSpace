@@ -5,10 +5,10 @@ export const reportingCopy = {
   en: {
     report: "Report listing", intro: "Tell staff about unsafe, misleading or unavailable content.",
     privacy: "Reports are visible to authorized staff. Do not include passwords, tokens or private files.",
-    signIn: "Sign in to send a report", reason: "Reason", explanation: "What happened?", explanationHint: "Describe the issue and where you found it. Use 20–4000 characters.",
+    signIn: "Log in to send a report", reason: "Reason", explanation: "What happened?", explanationHint: "Describe the issue and where you found it. Use 20–4000 characters.",
     send: "Send report", sending: "Sending…", received: "Report received", receipt: "Receipt", receivedHint: "Keep this receipt if you contact staff. Your report will be reviewed; sending it does not immediately remove the listing.",
     loading: "Loading…", retry: "Retry", loadFailed: "Reporting could not be loaded. Try again.", failed: "The report could not be saved. Your text is still here; try again.",
-    unauthorized: "Your session has ended. Sign in again to continue.", denied: "A verified moderator or administrator account is required.",
+    unauthorized: "Your session has ended. Log in again to continue.", denied: "A verified moderator or administrator account is required.",
     unavailable: "This listing or case is unavailable, or your account cannot access it.", limited: "The reporting limit was reached. Wait before trying again.", busy: "The reporting service is busy. Retry shortly.",
     network: "The reporting service could not be reached. Check your connection and retry.", timeout: "The request timed out. Retry with the same details.",
     conflict: "This case changed. Reload it and review the latest decision before submitting again.", closed: "This case is resolved. Its decision cannot be overwritten.", invalid: "Check the field limits and required values, then try again.",

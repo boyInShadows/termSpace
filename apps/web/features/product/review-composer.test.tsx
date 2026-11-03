@@ -26,11 +26,11 @@ describe("ReviewComposer", () => {
     getMyReview.mockResolvedValue({ eligibility: "eligible", review: null });
   });
 
-  it("asks a signed-out visitor to sign in, without calling the API", () => {
+  it("asks a signed-out visitor to log in, without calling the API", () => {
     session.email = null;
     render(<ReviewComposer slug="x" />);
 
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/account?next=%2Fproducts%2Fx");
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/account?next=%2Fproducts%2Fx");
     expect(getMyReview).not.toHaveBeenCalled();
   });
 

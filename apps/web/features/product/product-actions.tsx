@@ -32,8 +32,8 @@ export function ProductActions({ product }: { product: ProductDetail }) {
     viewInstall: "View installation",
     installUnavailable: "Installation for this release is currently unavailable.",
     noReleaseTitle: "No release to add yet", noReleaseBody: "The creator hasn’t published an approved release. You can still preview this listing and save it.",
-    gone: "This release is no longer available to add.", held: "This resource is already in your library.", signInAgain: "Your session has ended. Sign in again to add this.",
-    busy: "Too many requests. Wait a minute and try again.", signedOut: "Sign in to add or save this listing.",
+    gone: "This release is no longer available to add.", held: "This resource is already in your library.", signInAgain: "Your session has ended. Log in again to add this.",
+    busy: "Too many requests. Wait a minute and try again.", signedOut: "Log in to add or save this listing.",
     addVersion: "Add v{version} to library", loadingRelease: "Loading release…", releaseFailed: "Couldn’t load this release.",
   };
   const session = useMarketplaceSession();

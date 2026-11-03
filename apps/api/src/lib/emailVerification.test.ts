@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createEmailVerificationToken, createPasswordResetCode, localEmailVerificationBypassEnabled, verifyEmailVerificationToken, verifyPasswordResetCode, verificationUrl } from "./emailVerification.js";
+import { createEmailVerificationToken, createPasswordResetToken, localEmailVerificationBypassEnabled, passwordResetUrl, verifyEmailVerificationToken, verifyPasswordResetToken, verificationUrl } from "./emailVerification.js";
 
 describe("email verification tokens", () => {
   const previousSecret = process.env.EMAIL_VERIFICATION_SECRET;
@@ -27,7 +27,7 @@ describe("email verification tokens", () => {
 
   it("refuses the public .env.example placeholder as a signing secret", () => {
     process.env.EMAIL_VERIFICATION_SECRET = "replace-with-at-least-32-random-bytes";
-    expect(() => createPasswordResetCode({ id: "reset-1", userId: "reader-1", expiresAt: new Date() })).toThrow(/placeholder/);
+    expect(() => createPasswordResetToken({ id: "reset-1", userId: "reader-1", expiresAt: new Date() })).toThrow(/placeholder/);
   });
 
   it("places the token in a URL fragment", () => {
@@ -36,13 +36,20 @@ describe("email verification tokens", () => {
     expect(new URL(url).search).toBe("");
   });
 
-  it("derives a stable six-digit reset code without storing the code", () => {
+  it("derives a reset token bound to the reset row without storing it", () => {
     const fields = { id: "reset-1", userId: "reader-1", expiresAt: new Date("2026-09-15T12:30:00.000Z") };
-    const code = createPasswordResetCode(fields);
-    expect(code).toMatch(/^\d{6}$/);
-    expect(verifyPasswordResetCode(code, fields)).toBe(true);
-    expect(verifyPasswordResetCode(code, { ...fields, userId: "reader-2" })).toBe(false);
-    expect(verifyPasswordResetCode("12345a", fields)).toBe(false);
+    const token = createPasswordResetToken(fields);
+    expect(verifyPasswordResetToken(token, fields)).toBe(true);
+    expect(verifyPasswordResetToken(token, { ...fields, userId: "reader-2" })).toBe(false);
+    expect(verifyPasswordResetToken(token, { ...fields, expiresAt: new Date("2026-09-15T12:31:00.000Z") })).toBe(false);
+    expect(verifyPasswordResetToken("reset-2.signature", fields)).toBe(false);
+    expect(token).not.toContain(process.env.EMAIL_VERIFICATION_SECRET!);
+  });
+
+  it("places the reset token in a URL fragment", () => {
+    const url = passwordResetUrl("reset-1.signature");
+    expect(url).toBe("https://termspace.example/account/reset-password#token=reset-1.signature");
+    expect(new URL(url).search).toBe("");
   });
 
   it("allows the explicit local bypass only for loopback public URLs", () => {

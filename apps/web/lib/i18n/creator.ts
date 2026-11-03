@@ -18,7 +18,7 @@ export const creator = {
       save: "Save profile",
       saved: "Creator profile saved.",
       loading: "Loading your creator account…",
-      signInRequired: "Sign in before creating a creator profile.",
+      signInRequired: "Log in before creating a creator profile.",
       verifyRequired: "Verify your email before creating a creator profile.",
       handleTaken: "That creator handle is already taken.",
       accessRevoked: "Creator access was revoked. Contact support before onboarding again.",

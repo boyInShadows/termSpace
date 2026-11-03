@@ -11,7 +11,6 @@ import {
   EMAIL_VERIFICATION_RESEND_COOLDOWN_MS,
   EMAIL_VERIFICATION_RESEND_LIMIT,
   EMAIL_VERIFICATION_RESEND_WINDOW_MS,
-  PASSWORD_RESET_ATTEMPT_LIMIT,
   PASSWORD_RESET_REQUEST_COOLDOWN_MS,
   PASSWORD_RESET_REQUEST_LIMIT,
   PASSWORD_RESET_REQUEST_WINDOW_MS,
@@ -19,7 +18,7 @@ import {
   newPasswordResetData,
   newVerificationData,
   verifyEmailVerificationToken,
-  verifyPasswordResetCode,
+  verifyPasswordResetToken,
 } from "../lib/emailVerification.js";
 
 const sessionDays = Math.max(1, Number(process.env.READER_SESSION_DAYS ?? 30));
@@ -55,7 +54,7 @@ function publicReader(user: ReaderAccessUser) {
   };
 }
 
-async function createSession(res: Response, user: ReaderAccessUser) {
+async function startSession(res: Response, user: ReaderAccessUser) {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + cookieOptions().maxAge);
   await prisma.$transaction([
@@ -63,7 +62,7 @@ async function createSession(res: Response, user: ReaderAccessUser) {
     prisma.readerSession.create({ data: { tokenHash: hashSessionToken(token), expiresAt, userId: user.id } }),
   ]);
   res.cookie(READER_SESSION_COOKIE, token, cookieOptions());
-  res.json({ data: { authenticated: true, user: publicReader(user), expiresAt } });
+  return { authenticated: true as const, user: publicReader(user), expiresAt };
 }
 
 export async function loginReader(req: Request, res: Response) {
@@ -85,7 +84,8 @@ export async function loginReader(req: Request, res: Response) {
       include: { marketplaceRoleGrants: activeMarketplaceRoles },
     });
   }
-  await createSession(res, user);
+  const session = await startSession(res, user);
+  res.json({ data: session });
 }
 
 export async function registerReader(req: Request, res: Response) {
@@ -152,6 +152,12 @@ export async function confirmReaderEmailVerification(req: Request, res: Response
     res.status(400).json({ error: { code: "INVALID_OR_EXPIRED_VERIFICATION", message: "This verification link is invalid or expired" } });
     return;
   }
+  // A link for another account must not silently replace the session someone is using.
+  // The token stays valid so the reader can sign out and open the same link again.
+  if (res.locals.reader && res.locals.reader.id !== verification.userId) {
+    res.status(409).json({ error: { code: "SIGNED_IN_AS_OTHER_ACCOUNT", message: "Sign out before opening this link" } });
+    return;
+  }
 
   const now = new Date();
   const verified = await prisma.$transaction(async (tx) => {
@@ -175,7 +181,19 @@ export async function confirmReaderEmailVerification(req: Request, res: Response
     res.status(400).json({ error: { code: "INVALID_OR_EXPIRED_VERIFICATION", message: "This verification link is invalid or expired" } });
     return;
   }
-  res.json({ data: { verified: true } });
+
+  const user = await prisma.readerUser.findUnique({
+    where: { id: verification.userId },
+    select: { id: true, email: true, emailVerifiedAt: true, onboardingRequired: true, marketplaceRoleGrants: activeMarketplaceRoles },
+  });
+  if (!user) {
+    res.status(400).json({ error: { code: "INVALID_OR_EXPIRED_VERIFICATION", message: "This verification link is invalid or expired" } });
+    return;
+  }
+  // Rotate a session that was already this account's, so the cookie verified here is fresh.
+  if (res.locals.readerSessionId) await prisma.readerSession.deleteMany({ where: { id: res.locals.readerSessionId } });
+  const session = await startSession(res, user);
+  res.json({ data: { verified: true, ...session } });
 }
 
 export async function requestReaderPasswordReset(req: Request, res: Response) {
@@ -214,31 +232,28 @@ export async function requestReaderPasswordReset(req: Request, res: Response) {
 }
 
 export async function confirmReaderPasswordReset(req: Request, res: Response) {
-  const email = String(req.body.email).trim().toLowerCase();
-  const code = String(req.body.code);
-  const user = await prisma.readerUser.findUnique({
-    where: { email },
-    select: { id: true, passwordHash: true, emailVerifiedAt: true },
-  });
-  const reset = user?.passwordHash ? await prisma.readerPasswordReset.findFirst({
-    where: { userId: user.id, consumedAt: null },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, userId: true, expiresAt: true, consumedAt: true, failedAttempts: true },
+  const token = String(req.body.token);
+  const id = token.slice(0, token.indexOf("."));
+  const reset = id ? await prisma.readerPasswordReset.findUnique({
+    where: { id },
+    select: {
+      id: true, userId: true, expiresAt: true, consumedAt: true,
+      user: { select: { id: true, email: true, passwordHash: true, emailVerifiedAt: true, onboardingRequired: true, marketplaceRoleGrants: activeMarketplaceRoles } },
+    },
   }) : null;
   const now = new Date();
-  const active = Boolean(reset && !reset.consumedAt && reset.expiresAt > now && reset.failedAttempts < PASSWORD_RESET_ATTEMPT_LIMIT);
-  if (!user?.passwordHash || !reset || !active || !verifyPasswordResetCode(code, reset)) {
-    if (reset && active) {
-      const finalAttempt = reset.failedAttempts + 1 >= PASSWORD_RESET_ATTEMPT_LIMIT;
-      await prisma.readerPasswordReset.updateMany({
-        where: { id: reset.id, consumedAt: null, failedAttempts: reset.failedAttempts, expiresAt: { gt: now } },
-        data: { failedAttempts: { increment: 1 }, consumedAt: finalAttempt ? now : undefined },
-      });
-    }
-    res.status(400).json({ error: { code: "INVALID_OR_EXPIRED_OTP", message: "This reset code is invalid or expired" } });
+  const active = Boolean(reset && !reset.consumedAt && reset.expiresAt > now && reset.user.passwordHash && verifyPasswordResetToken(token, reset));
+  if (!reset || !active) {
+    res.status(400).json({ error: { code: "INVALID_OR_EXPIRED_RESET_TOKEN", message: "This reset link is invalid or expired" } });
     return;
   }
-  if (await compare(String(req.body.newPassword), user.passwordHash)) {
+  // The link must not replace a session that belongs to someone else; the reader signs
+  // out first and the same link still works.
+  if (res.locals.reader && res.locals.reader.id !== reset.userId) {
+    res.status(409).json({ error: { code: "SIGNED_IN_AS_OTHER_ACCOUNT", message: "Sign out before opening this link" } });
+    return;
+  }
+  if (await compare(String(req.body.newPassword), reset.user.passwordHash!)) {
     res.status(400).json({ error: { code: "PASSWORD_UNCHANGED", message: "Choose a different password" } });
     return;
   }
@@ -246,28 +261,33 @@ export async function confirmReaderPasswordReset(req: Request, res: Response) {
   const passwordHash = await hash(String(req.body.newPassword), 12);
   const changed = await prisma.$transaction(async (tx) => {
     const consumed = await tx.readerPasswordReset.updateMany({
-      where: { id: reset.id, consumedAt: null, failedAttempts: reset.failedAttempts, expiresAt: { gt: now } },
+      where: { id: reset.id, consumedAt: null, expiresAt: { gt: now } },
       data: { consumedAt: now },
     });
-    if (consumed.count !== 1) return false;
-    await tx.readerUser.update({ where: { id: user.id }, data: { passwordHash, emailVerifiedAt: user.emailVerifiedAt ?? now } });
-    await tx.readerSession.deleteMany({ where: { userId: user.id } });
+    if (consumed.count !== 1) return null;
+    const user = await tx.readerUser.update({
+      where: { id: reset.userId },
+      data: { passwordHash, emailVerifiedAt: reset.user.emailVerifiedAt ?? now },
+      select: { id: true, email: true, emailVerifiedAt: true, onboardingRequired: true, marketplaceRoleGrants: activeMarketplaceRoles },
+    });
+    // A reset revokes every existing session, then the browser that used the link gets one.
+    await tx.readerSession.deleteMany({ where: { userId: reset.userId } });
     await tx.readerPasswordReset.updateMany({
-      where: { userId: user.id, id: { not: reset.id }, consumedAt: null },
+      where: { userId: reset.userId, id: { not: reset.id }, consumedAt: null },
       data: { consumedAt: now },
     });
     await tx.transactionalEmailOutbox.updateMany({
-      where: { passwordReset: { userId: user.id }, status: { in: ["PENDING", "PROCESSING", "RETRY"] } },
+      where: { passwordReset: { userId: reset.userId }, status: { in: ["PENDING", "PROCESSING", "RETRY"] } },
       data: { status: "CANCELLED", lockedAt: null, lastErrorCode: "PASSWORD_RESET" },
     });
-    return true;
+    return user;
   });
   if (!changed) {
-    res.status(400).json({ error: { code: "INVALID_OR_EXPIRED_OTP", message: "This reset code is invalid or expired" } });
+    res.status(400).json({ error: { code: "INVALID_OR_EXPIRED_RESET_TOKEN", message: "This reset link is invalid or expired" } });
     return;
   }
-  res.clearCookie(READER_SESSION_COOKIE, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/" });
-  res.json({ data: { reset: true } });
+  const session = await startSession(res, changed);
+  res.json({ data: { reset: true, ...session } });
 }
 
 export async function loginReaderWithGoogle(req: Request, res: Response) {
@@ -322,7 +342,8 @@ export async function loginReaderWithGoogle(req: Request, res: Response) {
         select: { id: true, email: true, googleSubject: true, emailVerifiedAt: true, onboardingRequired: true, marketplaceRoleGrants: activeMarketplaceRoles },
       });
     }
-    await createSession(res, user);
+    const session = await startSession(res, user);
+    res.json({ data: session });
   } catch (error) {
     req.log?.error({ err: error }, "Google sign-in persistence failed");
     throw error;

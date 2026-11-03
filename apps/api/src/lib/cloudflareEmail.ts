@@ -10,7 +10,7 @@ type SendVerificationEmailInput = {
 
 type SendPasswordResetEmailInput = {
   to: string;
-  code: string;
+  passwordResetUrl: string;
   correlationId: string;
 };
 
@@ -75,8 +75,8 @@ export async function sendPasswordResetEmail(
     to: input.to,
     correlationId: input.correlationId,
     subject: "Reset your TermSpace password",
-    text: `Your TermSpace password reset code is ${input.code}. It expires in 10 minutes.\n\nIf you did not request this code, you can ignore this message.`,
-    html: `<p>Your TermSpace password reset code is:</p><p style="font-size:24px;font-weight:700;letter-spacing:0.2em">${input.code}</p><p>It expires in 10 minutes. If you did not request this code, you can ignore this message.</p>`,
+    text: `Reset your TermSpace password. This link expires in 10 minutes:\n\n${input.passwordResetUrl}\n\nIf you did not request this, you can ignore this message and nothing will change.`,
+    html: `<p>Reset your TermSpace password.</p><p><a href="${input.passwordResetUrl}">Choose a new password</a></p><p>This link expires in 10 minutes. If you did not request this, you can ignore this message and nothing will change.</p>`,
   }, fetchImpl);
 }
 

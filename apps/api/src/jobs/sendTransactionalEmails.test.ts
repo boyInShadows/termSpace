@@ -92,7 +92,11 @@ describe("transactional email worker", () => {
     sendPasswordResetEmail.mockResolvedValue({ outcome: "sent", statusCode: 200 });
 
     await expect(processTransactionalEmailBatch()).resolves.toBe(1);
-    expect(sendPasswordResetEmail).toHaveBeenCalledWith({ to: "reader@example.com", code: expect.stringMatching(/^\d{6}$/), correlationId: "correlation-reset" });
+    expect(sendPasswordResetEmail).toHaveBeenCalledWith({
+      to: "reader@example.com",
+      passwordResetUrl: expect.stringMatching(/^https:\/\/termspace\.example\/account\/reset-password#token=reset-1\./),
+      correlationId: "correlation-reset",
+    });
     expect(sendVerificationEmail).not.toHaveBeenCalled();
   });
 

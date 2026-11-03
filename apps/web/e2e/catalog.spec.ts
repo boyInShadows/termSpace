@@ -77,7 +77,7 @@ test.describe("product detail", () => {
 
     const reviews = page.locator("#reviews");
     await expect(reviews.getByRole("heading", { name: "Your review" })).toBeVisible();
-    await expect(reviews.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/account?next=%2Fproducts%2Fconversion-copywriter");
+    await expect(reviews.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/account?next=%2Fproducts%2Fconversion-copywriter");
     await expect(reviews.getByRole("button", { name: "Post review" })).toHaveCount(0);
   });
 

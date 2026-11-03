@@ -25,9 +25,9 @@ router.post("/profile/email/confirm", emailVerificationAttemptRateLimit, validat
 router.get("/profile/export", requireReader, accountExportRateLimit, exportReaderData);
 router.delete("/profile", requireReader, accountDeleteRateLimit, validate(readerAccountDeleteSchema), deleteReaderAccount);
 router.post("/email-verification/request", requireReader, emailVerificationRequestRateLimit, requestReaderEmailVerification);
-router.post("/email-verification/confirm", emailVerificationAttemptRateLimit, validate(emailVerificationConfirmSchema), confirmReaderEmailVerification);
+router.post("/email-verification/confirm", optionalReader, emailVerificationAttemptRateLimit, validate(emailVerificationConfirmSchema), confirmReaderEmailVerification);
 router.post("/password-reset/request", passwordResetRequestRateLimit, validate(readerPasswordResetRequestSchema), requestReaderPasswordReset);
-router.post("/password-reset/confirm", passwordResetAttemptRateLimit, validate(readerPasswordResetConfirmSchema), confirmReaderPasswordReset);
+router.post("/password-reset/confirm", optionalReader, passwordResetAttemptRateLimit, validate(readerPasswordResetConfirmSchema), confirmReaderPasswordReset);
 router.put("/profile/password", requireReader, passwordChangeRateLimit, validate(readerPasswordChangeSchema), changeReaderPassword);
 router.get("/library", requireReader, getReaderLibrary);
 router.get("/preferences", requireReader, getReaderPreferences);

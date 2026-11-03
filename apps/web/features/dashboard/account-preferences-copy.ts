@@ -20,7 +20,7 @@ export const accountPreferencesCopy = {
     unsubscribed: "You are unsubscribed. You will not receive the newsletter.",
     failed: "Your preference could not be saved. Check your connection and try again.",
     rateLimited: "Too many changes. Please wait a moment and try again.",
-    sessionExpired: "Your session has ended. Sign in again to change this setting.",
+    sessionExpired: "Your session has ended. Log in again to change this setting.",
   },
   fa: {
     title: "تنظیمات ایمیل",
