@@ -2,6 +2,37 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-04 — Sequential local queue: onboarding wording review
+
+- **Scope / shared surface.** Owner requested `ramtin-pending.md` execution in
+  order. Resolve actionable work while retaining owner-dependent acceptance.
+  Shared surface: `changelog.md`; the ignored local queue is never staged.
+  No application code or copy changed. Existing DESIGN formatting and brand
+  assets remain untouched; the other maintainer's `pending.md` is not claimed.
+- **Completed.** Reviewed English/Persian onboarding headings, all 19 answer
+  choices, starting preferences, help and state messages against current API
+  choices and the Profile location. Privacy wording matches caller-scoped
+  access, export inclusion and clearing on account deletion. No wording change
+  was needed. Remove that completed wording-review item from the local queue;
+  retain broader Persian/device, Google and deployment acceptance.
+- **Verification.** Eleven focused web onboarding/legal tests and thirteen API
+  onboarding tests pass. Reviewed current source after graph coverage checks;
+  API tests use mocks. No real account, Google identity, database or permission
+  was changed. Evidence: `docs/artifacts/ramtin-queue-2026-11-04/copy-review.md`
+  and its test logs. Application source is unchanged since the previous fully
+  verified phase, so builds/full suites were not repeated for this review log.
+- **Remaining inputs.** Explicit local-preview/cleanup approval and a phone/
+  test-Google sign-in decision were requested. An Android device is connected;
+  the web/API dev servers are running. Earlier automatic approval rejections
+  remain respected until resolved. The deployment migration is a conditional
+  operating note, not authorization to deploy or mutate a database.
+- **Prerequisite findings.** No Google web/API client ID is configured in the
+  app env files or Windows user environment. Requested an existing public
+  client ID; no secret was requested or exposed. Read-only Prisma status shows
+  the local onboarding migration is applied, with external-link source and
+  release-review state migrations still pending. No migration was applied;
+  retain the deployment condition and record the local prerequisites in the queue.
+
 ## 2026-11-03 — Owner-selected blue action buttons
 
 - **Goal / files / shared surface.** Apply the owner's exact #2563EB to normal
