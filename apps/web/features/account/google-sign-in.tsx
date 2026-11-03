@@ -52,16 +52,19 @@ export function GoogleSignIn({ locale, label, disabled, onCredential, onUnavaila
       width: Math.max(200, Math.min(400, Math.floor(target.clientWidth || 320))),
     });
     // Google injects the iframe with negative margins and a fixed width. Pin it
-    // to the button instead, so every pixel of the control is clickable.
-    const frame = target.querySelector("iframe");
-    if (frame) {
-      frame.style.position = "absolute";
-      frame.style.inset = "0";
-      frame.style.width = "100%";
-      frame.style.height = "100%";
-      frame.style.margin = "0";
-      frame.style.border = "0";
-    }
+    // to the button instead, so every pixel of the control is clickable. Google
+    // re-applies its own inline width/margin after render, hence !important and
+    // the second pass on the next frame and on load.
+    const pinFrame = () => {
+      const frame = target.querySelector("iframe");
+      if (!frame) return;
+      for (const [property, value] of [["position", "absolute"], ["inset", "0"], ["width", "100%"], ["height", "100%"], ["margin", "0"], ["border", "0"]]) {
+        frame.style.setProperty(property, value, "important");
+      }
+    };
+    pinFrame();
+    requestAnimationFrame(pinFrame);
+    target.querySelector("iframe")?.addEventListener("load", pinFrame, { once: true });
     return true;
   }, [clientId, locale]);
 
@@ -92,7 +95,7 @@ export function GoogleSignIn({ locale, label, disabled, onCredential, onUnavaila
       </Button>
       <div
         ref={host}
-        className="absolute inset-0 opacity-0"
+        className="absolute inset-0 opacity-[0.001]"
         inert={disabled}
         aria-busy={disabled}
         data-google-signin

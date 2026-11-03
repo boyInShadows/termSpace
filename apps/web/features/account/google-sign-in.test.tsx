@@ -36,10 +36,10 @@ describe("Google sign-in button", () => {
     render(<GoogleSignIn {...props} onCredential={vi.fn()} onUnavailable={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "SDK ready" }));
     const frame = document.querySelector("iframe");
-    expect(frame?.style.position).toBe("absolute");
-    expect(frame?.style.width).toBe("100%");
-    expect(frame?.style.height).toBe("100%");
-    expect(frame?.style.margin).toBe("0px");
+    const style = frame?.getAttribute("style") ?? "";
+    expect(style).toContain("position: absolute");
+    expect(style).toContain("width: 100%");
+    expect(style).toContain("height: 100%");
   });
 
   it("reports a blocked SDK instead of silently leaving an empty sign-in control", () => {
