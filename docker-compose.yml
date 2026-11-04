@@ -106,6 +106,10 @@ services:
       # Policy pages: the entity and contact shown on /privacy, /terms and /content-policy.
       LEGAL_ENTITY_NAME: ${LEGAL_ENTITY_NAME:-TermSpace}
       LEGAL_CONTACT_EMAIL: ${LEGAL_CONTACT_EMAIL:?Set LEGAL_CONTACT_EMAIL (privacy and takedown contact) in .env}
+      # Termbuddy live chat. Empty tokens disable the widget (local dev, previews).
+      CHATWOOT_BASE_URL: ${CHATWOOT_BASE_URL:-https://chat.termspace.dev}
+      CHATWOOT_TOKEN_EN: ${CHATWOOT_TOKEN_EN:-}
+      CHATWOOT_TOKEN_FA: ${CHATWOOT_TOKEN_FA:-}
     depends_on:
       api:
         condition: service_healthy

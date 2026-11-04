@@ -2,6 +2,55 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-04 — Termbuddy live chat (self-hosted Chatwoot)
+
+- **Scope / ownership notice.** Shared surfaces: `apps/web/app/layout.tsx`,
+  `apps/web/next.config.ts`, `docker-compose.yml`, `.env.example` and
+  `changelog.md`. New deployment assets in `deploy/chatwoot/` and the ops doc
+  `docs/chatwoot.md`. No API, database schema, permission or auth-flow change.
+- **Deployment.** Chatwoot Community Edition 4.19.1 now runs on the production
+  host as its own compose project beside TermSpace:
+  `chat.termspace.dev` → Caddy → `127.0.0.1:3010`. Only the Rails port is
+  published; Postgres (pgvector 16), Redis and the bot are internal. DNS is the
+  existing Cloudflare `A chat` record, proxied; TLS is Caddy's certificate.
+  Secrets live in untracked `deploy/chatwoot/.env` and `.env.bot` (chmod 600);
+  the bootstrap credentials are in `/opt/chatwoot/credentials.env` (root only).
+  `SAFE_FETCH_ALLOW_PRIVATE_NETWORK` is enabled because the bot webhook target is
+  an internal hostname.
+- **Termbuddy instead of Captain.** Chatwoot's built-in AI (Captain) is a paid
+  feature, so the bot is a webhook agent bot: a dependency-free Node service
+  (`deploy/chatwoot/bot/server.mjs`) that verifies Chatwoot's HMAC signature,
+  acknowledges immediately (Chatwoot fails calls at 5 s), keeps its own rolling
+  context per conversation (Chatwoot blocks bots from reading conversations),
+  and answers through the OpenAI Responses API with `gpt-6-luna`. The knowledge
+  pack is `bot/knowledge/en.md` plus `fa.md`; replies mirror the visitor's
+  language. With no API key — the case at deploy time — it posts the localized
+  fallback that points to support@termspace.dev instead of going silent.
+  Attached to two website inboxes (`TermSpace Website (EN)`, `(FA)`) so the
+  widget welcome copy is localized; email collection and continuity mail are
+  disabled. No human agents are configured.
+- **Web integration.** `components/support/chat-widget.tsx` (with tests) loads
+  the Chatwoot SDK after hydration with `afterInteractive`, passes the locale and
+  launcher name, and renders nothing when the website tokens are absent (local
+  dev and previews). The website tokens are read from runtime env
+  (`CHATWOOT_TOKEN_EN`/`CHATWOOT_TOKEN_FA`, `CHATWOOT_BASE_URL`) so rotation does
+  not need a rebuild. The report-only CSP now allows `chat.termspace.dev` for
+  scripts, connections and frames.
+- **Verification.** Root typecheck; web lint 0 errors (two pre-existing
+  warnings); 503 web tests (`NODE_OPTIONS=--no-experimental-webstorage`, needed
+  because Node 26's global `localStorage` shadows jsdom's); production web
+  build. Live stack: `/api` 200, `/packs/js/sdk.js` 200, TLS through
+  Cloudflare; both inboxes exercised end-to-end (anonymous contact →
+  conversation → incoming message → signed webhook → bot reply) with correct
+  English and Persian fallback text.
+- **Remaining acceptance.** The owner must add `OPENAI_API_KEY` to `.env.bot`
+  and restart `termbuddy` for real GPT-6 Luna answers — until then every chat
+  gets the fallback copy. A live browser pass of the embedded widget (both
+  themes, EN/FA RTL, 320–1280 px), help-center portal theming, and a decision on
+  SMTP/transcript email are still open. Chatwoot's "Powered by" footer remains:
+  `disable_branding` is a paid Chatwoot plan feature and was not circumvented.
+
+
 ## 2026-11-04 — New navbar mark and favicon
 
 - **Scope.** `apps/web/components/layout/logo.tsx`,
