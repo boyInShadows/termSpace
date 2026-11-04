@@ -1,5 +1,7 @@
 "use client";
+import { useEffect, useRef } from "react";
 import Script from "next/script";
+import { useTheme } from "next-themes";
 
 type Locale = "en" | "fa";
 
@@ -18,6 +20,7 @@ declare global {
   interface Window {
     chatwootSettings?: ChatwootSettings;
     chatwootSDK?: { run: (options: { websiteToken: string; baseUrl: string }) => void };
+    $chatwoot?: { setColorScheme: (mode: "light" | "dark") => void };
   }
 }
 
@@ -47,6 +50,14 @@ export function ChatWidget({
 }) {
   const token = locale === "fa" ? tokenFa || tokenEn : tokenEn;
   const resolvedBaseUrl = (baseUrl || DEFAULT_BASE_URL).replace(/\/$/, "");
+  // next-themes applies the site theme as a class on <html>; the widget iframe
+  // cannot read it, so mirror the resolved scheme into the widget.
+  const { resolvedTheme } = useTheme();
+  const scheme = useRef<"light" | "dark">("light");
+  useEffect(() => {
+    scheme.current = resolvedTheme === "dark" ? "dark" : "light";
+    window.$chatwoot?.setColorScheme(scheme.current);
+  }, [resolvedTheme]);
   if (!token) return null;
 
   const settings: ChatwootSettings = {
@@ -77,6 +88,7 @@ export function ChatWidget({
         src={`${resolvedBaseUrl}/packs/js/sdk.js`}
         onLoad={() => {
           window.chatwootSDK?.run({ websiteToken: token, baseUrl: resolvedBaseUrl });
+          window.$chatwoot?.setColorScheme(scheme.current);
         }}
       />
     </>
