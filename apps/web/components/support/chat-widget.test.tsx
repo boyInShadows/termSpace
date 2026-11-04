@@ -34,6 +34,7 @@ describe("ChatWidget", () => {
     );
     expect(getByTestId("chatwoot-sdk")).toHaveAttribute("data-src", "https://chat.termspace.dev/packs/js/sdk.js");
     expect(getByTestId("chatwoot-settings").getAttribute("data-html")).toContain('"locale":"en"');
+    expect(getByTestId("chatwoot-settings").getAttribute("data-html")).toContain("online 24/7");
     fireEvent.click(getByTestId("chatwoot-sdk").querySelector("button")!);
     expect(run).toHaveBeenCalledWith({ websiteToken: "token-en", baseUrl: "https://chat.termspace.dev" });
   });

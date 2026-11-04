@@ -10,6 +10,8 @@ type ChatwootSettings = {
   launcherTitle?: string;
   darkMode?: "light" | "auto" | "dark";
   showPopoutButton?: boolean;
+  availableMessage?: string;
+  unavailableMessage?: string;
 };
 
 declare global {
@@ -56,6 +58,10 @@ export function ChatWidget({
     // disagree; the iframe cannot read the class on <html>.
     darkMode: "auto",
     showPopoutButton: false,
+    // There are no human agents, so Chatwoot's default presence banner would
+    // say "We are away". Termbuddy is always available; say so instead.
+    availableMessage: locale === "fa" ? "ترم‌بادی ۲۴ ساعته آنلاین است و فوراً پاسخ می‌دهد." : "Termbuddy is online 24/7 and replies instantly.",
+    unavailableMessage: locale === "fa" ? "ترم‌بادی ۲۴ ساعته آنلاین است و فوراً پاسخ می‌دهد." : "Termbuddy is online 24/7 and replies instantly.",
   };
 
   return (

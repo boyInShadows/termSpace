@@ -34,8 +34,10 @@ Project changes completed from `pending.md` should be recorded here with the dat
   launcher name, and renders nothing when the website tokens are absent (local
   dev and previews). The website tokens are read from runtime env
   (`CHATWOOT_TOKEN_EN`/`CHATWOOT_TOKEN_FA`, `CHATWOOT_BASE_URL`) so rotation does
-  not need a rebuild. The report-only CSP now allows `chat.termspace.dev` for
-  scripts, connections and frames.
+  not need a rebuild. The availability banner is overridden to say Termbuddy is
+  online 24/7, because Chatwoot's default presence copy assumes human agents. The
+  report-only CSP now allows `chat.termspace.dev` for scripts, connections and
+  frames.
 - **Verification.** Root typecheck; web lint 0 errors (two pre-existing
   warnings); 503 web tests (`NODE_OPTIONS=--no-experimental-webstorage`, needed
   because Node 26's global `localStorage` shadows jsdom's); production web
