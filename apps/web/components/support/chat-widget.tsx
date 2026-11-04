@@ -56,6 +56,7 @@ export function ChatWidget({
   const scheme = useRef<"light" | "dark">("light");
   useEffect(() => {
     scheme.current = resolvedTheme === "dark" ? "dark" : "light";
+    if (window.chatwootSettings) window.chatwootSettings.darkMode = scheme.current;
     window.$chatwoot?.setColorScheme(scheme.current);
   }, [resolvedTheme]);
   if (!token) return null;
@@ -74,13 +75,16 @@ export function ChatWidget({
     availableMessage: locale === "fa" ? "ترم‌بادی ۲۴ ساعته آنلاین است و فوراً پاسخ می‌دهد." : "Termbuddy is online 24/7 and replies instantly.",
     unavailableMessage: locale === "fa" ? "ترم‌بادی ۲۴ ساعته آنلاین است و فوراً پاسخ می‌دهد." : "Termbuddy is online 24/7 and replies instantly.",
   };
+  // Read the theme at execution time: the SDK sends darkMode to the iframe in
+  // its first config message, so it must already match the site.
+  const settingsScript = `window.chatwootSettings = ${JSON.stringify(settings)};window.chatwootSettings.darkMode = document.documentElement.classList.contains("dark") ? "dark" : "light";`;
 
   return (
     <>
       <Script
         id="chatwoot-settings"
         strategy="afterInteractive"
-        dangerouslySetInnerHTML={{ __html: `window.chatwootSettings = ${JSON.stringify(settings)};` }}
+        dangerouslySetInnerHTML={{ __html: settingsScript }}
       />
       <Script
         id="chatwoot-sdk"
