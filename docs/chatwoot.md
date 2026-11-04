@@ -89,20 +89,28 @@ docker run --rm -v chatwoot_chatwoot_storage:/data -v "$PWD":/backup alpine tar 
 OpenAI budget: set a monthly spend limit on the API project. Rotate the key by
 editing `.env.bot` and `docker compose up -d termbuddy`.
 
+## Branding
+
+`INSTALLATION_NAME` and `BRAND_NAME` are set to `TermSpace`, and the TermSpace
+mark is attached as the avatar of the agent bot and both inboxes, so the widget
+header shows the brand rather than a letter. `BRAND_URL` and `WIDGET_BRAND_URL`
+point at termspace.dev. The footer line reads "Powered by TermSpace" in the
+widget (Chatwoot derives it from `BRAND_NAME`); removing the line entirely is
+the paid `disable_branding` feature and was not circumvented. The Persian widget
+still shows its own translation of "Powered by Chatwoot" in the footer.
+
 ## Known limits and open acceptance
 
 - **OpenAI key not configured yet.** At deploy time no key was available, so
   every conversation currently receives the friendly fallback. Add
   `OPENAI_API_KEY=...` to `.env.bot` and restart `termbuddy`.
-- `disable_branding` (removing "Powered by Chatwoot" from the widget) is a paid
-  Chatwoot plan feature and was not circumvented.
-- The widget follows the operating system colour scheme (`darkMode: "auto"`);
-  it cannot read the site's class-based theme toggle.
+- `disable_branding` (removing the footer line) is a paid Chatwoot plan feature
+  and was not circumvented.
+- The help-center portal has not been created or themed yet.
 - No SMTP configured: no transcript or notification email; inbox email
   collection is disabled.
-- The help-center portal has not been created or themed yet.
-- Live browser acceptance of the embedded widget (both themes, EN/FA RTL,
-  320–1280 px) is still the owner's check.
+- The widget does not support 320 px full-screen reopen persistence across page
+  loads beyond Chatwoot's own cookie behaviour; verify if that matters.
 
 ## Verification evidence (2026-11-04)
 
@@ -113,4 +121,10 @@ editing `.env.bot` and `docker compose up -d termbuddy`.
   English and Persian both received the correct localized fallback (no OpenAI
   key yet), and the bot logged `openai_http_401` with latency and no message
   content.
+- Browser pass with Chrome at 1280 px: EN and FA pages load the correct inbox
+  token, the launcher opens, and a real message sent from the widget received
+  the fallback reply inside the conversation. FA renders RTL; the panel follows
+  the site's light/dark toggle through `setColorScheme`/initial config; at
+  320 px the FA widget opens full-width and remains usable.
 - Web: root typecheck, 503 tests, lint (0 errors), production build.
+

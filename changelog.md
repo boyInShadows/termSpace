@@ -35,9 +35,11 @@ Project changes completed from `pending.md` should be recorded here with the dat
   dev and previews). The website tokens are read from runtime env
   (`CHATWOOT_TOKEN_EN`/`CHATWOOT_TOKEN_FA`, `CHATWOOT_BASE_URL`) so rotation does
   not need a rebuild. The availability banner is overridden to say Termbuddy is
-  online 24/7, because Chatwoot's default presence copy assumes human agents. The
-  report-only CSP now allows `chat.termspace.dev` for scripts, connections and
-  frames.
+  online 24/7, because Chatwoot's default presence copy assumes human agents, and
+  the panel follows the site's light/dark toggle. The report-only CSP now allows
+  `chat.termspace.dev` for scripts, connections and frames. The bot and both
+  inboxes carry the TermSpace mark as their avatar, and `INSTALLATION_NAME` /
+  `BRAND_NAME` are set to TermSpace in Chatwoot's installation config.
 - **Verification.** Root typecheck; web lint 0 errors (two pre-existing
   warnings); 503 web tests (`NODE_OPTIONS=--no-experimental-webstorage`, needed
   because Node 26's global `localStorage` shadows jsdom's); production web
@@ -47,10 +49,13 @@ Project changes completed from `pending.md` should be recorded here with the dat
   English and Persian fallback text.
 - **Remaining acceptance.** The owner must add `OPENAI_API_KEY` to `.env.bot`
   and restart `termbuddy` for real GPT-6 Luna answers — until then every chat
-  gets the fallback copy. A live browser pass of the embedded widget (both
-  themes, EN/FA RTL, 320–1280 px), help-center portal theming, and a decision on
-  SMTP/transcript email are still open. Chatwoot's "Powered by" footer remains:
-  `disable_branding` is a paid Chatwoot plan feature and was not circumvented.
+  gets the fallback copy. The embedded widget was verified in Chrome at 1280 and
+  320 px, EN and FA, light and dark: the launcher opens, messages send, and the
+  fallback reply arrives in the conversation; the panel follows the site theme
+  and the availability banner reads "online 24/7". Still open: help-center
+  portal theming and a decision on SMTP/transcript email. Chatwoot's footer
+  shows "Powered by TermSpace" through `BRAND_NAME`; removing the line entirely
+  is the paid `disable_branding` feature and was not circumvented.
 
 
 ## 2026-11-04 — New navbar mark and favicon
