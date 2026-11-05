@@ -1,3 +1,4 @@
+import { EmptyCollection } from "@/components/EmptyState";
 import {notFound} from "next/navigation";
 import Link from "next/link";
 import {getTranslations} from "next-intl/server";
@@ -41,6 +42,7 @@ export default async function SeriesPage({params}: {params: Promise<{slug: strin
       <p className="text-sm uppercase tracking-widest text-ink-muted">{t("series")}</p>
       <h1 className="mt-3 font-serif text-4xl font-semibold">{series.name}</h1>
       {series.description && <p className="mt-4 text-ink-soft">{series.description}</p>}
+      {series.articles.length === 0 && <div className="mt-10"><EmptyCollection locale={locale} /></div>}
       <ol className="mt-10 space-y-4">
         {series.articles.map((article, index) => {
           const display = locale === "fa" ? localizeArticleFa(article) : article;

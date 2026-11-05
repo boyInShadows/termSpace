@@ -49,18 +49,19 @@ test.describe("performance wiring", () => {
   });
 });
 
-test.describe("scroll reveals", () => {
-  test("are complete once a section has scrolled fully into view", async ({ page }) => {
+test.describe("stable section content", () => {
+  test("stays visible when a section scrolls into view", async ({ page }) => {
     await page.goto("/");
-    const reveal = page.getByRole("region", { name: "Featured building blocks" }).locator(".ts-reveal").last();
+    const reveal = page.getByRole("region", { name: "Featured building blocks" }).getByRole("article").last();
     await reveal.evaluate((node) => node.scrollIntoView({ block: "center", behavior: "instant" }));
     await expect.poll(() => reveal.evaluate((node) => getComputedStyle(node).opacity)).toBe("1");
+    expect(await reveal.evaluate((node) => node.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running").length)).toBe(0);
   });
 
   test("do nothing under reduced motion: content is there before any scroll", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
-    const opacities = await page.locator(".ts-reveal").evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).opacity));
+    const opacities = await page.getByRole("region", { name: "Featured building blocks" }).getByRole("article").evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).opacity));
     expect(opacities.length).toBeGreaterThan(0);
     expect(opacities.every((opacity) => opacity === "1")).toBe(true);
   });

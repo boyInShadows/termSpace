@@ -15,12 +15,16 @@ email-service bypass.
 
 ## Direction contract
 
-Use the existing Datasheet language: Geist/Estedad for words, mono and tabular
-figures for references and measurements, square controls, ruled sections and
-aligned values. Use existing theme tokens only. Primary actions use ink on ground;
-the accent marks selection and focus. Lifecycle colors are shared between studio
-and overview, with visible labels. No serif display, ornamental badges, elevated
-cards, decorative motion or colored panel washes.
+Follow the Paper & Signal system in `../../DESIGN.md`: Geist/Estedad for words,
+mono/tabular figures for references and measurements, 12px controls, 16px panels,
+restrained panel shadows and aligned values. Use existing theme tokens only.
+Primary and submit actions use #0864D1 with white labels in both themes,
+through the shared action tokens. Blue also marks selection, links and focus.
+Lifecycle colors are shared between studio and overview, with visible labels.
+Use the existing pastel tokens only where a feature/summary surface calls for
+them; keep ordinary task sections on a consistent ground. No serif app headings,
+glow, decorative motion or square Datasheet frames. Known implementation gaps
+remain open as recorded in DESIGN.md; this brief does not declare them fixed.
 
 Overview, studio, listing editor, releases, library collections and Profile share
 this vocabulary. Saved listings and acquisitions stay distinct; public
@@ -43,7 +47,7 @@ the first invalid step. Save for later keeps account-scoped partial work on this
 browser; Save draft stores a complete, validated account draft without publishing.
 Loading, storage failure, empty and ready states remain explicit.
 
-Context help uses the shared square, 44px question-mark control at the logical
+Context help uses the shared rounded, 44px question-mark control at the logical
 end of relevant field or section labels. Its bordered, opaque bubble opens on
 hover, focus or tap, supports Escape, Tab and outside dismissal, and keeps concise
 EN/FA examples with Latin text isolated. Formats, errors and public-secret warnings

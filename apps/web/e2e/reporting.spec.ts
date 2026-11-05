@@ -34,6 +34,7 @@ for (const locale of ["en", "fa"] as const) {
     await page.goto(listing);
     const summary = page.locator("#report-listing summary");
     await summary.focus(); await page.keyboard.press("Enter");
+    await expect(summary).toBeInViewport();
     const explanation = page.getByRole("textbox", { name: t.explanation, exact: true });
     await explanation.fill("The installation script sends credentials to an unrelated server.");
     await summary.click(); await expect(explanation).toBeHidden(); await summary.click();

@@ -18,7 +18,7 @@ export function CategoryCard({ category }: { category: Category }) {
         <h3 className="font-serif text-lg font-semibold group-hover:text-accent">
           {name}
         </h3>
-        <span aria-hidden="true" className="text-ink-faint transition-transform group-hover:translate-x-1">
+        <span aria-hidden="true" className="text-ink-faint transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1">
           →
         </span>
       </div>

@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { reviewCopy } from "./review-copy";
 import { ApiError } from "@/lib/api";
 
 const getMyReview = vi.hoisted(() => vi.fn());
@@ -28,7 +29,7 @@ describe("ReviewComposer", () => {
 
   it("asks a signed-out visitor to log in, without calling the API", () => {
     session.email = null;
-    render(<ReviewComposer slug="x" />);
+    render(<ReviewComposer slug="x" messages={reviewCopy[locale.value]} />);
 
     expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/account?next=%2Fproducts%2Fx");
     expect(getMyReview).not.toHaveBeenCalled();
@@ -39,7 +40,7 @@ describe("ReviewComposer", () => {
     ["own_listing", /can't review your own listing/],
   ])("explains why a %s reader cannot review", async (eligibility, message) => {
     getMyReview.mockResolvedValue({ eligibility, review: null });
-    render(<ReviewComposer slug="x" />);
+    render(<ReviewComposer slug="x" messages={reviewCopy[locale.value]} />);
 
     expect(await screen.findByText(message)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Post review" })).not.toBeInTheDocument();
@@ -47,14 +48,14 @@ describe("ReviewComposer", () => {
 
   it("asks for email verification before showing the form", async () => {
     session.emailVerified = false;
-    render(<ReviewComposer slug="x" />);
+    render(<ReviewComposer slug="x" messages={reviewCopy[locale.value]} />);
 
     expect(await screen.findByText(/Verify your email to write a review/)).toBeInTheDocument();
   });
 
   it("posts a review with the chosen rating and the name the reader typed", async () => {
     saveReview.mockResolvedValue(existing);
-    render(<ReviewComposer slug="x" />);
+    render(<ReviewComposer slug="x" messages={reviewCopy[locale.value]} />);
 
     fireEvent.click(await screen.findByRole("radio", { name: "4 out of 5" }));
     fireEvent.change(screen.getByLabelText("Name shown with your review"), { target: { value: " Priya " } });
@@ -68,7 +69,7 @@ describe("ReviewComposer", () => {
   });
 
   it("will not submit without a rating", async () => {
-    render(<ReviewComposer slug="x" />);
+    render(<ReviewComposer slug="x" messages={reviewCopy[locale.value]} />);
     fireEvent.change(await screen.findByLabelText("Name shown with your review"), { target: { value: "Priya" } });
     fireEvent.change(screen.getByLabelText("Your review"), { target: { value: "A long enough review body." } });
 
@@ -82,7 +83,7 @@ describe("ReviewComposer", () => {
     getMyReview.mockResolvedValue({ eligibility: "eligible", review: existing });
     deleteReview.mockResolvedValue(undefined);
     const confirm = vi.spyOn(window, "confirm");
-    render(<ReviewComposer slug="x" />);
+    render(<ReviewComposer slug="x" messages={reviewCopy[locale.value]} />);
 
     expect(await screen.findByDisplayValue("Priya")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "4 out of 5" })).toBeChecked();
@@ -101,7 +102,7 @@ describe("ReviewComposer", () => {
 
   it("shows a moderator's decision and offers no way to edit around it", async () => {
     getMyReview.mockResolvedValue({ eligibility: "eligible", review: { ...existing, hidden: { at: "2026-10-02T00:00:00Z", reason: "Spam links" } } });
-    render(<ReviewComposer slug="x" />);
+    render(<ReviewComposer slug="x" messages={reviewCopy[locale.value]} />);
 
     expect(await screen.findByText(/A moderator hid your review/)).toBeInTheDocument();
     expect(screen.getByText("Spam links")).toBeInTheDocument();
@@ -115,7 +116,7 @@ describe("ReviewComposer", () => {
     [new ApiError(400, "VALIDATION_ERROR", "Review text is too short"), /Review text is too short/],
   ])("names the real reason a save failed (%#)", async (failure, message) => {
     saveReview.mockRejectedValue(failure);
-    render(<ReviewComposer slug="x" />);
+    render(<ReviewComposer slug="x" messages={reviewCopy[locale.value]} />);
     fireEvent.click(await screen.findByRole("radio", { name: "5 out of 5" }));
     fireEvent.change(screen.getByLabelText("Name shown with your review"), { target: { value: "Priya" } });
     fireEvent.change(screen.getByLabelText("Your review"), { target: { value: "A long enough review body." } });
@@ -128,15 +129,24 @@ describe("ReviewComposer", () => {
   it("reports when the review status cannot be loaded", async () => {
     getMyReview.mockRejectedValue(new ApiError(0, "NETWORK_ERROR", "unreachable"));
     vi.spyOn(console, "error").mockImplementation(() => {});
-    render(<ReviewComposer slug="x" />);
+    render(<ReviewComposer slug="x" messages={reviewCopy[locale.value]} />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't check your review status.");
+  });
+
+  it("retries a failed eligibility request without reloading the page", async () => {
+    getMyReview.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce({ eligibility: "not_acquired", review: null });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<ReviewComposer slug="x" messages={reviewCopy[locale.value]} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Retry" }));
+    expect(await screen.findByText("Add this listing to your library to review it.")).toBeInTheDocument();
+    expect(getMyReview).toHaveBeenCalledTimes(2);
   });
 
   it("renders in Persian with a /fa sign-in link", () => {
     session.email = null;
     locale.value = "fa";
-    render(<ReviewComposer slug="x" />);
+    render(<ReviewComposer slug="x" messages={reviewCopy[locale.value]} />);
 
     expect(screen.getByText("نقد شما")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "ورود" })).toHaveAttribute("href", "/fa/account?next=%2Ffa%2Fproducts%2Fx");

@@ -41,12 +41,12 @@ export function ListingReportForm({ slug }: { slug: string }) {
         <p className="text-sm text-muted-foreground">{t.intro}</p>
         <p id={`${fieldId}-privacy`} className="text-sm text-muted-foreground">{t.privacy}</p>
         <fieldset disabled={busy} className="min-w-0 space-y-4">
-          <label className="block text-sm font-semibold">{t.reason}<select value={reason} onChange={(event) => setReason(event.target.value as ListingReportReason)} className="mt-2 min-h-11 w-full min-w-0 border border-input bg-background px-2 text-base font-normal">
+          <label className="block text-sm font-semibold">{t.reason}<select value={reason} onChange={(event) => setReason(event.target.value as ListingReportReason)} className="mt-2 min-h-11 w-full min-w-0 rounded-control border border-input bg-surface px-2 text-base font-normal">
             {(Object.keys(t.reasons) as ListingReportReason[]).map((value) => <option key={value} value={value}>{t.reasons[value]}</option>)}
           </select></label>
           <label className="block text-sm font-semibold" htmlFor={`${fieldId}-explanation`}>{t.explanation}</label>
           <p id={`${fieldId}-hint`} className="text-sm text-muted-foreground">{t.explanationHint}</p>
-          <textarea id={`${fieldId}-explanation`} required minLength={20} maxLength={4000} value={explanation} onChange={(event) => setExplanation(event.target.value)} aria-describedby={`${fieldId}-hint ${fieldId}-privacy`} dir="auto" rows={5} className="block w-full min-w-0 border border-input bg-background p-3 text-base" />
+          <textarea id={`${fieldId}-explanation`} required minLength={20} maxLength={4000} value={explanation} onChange={(event) => setExplanation(event.target.value)} aria-describedby={`${fieldId}-hint ${fieldId}-privacy`} dir="auto" rows={5} className="block w-full min-w-0 rounded-control border border-input bg-surface p-3 text-base" />
           <Button type="submit" className="w-full">{busy ? t.sending : t.send}</Button>
         </fieldset>
         {error && <div role="alert" className="space-y-2 text-sm text-destructive"><p>{error}</p>{error === t.unauthorized && <Link href={account} className="inline-flex min-h-11 items-center font-semibold underline">{t.signIn}</Link>}</div>}

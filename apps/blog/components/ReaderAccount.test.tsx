@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ReaderAccount } from "./ReaderAccount";
 import { api } from "@/lib/api";
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+
 vi.mock("@/lib/api", () => ({
   ApiClientError: class ApiClientError extends Error {
     status: number;
@@ -45,6 +47,24 @@ describe("ReaderAccount", () => {
     vi.mocked(api.getReaderProfile).mockResolvedValue({ data: profile });
     vi.mocked(api.getReaderLibrary).mockResolvedValue({ data: library });
     vi.mocked(api.changeReaderPassword).mockResolvedValue(undefined);
+  });
+
+  it("localizes unknown profile-load failures in Persian", async () => {
+    vi.mocked(api.getReaderProfile).mockRejectedValueOnce("unknown failure");
+    render(<ReaderAccount locale="fa" />);
+    expect(await screen.findByRole("alert")).toHaveTextContent("بارگذاری نمایهٔ شما انجام نشد. دوباره تلاش کنید.");
+  });
+
+  it("localizes an unknown password failure without discarding the entered password", async () => {
+    vi.mocked(api.changeReaderPassword).mockRejectedValueOnce("unknown failure");
+    const user = userEvent.setup();
+    render(<ReaderAccount locale="fa" />);
+    await user.type(await screen.findByLabelText("رمز عبور فعلی"), "old-password");
+    await user.type(screen.getByLabelText("رمز عبور تازه", { exact: true }), "new-password");
+    await user.type(screen.getByLabelText("تکرار رمز عبور تازه"), "new-password");
+    await user.click(screen.getByRole("button", { name: "ذخیرهٔ رمز عبور" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("به‌روزرسانی رمز عبور انجام نشد. دوباره تلاش کنید.");
+    expect(screen.getByLabelText("رمز عبور تازه", { exact: true })).toHaveValue("new-password");
   });
 
   it("shows the signed-in profile, bookmarks, and reading history", async () => {

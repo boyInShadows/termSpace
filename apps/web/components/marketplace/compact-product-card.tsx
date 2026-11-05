@@ -87,7 +87,7 @@ export function CompactProductCard({ product }: { product: Product }) {
             aria-label={`${t.viewDetails}: ${product.name}`}
             className={cn(
               buttonVariants({ variant: "secondary", size: "icon" }),
-              "size-8 group-hover:border-primary group-hover:text-primary",
+              "size-11 sm:size-9 group-hover:border-primary group-hover:text-primary",
             )}
           >
             <ArrowUpRight size={14} className="rtl:-scale-x-100" />

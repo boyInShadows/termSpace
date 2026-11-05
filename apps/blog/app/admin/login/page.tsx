@@ -18,7 +18,7 @@ export default async function AdminLoginPage({
         <p className="text-sm font-medium uppercase tracking-widest text-ink-muted">Studio</p>
         <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight">Admin login</h1>
         <p className="mt-3 text-sm text-ink-soft">
-          Sign in with your administrator email and password.
+          The editorial workspace is available in English. Sign in with your administrator email and password.
         </p>
         <AdminLoginForm next={next} />
       </div>

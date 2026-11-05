@@ -82,7 +82,7 @@ export function CategoryManager({ categories: initial }: CategoryManagerProps) {
               id="cat-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-line bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
+              className="w-full rounded-lg border border-line-input bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
             />
           </div>
           <div>
@@ -92,7 +92,7 @@ export function CategoryManager({ categories: initial }: CategoryManagerProps) {
                 id="cat-slug"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
-                className="w-full rounded-lg border border-line bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
+                className="w-full rounded-lg border border-line-input bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
               />
               <button
                 type="button"
@@ -111,13 +111,13 @@ export function CategoryManager({ categories: initial }: CategoryManagerProps) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="w-full rounded-lg border border-line bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
+            className="w-full rounded-lg border border-line-input bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
           />
         </div>
         <button
           type="submit"
           disabled={busy}
-          className="rounded-lg bg-accent px-6 py-2.5 font-medium text-paper hover:bg-accent-soft disabled:opacity-50"
+          className="rounded-lg bg-action px-6 py-2.5 font-medium text-action-foreground hover:bg-action-hover disabled:opacity-50"
         >
           {busy ? "Adding…" : "Add category"}
         </button>
@@ -156,6 +156,7 @@ export function CategoryManager({ categories: initial }: CategoryManagerProps) {
       </div>
 
       <ConfirmDialog
+        error={error || undefined}
         open={Boolean(categoryToDelete)}
         title="Delete category"
         description={

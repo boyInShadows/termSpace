@@ -9,41 +9,19 @@ import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { ApiError, deleteReview, getMyReview, saveReview } from "@/lib/api";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
+import type { ReviewMessages } from "./review-copy";
 import type { MyReviewState } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const text = {
-  en: {
-    title: "Your review", signIn: "Log in to review this listing.", signInLink: "Log in",
-    notAcquired: "Add this listing to your library to review it.", ownListing: "You can't review your own listing.",
-    verify: "Verify your email to write a review.", loading: "Checking whether you can review this listing…",
-    rating: "Your rating", needRating: "Choose a rating from 1 to 5.", stars: (n: number) => `${n} out of 5`, name: "Name shown with your review", nameHint: "This is not your email address.",
-    body: "Your review", bodyHint: (n: number) => `${n} / 2000`, post: "Post review", update: "Update review", saving: "Saving…",
-    remove: "Delete review", confirmRemove: "Delete your review?", saved: "Review saved.", removed: "Review deleted.",
-    hidden: "A moderator hid your review, so it can't be edited or deleted.", reason: "Reason",
-    tooMany: "Too many review changes. Try again later.", loadFailed: "Couldn't check your review status.",
-  },
-  fa: {
-    title: "نقد شما", signIn: "برای نقد این فهرست وارد شوید.", signInLink: "ورود",
-    notAcquired: "برای نقد این فهرست، آن را به کتابخانهٔ خود اضافه کنید.", ownListing: "نمی‌توانید فهرست خودتان را نقد کنید.",
-    verify: "برای نوشتن نقد، ایمیل خود را تأیید کنید.", loading: "در حال بررسی امکان نقد این فهرست…",
-    rating: "امتیاز شما", needRating: "امتیازی از ۱ تا ۵ انتخاب کنید.", stars: (n: number) => `${n} از ۵`, name: "نامی که کنار نقد نمایش داده می‌شود", nameHint: "این نشانی ایمیل شما نیست.",
-    body: "نقد شما", bodyHint: (n: number) => `${n} / ۲۰۰۰`, post: "ثبت نقد", update: "به‌روزرسانی نقد", saving: "در حال ذخیره…",
-    remove: "حذف نقد", confirmRemove: "نقد شما حذف شود؟", saved: "نقد ذخیره شد.", removed: "نقد حذف شد.",
-    hidden: "یک ناظر نقد شما را پنهان کرده است و قابل ویرایش یا حذف نیست.", reason: "دلیل",
-    tooMany: "تعداد تغییرات نقد زیاد بود. بعداً دوباره تلاش کنید.", loadFailed: "بررسی وضعیت نقد شما ممکن نشد.",
-  },
-};
-
 /** The reader's way in: sign in, add to library, verify email, then write, edit or delete one review. */
-export function ReviewComposer({ slug }: { slug: string }) {
+export function ReviewComposer({ slug, messages: t }: { slug: string; messages: ReviewMessages }) {
   const { locale } = useLocale();
-  const t = text[locale];
   const router = useRouter();
   const session = useMarketplaceSession();
   const fieldId = useId();
   const [state, setState] = useState<MyReviewState | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [rating, setRating] = useState(0);
   const [displayName, setDisplayName] = useState("");
   const [body, setBody] = useState("");
@@ -62,7 +40,7 @@ export function ReviewComposer({ slug }: { slug: string }) {
       })
       .catch((cause) => { if (!controller.signal.aborted) { setLoadError(true); console.error("Review status failed", cause); } });
     return () => controller.abort();
-  }, [slug, session.loading, session.email]);
+  }, [slug, session.loading, session.email, loadAttempt]);
 
   function explain(cause: unknown): string {
     if (cause instanceof ApiError) {
@@ -108,14 +86,14 @@ export function ReviewComposer({ slug }: { slug: string }) {
   let content: React.ReactNode;
   if (session.loading) content = <p className="text-sm">{t.loading}</p>;
   else if (!session.email) content = <p className="text-sm">{t.signIn} <Link className="font-semibold text-primary hover:underline" href={account}>{t.signInLink}</Link></p>;
-  else if (loadError) content = <p role="alert" className="text-sm text-destructive">{t.loadFailed}</p>;
+  else if (loadError) content = <div className="space-y-3"><p role="alert" className="text-sm text-destructive">{t.loadFailed}</p><Button variant="secondary" onClick={() => { setLoadError(false); setLoadAttempt((attempt) => attempt + 1); }}>{t.retry}</Button></div>;
   else if (!state) content = <p className="text-sm">{t.loading}</p>;
   else if (state.eligibility === "own_listing") content = <p className="text-sm">{t.ownListing}</p>;
   else if (state.eligibility === "not_acquired") content = <p className="text-sm">{t.notAcquired}</p>;
   else if (!session.emailVerified) content = <p className="text-sm">{t.verify} <Link className="font-semibold text-primary hover:underline" href={localePath("/account", locale)}>{t.signInLink}</Link></p>;
   else if (state.review?.hidden) {
     content = (
-      <div role="status" className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-800 dark:text-amber-300">
+      <div role="status" className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm text-warning">
         <p>{t.hidden}</p>
         {state.review.hidden.reason && <p className="mt-1"><strong>{t.reason}:</strong> {state.review.hidden.reason}</p>}
       </div>
@@ -127,8 +105,8 @@ export function ReviewComposer({ slug }: { slug: string }) {
           <legend className="text-sm font-semibold text-foreground">{t.rating}</legend>
           <div className="mt-2 flex gap-1">
             {[1, 2, 3, 4, 5].map((value) => (
-              <label key={value} className="cursor-pointer">
-                <input type="radio" name={`${fieldId}-rating`} value={value} checked={rating === value} onChange={() => setRating(value)} className="peer sr-only" aria-label={t.stars(value)} />
+              <label key={value} className="inline-flex size-11 cursor-pointer items-center justify-center">
+                <input type="radio" name={`${fieldId}-rating`} value={value} checked={rating === value} onChange={() => setRating(value)} className="peer sr-only" aria-label={t.stars.replace("{count}", String(value))} />
                 <Star size={26} className={cn("rounded-sm text-muted-foreground peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-ring", value <= rating && "fill-primary text-primary")} aria-hidden="true" />
               </label>
             ))}
@@ -141,8 +119,8 @@ export function ReviewComposer({ slug }: { slug: string }) {
         </div>
         <div>
           <label htmlFor={`${fieldId}-body`} className="text-sm font-semibold text-foreground">{t.body}</label>
-          <textarea id={`${fieldId}-body`} className="mt-2 min-h-32 w-full max-w-2xl rounded-md border border-input bg-surface p-3 text-sm hover:border-border-strong focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20" value={body} onChange={(event) => setBody(event.target.value)} minLength={10} maxLength={2000} required />
-          <p className="mt-1 text-xs" dir="ltr">{t.bodyHint(body.length)}</p>
+          <textarea id={`${fieldId}-body`} className="mt-2 min-h-32 w-full max-w-2xl rounded-md border border-input bg-surface p-3 text-base hover:border-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20" value={body} onChange={(event) => setBody(event.target.value)} minLength={10} maxLength={2000} required />
+          <p className="mt-1 text-xs" dir="ltr">{t.bodyHint.replace("{count}", String(body.length))}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" disabled={busy}>{busy ? t.saving : state.review ? t.update : t.post}</Button>

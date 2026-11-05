@@ -1,5 +1,5 @@
 {
-  "Navigation": {"home":"Home","blog":"Articles","editions":"Editions","topics":"Topics","resources":"Resources","library":"Library","signIn":"Sign in","language":"فارسی"},
+  "Navigation": {"account":"Account","home":"Home","blog":"Articles","editions":"Editions","topics":"Topics","resources":"Resources","library":"Library","signIn":"Sign in","language":"فارسی"},
   "Hero": {"eyebrow":"Termspace — an editorial journal","title":"Notes on craft, code, and the calm in between.","intro":"Essays and field notes on software engineering, design, productivity, and the ideas quietly shaping modern technology. Written slowly, edited carefully.","read":"Read the journal","explore":"Explore topics"},
   "Common": {"topic":"Topic","tag":"Tag","series":"Series","articles":"articles","noArticles":"No articles in this topic yet","checkBack":"Check back soon — new writing is on the way.","minutes":"{count} min read","allResources":"All resources","resourceHint":"Preview the file below or download it for editing."},
   "NotFound": {"title":"Page not found","description":"The page you are looking for does not exist or has moved.","home":"Back home"}

@@ -141,7 +141,7 @@ function PublishLink({ className, iconOnly = false }: { className?: string; icon
       href={localePath(href, locale)}
       aria-label={iconOnly ? t.dashboardHome.publish : undefined}
       className={cn(
-        "flex items-center justify-center gap-2 bg-primary text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover",
+        "flex items-center justify-center gap-2 bg-action text-sm font-medium text-action-foreground transition-colors hover:bg-action-hover",
         className,
       )}
     >

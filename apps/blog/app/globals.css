@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  button { min-height: 44px; min-width: 44px; }
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+    min-width: 0;
+    font-size: 1rem;
+  }
+  input:not([type="checkbox"]):not([type="radio"]), select { min-height: 44px; }
+  button:disabled { cursor: not-allowed; opacity: 0.55; }
+}
+
 :root {
   --font-sans: "Manrope Variable", system-ui, sans-serif;
   --font-serif: "Newsreader Variable", Georgia, serif;
@@ -60,6 +70,16 @@ html[dir="rtl"] .font-mono {
 
 html[dir="rtl"] .prose-article:not([dir="ltr"]) {
   text-align: right;
+  font-family: "Estedad Variable", Tahoma, sans-serif;
+}
+
+html[dir="rtl"] .prose-article:not([dir="ltr"]) :is(h1, h2, h3) {
+  font-family: "Estedad Variable", Tahoma, sans-serif;
+}
+
+html[dir="rtl"] :where(body *):not([dir="ltr"], [dir="ltr"] *) {
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 html[dir="rtl"] .prose-article ul,
@@ -79,7 +99,6 @@ html[dir="rtl"] .prose-article blockquote {
 :focus-visible {
   outline: 2px solid #b45309;
   outline-offset: 2px;
-  border-radius: 2px;
 }
 
 ::selection {
@@ -111,7 +130,19 @@ html[dir="rtl"] .prose-article blockquote {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   .edition-reveal { animation: none; }
+  .animate-pulse { animation: none; }
+  [class*="scale-"]:hover,
+  .group:hover [class*="group-hover:scale-"],
+  .group:hover [class*="group-hover:translate-"],
+  [class*="hover:-translate-"]:hover {
+    --tw-translate-x: 0 !important;
+    --tw-translate-y: 0 !important;
+    --tw-scale-x: 1 !important;
+    --tw-scale-y: 1 !important;
+    transition: none !important;
+  }
 }
 
 /* Prose styles for article bodies. */
@@ -200,6 +231,14 @@ html[dir="rtl"] .prose-article blockquote {
   border-radius: 0.5rem;
   overflow-x: auto;
   margin: 1.5rem 0;
+}
+
+.prose-article pre code {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
 }
 
 .prose-article strong {

@@ -26,6 +26,11 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isPersian = pathname === "/fa" || pathname.startsWith("/fa/");
   const effectivePath = isPersian ? pathname.slice(3) || "/" : pathname;
+  if (isPersian && (effectivePath === "/admin" || effectivePath.startsWith("/admin/"))) {
+    const englishAdmin = request.nextUrl.clone();
+    englishAdmin.pathname = effectivePath;
+    return NextResponse.redirect(englishAdmin);
+  }
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-term-locale", isPersian ? "fa" : "en");
 

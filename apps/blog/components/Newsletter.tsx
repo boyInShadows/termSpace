@@ -66,14 +66,14 @@ export function Newsletter() {
                 if (status === "error") setStatus("idle");
               }}
               placeholder="you@example.com"
-              className="w-full rounded-lg border border-line bg-paper-card px-4 py-3 text-ink placeholder:text-ink-faint focus:border-accent"
+              className="w-full rounded-lg border border-line-input bg-paper-card px-4 py-3 text-ink placeholder:text-ink-faint focus:border-accent"
               aria-invalid={status === "error"}
               aria-describedby={status === "error" ? "newsletter-error" : undefined}
             />
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-accent px-6 py-3 font-medium text-paper transition-colors hover:bg-accent-soft"
+              className="rounded-lg bg-action px-6 py-3 font-medium text-action-foreground transition-colors hover:bg-action-hover"
             >
               {submitting ? (fa ? "در حال ثبت…" : "Subscribing...") : (fa ? "عضویت" : "Subscribe")}
             </button>
