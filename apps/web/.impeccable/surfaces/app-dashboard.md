@@ -18,7 +18,7 @@ email-service bypass.
 Follow the Paper & Signal system in `../../DESIGN.md`: Geist/Estedad for words,
 mono/tabular figures for references and measurements, 12px controls, 16px panels,
 restrained panel shadows and aligned values. Use existing theme tokens only.
-Primary and submit actions use #2563EB with white labels in both themes,
+Primary and submit actions use #0864D1 with white labels in both themes,
 through the shared action tokens. Blue also marks selection, links and focus.
 Lifecycle colors are shared between studio and overview, with visible labels.
 Use the existing pastel tokens only where a feature/summary surface calls for

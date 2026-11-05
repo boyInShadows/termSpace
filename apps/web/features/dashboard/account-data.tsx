@@ -105,7 +105,7 @@ export function AccountData({ profile: state }: { profile: ProfileState }) {
                 <label className="block text-sm font-medium">{copy.passwordLabel}
                   <Input name="currentPassword" type="password" required maxLength={128} autoComplete="current-password" className="mt-2" />
                 </label>
-                <Button type="submit" variant="destructive" disabled={!confirmed}>{deleting ? copy.deleting : copy.deleteButton}</Button>
+                <Button type="submit" disabled={!confirmed}>{deleting ? copy.deleting : copy.deleteButton}</Button>
               </>
               : <>
                 <p className="text-sm text-muted-foreground">{copy.googleConfirm}</p>

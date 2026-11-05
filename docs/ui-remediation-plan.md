@@ -41,7 +41,7 @@ was manually viewed. Tests, source review and rendered evidence are separate.
 | W03 | Stronger light input token and blue hover; calculated boundary contrast 3.04–3.23:1. |
 | W04 | RTL checked thumb translation; 320px EN/FA browser containment checks. |
 | W05 | Stable theme hydration snapshot and accurate destination; unit/browser regression. |
-| W06 | Shared Button vocabulary for search, recovery and dashboard actions. Owner update on 2026-11-03: #2563EB with white text replaces ink/ground action fills in both themes; the current DESIGN contract takes precedence. |
+| W06 | Shared Button vocabulary for search, recovery and dashboard actions. Owner update on 2026-11-06: #0864D1 with white text replaces the prior action fill in both themes; the current DESIGN contract takes precedence. |
 | W07 | Shared sans/600 editorial and product heading defaults; six-route theme/locale checks. |
 | W08 | Restrained sans labels replace terminal-style decorative eyebrows. |
 | W09 | Overview and peer-section heading ramps and spacing aligned. |

@@ -11,9 +11,9 @@
   --font-estedad: "Estedad Variable";
 
   /* Owner-selected action fill stays the same in both themes. */
-  --action: #2563eb;
+  --action: #0864d1;
   --action-foreground: #ffffff;
-  --action-hover: #1d4ed8;
+  --action-hover: #0755b2;
 
   /* motion ------------------------------------------------------------- */
   /* Short feedback transitions; page content stays visible immediately. */

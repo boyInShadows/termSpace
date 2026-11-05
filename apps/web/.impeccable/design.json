@@ -187,16 +187,16 @@
       "action": {
         "role": "primary",
         "displayName": "action blue",
-        "canonical": "#2563EB",
+        "canonical": "#0864D1",
         "tonalRamp": [
-          "oklch(15% 0.2152 262.9)",
-          "oklch(25% 0.2152 262.9)",
-          "oklch(35% 0.2152 262.9)",
-          "oklch(45% 0.2152 262.9)",
-          "oklch(55% 0.2152 262.9)",
-          "oklch(65% 0.2152 262.9)",
-          "oklch(80% 0.2152 262.9)",
-          "oklch(95% 0.2152 262.9)"
+          "oklch(15% 0.1851 257.6)",
+          "oklch(25% 0.1851 257.6)",
+          "oklch(35% 0.1851 257.6)",
+          "oklch(45% 0.1851 257.6)",
+          "oklch(55% 0.1851 257.6)",
+          "oklch(65% 0.1851 257.6)",
+          "oklch(80% 0.1851 257.6)",
+          "oklch(95% 0.1851 257.6)"
         ]
       }
     },
@@ -294,9 +294,9 @@
     {
       "name": "Primary button",
       "kind": "button",
-      "description": "Existing Button primary variant; #2563EB fill, white labels, darker hover, shared 44px default and visible focus in both themes.",
+      "description": "Existing Button primary variant; #0864D1 fill, white labels, darker hover, shared 44px default and visible focus in both themes.",
       "html": "<button class=\"ds-btn\" type=\"button\">Save profile</button>",
-      "css": ".ds-btn{display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;padding:0 16px;border:0;border-radius:var(--radius-control,12px);font-family:var(--font-geist),sans-serif;font-size:14px;font-weight:600;line-height:20px;cursor:pointer;transition:background-color 160ms,opacity 160ms}.ds-btn:focus-visible{outline:2px solid var(--ring);outline-offset:3px}.ds-btn:disabled{pointer-events:none;opacity:.45}.ds-btn{background:var(--action,#2563eb);color:var(--action-foreground,#fff);box-shadow:0 1px 2px #0000000d}.ds-btn:hover{background:var(--action-hover,#1d4ed8)}"
+      "css": ".ds-btn{display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;padding:0 16px;border:0;border-radius:var(--radius-control,12px);font-family:var(--font-geist),sans-serif;font-size:14px;font-weight:600;line-height:20px;cursor:pointer;transition:background-color 160ms,opacity 160ms}.ds-btn:focus-visible{outline:2px solid var(--ring);outline-offset:3px}.ds-btn:disabled{pointer-events:none;opacity:.45}.ds-btn{background:var(--action,#0864d1);color:var(--action-foreground,#fff);box-shadow:0 1px 2px #0000000d}.ds-btn:hover{background:var(--action-hover,#0755b2)}"
     },
     {
       "name": "Secondary button",

@@ -27,9 +27,9 @@ const config: Config = {
           tint: "#fef3c7",
         },
         action: {
-          DEFAULT: "#2563eb",
+          DEFAULT: "#0864d1",
           foreground: "#ffffff",
-          hover: "#1d4ed8",
+          hover: "#0755b2",
         },
         line: {
           DEFAULT: "#e5e1da",

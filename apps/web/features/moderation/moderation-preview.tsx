@@ -278,7 +278,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
               <label className="block text-sm font-semibold">{m.internalNote}<span className="mt-1 block text-xs font-normal text-muted-foreground">{m.internalNoteHint}</span><textarea className="mt-2 min-h-28 w-full border border-input bg-background p-3 text-sm" name="internalNote" maxLength={4000} /></label>
             </fieldset>
             {actionBlocked && <p className="text-xs text-muted-foreground" role="note">{m.publishBlocked}</p>}
-            <Button className="w-full" variant={selected && DESTRUCTIVE.has(selected) ? "destructive" : "primary"} disabled={!selected || pending !== null || submitting || stale || preview.selfOwned || actionBlocked}>{selected ? (m.actionButton as Labels)[selected] : m.chooseFirst}</Button>
+            <Button className="w-full" disabled={!selected || pending !== null || submitting || stale || preview.selfOwned || actionBlocked}>{selected ? (m.actionButton as Labels)[selected] : m.chooseFirst}</Button>
           </form> : <p className="text-sm text-muted-foreground">{m.noActions}</p>}
 
           {pending && <div ref={confirmBox} tabIndex={-1} role="group" aria-labelledby="confirm-title" className="mt-4 border-2 border-foreground p-4 outline-none focus-visible:ring-2 focus-visible:ring-ring">

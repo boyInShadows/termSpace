@@ -2,6 +2,42 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-06 - Refresh main and use the requested submit blue
+
+- **Goal / files / shared surface.** Fetch and integrate current main, then
+  replace the previous action blue with the owner-requested exact #0864D1. Change
+  web action tokens and blog Tailwind action colors, including account deletion
+  and the moderation decision form. Synchronize DESIGN, preview
+  metadata, dashboard brief, remediation handoff and existing browser assertions.
+  Shared surface: `changelog.md`. Blog `tailwind.config.ts` is included by the
+  all-submit-buttons instruction; editorial accents remain unchanged.
+- **Integration.** Fetch succeeded; origin/main is 1b432be and already an
+  ancestor of ramtin. Merge reports already up to date, with no conflicts.
+  Preserve main inbox-driven signup/reset and release-review changes.
+  Preserve pre-existing DESIGN formatting, brand assets and the in-progress
+  wording-review entry; none belongs to this phase.
+- **Acceptance / verification.** #0864D1 fill, white labels, #0755B2 hover
+  through existing action tokens in both web themes and blog forms. Keep
+  validation, pending/disabled behavior, keyboard focus, warnings and the separate
+  destructive moderation confirmation. All form submits use the action palette.
+  Run root typecheck/tests/build, web lint/E2E, Lighthouse and Impeccable review.
+- **Results.** Root typecheck, all 844 unit/component tests (44 existing API
+  integration skips), all production builds and web lint pass; lint retains
+  its two existing warnings. Full E2E: 527 passed / 46 intentional skips.
+  After the last two submit overrides, rebuilt all apps and passed all 62
+  affected browser checks, including Settings in both themes/locales.
+  Twenty rendered account checks cover web light/dark and blog light, EN/FA
+  and 320/1280px; exact colors, keyboard focus and blog hover pass. Inspected
+  screenshots, including enabled deletion submits. White-text contrast is
+  5.59:1 normal / 7.12:1 hover. No runtime dependency or form logic changed.
+- **Review / limits.** Manual diff review finds no new issue. Impeccable
+  reports only the existing feedback-easing advisory. Blog account rendering
+  uses mocked signed-out API responses; broader editorial/admin acceptance,
+  physical devices and real-provider checks remain outside this color phase.
+  Evidence is local under `docs/artifacts/submit-blue-2026-11-06/`.
+- **Lighthouse.** All nine runs pass every unchanged budget. Reused the existing
+  local Windows temporary-profile cleanup preload; no audit or assertion changed.
+
 ## 2026-11-04 — Sequential local queue: onboarding wording review
 
 - **Scope / shared surface.** Owner requested `ramtin-pending.md` execution in

@@ -26,6 +26,8 @@ for (const locale of ["en", "fa"] as const) {
       await expect(remove).toBeDisabled();
       await page.getByLabel(text.confirmLabel).fill("reader@e2e.test");
       await page.getByLabel(text.passwordLabel).fill("wrong-password");
+      await expect(remove).toHaveCSS("background-color", "rgb(8, 100, 209)");
+      await expect(remove).toHaveCSS("color", "rgb(255, 255, 255)");
       await remove.click();
       await expect(page.getByRole("alert").filter({ hasText: text.invalidPassword })).toBeVisible();
       await page.getByLabel(text.passwordLabel).fill("correct-password");

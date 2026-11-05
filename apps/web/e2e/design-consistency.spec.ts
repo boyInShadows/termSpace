@@ -6,7 +6,7 @@ for (const locale of ["en", "fa"]) for (const theme of ["light", "dark"]) {
     await context.addInitScript((theme) => localStorage.setItem("theme", theme), theme);
     const prefix = locale === "fa" ? "/fa" : "";
     let headingFont: string | undefined;
-    for (const route of ["/", "/dashboard", "/explore", "/products/conversion-copywriter", "/account", "/communities"]) {
+    for (const route of ["/", "/dashboard", "/dashboard/settings", "/explore", "/products/conversion-copywriter", "/account", "/communities"]) {
       await page.goto(`${prefix}${route === "/" ? "" : route}`);
       await expect(page.locator("h1").first()).toBeVisible();
       await expect(page.locator("html")).toHaveClass(new RegExp(`\\b${theme}\\b`));
@@ -20,7 +20,7 @@ for (const locale of ["en", "fa"]) for (const theme of ["light", "dark"]) {
           .map((card) => ({ radius: getComputedStyle(card).borderRadius, shadow: getComputedStyle(card).boxShadow }));
         const actions = [...document.querySelectorAll<HTMLElement>("button, a")]
           .filter((element) => element.offsetWidth > 0 && element.offsetHeight > 0)
-          .filter((element) => element.classList.contains("bg-action") || (element instanceof HTMLButtonElement && element.form && element.type === "submit" && !element.classList.contains("bg-destructive")))
+          .filter((element) => element.classList.contains("bg-action") || (element instanceof HTMLButtonElement && element.form && element.type === "submit"))
           .map((element) => ({ background: getComputedStyle(element).backgroundColor, foreground: getComputedStyle(element).color }));
         return {
           headingFont: style.fontFamily,
@@ -38,7 +38,7 @@ for (const locale of ["en", "fa"]) for (const theme of ["light", "dark"]) {
       expect(styles.overflow, route).toBe(false);
       if (route === "/" || route.startsWith("/products/")) expect(styles.actions.length, route).toBeGreaterThan(0);
       for (const action of styles.actions) {
-        expect(action.background, route).toBe("rgb(37, 99, 235)");
+        expect(action.background, route).toBe("rgb(8, 100, 209)");
         expect(action.foreground, route).toBe("rgb(255, 255, 255)");
       }
       const isLanding = route === "/";
@@ -66,10 +66,10 @@ test("hero search keeps its prompt and keyboard focus exposes usable suggestions
   await expect(focused).toHaveAttribute("type", "submit");
   const focusVisible = await focused.evaluate((node) => getComputedStyle(node).outlineStyle !== "none");
   expect(focusVisible).toBe(true);
-  await expect(focused).toHaveCSS("background-color", "rgb(37, 99, 235)");
+  await expect(focused).toHaveCSS("background-color", "rgb(8, 100, 209)");
   if (await page.evaluate(() => matchMedia("(hover: hover)").matches)) {
     await focused.hover();
-    await expect(focused).toHaveCSS("background-color", "rgb(29, 78, 216)");
+    await expect(focused).toHaveCSS("background-color", "rgb(7, 85, 178)");
   }
 });
 
