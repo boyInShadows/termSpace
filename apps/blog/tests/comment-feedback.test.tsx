@@ -4,7 +4,19 @@ import { Comments } from "@/components/Comments";
 
 const submitComment = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/api", () => ({ api: { submitComment } }));
-afterEach(cleanup);
+afterEach(() => { cleanup(); submitComment.mockReset(); });
+
+it.each([
+  ["en", { message: "Comment submitted for moderation" }, "Comment submitted for moderation"],
+  ["fa", { message: "Comment submitted for moderation" }, "دیدگاه برای بررسی ارسال شد."],
+  ["en", {}, "Comment submitted for moderation"],
+  ["fa", {}, "دیدگاه برای بررسی ارسال شد."],
+] as const)("announces %s success without exposing filtering (%j)", async (locale, data, message) => {
+  submitComment.mockResolvedValueOnce({ data });
+  render(<Comments slug="article" initialComments={[]} locale={locale} />);
+  fireEvent.submit(screen.getByRole("button", { name: locale === "fa" ? "ارسال برای بررسی" : "Submit for review" }).closest("form")!);
+  expect(await screen.findByRole("status")).toHaveTextContent(message);
+});
 
 it("blocks duplicate pending comments and retains the text on failure", async () => {
   let reject!: (error: Error) => void;

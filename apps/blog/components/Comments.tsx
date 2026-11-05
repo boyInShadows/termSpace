@@ -24,8 +24,8 @@ export function Comments({ slug, initialComments, locale = "en" }: { slug: strin
     setFailed(false);
     setStatus(fa ? "در حال ارسال…" : "Submitting…");
     try {
-      const response = await api.submitComment(slug, { name, email, body, website });
-      setStatus(response.data.message);
+      await api.submitComment(slug, { name, email, body, website });
+      setStatus(fa ? "دیدگاه برای بررسی ارسال شد." : "Comment submitted for moderation");
       setBody("");
     } catch (error) {
       setFailed(true);

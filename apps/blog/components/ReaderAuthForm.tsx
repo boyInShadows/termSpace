@@ -37,7 +37,7 @@ export function ReaderAuthForm({ locale = "en" }: { locale?: Locale }) {
       callback: async ({ credential }) => {
         setBusy(true); setError("");
         try { await api.loginReaderWithGoogle(credential); await finishSignIn(); }
-        catch (err) { setError(err instanceof Error ? err.message : "Google sign-in failed."); setBusy(false); }
+        catch (err) { setError(err instanceof Error ? err.message : (fa ? "ورود با Google انجام نشد. دوباره تلاش کنید." : "Google sign-in failed.")); setBusy(false); }
       },
     });
     window.google.accounts.id.renderButton(googleButton.current, { theme: "outline", size: "large", locale, width: Math.min(320, googleButton.current.clientWidth || 320) });
@@ -48,7 +48,7 @@ export function ReaderAuthForm({ locale = "en" }: { locale?: Locale }) {
     try {
       await api.loginReader(email.trim().toLowerCase(), password);
       await finishSignIn();
-    } catch (err) { setError(err instanceof Error ? err.message : "Unable to continue."); setBusy(false); }
+    } catch (err) { setError(err instanceof Error ? err.message : (fa ? "ادامهٔ ورود انجام نشد. دوباره تلاش کنید." : "Unable to continue.")); setBusy(false); }
   }
 
   return (

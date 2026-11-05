@@ -14,6 +14,8 @@ describe("server-rendered footer", () => {
     expect(screen.getByText(copy[locale].footer)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: footerLabels[locale].explore })).toHaveAttribute("href", locale === "fa" ? "/fa/explore" : "/explore");
     expect(screen.getByRole("link", { name: footerLabels[locale].support })).toHaveAttribute("href", locale === "fa" ? "/fa/account" : "/account");
+    expect(screen.getByRole("link", { name: locale === "fa" ? "جامعه‌ها" : "Communities" })).toHaveAttribute("href", `${locale === "fa" ? "/fa" : ""}/communities`);
+    expect(screen.getByRole("link", { name: locale === "fa" ? "حساب کاربری" : "Account" })).toHaveAttribute("href", `${locale === "fa" ? "/fa" : ""}/account`);
     for (const slug of ["privacy", "terms", "content-policy"] as const) {
       expect(screen.getByRole("link", { name: legalLabels[locale][slug] })).toHaveAttribute("href", `${locale === "fa" ? "/fa" : ""}/${slug}`);
     }

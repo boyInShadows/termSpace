@@ -2,6 +2,45 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-06 - Finish public copy corrections and refresh the local queue
+
+- **Scope / shared surfaces.** Owner requested the changelog refresh and
+  `ramtin-pending.md` follow-through. Complete the six confirmed public-copy
+  groups from the November 4 review. Shared surfaces: `apps/web/lib/i18n/`
+  (`catalog.ts`, `common.ts`) and `changelog.md`. Blog ownership exception:
+  `messages/fa.json`, `Hero.tsx`, `ReaderAuthForm.tsx`, `ReaderAccount.tsx`
+  and `Comments.tsx`, plus focused tests, for the queued presentation fixes.
+  The local queue remains ignored and is never staged.
+- **Completed source corrections.** Remove the extra Persian discovery trust
+  assurance; name Termspace in the Persian blog hero; send Explore topics to
+  the topics directory; name footer Communities/Account links truthfully in
+  both locales. Localize four unknown-error fallbacks while retaining specific
+  server errors. Announce comment moderation success in the current locale
+  for both normal and message-free honeypot responses, without exposing filtering.
+  Preserve API/authentication contracts, entered data and #0864D1 submits.
+- **Verification.** Focused regressions reproduced the defects before repair;
+  all 855 unit/component tests now pass (44 existing integration skips), root
+  typecheck and all production builds pass, web lint retains two existing
+  warnings. Eight rendered footer variants and four Persian discovery variants
+  pass in EN/FA, web light/dark and 320/1280px; screenshots inspected. The
+  discovery intro retains its existing phone-hidden behavior. Impeccable reports
+  no findings for the changed targets. Full E2E: 527 passed / 46 intentional skips.
+  All nine Lighthouse runs pass the unchanged budgets using the existing local
+  Windows cleanup preload; no audit/assertion was changed.
+- **Queue / prerequisites.** Keep editorial/admin rendered acceptance and
+  scoped cache cleanup awaiting the owner choice prompted in this session;
+  the queue records earlier automatic approval rejections (blocked by policy).
+  No blog fixture launch or rejected cleanup was retried. Port 4100 has no
+  listener; remove the stale running-API/PID instruction. Google public client
+  IDs are still absent from the app env files and Windows user environment.
+  Read-only Prisma status confirms external-link-source and release-review
+  migrations remain pending locally; no migration was applied. Physical-phone,
+  real-Google and owner Persian-copy acceptance remain open.
+- **Evidence / review.** `docs/artifacts/ramtin-copy-2026-11-06/` holds local
+  test logs, screenshots and read-only prerequisite evidence. Supersedes the
+  unfinished November 4 copy-plan entry; no other-maintainer queue item claimed.
+  Manual diff review completed by hand; no new findings.
+
 ## 2026-11-06 - Refresh main and use the requested submit blue
 
 - **Goal / files / shared surface.** Fetch and integrate current main, then
@@ -37,25 +76,6 @@ Project changes completed from `pending.md` should be recorded here with the dat
   Evidence is local under `docs/artifacts/submit-blue-2026-11-06/`.
 - **Lighthouse.** All nine runs pass every unchanged budget. Reused the existing
   local Windows temporary-profile cleanup preload; no audit or assertion changed.
-
-## 2026-11-04 — Sequential local queue: public wording corrections (in progress)
-
-- **Goal / files / shared surfaces.** Complete the public Persian wording
-  review. Fix six confirmed copy/navigation groups in shared web
-  `lib/i18n/catalog.ts` and `common.ts`, blog `messages/fa.json`, `Hero.tsx`,
-  `ReaderAuthForm.tsx`, `ReaderAccount.tsx` and `Comments.tsx`; add focused
-  regression coverage using existing test files/patterns. Shared surfaces:
-  `apps/web/lib/i18n/` and `changelog.md`. Blog presentation is in scope under
-  the owner-requested queue. Preserve brand assets and existing DESIGN formatting.
-- **Acceptance / verification.** Remove the additional trust assurance only
-  from the FA intro; use the actual blog brand; align navigation labels/hrefs;
-  localize explicit fallback and known comment-success messages without changing
-  authentication, moderation or API contracts. Run focused regressions, root
-  typecheck/tests/build, web lint and E2E; retain established performance gates.
-- **Owner decisions.** Keep the blog fixture preview/cleanup pending. Skip
-  physical-phone and real-Google acceptance, including Google setup, for this
-  queue run. Retain these unfinished items as deferred, rather than marking
-  them verified. No blocked launch or cleanup action is retried.
 
 ## 2026-11-04 — Sequential local queue: onboarding wording review
 

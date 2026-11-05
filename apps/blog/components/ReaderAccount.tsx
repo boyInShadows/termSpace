@@ -31,12 +31,12 @@ export function ReaderAccount({ locale = "en" }: { locale?: Locale }) {
       })
       .catch((error) => {
         if (active && !(error instanceof ApiClientError && error.status === 401)) {
-          setPasswordError(error instanceof Error ? error.message : "Unable to load your profile.");
+          setPasswordError(error instanceof Error ? error.message : (fa ? "بارگذاری نمایهٔ شما انجام نشد. دوباره تلاش کنید." : "Unable to load your profile."));
         }
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, []);
+  }, [fa]);
 
   async function changePassword(event: React.FormEvent) {
     event.preventDefault();
@@ -59,7 +59,7 @@ export function ReaderAccount({ locale = "en" }: { locale?: Locale }) {
       setConfirmPassword("");
       setPasswordSuccess(fa ? "رمز عبور شما به‌روزرسانی شد." : "Your password has been updated.");
     } catch (error) {
-      setPasswordError(error instanceof Error ? error.message : "Unable to update your password.");
+      setPasswordError(error instanceof Error ? error.message : (fa ? "به‌روزرسانی رمز عبور انجام نشد. دوباره تلاش کنید." : "Unable to update your password."));
     } finally {
       setPasswordBusy(false);
     }

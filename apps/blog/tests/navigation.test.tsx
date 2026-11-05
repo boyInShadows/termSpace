@@ -1,13 +1,28 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import english from "@/messages/en.json";
+import persian from "@/messages/fa.json";
+import { Hero } from "@/components/Hero";
 import { SiteHeader } from "@/components/SiteHeader";
 import { AdminShell } from "@/components/admin/AdminShell";
 
-const location = vi.hoisted(() => ({ path: "/blog", search: "q=workflow&page=2" }));
+const location = vi.hoisted(() => ({ path: "/blog", search: "q=workflow&page=2", locale: "en" as "en" | "fa" }));
 vi.mock("next/navigation", () => ({ usePathname: () => location.path, useSearchParams: () => new URLSearchParams(location.search), useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
-vi.mock("next-intl", () => ({ useLocale: () => "en", useTranslations: () => (key: string) => english.Navigation[key as keyof typeof english.Navigation] }));
-afterEach(() => { cleanup(); location.path = "/blog"; });
+function translate(namespace: string) {
+  const messages: Record<string, Record<string, string>> = location.locale === "fa" ? persian : english;
+  return (key: string) => messages[namespace][key];
+}
+vi.mock("next-intl", () => ({ useLocale: () => location.locale, useTranslations: (namespace: string) => translate(namespace) }));
+vi.mock("next-intl/server", () => ({ getTranslations: async (namespace: string) => translate(namespace) }));
+vi.mock("@/lib/serverLocale", () => ({ getLocale: async () => location.locale }));
+afterEach(() => { cleanup(); location.path = "/blog"; location.locale = "en"; });
+
+it.each(["en", "fa"] as const)("the %s hero names Termspace and opens the topics directory", async (locale) => {
+  location.locale = locale;
+  render(await Hero());
+  expect(screen.getByText(locale === "fa" ? "Termspace — یک مجلهٔ تحریریه" : english.Hero.eyebrow)).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: locale === "fa" ? "کاوش موضوعات" : "Explore topics" })).toHaveAttribute("href", `${locale === "fa" ? "/fa" : ""}/topics`);
+});
 
 it("preserves browse context, marks the current page and labels the reader account honestly", () => {
   render(<SiteHeader />);
