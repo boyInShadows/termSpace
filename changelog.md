@@ -38,6 +38,25 @@ Project changes completed from `pending.md` should be recorded here with the dat
 - **Lighthouse.** All nine runs pass every unchanged budget. Reused the existing
   local Windows temporary-profile cleanup preload; no audit or assertion changed.
 
+## 2026-11-04 — Sequential local queue: public wording corrections (in progress)
+
+- **Goal / files / shared surfaces.** Complete the public Persian wording
+  review. Fix six confirmed copy/navigation groups in shared web
+  `lib/i18n/catalog.ts` and `common.ts`, blog `messages/fa.json`, `Hero.tsx`,
+  `ReaderAuthForm.tsx`, `ReaderAccount.tsx` and `Comments.tsx`; add focused
+  regression coverage using existing test files/patterns. Shared surfaces:
+  `apps/web/lib/i18n/` and `changelog.md`. Blog presentation is in scope under
+  the owner-requested queue. Preserve brand assets and existing DESIGN formatting.
+- **Acceptance / verification.** Remove the additional trust assurance only
+  from the FA intro; use the actual blog brand; align navigation labels/hrefs;
+  localize explicit fallback and known comment-success messages without changing
+  authentication, moderation or API contracts. Run focused regressions, root
+  typecheck/tests/build, web lint and E2E; retain established performance gates.
+- **Owner decisions.** Keep the blog fixture preview/cleanup pending. Skip
+  physical-phone and real-Google acceptance, including Google setup, for this
+  queue run. Retain these unfinished items as deferred, rather than marking
+  them verified. No blocked launch or cleanup action is retried.
+
 ## 2026-11-04 — Sequential local queue: onboarding wording review
 
 - **Scope / shared surface.** Owner requested `ramtin-pending.md` execution in

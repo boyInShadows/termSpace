@@ -124,17 +124,17 @@ one palette, and both themes share its hues: the light theme is a cool paper
 ground (`#f7f8fa` converted to OKLCH) with white surfaces and navy ink; the dark
 theme is a blue-black ground derived from the same hue.
 
-| Role | Light | Dark |
-| --- | --- | --- |
-| background | `--background` cool paper | blue-black |
-| surface / card | `--surface` white | raised blue-black |
-| ink | `--foreground` navy | near-white |
-| muted text | `--muted-foreground` slate | light slate |
-| border | `--border` hairline | low-contrast blue |
-| field border | `--input` | low-contrast blue |
-| signal (links, focus, current) | `--primary` blue | brighter blue |
-| action fill | `--action` #0864D1 | same #0864D1 / white text |
-| success / warning / danger | `--success` / `--warning` / `--destructive` | same roles, lifted for dark |
+| Role                           | Light                                       | Dark                        |
+| ------------------------------ | ------------------------------------------- | --------------------------- |
+| background                     | `--background` cool paper                   | blue-black                  |
+| surface / card                 | `--surface` white                           | raised blue-black           |
+| ink                            | `--foreground` navy                         | near-white                  |
+| muted text                     | `--muted-foreground` slate                  | light slate                 |
+| border                         | `--border` hairline                         | low-contrast blue           |
+| field border                   | `--input`                                   | low-contrast blue           |
+| signal (links, focus, current) | `--primary` blue                            | brighter blue               |
+| action fill                    | `--action` #0864D1                        | same #0864D1 / white text              |
+| success / warning / danger     | `--success` / `--warning` / `--destructive` | same roles, lifted for dark |
 
 Rules:
 
@@ -162,14 +162,14 @@ Rules:
 
 ### State vocabulary
 
-| Meaning | Visual role | Required distinction |
-| --- | --- | --- |
-| Main action | action blue / white text | same fill in both themes |
-| Current route, selected filter, focus | blue signal | current/pressed/focus semantics as applicable |
-| Listing safety reviewed | reviewed/success accent | visible reviewed label |
-| Not yet safety reviewed | warning/caution accent | explicit unreviewed label, not a rejection |
-| Missing required declaration, error, destructive confirmation | danger accent | precise missing/error/action wording |
-| Creator identity or source ownership verified | its named identity/source indicator | never imply listing safety approval |
+| Meaning                                                 | Visual role                         | Required distinction                          |
+| ------------------------------------------------------- | ----------------------------------- | --------------------------------------------- |
+| Main action                                             | action blue / white text          | same fill in both themes            |
+| Current route, selected filter, focus                   | blue signal                         | current/pressed/focus semantics as applicable |
+| Listing safety reviewed                                 | reviewed/success accent             | visible reviewed label                        |
+| Not yet safety reviewed                                 | warning/caution accent              | explicit unreviewed label, not a rejection    |
+| Missing required declaration, error, destructive confirmation | danger accent                       | precise missing/error/action wording          |
+| Creator identity or source ownership verified           | its named identity/source indicator | never imply listing safety approval           |
 
 Avoid hardcoded emerald/amber variants when an existing semantic role fits.
 In the blog, preserve amber for editorial accents. Submit buttons share
@@ -185,17 +185,17 @@ Newsreader is reserved for generated marketplace Open Graph cards
 (`lib/og/card.tsx`) and the separate blog's editorial content. Geist Mono is for
 commands, versions, identifiers and comparable data, not general section labels.
 
-| Role | Existing scale / convention | Application |
-| --- | --- | --- |
-| Public display | responsive 36/48px utilities and existing fluid hero sizes | keep the hero's viewport-aware fit; do not make every heading a display heading |
-| Dashboard page title | 24px phone / 30px from `sm`, weight 600 | follow the Profile page's ramp; the overview's reversed ramp is drift |
-| Peer dashboard section title | normally 20px, weight 600 | align peer sections; reserve smaller subgroup headings for actual subgroups |
-| Body | 16px; longer explanations commonly use 1.75 leading | preserve readable line length and context-specific leading |
-| Forms | 16px input/select/textarea text | same convention on public pages and in the dashboard |
-| Supporting copy | 14px with readable leading | instructions and secondary descriptions |
-| Label / eyebrow | 12px sans, weight 600, restrained tracking | no terminal-style wide-tracked mono labels |
-| Badge / compact metadata | 11px | intentional compact ramp, not body copy |
-| Command / comparable data | 13px mono where appropriate | isolate Latin identifiers inside Persian layouts |
+| Role                         | Existing scale / convention                                | Application                                                                     |
+| ---------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Public display               | responsive 36/48px utilities and existing fluid hero sizes | keep the hero's viewport-aware fit; do not make every heading a display heading |
+| Dashboard page title         | 24px phone / 30px from `sm`, weight 600                    | follow the Profile page's ramp; the overview's reversed ramp is drift           |
+| Peer dashboard section title | normally 20px, weight 600                                  | align peer sections; reserve smaller subgroup headings for actual subgroups     |
+| Body                         | 16px; longer explanations commonly use 1.75 leading        | preserve readable line length and context-specific leading                      |
+| Forms                        | 16px input/select/textarea text                            | same convention on public pages and in the dashboard                            |
+| Supporting copy              | 14px with readable leading                                 | instructions and secondary descriptions                                         |
+| Label / eyebrow              | 12px sans, weight 600, restrained tracking                 | no terminal-style wide-tracked mono labels                                      |
+| Badge / compact metadata     | 11px                                                       | intentional compact ramp, not body copy                                         |
+| Command / comparable data    | 13px mono where appropriate                                | isolate Latin identifiers inside Persian layouts                                |
 
 Headings use weight 600 as the shared default, without gradient text. Keep
 genuine display-size differences; do not preserve accidental 400/600/700
@@ -277,12 +277,12 @@ navigation treatment, not permission to introduce glass panels elsewhere.
 
 ## Shapes
 
-| Token | Value | Use |
-| --- | --- | --- |
-| `rounded-nav` | 8px | header/menu rows, small tabs |
-| `rounded-control` | 12px | buttons, inputs, selects, textareas |
-| `rounded-card` | 16px | panels, cards, dialogs, popovers |
-| `rounded-chip` | pill | badges, tags, filter chips |
+| Token             | Value | Use                                 |
+| ----------------- | ----- | ----------------------------------- |
+| `rounded-nav`     | 8px   | header/menu rows, small tabs        |
+| `rounded-control` | 12px  | buttons, inputs, selects, textareas |
+| `rounded-card`    | 16px  | panels, cards, dialogs, popovers    |
+| `rounded-chip`    | pill  | badges, tags, filter chips          |
 
 `rounded-lg`, `rounded-xl` and `rounded-2xl` all resolve to the 16px panel step
 so older call sites match without a rewrite. Avatars, switch tracks and status
@@ -383,14 +383,14 @@ not exist in a fresh checkout. The durable
 verification and remaining acceptance separately. All 42 original groups and the
 additional blog field-boundary finding (B23) have source repairs.
 
-| Area | Repair and verification scope |
-| --- | --- |
-| Discovery | Measured sticky offset, unique named drawer filters, contained RTL thumb and keyboard suggestions. |
-| Typography / spacing | Shared sans/600 headings, consistent overview/peer ramps, Persian Estedad and restrained labels. |
-| Controls / colors | Blue primary actions, 12px fields, 16px panels and field text, semantic states, larger phone controls. |
-| Contrast | Web input boundaries measure 3.04–3.23:1 in light and 3.08:1 on dark surface. Blog fields use `line.input` (#8a847b), 3.29–3.71:1; invalid article fields use red-600. Blog faint text on warm paper is 4.73:1; amber/hover on white is 5.02/7.09:1. Nested code and arbitrary edition accents are corrected. |
-| Motion / state | Decorative reveals/lifts/carets/typing removed; stable theme hydration, retries and write/empty feedback added. |
-| Blog | Native modal, labeled fields, connected validation, wrapping actions, one main, current navigation and preserved locale query context. English admin scope is explicit. Native modal/phone editorial rendering awaits local fixture approval. |
+| Area                 | Repair and verification scope                                                                                                                                                                                                                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Discovery            | Measured sticky offset, unique named drawer filters, contained RTL thumb and keyboard suggestions.                                                                                                                                                                                                            |
+| Typography / spacing | Shared sans/600 headings, consistent overview/peer ramps, Persian Estedad and restrained labels.                                                                                                                                                                                                              |
+| Controls / colors    | Blue primary actions, 12px fields, 16px panels and field text, semantic states, larger phone controls.                                                                                                                                                                                                         |
+| Contrast             | Web input boundaries measure 3.04–3.23:1 in light and 3.08:1 on dark surface. Blog fields use `line.input` (#8a847b), 3.29–3.71:1; invalid article fields use red-600. Blog faint text on warm paper is 4.73:1; amber/hover on white is 5.02/7.09:1. Nested code and arbitrary edition accents are corrected. |
+| Motion / state       | Decorative reveals/lifts/carets/typing removed; stable theme hydration, retries and write/empty feedback added.                                                                                                                                                                                               |
+| Blog                 | Native modal, labeled fields, connected validation, wrapping actions, one main, current navigation and preserved locale query context. English admin scope is explicit. Native modal/phone editorial rendering awaits local fixture approval.                                                                 |
 
 Regression assertions now require stable search prompts and 600-weight headings.
 Browser-dependent editorial acceptance, physical devices, real providers and
