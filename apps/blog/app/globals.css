@@ -222,6 +222,8 @@ html[dir="rtl"] .prose-article blockquote {
 }
 
 .prose-article pre {
+  direction: ltr;
+  text-align: left;
   font-family: var(--font-mono);
   font-size: 0.875rem;
   line-height: 1.6;

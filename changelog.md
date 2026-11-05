@@ -2,6 +2,50 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-06 - Non-authentication editorial acceptance and scoped cleanup
+
+- **Owner scope / shared surface.** Execute remaining local queue items in order;
+  leave authentication and migration coordination deferred. The explicit queue
+  instruction resumes the local fixture preview and scoped cache cleanup after
+  their earlier approval hold. Physical-phone checks were subsequently deferred
+  by the owner because the connected device is locked. Shared surface:
+  `changelog.md`; update the existing remediation checklist/design acceptance
+  notes and the ignored local queue, which is never staged.
+- **Editorial presentation ownership.** Render the blog against an in-memory
+  fixture. Use a fixed disposable admin identity to inspect presentation, not
+  authentication behavior; no real credentials, accounts or database are used.
+  Repair confirmed non-auth UI defects in blog `ArticleEngagement.tsx`,
+  `admin/ConfirmDialog.tsx`, `admin/AdminArticleList.tsx`, `admin/ArticleForm.tsx`
+  and `app/globals.css`,
+  with existing component/accessibility tests. No login, session, password,
+  Google, permission or migration code is changed.
+- **Repairs.** Read the article locale from the existing next-intl provider so
+  rewritten Persian routes hydrate consistently. Wrap native confirmation Tab
+  navigation at both button boundaries. Remove 14px overrides from three list
+  selects and the Markdown field. Give the Markdown field a unique ID, keeping
+  the page skip target intact and focusing the correct field on validation errors.
+  Give prose code blocks explicit LTR direction/alignment within Persian resources.
+- **Verification.** Locale, modal-focus, editor-ID and code-direction regressions
+  reproduced the defects before repair and pass after repair. Root typecheck,
+  859 unit/component tests, all production builds and web lint pass (44 existing
+  integration skips; two existing lint warnings). Full web E2E: 527 passed / 46
+  intentional skips. All nine Lighthouse runs pass unchanged budgets. The
+  editorial matrix passes 122 checks, including 93 EN/FA/public and English-admin
+  variants at 320/768/1280px. Additional reading/comment recovery checks pass
+  in EN/FA; the final CSS repair passes 12 article/resource direction checks.
+  Inspected captures and 168 field samples: 16px minimum, 3.71:1 border contrast.
+  Impeccable retains only the two existing semantic blockquote exclusions.
+- **Cleanup / queue.** Stopped only the verified task processes; preview/audit
+  ports are closed. Removed only the resolved, non-reparse-point task Node
+  compile cache (1,738,136 bytes); retained reports/screenshots. Remove completed
+  editorial rendering and cleanup blocks from the ignored queue. Retain owner
+  Persian-copy acceptance, deferred phones, authentication and migration notes.
+- **Evidence / method.** Local scripts, logs, the acceptance report and captures live under
+  `docs/artifacts/ramtin-acceptance-2026-11-06/`. Codebase Memory transport is
+  unavailable; use current scoped source reads/caller searches and rendered
+  browser evidence rather than claiming fresh graph coverage. Final code/diff
+  review was performed by hand; no new unresolved finding.
+
 ## 2026-11-06 - Finish public copy corrections and refresh the local queue
 
 - **Scope / shared surfaces.** Owner requested the changelog refresh and

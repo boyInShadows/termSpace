@@ -30,6 +30,16 @@ it("opens a browser-modal confirmation and keeps a busy operation from being can
   expect(onCancel).toHaveBeenCalledOnce();
 });
 
+it.each([true, false])("wraps modal keyboard focus at both ends (reverse: %s)", (reverse) => {
+  render(<ConfirmDialog open title="Delete edition?" description="Articles remain." confirmLabel="Delete" onConfirm={vi.fn()} onCancel={vi.fn()} />);
+  const cancel = screen.getByRole("button", { name: "Cancel" });
+  const confirm = screen.getByRole("button", { name: "Delete" });
+  const start = reverse ? cancel : confirm;
+  start.focus();
+  fireEvent.keyDown(start, { key: "Tab", shiftKey: reverse });
+  expect(reverse ? confirm : cancel).toHaveFocus();
+});
+
 it("associates edition labels with their fields", () => {
   render(<EditionManager initialEditions={[]} articles={[]} />);
   expect(screen.getByLabelText("Title")).toHaveAttribute("required");
@@ -53,4 +63,14 @@ it("focuses an invalid article field and connects its explanation", () => {
   const title = screen.getByLabelText("Title");
   expect(title).toHaveFocus();
   expect(title).toHaveAccessibleDescription("Title must be at least 3 characters.");
+});
+
+it("labels and focuses Markdown content without colliding with the page skip target", () => {
+  render(<main id="content" tabIndex={-1}><ArticleForm authors={[]} categories={[]} tags={[]} series={[]} media={[]} /></main>);
+  fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Fixture article" } });
+  fireEvent.change(screen.getByLabelText("Slug"), { target: { value: "fixture-article" } });
+  const content = screen.getByRole("textbox", { name: "Content (markdown)" });
+  fireEvent.click(screen.getByRole("button", { name: "Create article" }));
+  expect(content).toHaveFocus();
+  expect(content).toHaveAccessibleDescription("Content must be at least 10 characters.");
 });
