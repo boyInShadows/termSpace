@@ -2,12 +2,13 @@ import http from "node:http";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { Queue } from "./queue.mjs";
 
 // Termbuddy — Chatwoot agent-bot webhook server.
 //
 // Chatwoot posts message events to /webhook (HMAC-SHA256 signed) and expects a
 // fast 2xx: it retries 429/500 after 3s and marks the bot failed after 5s. So the
-// handler acknowledges immediately and processes the reply asynchronously.
+// handler persists incoming work before acknowledging it, then replies asynchronously.
 
 const PORT = Number(process.env.PORT || 8787);
 const CHATWOOT_BASE_URL = process.env.CHATWOOT_BASE_URL || "http://rails:3000";
@@ -22,6 +23,17 @@ const MAX_HISTORY = Number(process.env.MAX_HISTORY || 12);
 const MAX_INPUT_CHARS = Number(process.env.MAX_INPUT_CHARS || 4000);
 const MAX_BODY_BYTES = 1024 * 1024;
 const SIGNATURE_TOLERANCE_SECONDS = 300;
+const STATE_DIRECTORY = process.env.STATE_DIRECTORY || path.join(import.meta.dirname, "data");
+const RETRY_DELAYS_MS = [1000, 5000, 30000, 300000];
+
+for (const name of ["CHATWOOT_ACCOUNT_ID", "CHATWOOT_BOT_TOKEN", "WEBHOOK_SECRET"]) {
+  if (!process.env[name]?.trim()) throw new Error(`missing_configuration:${name}`);
+}
+if (!/^\d+$/.test(ACCOUNT_ID)) throw new Error("invalid_configuration:CHATWOOT_ACCOUNT_ID");
+if (!Number.isSafeInteger(PORT) || PORT < 0 || PORT > 65535) throw new Error("invalid_configuration:PORT");
+for (const [name, value] of Object.entries({ OPENAI_TIMEOUT_MS, MAX_HISTORY, MAX_INPUT_CHARS })) {
+  if (!Number.isSafeInteger(value) || value < 1) throw new Error(`invalid_configuration:${name}`);
+}
 
 const FALLBACK = {
   en: "Sorry — I'm having a technical issue right now. Please email support@termspace.dev and we'll get back to you.",
@@ -51,27 +63,18 @@ ${knowledge}`;
 
 const startedAt = Date.now();
 const log = (fields) => console.log(JSON.stringify({ ts: new Date().toISOString(), ...fields }));
-
-const seenMessages = new Map();
-function isDuplicate(messageId) {
-  const now = Date.now();
-  if (seenMessages.has(messageId)) return true;
-  seenMessages.set(messageId, now);
-  if (seenMessages.size > 500) {
-    for (const [id, at] of seenMessages) {
-      if (now - at > 10 * 60 * 1000) seenMessages.delete(id);
-    }
-  }
-  return false;
-}
+const queue = new Queue(STATE_DIRECTORY);
+const failures = { openai: OPENAI_API_KEY ? null : "missing_api_key", chatwoot: null, storage: null };
+let stopping = false;
+let activeWork;
 
 function hasPersian(text) {
   return /[\u0600-\u06FF]/.test(text || "");
 }
 
 function verifySignature(rawBody, timestamp, signature) {
-  if (!WEBHOOK_SECRET) return true;
   if (!timestamp || !signature) return false;
+  if (typeof timestamp !== "string" || typeof signature !== "string") return false;
   const age = Math.abs(Date.now() / 1000 - Number(timestamp));
   if (!Number.isFinite(age) || age > SIGNATURE_TOLERANCE_SECONDS) return false;
   const expected = `sha256=${crypto
@@ -110,28 +113,26 @@ function pruneHistory() {
   }
 }
 
-async function chatwootRequest(pathname, { method = "GET", body } = {}) {
-  const response = await fetch(`${CHATWOOT_BASE_URL}${pathname}`, {
-    method,
-    headers: {
-      "content-type": "application/json",
-      api_access_token: BOT_TOKEN,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!response.ok) {
-    throw new Error(`chatwoot_http_${response.status}`);
+async function vendorRequest(vendor, url, options, fields) {
+  const started = Date.now();
+  let response;
+  try {
+    response = await fetch(url, options);
+    if (!response.ok) throw new Error(`${vendor}_http_${response.status}`);
+    const data = await response.json();
+    failures[vendor] = null;
+    log({ ...fields, event: "vendor_call", vendor, status: response.status, latency_ms: Date.now() - started,
+      request_id: response.headers.get("x-request-id") || undefined });
+    return data;
+  } catch (error) {
+    // Never log upstream bodies or exception messages: network errors can contain URLs.
+    const code = response && !response.ok ? `${vendor}_http_${response.status}`
+      : `${vendor}_${error.name === "TimeoutError" ? "timeout" : "request_failed"}`;
+    failures[vendor] = code;
+    log({ ...fields, event: "vendor_call", vendor, level: "error", status: response?.status,
+      latency_ms: Date.now() - started, error: code, request_id: response?.headers.get("x-request-id") || undefined });
+    throw Object.assign(new Error(code), { retryable: !response || response.status === 429 || response.status >= 500 });
   }
-  return response.json();
-}
-
-async function fetchHistory(conversationId) {
-  // Chatwoot blocks bots from reading a conversation over the API
-  // ("Access to this endpoint is not authorized for bots"), so the bot keeps its
-  // own rolling context per conversation. Outgoing messages are always this
-  // bot's own replies, so appending them here is sufficient.
-  return conversationHistory(conversationId);
 }
 
 function extractOutputText(data) {
@@ -148,8 +149,9 @@ function extractOutputText(data) {
   return parts.join("\n").trim();
 }
 
-async function askOpenAI(input) {
-  const response = await fetch(`${OPENAI_BASE_URL}/responses`, {
+async function askOpenAI(input, fields) {
+  if (!OPENAI_API_KEY) throw new Error("missing_api_key");
+  const data = await vendorRequest("openai", `${OPENAI_BASE_URL}/responses`, {
     method: "POST",
     headers: {
       authorization: `Bearer ${OPENAI_API_KEY}`,
@@ -161,67 +163,99 @@ async function askOpenAI(input) {
       input,
       max_output_tokens: 700,
       store: false,
+      reasoning: { effort: "none" },
     }),
     signal: AbortSignal.timeout(OPENAI_TIMEOUT_MS),
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(`openai_http_${response.status}`);
-  }
+  }, fields);
   const text = extractOutputText(data);
-  if (!text) throw new Error("openai_empty_output");
+  if (!text) {
+    failures.openai = "openai_empty_output";
+    throw new Error("openai_empty_output");
+  }
   return text;
 }
 
-async function reply(conversationId, content) {
-  await chatwootRequest(
-    `/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/messages`,
+async function reply(conversationId, content, fields) {
+  const data = await vendorRequest("chatwoot",
+    `${CHATWOOT_BASE_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/messages`,
     {
       method: "POST",
-      body: { content, message_type: "outgoing", private: false },
+      headers: { "content-type": "application/json", api_access_token: BOT_TOKEN },
+      body: JSON.stringify({ content, message_type: "outgoing", private: false,
+        content_attributes: { termbuddy_reply_to: fields.message_id } }),
+      signal: AbortSignal.timeout(10000),
     },
+    fields,
   );
+  if (!Number.isSafeInteger(data.id)) {
+    failures.chatwoot = "chatwoot_invalid_receipt";
+    throw new Error("chatwoot_invalid_receipt");
+  }
 }
 
-async function handleIncoming(payload) {
-  const conversationId = payload.conversation?.id;
-  const messageId = payload.id;
-  const incomingText = payload.content || "";
-  if (!conversationId || !messageId) return;
-
+async function handleIncoming(job) {
+  const { conversationId, id: messageId, content: incomingText } = job;
   const started = Date.now();
   const fields = { event: "reply", conversation_id: conversationId, message_id: messageId, model: OPENAI_MODEL };
 
-  try {
+  if (!job.answer) {
     remember(conversationId, "user", incomingText);
-    const input = fetchHistory(conversationId);
-    if (input.length === 0) input.push({ role: "user", content: incomingText.slice(0, MAX_INPUT_CHARS) });
-    const answer = await askOpenAI(input);
-    await reply(conversationId, answer);
-    remember(conversationId, "assistant", answer);
-    log({ ...fields, latency_ms: Date.now() - started, reply_chars: answer.length });
-  } catch (error) {
-    const lang = hasPersian(incomingText) ? "fa" : "en";
-    log({ ...fields, level: "error", latency_ms: Date.now() - started, error: String(error.message).slice(0, 120) });
+    const input = conversationHistory(conversationId);
+    let answer;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        answer = await askOpenAI(input, { ...fields, attempt });
+        break;
+      } catch (error) {
+        if (attempt < 2 && error.retryable) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          continue;
+        }
+        answer = FALLBACK[hasPersian(incomingText) ? "fa" : "en"];
+        log({ ...fields, level: "error", error: error.message, fallback: true });
+        break;
+      }
+    }
+    queue.update(messageId, { answer });
+    job = queue.jobs.get(messageId);
+  }
+  // An outgoing signed webhook can confirm a previous delivery whose HTTP
+  // response was lost. Do not send a second answer once it is confirmed.
+  if (job.status === "done") return;
+  await reply(conversationId, job.answer, fields);
+  if (queue.jobs.get(messageId).status !== "done") {
+    remember(conversationId, "assistant", job.answer);
+    queue.complete(messageId);
+  }
+  log({ ...fields, latency_ms: Date.now() - started, reply_chars: job.answer.length });
+}
+
+async function drain() {
+  // ponytail: global serial worker for this small support inbox. Add bounded
+  // concurrency if real traffic shows that unrelated conversations wait too long.
+  while (!stopping) {
+    const job = queue.next();
+    if (!job) break;
     try {
-      await reply(conversationId, FALLBACK[lang]);
-      remember(conversationId, "assistant", FALLBACK[lang]);
-    } catch (fallbackError) {
-      log({ ...fields, level: "error", error: `fallback_failed:${String(fallbackError.message).slice(0, 80)}` });
+      await handleIncoming(job);
+      failures.storage = null;
+    } catch (error) {
+      const attempts = job.attempts + 1;
+      const delay = RETRY_DELAYS_MS[Math.min(attempts - 1, RETRY_DELAYS_MS.length - 1)];
+      queue.update(job.id, { attempts, nextAt: Date.now() + delay });
+      log({ event: "retry_scheduled", level: "error", message_id: job.id, conversation_id: job.conversationId,
+        attempt: attempts, retry_ms: delay, error: error.code || "reply_failed" });
     }
   }
 }
 
-// Serialize work per conversation so replies keep their order.
-const chains = new Map();
-function enqueue(conversationId, task) {
-  const previous = chains.get(conversationId) ?? Promise.resolve();
-  const next = previous.then(task, task).catch((error) => {
-    log({ event: "queue_error", conversation_id: conversationId, error: String(error.message).slice(0, 120) });
-  });
-  chains.set(conversationId, next);
-  next.finally(() => {
-    if (chains.get(conversationId) === next) chains.delete(conversationId);
+function wakeWorker() {
+  if (activeWork || stopping) return;
+  activeWork = drain().catch((error) => {
+    failures.storage = "queue_write_failed";
+    log({ event: "queue_error", level: "error", error: error.code || "queue_write_failed" });
+  }).finally(() => {
+    activeWork = undefined;
   });
 }
 
@@ -247,8 +281,11 @@ const server = http.createServer(async (request, response) => {
   const url = new URL(request.url || "/", `http://localhost:${PORT}`);
 
   if (request.method === "GET" && url.pathname === "/health") {
-    response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ ok: true, uptime_s: Math.round((Date.now() - startedAt) / 1000), model: OPENAI_MODEL }));
+    const stats = queue.stats();
+    const ok = !stopping && !Object.values(failures).some(Boolean) && stats.oldest_age_ms < 120000;
+    response.writeHead(ok ? 200 : 503, { "content-type": "application/json" });
+    response.end(JSON.stringify({ ok, uptime_s: Math.round((Date.now() - startedAt) / 1000), model: OPENAI_MODEL,
+      configured: Boolean(OPENAI_API_KEY), failures, queue: stats }));
     return;
   }
 
@@ -284,39 +321,70 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  response.writeHead(200, { "content-type": "application/json" });
-  response.end(JSON.stringify({ ok: true }));
-
   const isIncomingText =
-    payload.event === "message_created" &&
+    payload?.event === "message_created" &&
     payload.message_type === "incoming" &&
     payload.private !== true &&
     typeof payload.content === "string" &&
     payload.content.trim().length > 0;
 
-  if (!isIncomingText) return;
-  if (!ACCOUNT_ID || !BOT_TOKEN) {
-    log({ event: "ignored", reason: "missing_configuration" });
+  if (String(payload?.account?.id) !== ACCOUNT_ID) {
+    response.writeHead(403).end();
     return;
   }
-  if (isDuplicate(payload.id)) {
-    log({ event: "ignored", reason: "duplicate", message_id: payload.id });
+  if (stopping) {
+    response.writeHead(503).end();
     return;
   }
-
-  enqueue(payload.conversation?.id, () => handleIncoming(payload));
+  try {
+    const replyTo = payload.content_attributes?.termbuddy_reply_to;
+    const prior = queue.jobs.get(replyTo);
+    if (payload.event === "message_created" && payload.message_type === "outgoing" && payload.private === false &&
+      prior?.answer && prior.conversationId === payload.conversation?.id) {
+      remember(prior.conversationId, "assistant", prior.answer);
+      queue.complete(replyTo);
+      failures.chatwoot = null;
+    }
+    if (isIncomingText) {
+      if (!Number.isSafeInteger(payload.id) || payload.id < 1 ||
+        !Number.isSafeInteger(payload.conversation?.id) || payload.conversation.id < 1) {
+        response.writeHead(400).end();
+        return;
+      }
+      queue.accept({ id: payload.id, conversationId: payload.conversation.id,
+        content: payload.content.slice(0, MAX_INPUT_CHARS) });
+    }
+    failures.storage = null;
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify({ ok: true }));
+    wakeWorker();
+  } catch (error) {
+    failures.storage = error.message === "queue_full" ? "queue_full" : "queue_write_failed";
+    log({ event: "enqueue_failed", level: "error", error: failures.storage });
+    response.writeHead(503).end();
+  }
 });
 
-setInterval(pruneHistory, 5 * 60 * 1000).unref();
+setInterval(() => {
+  try {
+    pruneHistory();
+    queue.prune();
+  } catch {
+    failures.storage = "queue_prune_failed";
+    log({ event: "queue_error", level: "error", error: failures.storage });
+  }
+}, 5 * 60 * 1000).unref();
+const workerTimer = setInterval(wakeWorker, 1000);
 
 server.listen(PORT, () => {  log({
     event: "started",
-    port: PORT,
+    port: server.address().port,
     model: OPENAI_MODEL,
-    chatwoot: CHATWOOT_BASE_URL,
+    chatwoot: new URL(CHATWOOT_BASE_URL).origin,
     signed: Boolean(WEBHOOK_SECRET),
-    configured: Boolean(ACCOUNT_ID && BOT_TOKEN && OPENAI_API_KEY),
+    configured: Boolean(OPENAI_API_KEY),
   });
+  wakeWorker();
   if (!OPENAI_API_KEY) {
     log({
       event: "warning",
@@ -328,6 +396,13 @@ server.listen(PORT, () => {  log({
 for (const signal of ["SIGTERM", "SIGINT"]) {
   process.on(signal, () => {
     log({ event: "shutdown", signal });
-    server.close(() => process.exit(0));
+    stopping = true;
+    clearInterval(workerTimer);
+    server.close(async () => {
+      await activeWork;
+      process.exit(0);
+    });
+    // Unfinished jobs are durable and will resume after a forced shutdown.
+    setTimeout(() => process.exit(0), 20000).unref();
   });
 }

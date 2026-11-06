@@ -2,7 +2,7 @@ name: chatwoot
 
 # Self-hosted Chatwoot for TermSpace support (Termbuddy).
 # Deployed from the TermSpace repo at /opt/termspace/deploy/chatwoot on the
-# production host. Secrets live in untracked .env / bot.env files next to this
+# production host. Secrets live in untracked .env / .env.bot files next to this
 # file (chmod 600, never committed). See docs/chatwoot.md.
 #
 # Only the Rails port is published, bound to loopback: Caddy terminates TLS for
@@ -87,11 +87,16 @@ services:
     mem_limit: 192m
 
   # Termbuddy: webhook bot that answers widget conversations via the OpenAI API.
-  # Source lives in ./bot; config in ./bot.env (untracked).
+  # Source lives in ./bot; config in ./.env.bot (untracked).
   termbuddy:
     build: ./bot
     restart: unless-stopped
     env_file: .env.bot
+    environment:
+      STATE_DIRECTORY: /app/data
+    volumes:
+      - termbuddy_state:/app/data
+    stop_grace_period: 25s
     expose:
       - "8787"
     depends_on:
@@ -107,3 +112,4 @@ services:
 volumes:
   chatwoot_storage:
   chatwoot_postgres:
+  termbuddy_state:

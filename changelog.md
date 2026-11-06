@@ -2,6 +2,56 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-06 — Finish Termbuddy AI replies and delivery recovery
+
+- **Scope / ownership notice.** Owner-authorized Chatwoot follow-up in
+  `deploy/chatwoot/`, `.github/workflows/ci.yml`, `docs/chatwoot.md` and the
+  shared `changelog.md`. No corresponding item exists in the other maintainer's
+  `pending.md` queue. Merged current `main` into `v.3` first, retained both
+  changelog histories and used main's canonical favicon in the merge conflict.
+- **AI replies.** Removed the un-awaited async history wrapper that serialized
+  the Responses API input as `{}`. The owner supplied the production API key;
+  the rebuilt container loads it. Short support answers use `gpt-6-luna` with
+  reasoning disabled and `store: false`. OpenAI transient failures get one retry;
+  permanent errors get the localized fallback. Missing webhook credentials now
+  prevent startup, and signed incoming messages are validated and account-scoped.
+- **Delivery recovery.** Incoming work is fsynced before acknowledgment; saved
+  answers and deduplication records survive container recreation on the new
+  `termbuddy_state` volume. Delivery failures retry without another generation.
+  Signed outgoing events reconcile lost HTTP receipts. Health reports missing
+  keys, observed upstream/storage failures and old pending jobs. Logs contain
+  status, latency and correlation IDs without bodies or credentials. Delivery
+  remains at least once because Chatwoot's create-message endpoint has no
+  enforced idempotency key; the duplicate window is documented.
+- **Backups.** Installed `termspace-chatwoot-backup.timer` on production: daily
+  at 03:20 UTC plus up to 10 minutes of jitter, with 14-day local retention.
+  Root-only snapshots include database, storage, queue and recovery configuration.
+  Restored a fresh snapshot to a temporary database (110 public tables), checked
+  the storage archive/checksums and restored queue records to a temporary
+  directory. The checks remove only their own temporary restore targets.
+- **Verification.** Root typecheck; root tests 858 passed, 44 skipped; web lint
+  zero errors and two existing warnings; root production build with
+  `IS_WEBPACK_TEST=1` (the installed Next.js webpack-selection flag). The default
+  blog Turbopack build cannot bind its CSS-worker port in this environment,
+  including an escalated run and user systemd scope; webpack builds all apps.
+  Nine dependency-free bot regression tests pass locally and in the deployed
+  Node 22 image, including SIGKILL recovery, signed-webhook reconciliation,
+  EN/FA fallback, permanent/transient errors and log redaction. CI now runs them
+  and checks backup shell syntax. Backup units passed `systemd-analyze verify`.
+  Performed the second diff/security pass manually with Ponytail full mode;
+  fixed its vendor-event logging finding and verified the regression check.
+  This harness does not expose `/usage` metrics.
+- **Live UI acceptance.** Real EN/FA AI answers and an English follow-up work
+  through the embedded widget. Checked rendered light/dark, EN/LTR and FA/RTL,
+  1280/320 px, reduced-motion preference, first-stop skip link and keyboard
+  composing. Both inboxes retain conversations on mobile reload; Chatwoot's
+  localized Continue conversation action restores the thread from the welcome
+  screen. Automatic panel reopening was not added. Used Impeccable's existing
+  project/design context for the rendered pass; no web UI implementation changed.
+- **Owner-dependent follow-ups.** Choose off-host backup replication and an
+  external alert destination. Help-center creation/theming and SMTP/transcript
+  email remain product decisions; footer removal remains a paid Chatwoot feature.
+
 ## 2026-11-06 - Finish public copy corrections and refresh the local queue
 
 - **Scope / shared surfaces.** Owner requested the changelog refresh and
