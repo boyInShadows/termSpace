@@ -2,6 +2,22 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-06 — Grant owner-requested production marketplace administrator access
+
+- **Scope / shared surface.** Production role operation and `changelog.md` only;
+  the owner explicitly designated the existing reader account. No pending queue
+  item or application implementation changed.
+- Granted `administrator` through the deployed `manageMarketplaceRole` command
+  after verifying that reader `cmw4zntio000iqt01721efw22` is verified, not deleted,
+  and had no active marketplace grants. The command atomically saved the role
+  and its append-only `GRANTED` event under actor `ops:codex-owner-request`.
+- **Verification.** Read back exactly one active `ADMINISTRATOR` grant and its
+  audit event, correlation `703742c8-f9df-430e-80e1-6a9e4c69b052`. Marketplace
+  middleware reloads active grants on each request; refresh the website to
+  refresh client-side session identity. Separate editorial access was not granted.
+  Application checks from `23dd023` still cover the unchanged implementation;
+  this operation was verified against the live database. Usage metrics unavailable.
+
 ## 2026-11-06 — Finish Termbuddy AI replies and delivery recovery
 
 - **Scope / ownership notice.** Owner-authorized Chatwoot follow-up in
