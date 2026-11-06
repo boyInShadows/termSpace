@@ -486,7 +486,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
 
         {error && <p id="draft-errors" tabIndex={-1} className="flex scroll-mt-40 items-start gap-2 text-sm text-destructive" role="alert"><AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />{error}</p>}
         {saved && <p className="text-sm text-success" role="status">{copy.saved}</p>}
-        <div data-draft-actions data-help-anchor className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center justify-between gap-3 border bg-surface p-3 lg:bottom-4">
+        <div data-draft-actions data-help-anchor className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center justify-between gap-3 rounded-card border bg-surface p-3 shadow-panel lg:bottom-4">
           <div className="flex gap-2"><Button type="button" variant="secondary" disabled={step === 0 || saving} onClick={() => goToStep(step - 1)}>{copy.previousStep}</Button>{step < lastStep && <Button type="button" disabled={saving} onClick={() => goToStep(step + 1)}>{copy.nextStep}</Button>}</div>
           <div className="flex flex-wrap gap-1"><ContextHelp label={`${copy.saveLater} / ${copy.save}`} topic="saves" /><Link className={buttonVariants({ variant: "ghost" })} href={localePath("/dashboard/studio", locale)}>{copy.cancel}</Link><Button type="button" variant="secondary" disabled={saving || !storageKey} onClick={saveForLater}>{localStatus === copy.localSaved ? <><Check className="size-4" aria-hidden="true" />{copy.savedLater}</> : copy.saveLater}</Button>{step === lastStep && <Button disabled={saving}><Save className="size-4" aria-hidden="true" />{saving ? copy.saving : copy.save}</Button>}</div>
       </div>
@@ -531,7 +531,7 @@ function DetailInput({ field, locale, value }: { field: DetailField; locale: "en
 }
 
 function FormSection({ title, intro, help, children }: { title: string; intro: string; help?: HelpTopic; children: React.ReactNode }) {
-  return <section id={title.replaceAll(" ", "-")} className="scroll-mt-40 border bg-surface p-5 sm:p-7"><div className="flex items-start justify-between gap-3"><h2 className="text-2xl font-semibold">{title}</h2>{help && <ContextHelp label={title} topic={help} />}</div><p className="mt-1 text-sm text-muted-foreground">{intro}</p><div className="mt-6">{children}</div></section>;
+  return <section id={title.replaceAll(" ", "-")} className="scroll-mt-40 rounded-card border border-border bg-surface p-5 shadow-panel sm:p-6"><div className="flex items-start justify-between gap-3"><h2 className="text-xl font-semibold">{title}</h2>{help && <ContextHelp label={title} topic={help} />}</div><p className="mt-1 text-sm text-muted-foreground">{intro}</p><div className="mt-6">{children}</div></section>;
 }
 function Field({ label, hint, help, children }: { label: string; hint?: string; help?: HelpTopic; children: React.ReactNode }) {
   const id = useId();

@@ -66,6 +66,8 @@ for (const locale of ["en", "fa"] as const) {
       await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
       await page.keyboard.press("Tab");
       await expect(page.getByRole("link", { name: locale === "fa" ? "رفتن به محتوا" : "Skip to content" })).toBeFocused();
+      await expect(page.locator('a[href="#content"]')).toHaveCSS("background-color", "rgb(8, 100, 209)");
+      await expect(page.locator('a[href="#content"]')).toHaveCSS("color", "rgb(255, 255, 255)");
       await page.keyboard.press("Enter");
       await expect(page.getByRole("main")).toBeFocused();
       await expect(page.getByRole("banner")).toHaveCount(1);

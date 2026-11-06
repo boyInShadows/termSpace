@@ -1,361 +1,379 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-16T14:22:24.000Z",
+  "generatedAt": "2026-11-03T16:19:13.607Z",
   "title": "Design System: TermSpace",
   "extensions": {
     "colorMeta": {
-      "ground": {
+      "ground-dark": {
         "role": "neutral",
-        "displayName": "Ground",
-        "canonical": "oklch(14.5% 0.022 286)",
+        "displayName": "ground dark",
+        "canonical": "oklch(14.5% 0.018 262)",
         "tonalRamp": [
-          "oklch(15% 0.022 286)",
-          "oklch(25% 0.022 286)",
-          "oklch(35% 0.022 286)",
-          "oklch(45% 0.022 286)",
-          "oklch(55% 0.022 286)",
-          "oklch(65% 0.022 286)",
-          "oklch(80% 0.022 286)",
-          "oklch(95% 0.022 286)"
+          "oklch(15% 0.018 262)",
+          "oklch(25% 0.018 262)",
+          "oklch(35% 0.018 262)",
+          "oklch(45% 0.018 262)",
+          "oklch(55% 0.018 262)",
+          "oklch(65% 0.018 262)",
+          "oklch(80% 0.018 262)",
+          "oklch(95% 0.018 262)"
         ]
       },
-      "ink": {
+      "ink-dark": {
         "role": "neutral",
-        "displayName": "Ink",
-        "canonical": "oklch(96% 0.01 286)",
+        "displayName": "ink dark",
+        "canonical": "oklch(96% 0.008 262)",
         "tonalRamp": [
-          "oklch(15% 0.01 286)",
-          "oklch(25% 0.01 286)",
-          "oklch(35% 0.01 286)",
-          "oklch(45% 0.01 286)",
-          "oklch(55% 0.01 286)",
-          "oklch(65% 0.01 286)",
-          "oklch(80% 0.01 286)",
-          "oklch(95% 0.01 286)"
-        ]
-      },
-      "ink-muted": {
-        "role": "neutral",
-        "displayName": "Ink Muted",
-        "canonical": "oklch(73% 0.024 286)",
-        "tonalRamp": [
-          "oklch(15% 0.024 286)",
-          "oklch(25% 0.024 286)",
-          "oklch(35% 0.024 286)",
-          "oklch(45% 0.024 286)",
-          "oklch(55% 0.024 286)",
-          "oklch(65% 0.024 286)",
-          "oklch(80% 0.024 286)",
-          "oklch(95% 0.024 286)"
-        ]
-      },
-      "hairline": {
-        "role": "neutral",
-        "displayName": "Hairline",
-        "canonical": "oklch(30% 0.028 286)",
-        "tonalRamp": [
-          "oklch(15% 0.028 286)",
-          "oklch(25% 0.028 286)",
-          "oklch(35% 0.028 286)",
-          "oklch(45% 0.028 286)",
-          "oklch(55% 0.028 286)",
-          "oklch(65% 0.028 286)",
-          "oklch(80% 0.028 286)",
-          "oklch(95% 0.028 286)"
-        ]
-      },
-      "header-cell": {
-        "role": "neutral",
-        "displayName": "Header Cell",
-        "canonical": "oklch(26% 0.026 286)",
-        "tonalRamp": [
-          "oklch(15% 0.026 286)",
-          "oklch(25% 0.026 286)",
-          "oklch(35% 0.026 286)",
-          "oklch(45% 0.026 286)",
-          "oklch(55% 0.026 286)",
-          "oklch(65% 0.026 286)",
-          "oklch(80% 0.026 286)",
-          "oklch(95% 0.026 286)"
-        ]
-      },
-      "accent": {
-        "role": "primary",
-        "displayName": "Accent",
-        "canonical": "oklch(68% 0.195 292)",
-        "tonalRamp": [
-          "oklch(15% 0.195 292)",
-          "oklch(25% 0.195 292)",
-          "oklch(35% 0.195 292)",
-          "oklch(45% 0.195 292)",
-          "oklch(55% 0.195 292)",
-          "oklch(65% 0.195 292)",
-          "oklch(80% 0.195 292)",
-          "oklch(95% 0.195 292)"
-        ]
-      },
-      "accent-hover": {
-        "role": "primary",
-        "displayName": "Accent Hover",
-        "canonical": "oklch(74% 0.185 292)",
-        "tonalRamp": [
-          "oklch(15% 0.185 292)",
-          "oklch(25% 0.185 292)",
-          "oklch(35% 0.185 292)",
-          "oklch(45% 0.185 292)",
-          "oklch(55% 0.185 292)",
-          "oklch(65% 0.185 292)",
-          "oklch(80% 0.185 292)",
-          "oklch(95% 0.185 292)"
-        ]
-      },
-      "accent-ink": {
-        "role": "primary",
-        "displayName": "Accent Ink",
-        "canonical": "oklch(13% 0.03 292)",
-        "tonalRamp": [
-          "oklch(15% 0.03 292)",
-          "oklch(25% 0.03 292)",
-          "oklch(35% 0.03 292)",
-          "oklch(45% 0.03 292)",
-          "oklch(55% 0.03 292)",
-          "oklch(65% 0.03 292)",
-          "oklch(80% 0.03 292)",
-          "oklch(95% 0.03 292)"
-        ]
-      },
-      "not-declared": {
-        "role": "secondary",
-        "displayName": "Not-Declared Red",
-        "canonical": "oklch(66% 0.205 22)",
-        "tonalRamp": [
-          "oklch(15% 0.205 22)",
-          "oklch(25% 0.205 22)",
-          "oklch(35% 0.205 22)",
-          "oklch(45% 0.205 22)",
-          "oklch(55% 0.205 22)",
-          "oklch(65% 0.205 22)",
-          "oklch(80% 0.205 22)",
-          "oklch(95% 0.205 22)"
-        ]
-      },
-      "reviewed": {
-        "role": "secondary",
-        "displayName": "Reviewed Green",
-        "canonical": "oklch(82% 0.175 152)",
-        "tonalRamp": [
-          "oklch(15% 0.175 152)",
-          "oklch(25% 0.175 152)",
-          "oklch(35% 0.175 152)",
-          "oklch(45% 0.175 152)",
-          "oklch(55% 0.175 152)",
-          "oklch(65% 0.175 152)",
-          "oklch(80% 0.175 152)",
-          "oklch(95% 0.175 152)"
+          "oklch(15% 0.008 262)",
+          "oklch(25% 0.008 262)",
+          "oklch(35% 0.008 262)",
+          "oklch(45% 0.008 262)",
+          "oklch(55% 0.008 262)",
+          "oklch(65% 0.008 262)",
+          "oklch(80% 0.008 262)",
+          "oklch(95% 0.008 262)"
         ]
       },
       "ground-light": {
         "role": "neutral",
-        "displayName": "Ground (light theme)",
-        "canonical": "oklch(97.6% 0.006 286)",
+        "displayName": "ground light",
+        "canonical": "oklch(97.89% 0.0029 264.5)",
         "tonalRamp": [
-          "oklch(15% 0.006 286)",
-          "oklch(25% 0.006 286)",
-          "oklch(35% 0.006 286)",
-          "oklch(45% 0.006 286)",
-          "oklch(55% 0.006 286)",
-          "oklch(65% 0.006 286)",
-          "oklch(80% 0.006 286)",
-          "oklch(95% 0.006 286)"
+          "oklch(15% 0.0029 264.5)",
+          "oklch(25% 0.0029 264.5)",
+          "oklch(35% 0.0029 264.5)",
+          "oklch(45% 0.0029 264.5)",
+          "oklch(55% 0.0029 264.5)",
+          "oklch(65% 0.0029 264.5)",
+          "oklch(80% 0.0029 264.5)",
+          "oklch(95% 0.0029 264.5)"
+        ]
+      },
+      "surface-light": {
+        "role": "neutral",
+        "displayName": "surface light",
+        "canonical": "oklch(100% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(45% 0 0)",
+          "oklch(55% 0 0)",
+          "oklch(65% 0 0)",
+          "oklch(80% 0 0)",
+          "oklch(95% 0 0)"
         ]
       },
       "ink-light": {
         "role": "neutral",
-        "displayName": "Ink (light theme)",
-        "canonical": "oklch(19% 0.028 286)",
+        "displayName": "ink light",
+        "canonical": "oklch(23.53% 0.0707 262.7)",
         "tonalRamp": [
-          "oklch(15% 0.028 286)",
-          "oklch(25% 0.028 286)",
-          "oklch(35% 0.028 286)",
-          "oklch(45% 0.028 286)",
-          "oklch(55% 0.028 286)",
-          "oklch(65% 0.028 286)",
-          "oklch(80% 0.028 286)",
-          "oklch(95% 0.028 286)"
+          "oklch(15% 0.0707 262.7)",
+          "oklch(25% 0.0707 262.7)",
+          "oklch(35% 0.0707 262.7)",
+          "oklch(45% 0.0707 262.7)",
+          "oklch(55% 0.0707 262.7)",
+          "oklch(65% 0.0707 262.7)",
+          "oklch(80% 0.0707 262.7)",
+          "oklch(95% 0.0707 262.7)"
+        ]
+      },
+      "signal": {
+        "role": "primary",
+        "displayName": "signal",
+        "canonical": "oklch(54.61% 0.2152 262.9)",
+        "tonalRamp": [
+          "oklch(15% 0.2152 262.9)",
+          "oklch(25% 0.2152 262.9)",
+          "oklch(35% 0.2152 262.9)",
+          "oklch(45% 0.2152 262.9)",
+          "oklch(55% 0.2152 262.9)",
+          "oklch(65% 0.2152 262.9)",
+          "oklch(80% 0.2152 262.9)",
+          "oklch(95% 0.2152 262.9)"
+        ]
+      },
+      "ink-muted-light": {
+        "role": "neutral",
+        "displayName": "ink muted light",
+        "canonical": "oklch(52% 0.04 257.4)",
+        "tonalRamp": [
+          "oklch(15% 0.04 257.4)",
+          "oklch(25% 0.04 257.4)",
+          "oklch(35% 0.04 257.4)",
+          "oklch(45% 0.04 257.4)",
+          "oklch(55% 0.04 257.4)",
+          "oklch(65% 0.04 257.4)",
+          "oklch(80% 0.04 257.4)",
+          "oklch(95% 0.04 257.4)"
+        ]
+      },
+      "hairline-light": {
+        "role": "neutral",
+        "displayName": "hairline light",
+        "canonical": "oklch(92.88% 0.0126 255.5)",
+        "tonalRamp": [
+          "oklch(15% 0.0126 255.5)",
+          "oklch(25% 0.0126 255.5)",
+          "oklch(35% 0.0126 255.5)",
+          "oklch(45% 0.0126 255.5)",
+          "oklch(55% 0.0126 255.5)",
+          "oklch(65% 0.0126 255.5)",
+          "oklch(80% 0.0126 255.5)",
+          "oklch(95% 0.0126 255.5)"
+        ]
+      },
+      "sage": {
+        "role": "neutral",
+        "displayName": "sage",
+        "canonical": "oklch(96.27% 0.0107 158.8)",
+        "tonalRamp": [
+          "oklch(15% 0.0107 158.8)",
+          "oklch(25% 0.0107 158.8)",
+          "oklch(35% 0.0107 158.8)",
+          "oklch(45% 0.0107 158.8)",
+          "oklch(55% 0.0107 158.8)",
+          "oklch(65% 0.0107 158.8)",
+          "oklch(80% 0.0107 158.8)",
+          "oklch(95% 0.0107 158.8)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "paper",
+        "canonical": "oklch(97.65% 0.0098 87.5)",
+        "tonalRamp": [
+          "oklch(15% 0.0098 87.5)",
+          "oklch(25% 0.0098 87.5)",
+          "oklch(35% 0.0098 87.5)",
+          "oklch(45% 0.0098 87.5)",
+          "oklch(55% 0.0098 87.5)",
+          "oklch(65% 0.0098 87.5)",
+          "oklch(80% 0.0098 87.5)",
+          "oklch(95% 0.0098 87.5)"
+        ]
+      },
+      "mist": {
+        "role": "neutral",
+        "displayName": "mist",
+        "canonical": "oklch(96.16% 0.0114 252.1)",
+        "tonalRamp": [
+          "oklch(15% 0.0114 252.1)",
+          "oklch(25% 0.0114 252.1)",
+          "oklch(35% 0.0114 252.1)",
+          "oklch(45% 0.0114 252.1)",
+          "oklch(55% 0.0114 252.1)",
+          "oklch(65% 0.0114 252.1)",
+          "oklch(80% 0.0114 252.1)",
+          "oklch(95% 0.0114 252.1)"
+        ]
+      },
+      "lavender": {
+        "role": "neutral",
+        "displayName": "lavender",
+        "canonical": "oklch(96.91% 0.0161 293.8)",
+        "tonalRamp": [
+          "oklch(15% 0.0161 293.8)",
+          "oklch(25% 0.0161 293.8)",
+          "oklch(35% 0.0161 293.8)",
+          "oklch(45% 0.0161 293.8)",
+          "oklch(55% 0.0161 293.8)",
+          "oklch(65% 0.0161 293.8)",
+          "oklch(80% 0.0161 293.8)",
+          "oklch(95% 0.0161 293.8)"
+        ]
+      },
+      "action": {
+        "role": "primary",
+        "displayName": "action blue",
+        "canonical": "#0864D1",
+        "tonalRamp": [
+          "oklch(15% 0.1851 257.6)",
+          "oklch(25% 0.1851 257.6)",
+          "oklch(35% 0.1851 257.6)",
+          "oklch(45% 0.1851 257.6)",
+          "oklch(55% 0.1851 257.6)",
+          "oklch(65% 0.1851 257.6)",
+          "oklch(80% 0.1851 257.6)",
+          "oklch(95% 0.1851 257.6)"
         ]
       }
     },
     "typographyMeta": {
-      "headline": {
-        "displayName": "Headline",
-        "purpose": "Hero h1 only."
-      },
-      "sheet-title": {
-        "displayName": "Sheet Title",
-        "purpose": "Example listing name."
+      "heading": {
+        "displayName": "Marketplace heading",
+        "purpose": "Shared Geist/Estedad heading contract; inconsistent implemented weights remain open."
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Hero introduction."
-      },
-      "data": {
-        "displayName": "Data (13px)",
-        "purpose": "Ratings table text and install command; Geist Mono for values."
+        "purpose": "Marketplace prose; the editorial blog retains its own font system."
       },
       "label": {
         "displayName": "Label",
-        "purpose": "Tag cell, table headers, section headings; dropped tracking and caps in Persian."
+        "purpose": "Sans labels, distinct from mono identifiers."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "Exact commands, versions and comparable identifiers."
       }
     },
-    "shadows": [],
-    "motion": [],
+    "shadows": [
+      {
+        "name": "panel-light",
+        "value": "0 2px 8px oklch(23.53% 0.0707 262.7 / 0.07)",
+        "purpose": "Light-theme cards, menus and popovers."
+      },
+      {
+        "name": "panel-dark",
+        "value": "0 2px 8px oklch(0% 0 0 / 0.42)",
+        "purpose": "Dark-theme cards, menus and popovers."
+      },
+      {
+        "name": "promo-light",
+        "value": "0 3px 12px oklch(23.53% 0.0707 262.7 / 0.08)",
+        "purpose": "Light promoted surface."
+      },
+      {
+        "name": "promo-dark",
+        "value": "0 3px 12px oklch(0% 0 0 / 0.48)",
+        "purpose": "Dark promoted surface."
+      }
+    ],
+    "motion": [
+      {
+        "name": "duration-hover",
+        "value": "160ms",
+        "purpose": "Short hover/state feedback."
+      },
+      {
+        "name": "duration-panel",
+        "value": "240ms",
+        "purpose": "Existing panel state feedback."
+      },
+      {
+        "name": "duration-chip",
+        "value": "320ms",
+        "purpose": "Existing listing navigation feedback."
+      },
+      {
+        "name": "ease-out-quart",
+        "value": "cubic-bezier(0.25, 1, 0.5, 1)",
+        "purpose": "Existing short state-transition easing."
+      },
+      {
+        "name": "ease-spring",
+        "value": "cubic-bezier(0.34, 1.4, 0.64, 1)",
+        "purpose": "Limited existing theme/step feedback; honor reduced motion."
+      }
+    ],
     "breakpoints": [
+      {
+        "name": "xs",
+        "value": "480px"
+      },
       {
         "name": "sm",
         "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
       },
       {
         "name": "lg",
         "value": "1024px"
       },
       {
-        "name": "container-page",
-        "value": "76rem"
+        "name": "xl",
+        "value": "1280px"
       }
     ]
   },
   "components": [
     {
-      "name": "Search Field",
-      "kind": "input",
-      "refersTo": "search-field",
-      "description": "Square ruled box with a label cell and the accent Search button.",
-      "html": "<div class=\"ds-search\"><span class=\"ds-search-label\">Find a listing</span><input class=\"ds-search-input\" placeholder=\"Describe the job to be done\" aria-label=\"Search\"><button class=\"ds-search-btn\">Search</button></div>",
-      "css": ".ds-search{display:flex;align-items:center;border:1px solid color-mix(in oklch,var(--foreground) 60%,transparent);background:var(--background);border-radius:0;overflow:hidden}.ds-search:focus-within{border-color:var(--primary);box-shadow:0 0 0 2px color-mix(in oklch,var(--ring) 25%,transparent)}.ds-search-label{align-self:stretch;display:flex;align-items:center;padding:0 16px;background:var(--muted);border-inline-end:1px solid color-mix(in oklch,var(--foreground) 60%,transparent);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}.ds-search-input{flex:1;min-width:0;height:56px;padding:0 16px;background:transparent;border:0;color:var(--foreground);font-size:16px;outline:none}.ds-search-btn{margin-inline-end:8px;height:44px;padding:0 16px;border:0;border-radius:0;background:var(--primary);color:var(--primary-foreground);font-size:14px;font-weight:600;cursor:pointer}.ds-search-btn:hover{background:var(--primary-hover)}.ds-search-btn:focus-visible{outline:2px solid var(--ring);outline-offset:3px}"
-    },
-    {
-      "name": "Search Button",
+      "name": "Primary button",
       "kind": "button",
-      "refersTo": "search-button",
-      "description": "The single accent fill on the page. Square.",
-      "html": "<button class=\"ds-btn\">Search</button>",
-      "css": ".ds-btn{height:44px;padding:0 16px;border:0;border-radius:0;background:var(--primary);color:var(--primary-foreground);font-size:14px;font-weight:600;cursor:pointer}.ds-btn:hover{background:var(--primary-hover)}.ds-btn:focus-visible{outline:2px solid var(--ring);outline-offset:3px}"
+      "description": "Existing Button primary variant; #0864D1 fill, white labels, darker hover, shared 44px default and visible focus in both themes.",
+      "html": "<button class=\"ds-btn\" type=\"button\">Save profile</button>",
+      "css": ".ds-btn{display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;padding:0 16px;border:0;border-radius:var(--radius-control,12px);font-family:var(--font-geist),sans-serif;font-size:14px;font-weight:600;line-height:20px;cursor:pointer;transition:background-color 160ms,opacity 160ms}.ds-btn:focus-visible{outline:2px solid var(--ring);outline-offset:3px}.ds-btn:disabled{pointer-events:none;opacity:.45}.ds-btn{background:var(--action,#0864d1);color:var(--action-foreground,#fff);box-shadow:0 1px 2px #0000000d}.ds-btn:hover{background:var(--action-hover,#0755b2)}"
     },
     {
-      "name": "Type Shortcut",
+      "name": "Secondary button",
+      "kind": "button",
+      "description": "Existing Button secondary variant; shared 44px default and visible focus.",
+      "html": "<button class=\"ds-btn\" type=\"button\">Secondary</button>",
+      "css": ".ds-btn{display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;padding:0 16px;border:0;border-radius:var(--radius-control,12px);font-family:var(--font-geist),sans-serif;font-size:14px;font-weight:600;line-height:20px;cursor:pointer;transition:background-color 160ms,opacity 160ms}.ds-btn:focus-visible{outline:2px solid var(--ring);outline-offset:3px}.ds-btn:disabled{pointer-events:none;opacity:.45}.ds-btn{border:1px solid var(--border-strong);background:var(--surface);color:var(--foreground);box-shadow:0 1px 2px #0000000d}.ds-btn:hover{background:var(--muted)}"
+    },
+    {
+      "name": "Outline button",
+      "kind": "button",
+      "description": "Existing Button outline variant; shared 44px default and visible focus.",
+      "html": "<button class=\"ds-btn\" type=\"button\">Outline</button>",
+      "css": ".ds-btn{display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;padding:0 16px;border:0;border-radius:var(--radius-control,12px);font-family:var(--font-geist),sans-serif;font-size:14px;font-weight:600;line-height:20px;cursor:pointer;transition:background-color 160ms,opacity 160ms}.ds-btn:focus-visible{outline:2px solid var(--ring);outline-offset:3px}.ds-btn:disabled{pointer-events:none;opacity:.45}.ds-btn{border:1px solid color-mix(in oklab,var(--foreground) 60%,transparent);background:transparent;color:var(--foreground);box-shadow:0 1px 2px #0000000d}.ds-btn:hover{background:var(--muted)}"
+    },
+    {
+      "name": "Ghost button",
+      "kind": "button",
+      "description": "Existing Button ghost variant; shared 44px default and visible focus.",
+      "html": "<button class=\"ds-btn\" type=\"button\">Ghost</button>",
+      "css": ".ds-btn{display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;padding:0 16px;border:0;border-radius:var(--radius-control,12px);font-family:var(--font-geist),sans-serif;font-size:14px;font-weight:600;line-height:20px;cursor:pointer;transition:background-color 160ms,opacity 160ms}.ds-btn:focus-visible{outline:2px solid var(--ring);outline-offset:3px}.ds-btn:disabled{pointer-events:none;opacity:.45}.ds-btn{background:transparent;color:var(--foreground)}.ds-btn:hover{background:var(--muted)}"
+    },
+    {
+      "name": "Destructive button",
+      "kind": "button",
+      "description": "Existing Button destructive variant; shared 44px default and visible focus.",
+      "html": "<button class=\"ds-btn\" type=\"button\">Destructive</button>",
+      "css": ".ds-btn{display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;padding:0 16px;border:0;border-radius:var(--radius-control,12px);font-family:var(--font-geist),sans-serif;font-size:14px;font-weight:600;line-height:20px;cursor:pointer;transition:background-color 160ms,opacity 160ms}.ds-btn:focus-visible{outline:2px solid var(--ring);outline-offset:3px}.ds-btn:disabled{pointer-events:none;opacity:.45}.ds-btn{background:var(--destructive);color:var(--background)}.ds-btn:hover{opacity:.9}"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "description": "Existing Input convention; current field-border contrast debt remains documented.",
+      "html": "<label class=\"ds-field\">Public name<input class=\"ds-input\" type=\"text\" placeholder=\"Your name\" /></label>",
+      "css": ".ds-field{display:grid;gap:8px;color:var(--foreground);font-family:var(--font-geist),sans-serif;font-size:14px;font-weight:500}.ds-input{min-height:44px;padding:0 12px;border:1px solid var(--input);border-radius:var(--radius-control,12px);background:var(--surface);color:var(--foreground);font-size:16px}.ds-input::placeholder{color:var(--muted-foreground)}.ds-input:hover{border-color:var(--border-strong)}.ds-input:focus-visible{border-color:var(--primary);outline:2px solid var(--ring);outline-offset:3px}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "description": "Shared header navigation with current-page semantics.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Primary\"><a href=\"/explore\" aria-current=\"page\">Explore</a><a href=\"/dashboard/studio\">Share your work</a></nav>",
+      "css": ".ds-nav{display:flex;flex-wrap:wrap;gap:4px;font-family:var(--font-geist),sans-serif}.ds-nav a{display:inline-flex;min-height:44px;align-items:center;padding:0 12px;border-radius:var(--radius-nav,8px);color:var(--muted-foreground);font-size:14px;font-weight:600;text-decoration:none}.ds-nav a[aria-current]{background:var(--primary-soft);color:var(--foreground)}.ds-nav a:hover{background:var(--muted);color:var(--foreground)}.ds-nav a:focus-visible{outline:2px solid var(--ring);outline-offset:3px}"
+    },
+    {
+      "name": "Badge",
       "kind": "chip",
-      "description": "Quiet underlined filter text under the search; not a pill.",
-      "html": "<span class=\"ds-short\"><button class=\"ds-short-b\">Skills</button><button class=\"ds-short-b ds-on\" aria-pressed=\"true\">Agents</button></span>",
-      "css": ".ds-short-b{min-height:32px;padding:0 6px;background:none;border:0;color:var(--muted-foreground);font-size:14px;text-decoration:underline;text-decoration-color:var(--border);text-underline-offset:4px;cursor:pointer}.ds-short-b:hover{color:var(--foreground);text-decoration-color:var(--foreground)}.ds-on{color:var(--foreground);font-weight:600;text-decoration-color:var(--foreground)}.ds-short-b:focus-visible{outline:2px solid var(--ring);outline-offset:3px}"
+      "description": "Existing noninteractive neutral type badge.",
+      "html": "<span class=\"ds-badge\">Skill</span>",
+      "css": ".ds-badge{display:inline-flex;gap:4px;padding:4px 10px;border:1px solid var(--border);border-radius:var(--radius-chip,9999px);background:var(--muted);color:var(--foreground);font-family:var(--font-geist),sans-serif;font-size:11px;font-weight:600;line-height:1}"
     },
     {
-      "name": "Title Block",
+      "name": "Listing card",
       "kind": "card",
-      "description": "Revision table beside the headline: ink header row, hairline-divided rows.",
-      "html": "<div class=\"ds-tb\"><p class=\"ds-tb-h\"><span>Title block · example</span><span>1/1</span></p><dl><div class=\"ds-tb-r\"><dt>Document</dt><dd>TS-0001</dd></div><div class=\"ds-tb-r\"><dt>Revision</dt><dd>2.4.0</dd></div><div class=\"ds-tb-r\"><dt>Safety review</dt><dd style=\"font-family:inherit\">Reviewed</dd></div><div class=\"ds-tb-r\"><dt>Pinned release</dt><dd>0123abc</dd></div></dl></div>",
-      "css": ".ds-tb{width:18rem;border:1px solid color-mix(in oklch,var(--foreground) 60%,transparent);font-size:12px;color:var(--foreground)}.ds-tb-h{display:flex;justify-content:space-between;margin:0;padding:6px 10px;background:var(--foreground);color:var(--background);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}.ds-tb dl{margin:0}.ds-tb-r{display:flex;justify-content:space-between;gap:12px;padding:6px 10px;border-top:1px solid var(--border)}.ds-tb dt{color:var(--muted-foreground)}.ds-tb dd{margin:0;font-family:var(--font-geist-mono),ui-monospace,monospace}"
-    },
-    {
-      "name": "Tag Cell and Name Row",
-      "kind": "custom",
-      "description": "Solid ink example tag, name, meta, revision; closed by the 3px double rule.",
-      "html": "<div class=\"ds-name\"><p class=\"ds-tag\">Example listing</p><div class=\"ds-nm\"><h2>Staff Engineer Review</h2><p>Skill · by Ellis North · Safety reviewed · Licence MIT</p></div><div class=\"ds-rev\"><span>Revision</span><b>v2.4.0</b></div></div>",
-      "css": ".ds-name{display:grid;grid-template-columns:auto 1fr auto;border:1px solid color-mix(in oklch,var(--foreground) 60%,transparent);border-bottom:3px double color-mix(in oklch,var(--foreground) 60%,transparent);color:var(--foreground)}.ds-tag{display:flex;align-items:center;margin:0;padding:0 16px;background:var(--foreground);color:var(--background);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}.ds-nm{padding:12px 16px}.ds-nm h2{margin:0;font-size:24px;font-weight:700;line-height:1.25;letter-spacing:-.025em}.ds-nm p{margin:4px 0 0;font-size:12px;color:var(--muted-foreground)}.ds-rev{display:flex;flex-direction:column;justify-content:center;padding:0 16px;text-align:end;border-inline-start:1px solid color-mix(in oklch,var(--foreground) 60%,transparent);font-size:12px;color:var(--muted-foreground)}.ds-rev b{font-family:var(--font-geist-mono),ui-monospace,monospace;font-size:20px;color:var(--foreground)}"
-    },
-    {
-      "name": "Ratings Table",
-      "kind": "custom",
-      "description": "Absolute maximum ratings: accent header rule, a red mark for not declared, dashes for empty.",
-      "html": "<table class=\"ds-rt\"><thead><tr><th>Parameter</th><th>Value</th><th>Limit / declared</th></tr></thead><tbody><tr><th scope=\"row\">Reads</th><td>the diff under review</td><td><span class=\"ds-m\">declared</span></td></tr><tr><th scope=\"row\">Writes</th><td><span class=\"ds-d\">—</span></td><td><span class=\"ds-nd\">not declared</span></td></tr><tr><th scope=\"row\">Network</th><td>none</td><td><span class=\"ds-m\">declared</span></td></tr><tr><th scope=\"row\">Shell</th><td><span class=\"ds-d\">—</span></td><td><span class=\"ds-d\">—</span></td></tr></tbody></table>",
-      "css": ".ds-rt{width:100%;border-collapse:collapse;font-size:13px;color:var(--foreground)}.ds-rt thead th{padding:6px 8px;text-align:start;border-bottom:2px solid var(--primary);color:var(--primary);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}.ds-rt tbody tr{border-bottom:1px solid var(--border)}.ds-rt tbody th{padding:8px;text-align:start;font-weight:600}.ds-rt td{padding:8px;font-family:var(--font-geist-mono),ui-monospace,monospace;font-size:12px}.ds-m{font-family:var(--font-geist-mono),ui-monospace,monospace}.ds-d{color:var(--muted-foreground)}.ds-nd{display:inline-block;padding:2px 6px;border:1px solid var(--destructive);color:var(--destructive);font-family:var(--font-geist),sans-serif;font-weight:700;white-space:nowrap}"
-    },
-    {
-      "name": "Pin Diagram",
-      "kind": "custom",
-      "description": "Plain-line SVG part with three platform pins and dashed NC leads.",
-      "html": "<svg class=\"ds-pin\" viewBox=\"0 0 258 150\" role=\"img\" aria-label=\"Pin diagram\"><g stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.2\"><rect x=\"112\" y=\"14\" width=\"64\" height=\"116\"/><path d=\"M134 14a10 10 0 0 0 20 0\"/><path d=\"M84 40h28M84 72h28M84 104h28\"/></g><g stroke=\"currentColor\" stroke-opacity=\".4\" fill=\"none\" stroke-width=\"1.2\" stroke-dasharray=\"3 3\"><path d=\"M176 40h28M176 72h28M176 104h28\"/></g><g fill=\"currentColor\" font-size=\"12\" text-anchor=\"end\"><text x=\"78\" y=\"44\">Claude</text><text x=\"78\" y=\"76\">Cursor</text><text x=\"78\" y=\"108\">VS Code</text></g><g fill=\"currentColor\" fill-opacity=\".6\" font-size=\"10\"><text x=\"208\" y=\"44\">NC</text><text x=\"208\" y=\"76\">NC</text><text x=\"208\" y=\"108\">NC</text></g><text x=\"144\" y=\"78\" text-anchor=\"middle\" font-size=\"12\" font-weight=\"700\" class=\"ds-pl\" transform=\"rotate(-90 144 78)\">SKILL v2.4.0</text></svg>",
-      "css": ".ds-pin{width:100%;max-width:17rem;height:auto;color:var(--foreground);font-family:var(--font-geist-mono),ui-monospace,monospace}.ds-pl{fill:var(--primary)}"
-    },
-    {
-      "name": "Ordering Row",
-      "kind": "custom",
-      "description": "Heading cell, pinned release, and the ink install-command band.",
-      "html": "<div class=\"ds-ord\"><h3>4 Ordering information</h3><p class=\"ds-pn\"><span>Pinned</span><b>0123abc</b></p><p class=\"ds-cmd\"><span style=\"opacity:.6\">$ </span>termspace add staff-engineer-review@0123abc</p></div>",
-      "css": ".ds-ord{display:grid;grid-template-columns:auto auto 1fr;border:1px solid color-mix(in oklch,var(--foreground) 60%,transparent);font-size:14px;color:var(--foreground)}.ds-ord h3{margin:0;padding:10px 16px;background:var(--muted);color:var(--primary);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}.ds-pn{display:flex;align-items:center;gap:8px;margin:0;padding:10px 16px;border-inline-start:1px solid color-mix(in oklch,var(--foreground) 60%,transparent)}.ds-pn span{color:var(--muted-foreground);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}.ds-pn b{font-family:var(--font-geist-mono),ui-monospace,monospace}.ds-cmd{margin:0;padding:10px 16px;background:var(--foreground);color:var(--background);border-inline-start:1px solid color-mix(in oklch,var(--foreground) 60%,transparent);font-family:var(--font-geist-mono),ui-monospace,monospace;font-size:13px;white-space:nowrap;overflow-x:auto}"
+      "description": "Schematic existing card/trust pattern; example text is not a real listing.",
+      "html": "<article class=\"ds-card\"><h3>Listing title</h3><p>Describe the outcome and working context.</p><p>Not yet reviewed</p><dl><dt>Permissions</dt><dd>Not declared</dd></dl></article>",
+      "css": ".ds-card{padding:16px;border:1px solid var(--border);border-radius:var(--radius-card,16px);background:var(--surface);box-shadow:var(--panel-shadow);color:var(--foreground);font-family:var(--font-geist),sans-serif}.ds-card:hover{border-color:var(--border-strong)}.ds-card h3{margin:0;font-size:18px;font-weight:600;line-height:1.4}.ds-card p{margin:8px 0 0;color:var(--muted-foreground);font-size:14px;line-height:1.5}.ds-card dl{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0 0;font-size:12px}.ds-card dt{color:var(--muted-foreground)}.ds-card dd{margin:0;color:var(--destructive)}"
     }
   ],
   "narrative": {
-    "northStar": "The Datasheet",
-    "overview": "A listing is a part, and the page shows it the way a component manufacturer would: a title block with a revision table, thin and double rules, numbered sections, tabular values, one header cell in solid ink. Structure comes from rules and aligned columns, never from fills, shadows or effects. Transition: only the landing hero is built in this direction; the header, footer, lower sections, dashboard, explore and product pages still ship the earlier Signal & Void system and are slated to be replaced.",
+    "northStar": "Paper & Signal",
+    "overview": "Creative North Star: **Paper & Signal**. Updated 2026-11-03. One identity for\npublic discovery, account flows and the creator dashboard: a cool paper ground,\nwhite panels, navy ink and a single blue signal, softened with rounded controls,\nlight panel shadows and pastel tints.\n\nThe direction is inspired by the calm, card-led feel of anicards.ir. It is\ninspired by, not copied: no logo, wordmark, copy, imagery, illustration or\ncomponent is taken from that site. Only generic qualities — cool grey palette,\nnavy/blue pairing, 8/12/16 radii, pill chips, soft shadows, pastel cards — carry\nacross.\n\nThis retires the previous \"Datasheet\" rules. Square controls, ruled-only\nstructure, the ban on shadows and the zero-radius dashboard override are no\nlonger the house style. What survives from the Datasheet is its discipline:\nGeist and Estedad, dense but legible type, explicit trust metadata, visible\nstate labels and restrained motion. Do not revive the older \"Signal & Void\"\nserif, gradients, glass panels, glow or scroll entrances either.",
     "keyCharacteristics": [
-      "Ink on ground, one accent, one red, one green; no gradients, glow, shadows, photography or texture.",
-      "Square corners inside the sheet and the search; rules do the work of cards.",
-      "Three-column part with a double rule under its name row; a title-block table beside the headline from lg.",
-      "Geist for words, Geist Mono for values and commands, Estedad for Persian.",
-      "Static: no animation in the sheet; server-rendered markup that works without script."
+      "Cool paper ground, navy ink and blue signal.",
+      "Rounded controls and restrained panel shadows.",
+      "Explicit trust/provenance and readable EN/FA workflows.",
+      "Separate warm editorial blog with shared accessibility and interaction requirements."
     ],
-    "rules": [
-      {
-        "name": "The One Accent Rule",
-        "body": "Accent is a mark, not a surface. It appears on the Search button, table header rule and numerals, and nowhere as a panel or background wash.",
-        "section": "colors"
-      },
-      {
-        "name": "The Red Means Absent Rule",
-        "body": "Red marks \"not declared\" and nothing else. It is never an error colour inside the sheet.",
-        "section": "colors"
-      },
-      {
-        "name": "The Strong-Rule Rule",
-        "body": "Outer frames and column dividers are ink at 60% (border-foreground/60); interior row dividers are the hairline token. Two weights, no third.",
-        "section": "colors"
-      },
-      {
-        "name": "The Mono Is Data Rule",
-        "body": "Geist Mono is for versions, hashes, commands and table values. Prose and filters stay in Geist. In Persian, non-Latin values fall back to Estedad.",
-        "section": "typography"
-      },
-      {
-        "name": "The Latin Island Rule",
-        "body": "Versions, document numbers, hashes and the command are wrapped dir=ltr so they hold their shape inside Persian text.",
-        "section": "typography"
-      },
-      {
-        "name": "The Ruled-Cell Rule",
-        "body": "Regions are separated by a rule and cell padding, not by gaps between floating boxes.",
-        "section": "layout"
-      },
-      {
-        "name": "The No-Decoration Rule",
-        "body": "Nothing in the sheet exists only to look good: no icon without a function, no fill without information, no ornament. The pin diagram is the only drawing, and it states compatibility.",
-        "section": "elevation"
-      },
-      {
-        "name": "The Example-Is-Labelled Rule",
-        "body": "Synthetic content is named as such twice, in the tag cell and in the footer. Never show a made-up listing as real.",
-        "section": "components"
-      },
-      {
-        "name": "The State-Absence Rule",
-        "body": "Undeclared is printed, never omitted: a parameter with no declaration keeps its row, shows a dash or a red \"not declared\" mark, and is never hidden.",
-        "section": "components"
-      }
-    ],
+    "rules": [],
     "dos": [
-      "Do build new sheet surfaces from the existing theme tokens only: ink, ground, hairline, --muted, --primary, --destructive, --verified.",
-      "Do use the two rule weights: border-foreground/60 for structure, border-border for rows.",
-      "Do set values and commands in Geist Mono, wrapped in dir=\"ltr\", and give Persian its own face and no tracking.",
-      "Do number sections with accent mono numerals and put labels at 11px, 0.08em, uppercase.",
-      "Do keep the sheet static and readable without JavaScript; targets at least 24px (shortcuts 32px, buttons 44px).",
-      "Do print \"not declared\" rows and mark examples as examples."
+      "Do use the existing tokens and components, consistent peer-section spacing,   explicit trust labels, readable fields and both marketplace themes.",
+      "Do preserve the blog's confirmed editorial palette/type while sharing   accessibility, interaction, responsive and RTL requirements.",
+      "Do record observed defects separately from the intended rule and verify   the actual rendered result after a repair."
     ],
     "donts": [
-      "Don't use gradients, glow, shadows, blur, photography or textures on the datasheet, and don't reintroduce the nebula or a gradient headline.",
-      "Don't round the corners of the sheet or the hero search.",
-      "Don't use accent as a panel, card or background fill, or red for anything but absence.",
-      "Don't hide undeclared rows, or ship an unlabelled example.",
-      "Don't extend Signal & Void for new surfaces: the Plasma large-area primary, Newsreader .editorial headings, pill chips, --shadow-*/--glow-* and the long motion tokens remain elsewhere and are slated to be replaced.",
-      "Don't treat the hero search's carried remnants (suggestions dropdown shape and shadow, placeholder typing, lucide glyphs) as part of the datasheet system."
+      "Don't restore square Datasheet panels, Signal & Void effects or another   competing visual system from stale comments, previews or tests.",
+      "Don't make every button blue, turn every status green, or use arbitrary   color choices as unchecked text/action foregrounds.",
+      "Don't hide failed requests behind empty messages or synthetic content,   weaken authorization, discard form state, or count a clean detector as proof   that every screen is accessible."
     ]
   }
 }

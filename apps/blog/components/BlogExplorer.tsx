@@ -115,6 +115,7 @@ export function BlogExplorer({
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
           <button
             type="button"
+            aria-pressed={category === ""}
             onClick={() => resetAndSetCategory("")}
             className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
               category === "" ? "bg-accent text-paper" : "bg-paper-warm text-ink-soft hover:bg-paper-card"
@@ -126,6 +127,7 @@ export function BlogExplorer({
             <button
               key={c.id}
               type="button"
+              aria-pressed={category === c.slug}
               onClick={() => resetAndSetCategory(c.slug)}
               className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
                 category === c.slug ? "bg-accent text-paper" : "bg-paper-warm text-ink-soft hover:bg-paper-card"
@@ -148,7 +150,7 @@ export function BlogExplorer({
             setPage(1);
           }}
           placeholder={locale === "fa" ? "جست‌وجوی مقالات…" : "Search articles…"}
-          className="w-full rounded-lg border border-line bg-paper-card px-4 py-3 text-ink placeholder:text-ink-faint focus:border-accent"
+          className="w-full rounded-lg border border-line-input bg-paper-card px-4 py-3 text-ink placeholder:text-ink-faint focus:border-accent"
         />
 
         <label htmlFor="blog-sort" className="sr-only">
@@ -161,7 +163,7 @@ export function BlogExplorer({
             setSort(e.target.value as SortFilter);
             setPage(1);
           }}
-          className="w-full rounded-lg border border-line bg-paper-card px-4 py-3 text-ink-soft focus:border-accent sm:max-w-xs"
+          className="w-full rounded-lg border border-line-input bg-paper-card px-4 py-3 text-ink-soft focus:border-accent sm:max-w-xs"
         >
           <option value="newest">{locale === "fa" ? "تازه‌ترین" : "Newest first"}</option>
           <option value="oldest">{locale === "fa" ? "قدیمی‌ترین" : "Oldest first"}</option>

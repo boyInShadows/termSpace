@@ -11,7 +11,7 @@ export function ListingReport({ slug }: { slug: string }) {
   const { locale } = useLocale();
   const { email } = useMarketplaceSession();
   const [activated, setActivated] = useState(false);
-  return <details id="report-listing" className="group min-w-0 border-t border-border pt-2" onToggle={(event) => { if (event.currentTarget.open) setActivated(true); }}>
+  return <details id="report-listing" data-activated={activated || undefined} className="group min-w-0 border-t border-border pt-2" onToggle={(event) => { if (event.currentTarget.open) { setActivated(true); event.currentTarget.scrollIntoView({ block: "nearest", behavior: "instant" }); } }}>
     <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
       <Flag className="size-4 shrink-0" aria-hidden="true" />{locale === "fa" ? "گزارش آگهی" : "Report listing"}<ChevronDown className="ms-auto size-4 shrink-0 group-open:rotate-180" aria-hidden="true" />
     </summary>

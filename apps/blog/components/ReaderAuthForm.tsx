@@ -37,7 +37,7 @@ export function ReaderAuthForm({ locale = "en" }: { locale?: Locale }) {
       callback: async ({ credential }) => {
         setBusy(true); setError("");
         try { await api.loginReaderWithGoogle(credential); await finishSignIn(); }
-        catch (err) { setError(err instanceof Error ? err.message : "Google sign-in failed."); setBusy(false); }
+        catch (err) { setError(err instanceof Error ? err.message : (fa ? "ورود با Google انجام نشد. دوباره تلاش کنید." : "Google sign-in failed.")); setBusy(false); }
       },
     });
     window.google.accounts.id.renderButton(googleButton.current, { theme: "outline", size: "large", locale, width: Math.min(320, googleButton.current.clientWidth || 320) });
@@ -48,7 +48,7 @@ export function ReaderAuthForm({ locale = "en" }: { locale?: Locale }) {
     try {
       await api.loginReader(email.trim().toLowerCase(), password);
       await finishSignIn();
-    } catch (err) { setError(err instanceof Error ? err.message : "Unable to continue."); setBusy(false); }
+    } catch (err) { setError(err instanceof Error ? err.message : (fa ? "ادامهٔ ورود انجام نشد. دوباره تلاش کنید." : "Unable to continue.")); setBusy(false); }
   }
 
   return (
@@ -57,9 +57,9 @@ export function ReaderAuthForm({ locale = "en" }: { locale?: Locale }) {
       {clientId && <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-widest text-ink-muted"><span className="h-px flex-1 bg-line" />{fa ? "یا" : "or"}<span className="h-px flex-1 bg-line" /></div>}
       <form onSubmit={submit} className="space-y-4">
         {error && <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-        <div><label htmlFor="reader-email" className="mb-1 block text-sm font-medium">{fa ? "ایمیل" : "Email"}</label><input id="reader-email" dir="ltr" required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-lg border border-line bg-white px-4 py-2.5" /></div>
-        <div><label htmlFor="reader-password" className="mb-1 block text-sm font-medium">{fa ? "رمز عبور" : "Password"}</label><input id="reader-password" dir="ltr" required minLength={8} type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} className="w-full rounded-lg border border-line bg-white px-4 py-2.5" /></div>
-        <button disabled={busy} className="w-full rounded-lg bg-accent px-5 py-3 font-medium text-white disabled:opacity-50">{busy ? (fa ? "کمی صبر کنید…" : "Please wait…") : (fa ? "ورود" : "Sign in")}</button>
+        <div><label htmlFor="reader-email" className="mb-1 block text-sm font-medium">{fa ? "ایمیل" : "Email"}</label><input id="reader-email" dir="ltr" required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-lg border border-line-input bg-white px-4 py-2.5" /></div>
+        <div><label htmlFor="reader-password" className="mb-1 block text-sm font-medium">{fa ? "رمز عبور" : "Password"}</label><input id="reader-password" dir="ltr" required minLength={8} type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} className="w-full rounded-lg border border-line-input bg-white px-4 py-2.5" /></div>
+        <button disabled={busy} className="w-full rounded-lg bg-action px-5 py-3 font-medium text-action-foreground disabled:opacity-50 hover:bg-action-hover">{busy ? (fa ? "کمی صبر کنید…" : "Please wait…") : (fa ? "ورود" : "Sign in")}</button>
       </form>
       {clientId && <p className="mt-5 text-center text-xs text-ink-muted">{fa ? "حساب‌های تازه از طریق ورود تأییدشدهٔ گوگل ساخته می‌شوند." : "New accounts are created through verified Google sign-in."}</p>}
     </>

@@ -10,6 +10,11 @@
   --font-geist-mono: "Geist Mono Variable";
   --font-estedad: "Estedad Variable";
 
+  /* Owner-selected action fill stays the same in both themes. */
+  --action: #0864d1;
+  --action-foreground: #ffffff;
+  --action-hover: #0755b2;
+
   /* motion ------------------------------------------------------------- */
   /* Short feedback transitions; page content stays visible immediately. */
   --duration-fast: 160ms;
@@ -105,7 +110,7 @@
 
   --border: oklch(92.88% 0.0126 255.5);
   --border-strong: oklch(86.9% 0.0198 252.9);
-  --input: oklch(86.9% 0.0198 252.9);
+  --input: oklch(65% 0.03 252.9);
 
   --primary: oklch(54.61% 0.2152 262.9);
   --primary-foreground: oklch(100% 0 0);

@@ -81,7 +81,7 @@ export function AcquiredLibrary() {
           {/* Keyed by the address value, so back, forward and Clear filters reset the box. */}
           <Input key={q} id="library-search" name="q" type="search" maxLength={80} autoComplete="off" defaultValue={q} className="mt-1" />
         </div>
-        <Button type="submit" variant="secondary">{copy.searchButton}</Button>
+        <Button type="submit">{copy.searchButton}</Button>
       </form>
       <div>
         <label htmlFor="library-type" className="block text-sm font-medium">{copy.typeLabel}</label>

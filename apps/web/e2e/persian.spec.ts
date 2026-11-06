@@ -69,7 +69,7 @@ test.describe("persian", () => {
     await page.goto("/fa");
     const persian = await measure();
 
-    expect(english.weight).not.toBe("600");
+    expect(english.weight).toBe("600");
     expect(persian.leading).toBeCloseTo(1.35, 2);
     expect(persian.weight).toBe("600");
   });

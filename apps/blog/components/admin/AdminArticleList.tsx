@@ -145,7 +145,7 @@ export function AdminArticleList({ articles, initialMeta, categories }: AdminArt
             resetPage();
           }}
           placeholder="Search articles..."
-          className="w-full rounded-lg border border-line bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-accent"
+          className="w-full rounded-lg border border-line-input bg-paper-card px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-accent"
         />
 
         <label htmlFor="admin-status" className="sr-only">
@@ -158,7 +158,7 @@ export function AdminArticleList({ articles, initialMeta, categories }: AdminArt
             setStatus(e.target.value as StatusFilter);
             resetPage();
           }}
-          className="rounded-lg border border-line bg-paper-card px-3 py-2 text-sm text-ink-soft focus:border-accent"
+          className="rounded-lg border border-line-input bg-paper-card px-3 py-2 text-sm text-ink-soft focus:border-accent"
         >
           <option value="all">All statuses</option>
           <option value="published">Published</option>
@@ -175,7 +175,7 @@ export function AdminArticleList({ articles, initialMeta, categories }: AdminArt
             setCategory(e.target.value);
             resetPage();
           }}
-          className="rounded-lg border border-line bg-paper-card px-3 py-2 text-sm text-ink-soft focus:border-accent"
+          className="rounded-lg border border-line-input bg-paper-card px-3 py-2 text-sm text-ink-soft focus:border-accent"
         >
           <option value="">All categories</option>
           {categories.map((c) => (
@@ -195,7 +195,7 @@ export function AdminArticleList({ articles, initialMeta, categories }: AdminArt
             setSort(e.target.value as SortFilter);
             resetPage();
           }}
-          className="rounded-lg border border-line bg-paper-card px-3 py-2 text-sm text-ink-soft focus:border-accent"
+          className="rounded-lg border border-line-input bg-paper-card px-3 py-2 text-sm text-ink-soft focus:border-accent"
         >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
@@ -314,6 +314,7 @@ export function AdminArticleList({ articles, initialMeta, categories }: AdminArt
       )}
 
       <ConfirmDialog
+        error={error || undefined}
         open={Boolean(articleToDelete)}
         title="Delete article"
         description={

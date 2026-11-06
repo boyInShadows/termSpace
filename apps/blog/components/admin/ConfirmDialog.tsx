@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useId, useRef } from "react";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -8,6 +8,7 @@ interface ConfirmDialogProps {
   description: string;
   confirmLabel: string;
   busy?: boolean;
+  error?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -18,40 +19,38 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   busy = false,
+  error,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const id = useId();
   useEffect(() => {
-    if (!open) return;
-
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onCancel();
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onCancel, open]);
-
-  if (!open) return null;
+    const dialog = dialogRef.current;
+    if (!open || !dialog) return;
+    dialog.showModal();
+    return () => dialog.close();
+  }, [open]);
 
   return (
-    <div className="fixed inset-0 z-[60] grid place-items-center bg-ink/30 px-4" role="presentation">
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="confirm-dialog-title"
-        aria-describedby="confirm-dialog-description"
-        className="w-full max-w-md rounded-xl border border-line bg-paper-card p-6 shadow-xl"
+      <dialog
+        ref={dialogRef}
+        aria-labelledby={`${id}-title`}
+        aria-describedby={`${id}-description`}
+        onCancel={(event) => { event.preventDefault(); if (!busy) onCancel(); }}
+        className="fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-md rounded-xl border border-line bg-paper-card p-6 text-ink shadow-xl backdrop:bg-ink/30"
       >
-        <h2 id="confirm-dialog-title" className="font-serif text-xl font-semibold tracking-tight">
+        <h2 id={`${id}-title`} className="font-serif text-xl font-semibold tracking-tight">
           {title}
         </h2>
-        <p id="confirm-dialog-description" className="mt-3 text-sm leading-6 text-ink-soft">
+        <p id={`${id}-description`} className="mt-3 text-sm leading-6 text-ink-soft">
           {description}
         </p>
-        <div className="mt-6 flex justify-end gap-3">
+        {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
+        <div className="mt-6 flex flex-wrap justify-end gap-3">
           <button
             type="button"
+            autoFocus
             onClick={onCancel}
             disabled={busy}
             className="rounded-lg border border-line px-4 py-2 text-sm font-medium text-ink-soft hover:border-accent disabled:opacity-50"
@@ -67,7 +66,6 @@ export function ConfirmDialog({
             {busy ? "Deleting..." : confirmLabel}
           </button>
         </div>
-      </div>
-    </div>
+      </dialog>
   );
 }

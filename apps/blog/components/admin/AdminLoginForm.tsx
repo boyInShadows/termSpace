@@ -54,7 +54,7 @@ export function AdminLoginForm({ next }: AdminLoginFormProps) {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-lg border border-line bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
+          className="w-full rounded-lg border border-line-input bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
           autoComplete="username"
           aria-invalid={Boolean(error)}
         />
@@ -69,7 +69,7 @@ export function AdminLoginForm({ next }: AdminLoginFormProps) {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-lg border border-line bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
+          className="w-full rounded-lg border border-line-input bg-paper-card px-4 py-2.5 text-ink focus:border-accent"
           autoComplete="current-password"
           aria-invalid={Boolean(error)}
         />
@@ -78,7 +78,7 @@ export function AdminLoginForm({ next }: AdminLoginFormProps) {
       <button
         type="submit"
         disabled={checking}
-        className="w-full rounded-lg bg-accent px-6 py-3 font-medium text-paper hover:bg-accent-soft disabled:opacity-50"
+        className="w-full rounded-lg bg-action px-6 py-3 font-medium text-action-foreground hover:bg-action-hover disabled:opacity-50"
       >
         {checking ? "Checking..." : "Continue"}
       </button>

@@ -2,6 +2,292 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-06 - Finish public copy corrections and refresh the local queue
+
+- **Scope / shared surfaces.** Owner requested the changelog refresh and
+  `ramtin-pending.md` follow-through. Complete the six confirmed public-copy
+  groups from the November 4 review. Shared surfaces: `apps/web/lib/i18n/`
+  (`catalog.ts`, `common.ts`) and `changelog.md`. Blog ownership exception:
+  `messages/fa.json`, `Hero.tsx`, `ReaderAuthForm.tsx`, `ReaderAccount.tsx`
+  and `Comments.tsx`, plus focused tests, for the queued presentation fixes.
+  The local queue remains ignored and is never staged.
+- **Completed source corrections.** Remove the extra Persian discovery trust
+  assurance; name Termspace in the Persian blog hero; send Explore topics to
+  the topics directory; name footer Communities/Account links truthfully in
+  both locales. Localize four unknown-error fallbacks while retaining specific
+  server errors. Announce comment moderation success in the current locale
+  for both normal and message-free honeypot responses, without exposing filtering.
+  Preserve API/authentication contracts, entered data and #0864D1 submits.
+- **Verification.** Focused regressions reproduced the defects before repair;
+  all 855 unit/component tests now pass (44 existing integration skips), root
+  typecheck and all production builds pass, web lint retains two existing
+  warnings. Eight rendered footer variants and four Persian discovery variants
+  pass in EN/FA, web light/dark and 320/1280px; screenshots inspected. The
+  discovery intro retains its existing phone-hidden behavior. Impeccable reports
+  no findings for the changed targets. Full E2E: 527 passed / 46 intentional skips.
+  All nine Lighthouse runs pass the unchanged budgets using the existing local
+  Windows cleanup preload; no audit/assertion was changed.
+- **Queue / prerequisites.** Keep editorial/admin rendered acceptance and
+  scoped cache cleanup awaiting the owner choice prompted in this session;
+  the queue records earlier automatic approval rejections (blocked by policy).
+  No blog fixture launch or rejected cleanup was retried. Port 4100 has no
+  listener; remove the stale running-API/PID instruction. Google public client
+  IDs are still absent from the app env files and Windows user environment.
+  Read-only Prisma status confirms external-link-source and release-review
+  migrations remain pending locally; no migration was applied. Physical-phone,
+  real-Google and owner Persian-copy acceptance remain open.
+- **Evidence / review.** `docs/artifacts/ramtin-copy-2026-11-06/` holds local
+  test logs, screenshots and read-only prerequisite evidence. Supersedes the
+  unfinished November 4 copy-plan entry; no other-maintainer queue item claimed.
+  Manual diff review completed by hand; no new findings.
+
+## 2026-11-06 - Refresh main and use the requested submit blue
+
+- **Goal / files / shared surface.** Fetch and integrate current main, then
+  replace the previous action blue with the owner-requested exact #0864D1. Change
+  web action tokens and blog Tailwind action colors, including account deletion
+  and the moderation decision form. Synchronize DESIGN, preview
+  metadata, dashboard brief, remediation handoff and existing browser assertions.
+  Shared surface: `changelog.md`. Blog `tailwind.config.ts` is included by the
+  all-submit-buttons instruction; editorial accents remain unchanged.
+- **Integration.** Fetch succeeded; origin/main is 1b432be and already an
+  ancestor of ramtin. Merge reports already up to date, with no conflicts.
+  Preserve main inbox-driven signup/reset and release-review changes.
+  Preserve pre-existing DESIGN formatting, brand assets and the in-progress
+  wording-review entry; none belongs to this phase.
+- **Acceptance / verification.** #0864D1 fill, white labels, #0755B2 hover
+  through existing action tokens in both web themes and blog forms. Keep
+  validation, pending/disabled behavior, keyboard focus, warnings and the separate
+  destructive moderation confirmation. All form submits use the action palette.
+  Run root typecheck/tests/build, web lint/E2E, Lighthouse and Impeccable review.
+- **Results.** Root typecheck, all 844 unit/component tests (44 existing API
+  integration skips), all production builds and web lint pass; lint retains
+  its two existing warnings. Full E2E: 527 passed / 46 intentional skips.
+  After the last two submit overrides, rebuilt all apps and passed all 62
+  affected browser checks, including Settings in both themes/locales.
+  Twenty rendered account checks cover web light/dark and blog light, EN/FA
+  and 320/1280px; exact colors, keyboard focus and blog hover pass. Inspected
+  screenshots, including enabled deletion submits. White-text contrast is
+  5.59:1 normal / 7.12:1 hover. No runtime dependency or form logic changed.
+- **Review / limits.** Manual diff review finds no new issue. Impeccable
+  reports only the existing feedback-easing advisory. Blog account rendering
+  uses mocked signed-out API responses; broader editorial/admin acceptance,
+  physical devices and real-provider checks remain outside this color phase.
+  Evidence is local under `docs/artifacts/submit-blue-2026-11-06/`.
+- **Lighthouse.** All nine runs pass every unchanged budget. Reused the existing
+  local Windows temporary-profile cleanup preload; no audit or assertion changed.
+
+## 2026-11-04 — Sequential local queue: onboarding wording review
+
+- **Scope / shared surface.** Owner requested `ramtin-pending.md` execution in
+  order. Resolve actionable work while retaining owner-dependent acceptance.
+  Shared surface: `changelog.md`; the ignored local queue is never staged.
+  No application code or copy changed. Existing DESIGN formatting and brand
+  assets remain untouched; the other maintainer's `pending.md` is not claimed.
+- **Completed.** Reviewed English/Persian onboarding headings, all 19 answer
+  choices, starting preferences, help and state messages against current API
+  choices and the Profile location. Privacy wording matches caller-scoped
+  access, export inclusion and clearing on account deletion. No wording change
+  was needed. Remove that completed wording-review item from the local queue;
+  retain broader Persian/device, Google and deployment acceptance.
+- **Verification.** Eleven focused web onboarding/legal tests and thirteen API
+  onboarding tests pass. Reviewed current source after graph coverage checks;
+  API tests use mocks. No real account, Google identity, database or permission
+  was changed. Evidence: `docs/artifacts/ramtin-queue-2026-11-04/copy-review.md`
+  and its test logs. Application source is unchanged since the previous fully
+  verified phase, so builds/full suites were not repeated for this review log.
+- **Remaining inputs.** Explicit local-preview/cleanup approval and a phone/
+  test-Google sign-in decision were requested. An Android device is connected;
+  the web/API dev servers are running. Earlier automatic approval rejections
+  remain respected until resolved. The deployment migration is a conditional
+  operating note, not authorization to deploy or mutate a database.
+- **Prerequisite findings.** No Google web/API client ID is configured in the
+  app env files or Windows user environment. Requested an existing public
+  client ID; no secret was requested or exposed. Read-only Prisma status shows
+  the local onboarding migration is applied, with external-link source and
+  release-review state migrations still pending. No migration was applied;
+  retain the deployment condition and record the local prerequisites in the queue.
+
+## 2026-11-03 — Owner-selected blue action buttons
+
+- **Goal / files / shared surface.** Apply the owner's exact #2563EB to normal
+  submit actions and existing Ink Light/Ground Dark filled buttons. Use the
+  existing web Button/QuickAction and action tokens, blog submit control classes
+  and Tailwind palette. Update DESIGN, its preview metadata and dashboard brief.
+  Shared surface: `changelog.md`; blog form presentation is explicitly included
+  by the owner's submit-button instruction. Preserve unrelated brand assets and
+  the owner's uncommitted DESIGN table formatting.
+- **Acceptance / verification.** Blue fill/white text in both web themes and
+  both locales, darker blue hover, existing keyboard focus/disabled behavior.
+  Check generated blog styles and all normal form submits. Run root typecheck,
+  tests, production builds, web lint/E2E and unchanged Lighthouse budgets.
+- **Base.** Fetch failed because github.com could not resolve. The locally
+  recorded origin/main is already the parent of the existing repair commit;
+  continue locally without changing integration history or other queue items.
+- **Result.** Dedicated action tokens keep #2563EB/white consistent in both
+  themes, with #1D4ED8 hover. Update the shared Button, custom dashboard action,
+  keyboard skip control and three previously secondary normal submit actions.
+  All 12 blog submit buttons across 11 files use the matching action palette;
+  their submit logic is unchanged. Normal/hover white-text contrast is
+  5.17:1/6.70:1. The guide, dashboard brief, primary preview and W06 handoff now
+  reflect the owner's explicit replacement of ink-filled actions.
+- **Verification.** Root typecheck, all production builds and 844 unit/component
+  tests pass (44 existing integration skips); web lint has zero errors and two
+  existing warnings. Full E2E: 527 passed, 46 intentional skips. Browser checks
+  verify exact computed fill/label colors in EN/FA and light/dark, keyboard skip
+  navigation, and hover on hover-capable devices. Touch devices retain normal
+  fill. Nine Lighthouse runs pass all unchanged budgets; the existing local
+  Windows Chrome cleanup preload is used without altering audits/assertions.
+  Impeccable reports the same 13 web/2 blog contextual exclusions. Manual web
+  desktop/phone samples and generated blog CSS confirm the new colors.
+- **Limits / delivery.** Editorial live preview remains pending its earlier
+  automatic approval rejection ("blocked by policy"); no blocked launch/cleanup
+  was retried. Blog component tests, build and generated style checks pass.
+  Existing source-only editorial/real-device/provider acceptance stays in the
+  local queue. Preserve the owner's DESIGN table formatting and brand changes
+  outside this commit. No push while GitHub resolution is unavailable.
+
+## 2026-11-03 — UI repairs; editorial rendered acceptance pending
+
+- **Owner scope / shared surfaces.** Execute all 42 audited issue groups using
+  `docs/ui-remediation-plan.md`; preserve the blog's editorial identity and keep
+  its admin explicitly English-only (owner confirmed). Shared surfaces announced
+  before edits: `changelog.md`, `apps/web/lib/i18n/` only if existing copy needs
+  repair, and the previously refreshed `AGENTS.md`. No API/schema/permission
+  change is planned. All other-maintainer queue items remain unclaimed.
+- **Editorial presentation ownership.** The owner explicitly authorized repairs
+  in `apps/blog/app/globals.css`, `tailwind.config.ts`, `app/layout.tsx`,
+  `app/error.tsx`, `app/editions/`, `app/topics/`, `app/resources/`, `app/blog/`,
+  `app/admin/layout.tsx`, `app/admin/login/page.tsx`, `proxy.ts`,
+  `components/EditionCover.tsx`, `CategoryCard.tsx`, `SiteHeader.tsx`,
+  `BlogExplorer.tsx`, `ArticleEngagement.tsx`, `Comments.tsx`, `ReaderAccount.tsx`
+  and admin `ConfirmDialog.tsx`, `AdminLogoutButton.tsx`, `AdminLoginForm.tsx`,
+  `ArticleForm.tsx`, `AdminArticleList.tsx`, `EditionManager.tsx`,
+  `ResourceManager.tsx`, `TaxonomyManager.tsx`, `MediaManager.tsx`,
+  `CommentManager.tsx`, `RevisionHistory.tsx`, plus focused tests/message copy.
+  Reason: contrast, focus/labels, responsive layout, truthful navigation and
+  complete pending/error/empty feedback from the audit.
+- **Additional contrast finding (B23).** Final source review confirmed faint
+  editable boundaries on white blog forms. Extend the authorized control-only
+  repair to `components/ReaderAuthForm.tsx` and `components/Newsletter.tsx`,
+  plus existing public/admin form files named above; add `line.input` in the
+  blog Tailwind palette. Preserve decorative/table/panel borders and focus/error
+  colors. This was an omission from the original 42-group report.
+- **Base / safety.** Fetched and fast-forwarded `ramtin` to current `main`,
+  retaining the other maintainer's simpler editor, release review and inbox-auth
+  changes. Resolved the autostash changelog conflict by preserving both entries;
+  preflight patch remains local. Brand assets remain unstaged and untouched.
+- **Web repairs.** Align sans/600 heading ramps, ink actions, 12px controls,
+  16px panels/field text and semantic statuses. Strengthen field boundaries;
+  remove decorative reveals/lifts/carets/typed prompts. Repair sticky discovery
+  offsets, unique named mobile filters/RTL switch movement, theme hydration,
+  keyboard suggestions, review retries, community errors and locale ratings.
+  Keep the newer simplified editor and per-release review workflow intact.
+- **Editorial repairs.** Preserve warm paper/amber and Manrope/Newsreader/
+  Estedad. Correct code/accent/faint-text contrast, safe edition foregrounds,
+  Persian directions/type, reduced motion, field labels/validation, one main/
+  skip target, current navigation/query context and explicit English admin.
+  Use native modal behavior, wrapped phone actions, pending duplicate guards,
+  error/success feedback, bookmark rollback, copy/share/logout recovery and
+  explained empty collections. B23 adds a control-only border token across 13
+  files/52 sites (3.29–3.71:1); invalid article borders are 4.29–4.83:1.
+- **Rendered web follow-up.** The compact product rail clears the measured
+  header by 16px. Once reporting starts it stays in page flow through collapse/
+  retry, with instant nearest scrolling on open; this fixes a reproducible
+  click-instability loop. Existing review translations now pass from the server
+  for only the current locale; initial product JS is 164.4kB gz in EN/FA against
+  the unchanged 165kB gate. No dependency, schema or permission change.
+- **Automated verification.** Root typecheck, all production builds and tests
+  pass: API 304, blog 34, web 506 (844 total; 44 existing integration skips).
+  Full web E2E: 527 passed, 46 intentional skips. Web lint: zero errors, two
+  existing warnings. Root builds were repeated after final code; the last blog
+  field-tone adjustment also passed its tests/production build. Regenerated the
+  Prisma client for integrated-main types; no database migration was run.
+- **Lighthouse.** Nine runs, all original gates pass. Representative home/
+  dashboard/product performance: 96/94/96, accessibility: 100/100/100;
+  LCP 2730/2994/2816ms, TBT 14/22/18ms, CLS 0.0002/0.0154/0.
+  Windows Chrome-launcher cleanup raised EPERM after completed audits. A local
+  ignored preload defers only EPERM removal of named task Lighthouse temporary
+  directories; audit failures, settings, reports and assertions are unchanged.
+  Temporary files were redirected to D:. Chrome profiles are gone; automatic
+  approval review also rejected final cleanup (only "blocked by policy"). A
+  task-local Node compile cache remains on D: and the disposable fixture API
+  still listens on 127.0.0.1:4100 pending the preview decision. No global config
+  or installed dependency was modified for the workaround.
+- **Design review / evidence.** Independent Impeccable A/B reviews plus focused
+  follow-ups resolved article-edit active state, RTL arrows and B23 boundaries.
+  Detector: 13 web + 2 blog contextual exclusions (fonts/OG/showroom/limited
+  feedback easing/prose borders); the historical audit count remains 14.
+  Current source dispositions for W01–W20, B01–B23 and R01 are in
+  `docs/ui-remediation-plan.md`. Local reports/screenshots/logs are under
+  `docs/artifacts/ui-fixes-2026-11-03/`. Chrome samples covered web EN/FA,
+  light/dark and 320/768/1280px; checked switch containment, stable disclosure,
+  keyboard suggestions, typography and no overflow in those samples. Production
+  blog CSS contains the intended normal/error field tokens.
+- **Remaining acceptance / delivery.** Native editorial modal focus lifecycle
+  and authenticated phone/ready-state rendering await the owner's pending
+  fixture question. Automatic approval review rejected starting blog on
+  127.0.0.1:3001 against the disposable fixture API (4100), with only "blocked
+  by policy"; no alternate launch bypass was attempted. Code is retained in
+  local reviewable commits; push waits for rendered acceptance or an explicit
+  source/tests-only decision. Physical phones, real providers and native Persian
+  copy review remain owner acceptance, recorded in the ignored local queue.
+  Other-maintainer pending items and pre-existing brand edits are untouched.
+  No real account/content mutation occurred; harness usage counters unavailable.
+
+## 2026-11-03 — Refresh the shared design contract
+
+- **Scope / shared surfaces.** Owner-requested documentation refresh updates
+  `apps/web/DESIGN.md`, its `.impeccable/design.json` companion and dashboard
+  surface brief. Shared surfaces: `AGENTS.md` (retired identity reference only)
+  and `changelog.md`. No application code, queue items or existing brand assets
+  were changed.
+- **Contract.** Preserve Paper & Signal and the existing palette/components;
+  document spacing, heading hierarchy, control sizes, semantic colors, contrast,
+  focus, modal/combobox behavior, state feedback, responsive layout and Persian
+  treatment. Distinguish observed implementation gaps from intended rules;
+  the audit's 42 issue groups remain open. Correct the false claim that an
+  unlayered `:where()` fallback always loses to explicit utility classes.
+- **Owner decision.** The blog keeps its warm paper/amber palette and
+  Manrope/Newsreader editorial typography, with Estedad for Persian. It shares
+  accessibility and interaction rules with the marketplace; no blog redesign
+  or dark-mode implementation was authorized by this documentation decision.
+- **Agent alignment.** Replace retired Datasheet guidance in the dashboard
+  brief and AGENTS reference. Refresh stale purple/square Impeccable metadata
+  to the existing navy/paper palette and nine shared primitive previews.
+- **Verification.** YAML/JSON parsing, existing color/spacing/radius/shadow
+  checks against CSS, metadata and narrative consistency, canonical heading
+  order, relative links and scoped diff whitespace checks. Application builds,
+  tests and rendered checks were not repeated for documentation-only edits;
+  no implementation fix or browser acceptance is claimed. No commit or push.
+
+## 2026-11-03 — UI consistency and accessibility audit (report only)
+
+- **Scope / shared-surface notice.** Owner-requested audit of web and editorial
+  presentation; `changelog.md` is the only tracked file edited. No application
+  fixes or other-maintainer queue items were taken. Existing uncommitted icon
+  and brand assets were preserved.
+- **Findings.** Inventoried 52 page routes and 177 UI TSX files. Two independent
+  Impeccable assessments plus browser/source verification produced 42 grouped
+  findings: nine major, 32 usability/consistency issues and one polish item.
+  The local report is `docs/artifacts/ui-audit-2026-11-03/report.md`; adjacent
+  files contain independent assessments, screenshots, DOM/geometry observations
+  and detector evidence. One unconfirmed product-rail offset risk is separate.
+- **Root causes.** The current Paper & Signal design conflicts with retired
+  Datasheet guidance and several regression assertions. Raw route-specific
+  controls, unsafe color roles and inconsistent interaction/state semantics
+  account for much of the remaining drift. The blog's intentional editorial
+  fonts/palette and absence of a dark-theme provider were not blanket defects.
+- **Verification / limits.** Source scans and current-source fallback for graph
+  freshness gaps; Chrome checks across EN/FA, light/dark and phone/tablet/desktop
+  samples, including fixture-only sign-in, keyboard focus, RTL switch geometry,
+  mobile labels and sticky-toolbar hit tests. All 14 detector flags were reviewed
+  and excluded as intentional or false positives. Successful blog content/admin
+  and some editor/moderation states lack runnable fixtures; physical devices,
+  screen-reader applications and real providers remain unverified. No new build,
+  typecheck, unit/E2E suite or Lighthouse run was needed for this report-only
+  phase. No commit or push; implementation and its gates follow report review.
+
 ## 2026-11-04 — Termbuddy live chat (self-hosted Chatwoot)
 
 - **Scope / ownership notice.** Shared surfaces: `apps/web/app/layout.tsx`,

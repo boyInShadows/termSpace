@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export default async function CommunitiesPage() {
   const [locale, communities] = await Promise.all([
     getLocale(),
-    getMarketplaceCommunities().catch((error) => { console.error("Community directory load failed", error); return []; }),
+    getMarketplaceCommunities(),
   ]);
   const fa = locale === "fa";
   return <>

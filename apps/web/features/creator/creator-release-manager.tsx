@@ -97,7 +97,7 @@ function ReleaseCard({ release, copy, date, number, busy, onCheck, editHref }: {
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-xl font-semibold" dir="ltr">v{release.version}</h3>
-        <span className={cn("rounded-chip px-2.5 py-1 text-xs font-semibold", release.status === "published" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-muted text-muted-foreground")}>{status}</span>
+        <span className={cn("rounded-chip px-2.5 py-1 text-xs font-semibold", release.status === "published" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>{status}</span>
         {release.isCurrent && <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary"><CheckCircle2 className="size-4" aria-hidden="true" />{copy.current}</span>}
       </div>
       <span className="text-sm text-muted-foreground">{copy.acquisitions}: {number.format(release.acquisitionCount)}</span>
@@ -109,7 +109,7 @@ function ReleaseCard({ release, copy, date, number, busy, onCheck, editHref }: {
       <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{copy.created}</dt><dd className="mt-1">{date.format(new Date(release.createdAt))}</dd></div>
       <div><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{copy.publishedOn}</dt><dd className="mt-1">{release.publishedAt ? date.format(new Date(release.publishedAt)) : "—"}</dd></div>
     </dl>
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className={cn("text-xs font-semibold", release.sourceCheckStatus === "verified" ? "text-emerald-700 dark:text-emerald-300" : release.sourceCheckStatus === "restricted" || release.sourceCheckStatus === "failed" ? "text-destructive" : "text-amber-800 dark:text-amber-300")}>{copy.checkStatus}: {copy[`check_${release.sourceCheckStatus}`]}</p>{release.status === "proposed" && release.source.kind !== "external_link" && <Button size="sm" variant="secondary" disabled={busy} onClick={() => void onCheck()}><RotateCcw className="size-4" aria-hidden="true" />{copy.verifySource}</Button>}</div>
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className={cn("text-xs font-semibold", release.sourceCheckStatus === "verified" ? "text-emerald-700 dark:text-emerald-300" : release.sourceCheckStatus === "restricted" || release.sourceCheckStatus === "failed" ? "text-destructive" : "text-warning")}>{copy.checkStatus}: {copy[`check_${release.sourceCheckStatus}`]}</p>{release.status === "proposed" && release.source.kind !== "external_link" && <Button size="sm" variant="secondary" disabled={busy} onClick={() => void onCheck()}><RotateCcw className="size-4" aria-hidden="true" />{copy.verifySource}</Button>}</div>
     {release.lastSourceErrorCode && <div className="mt-3 space-y-2 text-sm" role="alert">
       <p>{sourceErrorHelp(release.lastSourceErrorCode, copy)}</p>
       <Link className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={editHref}>{copy.prepare}</Link>

@@ -102,7 +102,10 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
     e.preventDefault();
     const next = validate();
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    if (Object.keys(next).length > 0) {
+      document.getElementById(Object.keys(next)[0])?.focus();
+      return;
+    }
 
     setSaving(true);
     setSubmitError("");
@@ -140,7 +143,7 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
   }
 
   const inputClass = (field: string) =>
-    `w-full rounded-lg border ${errors[field] ? "border-red-400" : "border-line"} bg-paper-card px-4 py-2.5 text-ink placeholder:text-ink-faint focus:border-accent`;
+    `w-full rounded-lg border ${errors[field] ? "border-red-600" : "border-line-input"} bg-paper-card px-4 py-2.5 text-ink placeholder:text-ink-faint focus:border-accent`;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
@@ -161,8 +164,9 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
             onChange={(e) => setTitle(e.target.value)}
             className={inputClass("title")}
             aria-invalid={Boolean(errors.title)}
+            aria-describedby={errors.title ? "title-error" : undefined}
           />
-          {errors.title && <p className="mt-1 text-sm text-red-700">{errors.title}</p>}
+          {errors.title && <p id="title-error" className="mt-1 text-sm text-red-700">{errors.title}</p>}
         </div>
 
         <div>
@@ -176,6 +180,7 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
               onChange={(e) => setSlug(e.target.value)}
               className={inputClass("slug")}
               aria-invalid={Boolean(errors.slug)}
+            aria-describedby={errors.slug ? "slug-error" : undefined}
             />
             <button
               type="button"
@@ -185,7 +190,7 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
               Auto
             </button>
           </div>
-          {errors.slug && <p className="mt-1 text-sm text-red-700">{errors.slug}</p>}
+          {errors.slug && <p id="slug-error" className="mt-1 text-sm text-red-700">{errors.slug}</p>}
         </div>
       </div>
 
@@ -214,8 +219,9 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
             rows={16}
             className={`${inputClass("content")} font-mono text-sm`}
             aria-invalid={Boolean(errors.content)}
+            aria-describedby={errors.content ? "content-error" : undefined}
           />
-          {errors.content && <p className="mt-1 text-sm text-red-700">{errors.content}</p>}
+          {errors.content && <p id="content-error" className="mt-1 text-sm text-red-700">{errors.content}</p>}
           <p className="mt-1 text-xs text-ink-faint">
             Supports headings, lists, blockquotes, inline code, and fenced code blocks.
           </p>
@@ -242,10 +248,11 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
           placeholder="https://…"
           className={inputClass("heroImage")}
           aria-invalid={Boolean(errors.heroImage)}
+            aria-describedby={errors.heroImage ? "heroImage-error" : undefined}
         />
-        {errors.heroImage && <p className="mt-1 text-sm text-red-700">{errors.heroImage}</p>}
+        {errors.heroImage && <p id="heroImage-error" className="mt-1 text-sm text-red-700">{errors.heroImage}</p>}
         {media.length > 0 && (
-          <select className={`${inputClass("heroImage")} mt-2`} value="" onChange={(event) => setHeroImage(event.target.value)}>
+          <select aria-label="Choose a media image" className={`${inputClass("heroImage")} mt-2`} value="" onChange={(event) => setHeroImage(event.target.value)}>
             <option value="">Choose from media library…</option>
             {media.map((asset) => <option key={asset.id} value={asset.url}>{asset.altText}</option>)}
           </select>
@@ -263,13 +270,14 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
             onChange={(e) => setAuthorId(e.target.value)}
             className={inputClass("authorId")}
             aria-invalid={Boolean(errors.authorId)}
+            aria-describedby={errors.authorId ? "authorId-error" : undefined}
           >
             <option value="">Select an author…</option>
             {authors.map((a) => (
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </select>
-          {errors.authorId && <p className="mt-1 text-sm text-red-700">{errors.authorId}</p>}
+          {errors.authorId && <p id="authorId-error" className="mt-1 text-sm text-red-700">{errors.authorId}</p>}
         </div>
 
         <div>
@@ -282,13 +290,14 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
             onChange={(e) => setCategoryId(e.target.value)}
             className={inputClass("categoryId")}
             aria-invalid={Boolean(errors.categoryId)}
+            aria-describedby={errors.categoryId ? "categoryId-error" : undefined}
           >
             <option value="">Select a category…</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
-          {errors.categoryId && <p className="mt-1 text-sm text-red-700">{errors.categoryId}</p>}
+          {errors.categoryId && <p id="categoryId-error" className="mt-1 text-sm text-red-700">{errors.categoryId}</p>}
         </div>
       </div>
 
@@ -327,16 +336,16 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
           type="checkbox"
           checked={published}
           onChange={(e) => setPublished(e.target.checked)}
-          className="h-4 w-4 rounded border-line accent-accent"
+          className="h-4 w-4 rounded border-line-input accent-accent"
         />
         Publish this article
       </label>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="submit"
           disabled={saving}
-          className="rounded-lg bg-accent px-6 py-3 font-medium text-paper hover:bg-accent-soft disabled:opacity-50"
+          className="rounded-lg bg-action px-6 py-3 font-medium text-action-foreground hover:bg-action-hover disabled:opacity-50"
         >
           {saving ? "Saving…" : isEdit ? "Save changes" : "Create article"}
         </button>

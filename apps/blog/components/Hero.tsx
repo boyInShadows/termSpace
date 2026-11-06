@@ -40,7 +40,7 @@ export async function Hero() {
             {t("read")}
           </Link>
           <Link
-            href={localePath("/blog/category/artificial-intelligence", locale)}
+            href={localePath("/topics", locale)}
             className="rounded-lg border border-line bg-paper-card px-6 py-3 font-medium text-ink-soft transition-colors hover:border-accent hover:text-accent"
           >
             {t("explore")}

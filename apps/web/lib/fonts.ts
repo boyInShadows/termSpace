@@ -18,7 +18,8 @@ const ESTEDAD = `${FONT_DIR}/estedad-arabic-wght-v5.3.0.woff2`;
 
 /**
  * English uses Geist above the fold. Persian uses Estedad and keeps Geist
- * for Latin text. Below-fold serif headings load Newsreader through CSS.
+ * for Latin text. Marketplace headings share these sans faces; Open Graph
+ * rendering loads its own display face.
  */
 export function preloadedFonts(locale: string): readonly string[] {
   return locale === "fa" ? [ESTEDAD, GEIST] : [GEIST];

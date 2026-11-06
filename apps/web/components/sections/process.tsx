@@ -217,7 +217,7 @@ function StepPanel({ step, index }: { step: Step; index: number }) {
     <div className="panel overflow-hidden rounded-2xl shadow-panel">
       <div className="flex items-center gap-2.5 border-b border-border/80 bg-surface-raised/60 px-4 py-3">
         <PanelIcon size={14} className="text-primary" />
-        <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        <span className="text-xs font-semibold text-muted-foreground">
           {step.id}
         </span>
         <span className="ms-auto flex gap-1">
@@ -256,7 +256,6 @@ function StepPanel({ step, index }: { step: Step; index: number }) {
             </span>
           </div>
         ))}
-        <span className="mt-2 inline-block h-4 w-2 animate-pulse bg-accent align-middle" />
       </div>
     </div>
   );

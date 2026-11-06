@@ -233,7 +233,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
               <label className="text-sm font-semibold">{m.decisionLabel}<select name="action" className="mt-2 min-h-11 w-full border border-input bg-background px-3 text-sm">{options.map((value) => <option key={value} value={value}>{(m.placementActions as Labels)[value]}</option>)}</select></label>
               <label className="text-sm font-semibold">{m.publicReason}<textarea name="publicReason" className="mt-2 min-h-20 w-full border border-input bg-background p-3 text-sm" /></label>
               <label className="text-sm font-semibold">{m.internalNote}<textarea name="internalNote" className="mt-2 min-h-20 w-full border border-input bg-background p-3 text-sm" /></label>
-              <Button type="submit" variant="secondary" disabled={placementSubmitting === community.slug}>{placementSubmitting === community.slug ? m.submitting : m.saveCommunityDecision}</Button>
+              <Button type="submit" disabled={placementSubmitting === community.slug}>{placementSubmitting === community.slug ? m.submitting : m.saveCommunityDecision}</Button>
             </form>}
           </article>;
         })}</div> : <p className="text-sm text-muted-foreground">{m.noValue}</p>}</Panel>
@@ -278,7 +278,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
               <label className="block text-sm font-semibold">{m.internalNote}<span className="mt-1 block text-xs font-normal text-muted-foreground">{m.internalNoteHint}</span><textarea className="mt-2 min-h-28 w-full border border-input bg-background p-3 text-sm" name="internalNote" maxLength={4000} /></label>
             </fieldset>
             {actionBlocked && <p className="text-xs text-muted-foreground" role="note">{m.publishBlocked}</p>}
-            <Button className="w-full" variant={selected && DESTRUCTIVE.has(selected) ? "destructive" : "primary"} disabled={!selected || pending !== null || submitting || stale || preview.selfOwned || actionBlocked}>{selected ? (m.actionButton as Labels)[selected] : m.chooseFirst}</Button>
+            <Button className="w-full" disabled={!selected || pending !== null || submitting || stale || preview.selfOwned || actionBlocked}>{selected ? (m.actionButton as Labels)[selected] : m.chooseFirst}</Button>
           </form> : <p className="text-sm text-muted-foreground">{m.noActions}</p>}
 
           {pending && <div ref={confirmBox} tabIndex={-1} role="group" aria-labelledby="confirm-title" className="mt-4 border-2 border-foreground p-4 outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -300,7 +300,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
           <form className="mt-6 border-t border-border pt-5" onSubmit={submitNote}>
             <h3 className="text-sm font-semibold">{m.standaloneNote}</h3>
             <label className="mt-3 block text-sm font-semibold">{m.standaloneNoteLabel}<span className="mt-1 block text-xs font-normal text-muted-foreground">{m.internalNoteHint}</span><textarea className="mt-2 min-h-24 w-full border border-input bg-background p-3 text-sm" name="note" required minLength={2} maxLength={4000} /></label>
-            <Button className="mt-3 w-full" variant="secondary" disabled={addingNote || stale || preview.selfOwned}>{addingNote ? m.addingNote : m.addNote}</Button>
+            <Button className="mt-3 w-full" disabled={addingNote || stale || preview.selfOwned}>{addingNote ? m.addingNote : m.addNote}</Button>
           </form>
         </Panel>
       </aside>

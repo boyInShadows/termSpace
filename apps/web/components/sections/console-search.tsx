@@ -1,13 +1,14 @@
 "use client";
 
-import { Suspense, use, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Suspense, use, useId, useMemo, useState } from "react";
 import { Search, CornerDownLeft, Clock3, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
-import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
+import { buttonVariants } from "@/components/ui/button";
 import { useStoredString } from "@/lib/hooks/use-stored-string";
 import { formatNumber } from "@/lib/format";
 import type { MarketplaceTypeCount } from "@/lib/types";
+import { localePath } from "@/lib/i18n";
 
 /** The `type` values the shortcut chips filter on; labels come from i18n. */
 const SHORTCUTS = ["skill", "agent", "mcp_server", "prompt", "rule"] as const;
@@ -40,13 +41,7 @@ function parseRecent(raw: string | null): string[] {
  * The search bar, treated as the product's command line rather than as a
  * form field.
  *
- * The placeholder types itself through real user intents on a loop. That is
- * the hook: it teaches you to search by outcome instead of by file format,
- * which is the whole premise of the catalogue, without a line of instruction
- * copy. It stops the moment you focus the field, so it never types over
- * someone who is trying to think — and it is purely decorative to assistive
- * tech, which reads the field's stable `aria-label` instead of a placeholder
- * that rewrites itself every 40ms.
+ * A stable prompt stays readable; example intents appear as suggestions.
  *
  * Two placements. `hero` sits in the hero's copy column as the page's primary
  * action — this is a library, so search is the thing most people came to do,
@@ -72,55 +67,16 @@ export function ConsoleSearch({
    */
   types?: MarketplaceTypeCount[] | Promise<MarketplaceTypeCount[]>;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const intents = t.homePage.typedIntents;
-  const [typed, setTyped] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [scope, setScope] = useState<string | null>(null);
   const [storedRecent, setStoredRecent] = useStoredString(RECENT_KEY);
   const recent = useMemo(() => parseRecent(storedRecent), [storedRecent]);
   const [query, setQuery] = useState("");
-  const prefersReducedMotion = useReducedMotion();
-  const timerRef = useRef<number>(0);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [dismissed, setDismissed] = useState(false);
   const suggestionsId = useId();
-
-  useEffect(() => {
-    if (prefersReducedMotion || isFocused) return;
-
-    let phrase = 0;
-    let char = 0;
-    let isDeleting = false;
-
-    const tick = () => {
-      const current = intents[phrase];
-      char += isDeleting ? -1 : 1;
-      setTyped(current.slice(0, char));
-
-      let delay = isDeleting ? 22 : 42;
-
-      if (!isDeleting && char === current.length) {
-        // Hold the finished phrase long enough to actually be read.
-        delay = 2000;
-        isDeleting = true;
-      } else if (isDeleting && char === 0) {
-        isDeleting = false;
-        phrase = (phrase + 1) % intents.length;
-        delay = 320;
-      }
-
-      timerRef.current = window.setTimeout(tick, delay);
-    };
-
-    timerRef.current = window.setTimeout(tick, 700);
-    return () => window.clearTimeout(timerRef.current);
-  }, [prefersReducedMotion, isFocused, intents]);
-
-  // Derived, not synced: while focused or under reduced motion we simply
-  // render the resting prompt instead of writing it into state.
-  const placeholder =
-    prefersReducedMotion || isFocused || typed === null
-      ? t.homePage.searchPrompt
-      : typed;
 
   const isHero = variant === "hero";
 
@@ -138,12 +94,12 @@ export function ConsoleSearch({
   }
 
   const suggestions = recent.length > 0 ? recent : [...intents].slice(0, 4);
-  const isSuggesting = isFocused && query.trim().length === 0;
+  const isSuggesting = isFocused && !dismissed && query.trim().length === 0;
 
   return (
     <div className={isHero ? undefined : "container-page"}>
       <form
-        action="/explore"
+        action={localePath("/explore", locale)}
         onSubmit={() => remember(query)}
         className={cn("group relative", isHero ? "w-full" : "mx-auto max-w-3xl")}
       >
@@ -180,18 +136,31 @@ export function ConsoleSearch({
           <input
             name="q"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            // A stable name for the field. The placeholder rewrites itself
-            // every 40ms, and a screen reader with no explicit label would
-            // fall back to it and re-announce a half-typed sentence on every
-            // keystroke.
+            onChange={(event) => { setQuery(event.target.value); setActiveIndex(-1); setDismissed(false); }}
             aria-label={t.homePage.searchLabel}
-            placeholder={placeholder}
+            placeholder={t.homePage.searchPrompt}
             autoComplete="off"
             role="combobox"
             aria-expanded={isSuggesting}
             aria-controls={suggestionsId}
-            onFocus={() => setIsFocused(true)}
+            aria-activedescendant={isSuggesting && activeIndex >= 0 ? `${suggestionsId}-${activeIndex}` : undefined}
+            onFocus={() => { setIsFocused(true); setDismissed(false); }}
+            onKeyDown={(event) => {
+              if ((event.key === "ArrowDown" || event.key === "ArrowUp") && !query.trim()) {
+                event.preventDefault();
+                setDismissed(false);
+                setActiveIndex((index) => event.key === "ArrowDown" ? (index + 1) % suggestions.length : (index < 0 ? suggestions.length - 1 : (index - 1 + suggestions.length) % suggestions.length));
+              } else if (event.key === "Escape" && isSuggesting) {
+                event.preventDefault();
+                setDismissed(true);
+                setActiveIndex(-1);
+              } else if (event.key === "Enter" && isSuggesting && activeIndex >= 0) {
+                event.preventDefault();
+                setQuery(suggestions[activeIndex]);
+                setDismissed(true);
+                setActiveIndex(-1);
+              }
+            }}
             // Blur is deferred so a click on a suggestion lands before the
             // list unmounts.
             onBlur={() => window.setTimeout(() => setIsFocused(false), 120)}
@@ -204,7 +173,7 @@ export function ConsoleSearch({
             <button
               type="submit"
               aria-label={t.homePage.searchCta}
-              className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition hover:bg-primary-hover"
+              className={cn(buttonVariants({ size: "icon" }), "shrink-0 rounded-full")}
             >
               <CornerDownLeft size={16} aria-hidden />
             </button>
@@ -212,7 +181,7 @@ export function ConsoleSearch({
             <>
               <button
                 type="submit"
-                className="me-2 hidden h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover sm:flex"
+                className={cn(buttonVariants(), "me-2 hidden sm:inline-flex")}
               >
                 {t.homePage.searchCta}
                 <CornerDownLeft size={14} aria-hidden />
@@ -220,7 +189,7 @@ export function ConsoleSearch({
               <button
                 type="submit"
                 aria-label={t.homePage.searchCta}
-                className="me-2 grid size-11 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground transition hover:bg-primary-hover sm:hidden"
+                className={cn(buttonVariants({ size: "icon" }), "me-2 shrink-0 sm:hidden")}
               >
                 <Search size={17} aria-hidden />
               </button>
@@ -239,18 +208,19 @@ export function ConsoleSearch({
             }
             className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-card border border-border bg-surface shadow-panel"
           >
-            <li className="eyebrow px-4 pb-1 pt-3">
+            <li role="presentation" className="eyebrow px-4 pb-1 pt-3">
               {recent.length > 0
                 ? t.homePage.recentSearches
                 : t.homePage.popularSearches}
             </li>
-            {suggestions.map((suggestion) => (
-              <li key={suggestion} role="option" aria-selected={false}>
+            {suggestions.map((suggestion, index) => (
+              <li key={suggestion} id={`${suggestionsId}-${index}`} role="option" aria-selected={activeIndex === index}>
                 <button
                   type="button"
+                  tabIndex={-1}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => setQuery(suggestion)}
-                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-start text-sm transition-colors hover:bg-muted"
+                  className={cn("flex w-full items-center gap-2.5 px-4 py-2.5 text-start text-sm transition-colors hover:bg-muted", activeIndex === index && "bg-muted")}
                 >
                   {recent.length > 0 ? (
                     <Clock3 size={14} className="shrink-0 text-muted-foreground" aria-hidden />
@@ -343,8 +313,8 @@ function ScopeChips({
               // Sans, not mono: these are filters, and in monospace they read
               // as code tokens rather than as things you can press.
               plain
-                ? "inline-flex min-h-8 items-center gap-1 px-1.5 underline underline-offset-4 transition-colors"
-                : "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3.5 text-xs font-medium transition",
+                ? "inline-flex min-h-11 items-center sm:min-h-8 gap-1 px-1.5 underline underline-offset-4 transition-colors"
+                : "inline-flex min-h-11 items-center sm:min-h-8 gap-1.5 rounded-full border px-3.5 text-xs font-medium transition",
               plain
                 ? isActive
                   ? "font-semibold text-foreground decoration-foreground"

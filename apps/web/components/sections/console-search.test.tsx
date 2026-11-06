@@ -1,7 +1,7 @@
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { renderWithLocale as render } from "@/lib/test-render";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConsoleSearch } from "./console-search";
 
 function scopeInput(container: HTMLElement) {
@@ -20,6 +20,20 @@ describe("ConsoleSearch", () => {
         name: "Search community resources by outcome",
       }),
     ).toBeInTheDocument();
+  });
+
+  it("keeps its search prompt readable instead of typing and erasing it", async () => {
+    vi.useFakeTimers();
+    globalThis.prefersReducedMotion = false;
+    try {
+      render(<ConsoleSearch />);
+      const field = screen.getByRole("combobox");
+      const prompt = field.getAttribute("placeholder");
+      await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+      expect(field).toHaveAttribute("placeholder", prompt);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("scopes the search to a type instead of navigating away", async () => {
@@ -90,6 +104,23 @@ describe("ConsoleSearch", () => {
       await screen.findByRole("listbox", { name: "Recent searches" }),
     ).toBeInTheDocument();
     expect(screen.getByText("audit a migration")).toBeInTheDocument();
+  });
+
+  it("navigates, selects and dismisses suggestions with the keyboard", async () => {
+    const user = userEvent.setup();
+    render(<ConsoleSearch />);
+    const field = screen.getByRole("combobox");
+    await user.click(field);
+    await user.keyboard("{ArrowDown}");
+    const selected = screen.getByRole("option", { selected: true });
+    expect(field).toHaveAttribute("aria-activedescendant", selected.id);
+    await user.keyboard("{Enter}");
+    expect(field).toHaveValue("review my pull request like a staff engineer");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    await user.clear(field);
+    await user.keyboard("{ArrowDown}{Escape}");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(field).toHaveFocus();
   });
 
   it("survives localStorage holding something that is not a list", async () => {

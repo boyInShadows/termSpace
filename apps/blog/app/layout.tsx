@@ -63,10 +63,11 @@ export default async function RootLayout({
   const messages = await getMessages();
   return (
     <html lang={locale} dir={locale === "fa" ? "rtl" : "ltr"}>
-      <body className="min-h-screen bg-paper text-ink antialiased">
+      <body className="flex min-h-screen flex-col bg-paper text-ink antialiased">
         <NextIntlClientProvider messages={messages}>
+          <a href="#content" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-paper-card focus:px-4 focus:py-3 focus:text-ink">{locale === "fa" ? "رفتن به محتوا" : "Skip to content"}</a>
           <SiteHeader />
-          <main className="flex-1">{children}</main>
+          <main id="content" tabIndex={-1} className="flex-1">{children}</main>
           <SiteFooter />
         </NextIntlClientProvider>
       </body>
