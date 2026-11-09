@@ -25,7 +25,14 @@ Project changes completed from `pending.md` should be recorded here with the dat
   lint and build clean; e2e 515 passed. Remaining e2e failures are the pre-existing
   budget and reporting ones, a shared-navigation timeout and a creator-profiles
   canonical-link race that both pass alone. Visually checked at desktop and 375px,
-  dark theme only. Not deployed. Usage metrics unavailable.
+  dark theme only. Usage metrics unavailable.
+- **Deployment (2026-11-09).** `254dbd4` on the VPS after a gzip-verified dump
+  (`/opt/backups/termspace-pre-cmds-20261109-131501.sql.gz`); `api` and `web` rebuilt,
+  `202611090003` applied through the `migrate` service, all services healthy, site
+  routes 200. The owner had meanwhile published all 34 listings, so the 24 seeded
+  command sets are **not applied yet**: a published release is immutable and the API
+  refuses edits under the same version label (`VERSION_ALREADY_PUBLISHED`). The live
+  installation endpoint was not exercised (it needs a reader who added a release).
 
 ## 2026-11-09 — Remove the permissions row from listing cards
 
