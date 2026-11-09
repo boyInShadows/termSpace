@@ -74,7 +74,7 @@ export function AccountForm() {
   return <div className="mx-auto max-w-md rounded-xl border bg-surface p-7">
     <h1 className="editorial text-4xl">{mode === "login" ? t.signIn : mode === "register" ? t.createAccount : t.forgotPassword}</h1>
     <p className="mt-2 text-sm text-muted-foreground">{mode === "forgot" ? t.forgotPasswordIntro : t.accountIntro}</p>
-    {(mode === "login" || mode === "register") && <GoogleSignIn key={mode} text={mode === "register" ? "signup_with" : "signin_with"} locale={locale} disabled={submitting} onCredential={signInWithGoogle} onUnavailable={() => setError(t.serviceError)} />}
+    {(mode === "login" || mode === "register") && <GoogleSignIn locale={locale} label={t.googleCta} disabled={submitting} onCredential={signInWithGoogle} onUnavailable={() => setError(t.serviceError)} />}
     <form className="mt-7 space-y-4" onSubmit={submit}>
       <label className="block text-sm font-medium">{t.email}<Input name="email" type="email" required autoComplete="email" className="mt-2" /></label>
       {(mode === "login" || mode === "register") && <label className="block text-sm font-medium">{t.password}<Input name="password" type="password" minLength={8} maxLength={128} required autoComplete={mode === "login" ? "current-password" : "new-password"} className="mt-2" /></label>}

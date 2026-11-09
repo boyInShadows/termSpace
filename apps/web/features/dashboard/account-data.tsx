@@ -110,7 +110,7 @@ export function AccountData({ profile: state }: { profile: ProfileState }) {
               : <>
                 <p className="text-sm text-muted-foreground">{copy.googleConfirm}</p>
                 {confirmed && (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-                  ? <GoogleSignIn locale={locale} disabled={deleting} onCredential={(credential) => remove({ credential })} onUnavailable={() => setDeleteError(copy.googleUnavailable)} />
+                  ? <GoogleSignIn locale={locale} label={t.googleCta} disabled={deleting} onCredential={(credential) => remove({ credential })} onUnavailable={() => setDeleteError(copy.googleUnavailable)} />
                   : <p role="alert" className="text-sm text-destructive">{copy.googleUnavailable}</p>)}
               </>}
           </fieldset>

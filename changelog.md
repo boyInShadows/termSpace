@@ -2,6 +2,207 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — TermBuddy mascot and optional creator avatar
+
+- **Scope / shared surfaces (announce in commit body).** New migration `202611090004_marketplace_creator_avatar`,
+  `apps/api/prisma/schema.prisma`, `lib/types.ts`, `lib/api.ts`, `lib/i18n/creator.ts`, `changelog.md`.
+- **Mascot.** `public/brand/termbuddy.svg` (+ 512/1024 PNG): a terminal-window face (prompt chevron and cursor-block
+  eyes, antenna caret) on the signal-blue tile, built from the brand's rounded blocks. Checked at 32 px and circle-cropped.
+- **Creator avatar.** `MarketplaceCreator.avatarUrl`, optional, GitHub image hosts only (same hosts as listing icons,
+  enforced by zod and a DB CHECK). `PATCH /creator/profile` accepts it (omit = unchanged, `null` = remove); public creator
+  payloads include it; account deletion clears it. `Avatar` lays the image over the initials, so a failed load
+  leaves the initials and nothing shifts. Settings form gains a URL field (EN/FA).
+- **Chat.** `deploy/chatwoot/set-avatar.rb` attaches the picture to the Termbuddy agent bot and both website inboxes.
+  Separate from `bootstrap.rb` so a re-run never resets the admin password.
+- **Deployed 2026-11-09.** Backup `/opt/backups/pre-avatar-20261109-135334.sql.gz`, migration `202611090004` applied,
+  api/web rebuilt; `termbuddy` creator row set to the commit-pinned raw GitHub URL; `set-avatar.rb` attached the picture to
+  the Termbuddy bot and both inboxes. Checked live: creator page, listing cards and the chat widget header show the mascot.
+- **Verified.** typecheck, API tests (310), lint (0 errors), production build; web tests pass except
+  `creator-draft-editor-ui` "browser storage fails", which spies on `Storage.prototype` and does not exercise this
+  change (Node 26 localStorage quirk). e2e/lhci not run: no markup changes unless an avatar URL is set.
+
+## 2026-11-09 — Second TermBuddy batch: 13 developer tools and skills
+
+- **Scope.** `scripts/seed-termbuddy/listings.json` and `preview.md` only; no app code, no shared surfaces.
+- **Listings (all third-party, link-only, submitted as TermBuddy, awaiting Approve + Publish):**
+  impeccable, mattpocock-skills, ponytail, ui-ux-pro-max, caveman, marketingskills,
+  scientific-agent-skills, planning-with-files, openspec, openai-codex, cline, claude-mem, awesome-copilot.
+- **Honesty.** Descriptions state caveats from upstream READMEs (claude-mem sign-in/analytics/cloud sync,
+  caveman installer behaviour, marketingskills optional account connections). Repos without tagged
+  releases use a `snapshot-2026-11-09` version label.
+- **Not included.** Gemini CLI (README says enterprise-only now) and Trail of Bits skills (CC-BY-SA) pending owner decision.
+- **Verified.** `validate.ts`: 47 manifests valid; every `installation.commands` entry is an exact substring of the
+  project's README; pilot submit then batch: 13 new listings in state SUBMITTED, 0 failures.
+
+## 2026-11-09 — Per-OS install commands in the installation dialog
+
+- **Scope / shared surfaces (announce in commit body).** New migration
+  `202611090003_marketplace_install_commands`, `apps/api/prisma/schema.prisma`,
+  `lib/types.ts`, `changelog.md`, `pending.md`. Manifest v1 gains an optional
+  `release.installation.commands` (not a version bump: optional, strict, absent
+  means none). Web: install dialog, creator editor field, moderation preview.
+- **Dialog.** Each command is a read-only mono field with a Copy button
+  (`CopyBlock`, now with a `wrap` option), grouped by macOS/Linux/Windows/Any with
+  the reader's own system pre-selected. The dialog also moved off hardcoded amber
+  and the inverted foreground block onto the design tokens (`rounded-card`,
+  `warning` role, a plain copy field for the source link) and shows readable
+  source-status labels instead of the raw enum.
+- **Seed.** 37 commands on 24 listings, each checked as an exact substring of the
+  project's own README before use; unverifiable ones were dropped (Figma, GitHub MCP,
+  `claude-plugins-official` placeholder). Applying them needs the API deployed
+  first (production's manifest schema is still strict).
+- **Verification.** Migration applied to a scratch database through the full chain,
+  no Prisma drift, trigger covers the new column. API 309 passed; web 515 passed
+  with the Node 26 localstorage flag, 1 known environmental failure; typecheck,
+  lint and build clean; e2e 515 passed. Remaining e2e failures are the pre-existing
+  budget and reporting ones, a shared-navigation timeout and a creator-profiles
+  canonical-link race that both pass alone. Visually checked at desktop and 375px,
+  dark theme only. Usage metrics unavailable.
+- **Deployment (2026-11-09).** `254dbd4` on the VPS after a gzip-verified dump
+  (`/opt/backups/termspace-pre-cmds-20261109-131501.sql.gz`); `api` and `web` rebuilt,
+  `202611090003` applied through the `migrate` service, all services healthy, site
+  routes 200. The owner had meanwhile published all 34 listings, so the 24 seeded
+  command sets are **not applied yet**: a published release is immutable and the API
+  refuses edits under the same version label (`VERSION_ALREADY_PUBLISHED`). The live
+  installation endpoint was not exercised (it needs a reader who added a release).
+- **Commands applied (2026-11-09).** The 24 listings were resubmitted as new releases
+  through `revise.mts`: the real upstream version for Context7 (4.6.0) and Todoist
+  (14.0.1), a `snapshot-2026-11-09` label for projects without releases (the README
+  was re-read that day; `wshobson-agents` already had that label, so it is
+  `snapshot-2026-11-09+catalog.2`), and `<version>+catalog.2` with a "catalog update
+  only" release note for the rest. Previous versions stay public until each new one
+  is approved and published; 24 listings await review. Not covered: `github-mcp-server`
+  (no verified command; unchanged).
+
+## 2026-11-09 — Remove the permissions row from listing cards
+
+- **Scope.** `apps/web` presentation only (`TrustStrip`, both cards, card copy, two
+  tests) plus `changelog.md`. Owner-requested: seeded listings declare paragraph-long
+  permission text that blew up the card. Cards now show Review and Licence; declared
+  permissions stay on the detail page. The red "Not declared" card mark is gone with
+  the row, so an unreviewed listing is no longer flagged for undeclared access on the card.
+- **Verification.** Typecheck, lint (0 errors), card unit tests (11) and
+  `e2e/catalog.spec.ts` (51 passed) green. Not yet deployed. Usage metrics unavailable.
+
+## 2026-11-09 — Seed catalog, platform registry expansion, listing icon, Chatwoot CSP
+
+- **Scope / shared surfaces (announce in commit body).** `apps/api/prisma/schema.prisma`,
+  new migrations `202611090001_marketplace_platform_expansion` and
+  `202611090002_marketplace_listing_icon`, `apps/web/lib/types.ts`, `changelog.md`,
+  `pending.md`. Also `apps/web` presentation (product card, compact card, title
+  block, creator editor, moderation preview) for the icon, and
+  `deploy/chatwoot/bootstrap.rb`. Owner-requested; nothing here deployed yet.
+- **Seed.** `scripts/seed-termbuddy/` (validate, submit, preview, 34 listings, all
+  `external_link` + credited third-party author). 34 submitted to production via
+  the public API as TermBuddy; 1 published by the owner, 33 await Approve/Publish.
+  Resumable state file is git-ignored.
+- **Platforms.** Registry gained Aider, Amp, Cline, GitHub Copilot, OpenCode,
+  Windsurf, Zed, with a migration that inserts the platform rows and one community
+  each (idempotent; applied cleanly through the full chain on a scratch DB).
+- **Icon.** Optional `listing.icon` in manifest v1, limited to
+  `avatars.githubusercontent.com` / `raw.githubusercontent.com` (Zod plus a DB
+  CHECK on `MarketplaceProduct.iconUrl`). Rendered by `ProductIcon`: decorative,
+  `referrerPolicy="no-referrer"`, fixed box (no layout shift), initials tile on
+  absence or load failure. The moderation preview shows it; copy and docs state it
+  is the one exception to "stored text only".
+- **Chatwoot CSP.** `allowed_domains` was newline-separated, but Chatwoot splits on
+  commas, so `www.termspace.dev` became an invalid `frame-ancestors` directive.
+  Bootstrap now uses a comma list and repairs existing inboxes on rerun. Not yet
+  applied to the live Chatwoot (needs the bootstrap rerun on the VPS).
+- **Verification.** Root typecheck clean; API suite 308 passed / 44 DB-integration
+  skipped; web 511 passed with Node 26's `--localstorage-file` flag, 1 environmental
+  failure (storage-failure test spies on jsdom `Storage.prototype`); lint 0 errors;
+  build OK; Lighthouse CI assertions pass; e2e 518 passed. Visually checked EN/FA
+  (RTL), both themes, 360px. Bootstrap.rb not run (no Ruby locally).
+  **Unresolved:** the first-load JS budget already fails at `HEAD` (dashboard 171.6
+  vs 170 kB, detail 167.5 vs 165 kB); the icon adds about 0.7 kB to each. The
+  reporting e2e spec fails when the desktop and mobile projects share one mock API
+  and passes alone; also pre-existing. Usage metrics unavailable.
+- **Deployment (2026-11-09).** Pushed `59e9a01` to `v.3`; the VPS checkout
+  fast-forwarded. Pre-change dump `/opt/backups/termspace-pre-icon-20261109-112539.sql.gz`
+  (gzip-verified). Built `api` and `web`, ran the `migrate` service (both migrations
+  applied), restarted api, web, scheduler, email-worker and source-worker, all
+  healthy. Read back 16 platforms and 13 communities; the public products API
+  returns `iconUrl`; no errors in api/web logs. The widget now answers with
+  `content-security-policy: frame-ancestors termspace.dev www.termspace.dev`.
+  Seeded listings carry no icon yet; the 33 submitted ones still await review.
+
+- **Seed revision (2026-11-09).** `scripts/seed-termbuddy/revise.mts` withdrew, re-saved
+  and resubmitted 26 submitted listings with the new platforms and GitHub org
+  avatars as icons (individual maintainers keep the initials tile). Platform
+  claims come only from each project's own README or install guides (and the
+  agents.md site for `agents-md`): 34 compatibility entries across 15 listings,
+  plus matching community placement requests. 24 icon URLs checked as 200 images.
+  `github-mcp-server` is published and its listing is unchanged: the API refuses
+  `VERSION_ALREADY_PUBLISHED` metadata edits without a new version label and
+  upstream is still v2.1.0.
+
+## 2026-11-06 — Grant owner-requested production marketplace administrator access
+
+- **Scope / shared surface.** Production role operation and `changelog.md` only;
+  the owner explicitly designated the existing reader account. No pending queue
+  item or application implementation changed.
+- Granted `administrator` through the deployed `manageMarketplaceRole` command
+  after verifying that reader `cmw4zntio000iqt01721efw22` is verified, not deleted,
+  and had no active marketplace grants. The command atomically saved the role
+  and its append-only `GRANTED` event under actor `ops:codex-owner-request`.
+- **Verification.** Read back exactly one active `ADMINISTRATOR` grant and its
+  audit event, correlation `703742c8-f9df-430e-80e1-6a9e4c69b052`. Marketplace
+  middleware reloads active grants on each request; refresh the website to
+  refresh client-side session identity. Separate editorial access was not granted.
+  Application checks from `23dd023` still cover the unchanged implementation;
+  this operation was verified against the live database. Usage metrics unavailable.
+
+## 2026-11-06 — Finish Termbuddy AI replies and delivery recovery
+
+- **Scope / ownership notice.** Owner-authorized Chatwoot follow-up in
+  `deploy/chatwoot/`, `.github/workflows/ci.yml`, `docs/chatwoot.md` and the
+  shared `changelog.md`. No corresponding item exists in the other maintainer's
+  `pending.md` queue. Merged current `main` into `v.3` first, retained both
+  changelog histories and used main's canonical favicon in the merge conflict.
+- **AI replies.** Removed the un-awaited async history wrapper that serialized
+  the Responses API input as `{}`. The owner supplied the production API key;
+  the rebuilt container loads it. Short support answers use `gpt-6-luna` with
+  reasoning disabled and `store: false`. OpenAI transient failures get one retry;
+  permanent errors get the localized fallback. Missing webhook credentials now
+  prevent startup, and signed incoming messages are validated and account-scoped.
+- **Delivery recovery.** Incoming work is fsynced before acknowledgment; saved
+  answers and deduplication records survive container recreation on the new
+  `termbuddy_state` volume. Delivery failures retry without another generation.
+  Signed outgoing events reconcile lost HTTP receipts. Health reports missing
+  keys, observed upstream/storage failures and old pending jobs. Logs contain
+  status, latency and correlation IDs without bodies or credentials. Delivery
+  remains at least once because Chatwoot's create-message endpoint has no
+  enforced idempotency key; the duplicate window is documented.
+- **Backups.** Installed `termspace-chatwoot-backup.timer` on production: daily
+  at 03:20 UTC plus up to 10 minutes of jitter, with 14-day local retention.
+  Root-only snapshots include database, storage, queue and recovery configuration.
+  Restored a fresh snapshot to a temporary database (110 public tables), checked
+  the storage archive/checksums and restored queue records to a temporary
+  directory. The checks remove only their own temporary restore targets.
+- **Verification.** Root typecheck; root tests 858 passed, 44 skipped; web lint
+  zero errors and two existing warnings; root production build with
+  `IS_WEBPACK_TEST=1` (the installed Next.js webpack-selection flag). The default
+  blog Turbopack build cannot bind its CSS-worker port in this environment,
+  including an escalated run and user systemd scope; webpack builds all apps.
+  Nine dependency-free bot regression tests pass locally and in the deployed
+  Node 22 image, including SIGKILL recovery, signed-webhook reconciliation,
+  EN/FA fallback, permanent/transient errors and log redaction. CI now runs them
+  and checks backup shell syntax. Backup units passed `systemd-analyze verify`.
+  Performed the second diff/security pass manually with Ponytail full mode;
+  fixed its vendor-event logging finding and verified the regression check.
+  This harness does not expose `/usage` metrics.
+- **Live UI acceptance.** Real EN/FA AI answers and an English follow-up work
+  through the embedded widget. Checked rendered light/dark, EN/LTR and FA/RTL,
+  1280/320 px, reduced-motion preference, first-stop skip link and keyboard
+  composing. Both inboxes retain conversations on mobile reload; Chatwoot's
+  localized Continue conversation action restores the thread from the welcome
+  screen. Automatic panel reopening was not added. Used Impeccable's existing
+  project/design context for the rendered pass; no web UI implementation changed.
+- **Owner-dependent follow-ups.** Choose off-host backup replication and an
+  external alert destination. Help-center creation/theming and SMTP/transcript
+  email remain product decisions; footer removal remains a paid Chatwoot feature.
+
 ## 2026-11-06 - Finish public copy corrections and refresh the local queue
 
 - **Scope / shared surfaces.** Owner requested the changelog refresh and
@@ -287,6 +488,112 @@ Project changes completed from `pending.md` should be recorded here with the dat
   screen-reader applications and real providers remain unverified. No new build,
   typecheck, unit/E2E suite or Lighthouse run was needed for this report-only
   phase. No commit or push; implementation and its gates follow report review.
+
+## 2026-11-04 — Termbuddy live chat (self-hosted Chatwoot)
+
+- **Scope / ownership notice.** Shared surfaces: `apps/web/app/layout.tsx`,
+  `apps/web/next.config.ts`, `docker-compose.yml`, `.env.example` and
+  `changelog.md`. New deployment assets in `deploy/chatwoot/` and the ops doc
+  `docs/chatwoot.md`. No API, database schema, permission or auth-flow change.
+- **Deployment.** Chatwoot Community Edition 4.19.1 now runs on the production
+  host as its own compose project beside TermSpace:
+  `chat.termspace.dev` → Caddy → `127.0.0.1:3010`. Only the Rails port is
+  published; Postgres (pgvector 16), Redis and the bot are internal. DNS is the
+  existing Cloudflare `A chat` record, proxied; TLS is Caddy's certificate.
+  Secrets live in untracked `deploy/chatwoot/.env` and `.env.bot` (chmod 600);
+  the bootstrap credentials are in `/opt/chatwoot/credentials.env` (root only).
+  `SAFE_FETCH_ALLOW_PRIVATE_NETWORK` is enabled because the bot webhook target is
+  an internal hostname.
+- **Termbuddy instead of Captain.** Chatwoot's built-in AI (Captain) is a paid
+  feature, so the bot is a webhook agent bot: a dependency-free Node service
+  (`deploy/chatwoot/bot/server.mjs`) that verifies Chatwoot's HMAC signature,
+  acknowledges immediately (Chatwoot fails calls at 5 s), keeps its own rolling
+  context per conversation (Chatwoot blocks bots from reading conversations),
+  and answers through the OpenAI Responses API with `gpt-6-luna`. The knowledge
+  pack is `bot/knowledge/en.md` plus `fa.md`; replies mirror the visitor's
+  language. With no API key — the case at deploy time — it posts the localized
+  fallback that points to support@termspace.dev instead of going silent.
+  Attached to two website inboxes (`TermSpace Website (EN)`, `(FA)`) so the
+  widget welcome copy is localized; email collection and continuity mail are
+  disabled. No human agents are configured.
+- **Web integration.** `components/support/chat-widget.tsx` (with tests) loads
+  the Chatwoot SDK after hydration with `afterInteractive`, passes the locale and
+  launcher name, and renders nothing when the website tokens are absent (local
+  dev and previews). The website tokens are read from runtime env
+  (`CHATWOOT_TOKEN_EN`/`CHATWOOT_TOKEN_FA`, `CHATWOOT_BASE_URL`) so rotation does
+  not need a rebuild. The availability banner is overridden to say Termbuddy is
+  online 24/7, because Chatwoot's default presence copy assumes human agents, and
+  the panel follows the site's light/dark toggle. The report-only CSP now allows
+  `chat.termspace.dev` for scripts, connections and frames. The bot and both
+  inboxes carry the TermSpace mark as their avatar, and `INSTALLATION_NAME` /
+  `BRAND_NAME` are set to TermSpace in Chatwoot's installation config.
+- **Verification.** Root typecheck; web lint 0 errors (two pre-existing
+  warnings); 503 web tests (`NODE_OPTIONS=--no-experimental-webstorage`, needed
+  because Node 26's global `localStorage` shadows jsdom's); production web
+  build. Live stack: `/api` 200, `/packs/js/sdk.js` 200, TLS through
+  Cloudflare; both inboxes exercised end-to-end (anonymous contact →
+  conversation → incoming message → signed webhook → bot reply) with correct
+  English and Persian fallback text.
+- **Remaining acceptance.** The owner must add `OPENAI_API_KEY` to `.env.bot`
+  and restart `termbuddy` for real GPT-6 Luna answers — until then every chat
+  gets the fallback copy. The embedded widget was verified in Chrome at 1280 and
+  320 px, EN and FA, light and dark: the launcher opens, messages send, and the
+  fallback reply arrives in the conversation; the panel follows the site theme
+  and the availability banner reads "online 24/7". Still open: help-center
+  portal theming and a decision on SMTP/transcript email. Chatwoot's footer
+  shows "Powered by TermSpace" through `BRAND_NAME`; removing the line entirely
+  is the paid `disable_branding` feature and was not circumvented.
+
+
+## 2026-11-04 — New navbar mark and favicon
+
+- **Scope.** `apps/web/components/layout/logo.tsx`,
+  `apps/web/components/layout/header.tsx`, `apps/web/app/icon.svg`,
+  `changelog.md`. No copy, navigation or layout change.
+- **Navbar.** The global header replaces the text wordmark and caret with the
+  owner's `t|` mark in its rounded dark tile, 32px. Fixed brand colours
+  (`#1A1823`, `#F4F3F8`, `#2051CE`) mean it reads the same on paper and on the
+  dark ground. The link keeps `aria-label="termspace home"`. The footer keeps
+  the text wordmark, and `Logo` gains a `mark` concept without changing `pure`,
+  `cursor` or `block`.
+- **Favicon.** `app/icon.svg` is the modular block mark. It is wrapped in the
+  same dark rounded tile and scaled 1.4x about the centre: the supplied mark
+  uses near-white shapes, which disappear on light browser tab strips. The
+  owner may prefer the transparent version; it is a one-line change.
+- **Verification.** Web typecheck; lint zero errors (two pre-existing warnings);
+  header tests 15 passed; production build. Deployed v.3 at `55942de`. Live:
+  32x32 mark in the header at 1280 and 320, light and dark, English and Persian
+  RTL, no console errors; `/icon.svg` serves the committed asset byte for byte.
+
+## 2026-11-04 — Google sign-in wears the site's button
+
+- **Scope / ownership notice.** Shared surfaces: `apps/web/lib/i18n/common.ts` and
+  `changelog.md`. Presentation only in `features/account/google-sign-in.tsx`,
+  `features/account/account-form.tsx` and `features/dashboard/account-data.tsx`.
+  No API, schema, permission or credential-flow change.
+- **Problem.** Enabling Google exposed its own iframe button: `outline` is a white
+  slab with 4px corners and Roboto; `filled_black` adds a white logo tile. Neither
+  can sit in the Paper & Signal system, and the 320px cap made it narrower than
+  the form.
+- **Behaviour.** The visible control is now the site's secondary `Button` (12px
+  radius, 44px, Geist, bordered surface, hover and focus ring) with Google's
+  official multicolour G and localized copy: "Continue with Google" /
+  «ادامه با گوگل». Google's iframe still opens the popup and returns the same
+  credential; it is pinned invisibly over the button. It must stay at
+  `opacity: 0.001`, not `0` — Chrome does not deliver clicks to an opacity-0
+  iframe. Its inline width/margin are re-pinned on the next frame and on load.
+- **Notes.** The register and login modes share one label; the heading already
+  says which action the account takes. The blog keeps Google's own button until
+  that app is deployed.
+- **Verification.** Root typecheck (after `prisma:generate`, which the pulled
+  schema required); web 499 tests; lint zero errors (two pre-existing warnings);
+  production build. Deployed v.3 at `985f1a2`. In Chrome at 1280 and 320px,
+  light and dark, EN and FA: the button matches the design tokens, no console
+  errors, and the iframe covers the control so top, bottom, left, right and
+  centre clicks all open Google's popup. Only the clipped 12px rounded corners
+  fall outside the clickable shape, matching what is painted.
+- **Remaining acceptance.** A real Google account sign-in is still the owner's
+  check (verification, onboarding redirect, `emailVerified`).
 
 ## 2026-11-03 — Signup, verification and password reset follow the inbox
 

@@ -8,6 +8,13 @@ export const MARKETPLACE_PLATFORM_KEYS = [
   "gemini",
   "gemini-cli",
   "vscode",
+  "aider",
+  "amp",
+  "cline",
+  "github-copilot",
+  "opencode",
+  "windsurf",
+  "zed",
 ] as const;
 
 type MarketplacePlatformKey = typeof MARKETPLACE_PLATFORM_KEYS[number];
@@ -22,6 +29,13 @@ export const MARKETPLACE_PLATFORM_REGISTRY: Record<MarketplacePlatformKey, { nam
   gemini: { nameEn: "Gemini", nameFa: "جمینای" },
   "gemini-cli": { nameEn: "Gemini CLI", nameFa: "رابط خط فرمان جمینای" },
   vscode: { nameEn: "VS Code", nameFa: "ویژوال استودیو کد" },
+  aider: { nameEn: "Aider", nameFa: "ایدر" },
+  amp: { nameEn: "Amp", nameFa: "آمپ" },
+  cline: { nameEn: "Cline", nameFa: "کلاین" },
+  "github-copilot": { nameEn: "GitHub Copilot", nameFa: "گیت‌هاب کوپایلت" },
+  opencode: { nameEn: "OpenCode", nameFa: "اوپن‌کد" },
+  windsurf: { nameEn: "Windsurf", nameFa: "ویندسرف" },
+  zed: { nameEn: "Zed", nameFa: "زد" },
 };
 
 const PLATFORM_ALIASES = new Map<string, MarketplacePlatformKey>([
@@ -40,6 +54,17 @@ const PLATFORM_ALIASES = new Map<string, MarketplacePlatformKey>([
   ["vs-code", "vscode"],
   ["vs_code", "vscode"],
   ["vscode", "vscode"],
+  ["aider", "aider"],
+  ["amp", "amp"],
+  ["cline", "cline"],
+  ["github-copilot", "github-copilot"],
+  ["github_copilot", "github-copilot"],
+  ["githubcopilot", "github-copilot"],
+  ["copilot", "github-copilot"],
+  ["opencode", "opencode"],
+  ["open-code", "opencode"],
+  ["windsurf", "windsurf"],
+  ["zed", "zed"],
 ]);
 
 export function marketplacePlatformKey(value: string): MarketplacePlatformKey | null {

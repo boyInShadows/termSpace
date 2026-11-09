@@ -1,0 +1,9 @@
+{
+  "name": "termbuddy",
+  "private": true,
+  "type": "module",
+  "description": "TermSpace Chatwoot agent bot (OpenAI Responses API)",
+  "engines": {
+    "node": ">=22"
+  }
+}

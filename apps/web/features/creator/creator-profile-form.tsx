@@ -35,7 +35,7 @@ export function CreatorProfileForm({ profile, onSaved, headingLevel = "h2", noti
     const data = new FormData(event.currentTarget);
     try {
       const next = profile
-        ? await updateOwnedCreatorProfile({ name: String(data.get("name")), bio: String(data.get("bio")) })
+        ? await updateOwnedCreatorProfile({ name: String(data.get("name")), bio: String(data.get("bio")), avatarUrl: String(data.get("avatarUrl") ?? "").trim() || null })
         : await createOwnedCreatorProfile({ name: String(data.get("name")), handle: String(data.get("handle")), bio: String(data.get("bio")) });
       onSaved(next);
       setSaved(true);
@@ -62,6 +62,7 @@ export function CreatorProfileForm({ profile, onSaved, headingLevel = "h2", noti
         <Input id="creator-handle" name="handle" required={!profile} disabled={Boolean(profile)} minLength={3} maxLength={40} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={profile?.handle} dir="ltr" autoComplete="off" aria-describedby="creator-handle-help" className="mt-2" />
         <span id="creator-handle-help" className="mt-1 block text-xs text-muted-foreground">{profile ? t.creatorHub.handleLocked : t.creatorHub.handleHelp}</span>
       </div>
+      {profile && <div><label htmlFor="creator-avatar" className="block text-sm font-medium">{t.creatorHub.avatar}</label><Input id="creator-avatar" name="avatarUrl" type="url" maxLength={2048} pattern="https://(avatars|raw)\.githubusercontent\.com/\S+" defaultValue={profile.avatarUrl ?? ""} dir="ltr" autoComplete="off" aria-describedby="creator-avatar-help" className="mt-2" /><span id="creator-avatar-help" className="mt-1 block text-xs text-muted-foreground">{t.creatorHub.avatarHelp}</span></div>}
       <label className="block text-sm font-medium">{t.creatorHub.bio}<textarea name="bio" required minLength={20} maxLength={500} defaultValue={profile?.bio} className="mt-2 min-h-36 w-full rounded-control border border-input bg-surface px-3 py-3 text-base placeholder:text-muted-foreground/75 hover:border-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20" /></label>
       {shownError && <p role="alert" className="text-sm text-destructive">{shownError}</p>}
       {saved && <p role="status" className="text-sm text-success">{t.creatorHub.saved}</p>}

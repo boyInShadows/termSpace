@@ -39,8 +39,9 @@ describe("account profile state", () => {
     expect(within(form).getByLabelText(copy.fa.creatorHub.handle)).toBeDisabled();
     fireEvent.change(within(form).getByLabelText(copy.fa.creatorHub.name), { target: { value: "Ellis N" } });
     fireEvent.change(within(form).getByLabelText(copy.fa.creatorHub.bio), { target: { value: "A new biography that is long enough." } });
+    fireEvent.change(within(form).getByLabelText(copy.fa.creatorHub.avatar), { target: { value: "https://avatars.githubusercontent.com/u/1?v=4" } });
     fireEvent.click(within(form).getByRole("button", { name: copy.fa.creatorHub.save }));
-    await waitFor(() => expect(mocks.update).toHaveBeenCalledWith({ name: "Ellis N", bio: "A new biography that is long enough." }));
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledWith({ name: "Ellis N", bio: "A new biography that is long enough.", avatarUrl: "https://avatars.githubusercontent.com/u/1?v=4" }));
     expect(await screen.findByText(copy.fa.creatorHub.saved)).toBeVisible();
     expect(mocks.sessionRefresh).not.toHaveBeenCalled();
   });

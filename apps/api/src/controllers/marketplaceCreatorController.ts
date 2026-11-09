@@ -9,6 +9,7 @@ const creatorProfileSelect = {
   name: true,
   handle: true,
   initials: true,
+  avatarUrl: true,
   verified: true,
   bio: true,
   followers: true,
@@ -202,7 +203,7 @@ export async function updateOwnedCreatorProfile(req: Request, res: Response) {
   }
   const creator = await prisma.marketplaceCreator.update({
     where: { id: existing.id },
-    data: { name: req.body.name, bio: req.body.bio, initials: initialsFor(req.body.name) },
+    data: { name: req.body.name, bio: req.body.bio, initials: initialsFor(req.body.name), ...(req.body.avatarUrl !== undefined && { avatarUrl: req.body.avatarUrl }) },
     select: creatorProfileSelect,
   });
   res.json({ data: serializeCreatorProfile(creator) });

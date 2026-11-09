@@ -68,3 +68,6 @@ test-results/
 .impeccable/live/
 apps/blog/AGENTS.md
 apps/blog/CLAUDE.md
+
+# TermBuddy seed progress (local only)
+scripts/seed-termbuddy/.state.json

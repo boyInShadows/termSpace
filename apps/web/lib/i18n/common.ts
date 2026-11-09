@@ -63,6 +63,7 @@ export const common = {
     accountIntro:
       "Use one account for the TermSpace community and editorial library.",
     createAccount: "Create account",
+    googleCta: "Continue with Google",
     needAccount: "New here? Create an account",
     registered: "Already have an account? Log in",
     forgotPassword: "Forgot password?",
@@ -142,6 +143,7 @@ export const common = {
     accountIntro:
       "با یک حساب به جامعهٔ ترم‌اسپیس و کتابخانهٔ تحریریه دسترسی داشته باشید.",
     createAccount: "ساخت حساب",
+    googleCta: "ادامه با گوگل",
     needAccount: "تازه اینجا هستید؟ حساب بسازید",
     registered: "حساب دارید؟ وارد شوید",
     forgotPassword: "رمز عبور را فراموش کرده‌اید؟",

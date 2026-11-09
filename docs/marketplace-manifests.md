@@ -94,6 +94,17 @@ permission and installation behavior, English/Persian presentation, API
 serialization/filtering, creator and public UI, fixtures, and regression tests in
 one reviewed change.
 
+## Declared install commands
+
+`release.installation.commands` is optional: up to 12 entries of
+`{ os: "any" | "macos" | "linux" | "windows", label?, command }`. A command is one
+line of at most 600 characters. They are stored with the release
+(`installationCommands`, immutable once published) and returned only by the
+authenticated installation endpoint, so readers see them after adding the
+release. The dialog shows each in a copy field, grouped by system with the
+reader's own pre-selected. Staff see the same list in the moderation preview. The
+site never runs them; reviewers should read them as they would a README.
+
 ## Generated installation output
 
 The [platform registry](../apps/api/src/lib/marketplacePlatforms.ts) already

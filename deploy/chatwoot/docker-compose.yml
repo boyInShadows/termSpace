@@ -1,0 +1,115 @@
+name: chatwoot
+
+# Self-hosted Chatwoot for TermSpace support (Termbuddy).
+# Deployed from the TermSpace repo at /opt/termspace/deploy/chatwoot on the
+# production host. Secrets live in untracked .env / .env.bot files next to this
+# file (chmod 600, never committed). See docs/chatwoot.md.
+#
+# Only the Rails port is published, bound to loopback: Caddy terminates TLS for
+# chat.termspace.dev and proxies to 127.0.0.1:3010. Postgres, Redis and the bot
+# stay on the internal compose network.
+
+x-chatwoot-base: &chatwoot-base
+  image: chatwoot/chatwoot:v4.19.1-ce
+  env_file: .env
+  volumes:
+    - chatwoot_storage:/app/storage
+  restart: unless-stopped
+
+services:
+  rails:
+    <<: *chatwoot-base
+    environment:
+      NODE_ENV: production
+      RAILS_ENV: production
+      INSTALLATION_ENV: docker
+    entrypoint: docker/entrypoints/rails.sh
+    command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
+    ports:
+      - "127.0.0.1:3010:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+    mem_limit: 1g
+
+  sidekiq:
+    <<: *chatwoot-base
+    environment:
+      NODE_ENV: production
+      RAILS_ENV: production
+      INSTALLATION_ENV: docker
+    command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rails:
+        condition: service_healthy
+    mem_limit: 512m
+
+  postgres:
+    # Chatwoot needs the pgvector extension even on the community edition.
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DATABASE:-chatwoot}
+      POSTGRES_USER: ${POSTGRES_USERNAME:-chatwoot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - chatwoot_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME:-chatwoot} -d ${POSTGRES_DATABASE:-chatwoot}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 640m
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+    command: ["sh", "-c", "redis-server --requirepass \"$REDIS_PASSWORD\" --appendonly no --maxmemory 128mb --maxmemory-policy volatile-ttl"]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    mem_limit: 192m
+
+  # Termbuddy: webhook bot that answers widget conversations via the OpenAI API.
+  # Source lives in ./bot; config in ./.env.bot (untracked).
+  termbuddy:
+    build: ./bot
+    restart: unless-stopped
+    env_file: .env.bot
+    environment:
+      STATE_DIRECTORY: /app/data
+    volumes:
+      - termbuddy_state:/app/data
+    stop_grace_period: 25s
+    expose:
+      - "8787"
+    depends_on:
+      rails:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8787/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    mem_limit: 256m
+
+volumes:
+  chatwoot_storage:
+  chatwoot_postgres:
+  termbuddy_state:

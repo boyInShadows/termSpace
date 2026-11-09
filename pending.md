@@ -81,3 +81,17 @@ they touch and need a written plan first.
   worker that include creator notifications: reader queries select the new
   column and the worker claims the new outbox target. The change is additive;
   old API versions keep working after the migration.
+
+## Follow-ups from the 2026-11-09 seed phase
+
+- No creator path to `featured`/`verified`; seeded listings are only badged by staff review.
+- Only platform communities exist; the seeded catalog has no topical communities.
+- The report-only CSP `img-src` is still `https:`; tighten it to the two icon hosts
+  once the report-only period shows no other image sources.
+- First-load JS budgets for `/dashboard` (171.6 vs 170 kB) and the product detail
+  page (167.5 vs 165 kB) already fail at `HEAD`; trim or re-baseline.
+- `e2e/reporting.spec.ts` fails when the desktop and mobile projects run against one
+  shared stateful mock API; isolate state per project.
+- `github-mcp-server` (published, v2.1.0) still lacks its icon and the Copilot, OpenCode,
+  Windsurf and Zed compatibility: add them with its next upstream release, since a
+  published version's metadata cannot change under the same label.
