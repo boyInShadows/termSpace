@@ -29,6 +29,28 @@ describe("NotificationMenu", () => {
   afterEach(cleanup);
   beforeEach(() => vi.clearAllMocks());
 
+  it("routes private support alerts alongside moderation without showing message previews", async () => {
+    mocks.list.mockResolvedValue({ unread: 2, notifications: [notification, {
+      id: "support-1", type: "support_reply", ticketId: "ticket-1", staff: false,
+      readAt: null, createdAt: notification.createdAt, body: "Private message must not be previewed",
+    }] });
+    render(<NotificationMenu />);
+    fireEvent.click(await screen.findByRole("button", { name: `${text.label} (2 unread)` }));
+    expect(screen.getByRole("link", { name: /Support ticket/ })).toHaveAttribute("href", "/support/ticket-1");
+    expect(screen.getByRole("link", { name: /Owned Skill/ })).toHaveAttribute("href", "/dashboard/studio");
+    expect(screen.queryByText("Private message must not be previewed")).not.toBeInTheDocument();
+  });
+
+  it("links staff alerts to the protected staff thread", async () => {
+    mocks.list.mockResolvedValue({ unread: 1, notifications: [{
+      id: "support-2", type: "support_created", ticketId: "ticket-2", staff: true,
+      readAt: null, createdAt: notification.createdAt,
+    }] });
+    render(<NotificationMenu />);
+    fireEvent.click(await screen.findByRole("button", { name: `${text.label} (1 unread)` }));
+    expect(screen.getByRole("link", { name: /Support ticket/ })).toHaveAttribute("href", "/support/admin/ticket-2");
+  });
+
   it("shows the unread count, the decision and its public reason", async () => {
     mocks.list.mockResolvedValue({ unread: 2, notifications: [notification, { ...notification, id: "notification-2", type: "approved", productName: "Second Skill", productSlug: "second-skill", publicReason: null }] });
     mocks.mark.mockResolvedValue({ updated: 2, unread: 0 });

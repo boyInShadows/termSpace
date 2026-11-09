@@ -286,6 +286,7 @@ model ReaderUser {
   releaseReviews         MarketplaceReleaseManifest[]             @relation("MarketplaceReleaseReviewer")
   supportTickets         SupportTicket[]
   supportMessages        SupportMessage[]
+  supportNotifications   SupportNotification[]
 }
 
 enum SupportCategory {
@@ -316,6 +317,7 @@ model SupportTicket {
   updatedAt DateTime        @updatedAt
   owner     ReaderUser      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   messages  SupportMessage[]
+  notifications SupportNotification[]
 
   @@index([ownerId, updatedAt, id])
   @@index([status, updatedAt, id])
@@ -333,6 +335,26 @@ model SupportMessage {
   attachments SupportAttachment[]
 
   @@index([ticketId, createdAt, id])
+}
+
+enum SupportNotificationType {
+  TICKET_CREATED
+  MEMBER_REPLIED
+  STAFF_REPLIED
+  RESOLVED
+}
+
+model SupportNotification {
+  id        String                  @id @default(cuid())
+  userId    String
+  ticketId  String
+  type      SupportNotificationType
+  createdAt DateTime                @default(now())
+  readAt    DateTime?
+  user      ReaderUser              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticket    SupportTicket           @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt, id])
 }
 
 model SupportAttachment {

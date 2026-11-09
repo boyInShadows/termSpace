@@ -10,14 +10,26 @@ const typeKeys = {
   LISTING_REJECTED: "rejected",
 } as const;
 
+const supportTypeKeys = {
+  TICKET_CREATED: "support_created", MEMBER_REPLIED: "support_message",
+  STAFF_REPLIED: "support_reply", RESOLVED: "support_resolved",
+} as const;
+
+function supportScope(res: Response) {
+  const reader = res.locals.reader;
+  const administrator = reader.emailVerified && reader.marketplaceRoles.includes("administrator");
+  return { userId: String(reader.id), ...(administrator ? {} : { ticket: { ownerId: String(reader.id) } }) };
+}
+
 /**
- * The creator's own decision feed. Only a staff decision creates a row; the
- * public reason is copied at decision time and the internal note is never read
- * here. `unread` counts every unread row, not just the page returned.
+ * Private decisions and support events, newest first. Support previews contain
+ * only an event type and ticket reference; no subject, message or screenshot.
  */
 export async function listMarketplaceNotifications(_req: Request, res: Response) {
   const userId = String(res.locals.reader.id);
-  const [rows, unread] = await prisma.$transaction([
+  res.set("Cache-Control", "private, no-store");
+  const supportWhere = supportScope(res);
+  const [rows, unread, supportRows, supportUnread] = await prisma.$transaction([
     prisma.marketplaceNotification.findMany({
       where: { userId },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -32,32 +44,41 @@ export async function listMarketplaceNotifications(_req: Request, res: Response)
       },
     }),
     prisma.marketplaceNotification.count({ where: { userId, readAt: null } }),
+    prisma.supportNotification.findMany({
+      where: supportWhere, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: NOTIFICATION_LIMIT,
+      select: { id: true, type: true, ticketId: true, ticket: { select: { ownerId: true } }, readAt: true, createdAt: true },
+    }),
+    prisma.supportNotification.count({ where: { ...supportWhere, readAt: null } }),
   ]);
 
-  res.json({
-    data: {
-      unread,
-      notifications: rows.map((row) => ({
-        id: row.id,
-        type: typeKeys[row.type],
-        productName: row.product.name,
-        productSlug: row.product.slug,
-        publicReason: row.publicReason,
-        readAt: row.readAt,
-        createdAt: row.createdAt,
-      })),
-    },
-  });
+  const notifications = [
+    ...rows.map(row => ({
+      id: row.id, type: typeKeys[row.type], productName: row.product.name, productSlug: row.product.slug,
+      publicReason: row.publicReason, readAt: row.readAt, createdAt: row.createdAt,
+    })),
+    ...supportRows.map(row => ({
+      id: row.id, type: supportTypeKeys[row.type], ticketId: row.ticketId,
+      staff: row.ticket.ownerId !== userId, readAt: row.readAt, createdAt: row.createdAt,
+    })),
+  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0)).slice(0, NOTIFICATION_LIMIT);
+  res.json({ data: { unread: unread + supportUnread, notifications } });
 }
 
 /** Marks every unread row, or only the ids supplied. Always owner-scoped. */
 export async function markMarketplaceNotificationsRead(req: Request, res: Response) {
   const userId = String(res.locals.reader.id);
   const ids = req.body.ids as string[] | undefined;
-  const result = await prisma.marketplaceNotification.updateMany({
-    where: { userId, readAt: null, ...(ids === undefined ? {} : { id: { in: ids } }) },
-    data: { readAt: new Date() },
-  });
-  const unread = await prisma.marketplaceNotification.count({ where: { userId, readAt: null } });
-  res.json({ data: { updated: result.count, unread } });
+  res.set("Cache-Control", "private, no-store");
+  const supportWhere = supportScope(res);
+  const selection = { readAt: null, ...(ids === undefined ? {} : { id: { in: ids } }) };
+  const data = { readAt: new Date() };
+  const [moderation, support] = await prisma.$transaction([
+    prisma.marketplaceNotification.updateMany({ where: { userId, ...selection }, data }),
+    prisma.supportNotification.updateMany({ where: { ...supportWhere, ...selection }, data }),
+  ]);
+  const [unread, supportUnread] = await prisma.$transaction([
+    prisma.marketplaceNotification.count({ where: { userId, readAt: null } }),
+    prisma.supportNotification.count({ where: { ...supportWhere, readAt: null } }),
+  ]);
+  res.json({ data: { updated: moderation.count + support.count, unread: unread + supportUnread } });
 }

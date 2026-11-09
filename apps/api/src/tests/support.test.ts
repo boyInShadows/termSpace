@@ -4,6 +4,7 @@ import { supportWriteRateLimit } from "../middleware/security.js";
 
 const db = vi.hoisted(() => ({
   readerSession: { findFirst: vi.fn() },
+  readerUser: { findMany: vi.fn() }, supportNotification: { createMany: vi.fn() },
   supportTicket: { findMany: vi.fn(), findFirst: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   supportMessage: { findMany: vi.fn(), create: vi.fn() },
   $transaction: vi.fn(),
@@ -16,6 +17,7 @@ const input = { category: "TECHNICAL", subject: "Cannot open listing", body: "Th
 describe("private member support", () => {
   beforeEach(async () => {
     vi.resetAllMocks();
+    db.readerUser.findMany.mockResolvedValue([]);
     await supportWriteRateLimit.resetKey("member-1");
     await supportWriteRateLimit.resetKey("admin-1");
     db.readerSession.findFirst.mockResolvedValue({ id: "session", user: {
@@ -125,5 +127,14 @@ describe("private member support", () => {
       where: expect.objectContaining({ status: { not: "RESOLVED" } }),
     }));
     expect(db.supportMessage.create).not.toHaveBeenCalled();
+  });
+
+  it("does not generate more alerts when an already resolved ticket is resolved again", async () => {
+    db.supportTicket.findFirst.mockResolvedValue({ id: "ticket-1", ownerId: "member-1", status: "RESOLVED" });
+    const result = await request(createApp()).post("/api/support/tickets/ticket-1/resolve").set("Cookie", cookie)
+      .set("Origin", "http://localhost:3000").send({ expectedVersion: 3 });
+    expect(result.status).toBe(200);
+    expect(db.supportTicket.updateMany).not.toHaveBeenCalled();
+    expect(db.readerUser.findMany).not.toHaveBeenCalled();
   });
 });

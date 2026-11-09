@@ -16,6 +16,7 @@ const prismaMock = vi.hoisted(() => ({
   readerPasswordReset: { findUnique: vi.fn(), findFirst: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   transactionalEmailOutbox: { updateMany: vi.fn(), create: vi.fn() },
   marketplaceNotification: { create: vi.fn(), findMany: vi.fn(), count: vi.fn(), updateMany: vi.fn() },
+  supportNotification: { findMany: vi.fn(), count: vi.fn(), updateMany: vi.fn() },
   marketplaceProduct: { findMany: vi.fn(), count: vi.fn(), groupBy: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceProductVersion: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   marketplaceReleaseManifest: { create: vi.fn(), update: vi.fn(), updateMany: vi.fn(), findFirst: vi.fn() },
@@ -93,6 +94,9 @@ describe("API", () => {
       limiter.resetKey(ipKeyGenerator("127.0.0.1"));
     }
     prismaMock.$transaction.mockResolvedValue([]);
+    prismaMock.supportNotification.findMany.mockResolvedValue([]);
+    prismaMock.supportNotification.count.mockResolvedValue(0);
+    prismaMock.supportNotification.updateMany.mockResolvedValue({ count: 0 });
     prismaMock.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     prismaMock.article.updateMany.mockResolvedValue({ count: 0 });
     prismaMock.marketplacePlatform.findMany.mockResolvedValue([]);
@@ -1303,7 +1307,7 @@ describe("API", () => {
       readAt: null, createdAt, product: { name: "Owned Skill", slug: "owned-skill" },
     }]);
     prismaMock.marketplaceNotification.count.mockResolvedValue(1);
-    prismaMock.$transaction.mockImplementationOnce(async (operations) => Promise.all(operations));
+    prismaMock.$transaction.mockImplementation(async (operations) => Promise.all(operations));
 
     const list = await request(createApp())
       .get("/api/marketplace/notifications")
@@ -2806,6 +2810,9 @@ describe("marketplace reviews", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prismaMock.$transaction.mockResolvedValue([]);
+    prismaMock.supportNotification.findMany.mockResolvedValue([]);
+    prismaMock.supportNotification.count.mockResolvedValue(0);
+    prismaMock.supportNotification.updateMany.mockResolvedValue({ count: 0 });
     prismaMock.marketplacePlatform.findMany.mockResolvedValue([]);
   });
 

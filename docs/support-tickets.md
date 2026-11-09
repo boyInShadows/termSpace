@@ -77,3 +77,24 @@ do not publish it through media storage or an object-storage public bucket.
 The Docker build context excludes private files, local environment variants and
 generated evidence. Local application builds and scratch-database checks do not
 constitute a production deployment.
+
+## Private notifications
+
+Ticket creation, replies and resolution save their alerts in the same database
+transaction as the change. Member actions notify current verified marketplace
+administrators; staff actions notify the ticket owner. The actor is never notified
+about their own action. No support email is sent in this version.
+
+The existing dashboard bell combines support alerts with moderation decisions.
+`GET /api/marketplace/notifications` returns at most twelve newest visible alerts
+and a total unread count. Existing moderation fields remain unchanged; support
+types are `support_created`, `support_message`, `support_reply`, `support_resolved`,
+with an opaque `ticketId` and `staff` route flag. Subjects, messages, screenshots,
+storage keys and participant identities are absent from support previews.
+
+The existing `/api/marketplace/notifications/read` endpoint marks supplied IDs or
+all visible alerts read, scoped to the recipient. Support visibility also checks
+current ticket ownership or verified administrator access on each read/update;
+revoked staff cannot see or acknowledge former staff alerts. Unverified members
+can receive updates to their own tickets. Feed responses are private/no-store.
+Apply `202611090007_support_notifications` before starting this API revision.

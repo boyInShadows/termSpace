@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type { SupportStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { prepareSupportImages, readSupportImage, removeSupportImages } from "../lib/supportImages.js";
+import { notifySupportParticipants } from "../lib/supportNotifications.js";
 
 const ticketSelect = { id: true, category: true, subject: true, status: true, version: true, createdAt: true, updatedAt: true } as const;
 const messageSelect = { id: true, body: true, authorRole: true, createdAt: true, attachments: { select: { id: true, bytes: true, width: true, height: true } } } as const;
@@ -34,13 +35,15 @@ export async function createSupportTicket(req: Request, res: Response) {
   const { category, subject, body } = req.body;
   const ownerId = String(res.locals.reader.id);
   const images = await prepareSupportImages(req.files as Express.Multer.File[] | undefined);
-  try {
-    const ticket = await prisma.supportTicket.create({
+  const ticket = await prisma.$transaction(async tx => {
+    const created = await tx.supportTicket.create({
       data: { ownerId, category, subject, messages: { create: { body, authorId: ownerId, authorRole: "MEMBER", ...(images.length ? { attachments: { create: images } } : {}) } } },
       select: { id: true },
     });
-    res.status(201).json({ data: ticket });
-  } catch (error) { await removeSupportImages(images.map(image => image.storageKey)); throw error; }
+    await notifySupportParticipants(tx, { ticketId: created.id, ownerId, actorId: ownerId, type: "TICKET_CREATED", audience: "staff" });
+    return created;
+  }).catch(async error => { await removeSupportImages(images.map(image => image.storageKey)); throw error; });
+  res.status(201).json({ data: ticket });
 }
 
 export async function getSupportTicket(req: Request, res: Response) {
@@ -61,7 +64,7 @@ export async function getSupportTicket(req: Request, res: Response) {
 
 export async function replySupportTicket(req: Request, res: Response) {
   const scope = ticketScope(req, res);
-  const ticket = await prisma.supportTicket.findFirst({ where: scope, select: { id: true, status: true } });
+  const ticket = await prisma.supportTicket.findFirst({ where: scope, select: { id: true, ownerId: true, status: true } });
   if (!ticket) { missingTicket(res); return; }
   if (res.locals.supportAdmin && ticket.status === "RESOLVED") {
     res.status(409).json({ error: { code: "TICKET_RESOLVED", message: "Only a new member reply can reopen a resolved ticket." } });
@@ -80,6 +83,10 @@ export async function replySupportTicket(req: Request, res: Response) {
       authorRole: res.locals.supportAdmin ? "ADMINISTRATOR" : "MEMBER", body: req.body.body,
       ...(images.length ? { attachments: { create: images } } : {}),
     } });
+    await notifySupportParticipants(tx, {
+      ticketId: ticket.id, ownerId: ticket.ownerId, actorId: String(res.locals.reader.id),
+      type: res.locals.supportAdmin ? "STAFF_REPLIED" : "MEMBER_REPLIED", audience: res.locals.supportAdmin ? "member" : "staff",
+    });
     return true;
   }); } catch (error) { await removeSupportImages(images.map(image => image.storageKey)); throw error; }
   if (!saved) { await removeSupportImages(images.map(image => image.storageKey)); staleTicket(res); return; }
@@ -88,11 +95,20 @@ export async function replySupportTicket(req: Request, res: Response) {
 
 export async function resolveSupportTicket(req: Request, res: Response) {
   const scope = ticketScope(req, res);
-  if (!await prisma.supportTicket.findFirst({ where: scope, select: { id: true } })) { missingTicket(res); return; }
-  const updated = await prisma.supportTicket.updateMany({
-    where: { ...scope, version: req.body.expectedVersion }, data: { status: "RESOLVED", version: { increment: 1 } },
+  const ticket = await prisma.supportTicket.findFirst({ where: scope, select: { id: true, ownerId: true, status: true } });
+  if (!ticket) { missingTicket(res); return; }
+  if (ticket.status === "RESOLVED") { res.json({ data: { saved: true } }); return; }
+  const saved = await prisma.$transaction(async tx => {
+    const updated = await tx.supportTicket.updateMany({
+      where: { ...scope, version: req.body.expectedVersion, status: { not: "RESOLVED" } }, data: { status: "RESOLVED", version: { increment: 1 } },
+    });
+    if (!updated.count) return false;
+    await notifySupportParticipants(tx, {
+      ticketId: ticket.id, ownerId: ticket.ownerId, actorId: String(res.locals.reader.id), type: "RESOLVED", audience: res.locals.supportAdmin ? "member" : "staff",
+    });
+    return true;
   });
-  if (!updated.count) { staleTicket(res); return; }
+  if (!saved) { staleTicket(res); return; }
   res.json({ data: { saved: true } });
 }
 

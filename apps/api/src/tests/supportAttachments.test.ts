@@ -1,9 +1,11 @@
 import request from "supertest";
+import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { supportWriteRateLimit } from "../middleware/security.js";
 
 const mocks = vi.hoisted(() => ({
   readerSession: { findFirst: vi.fn() }, supportAttachment: { findFirst: vi.fn() },
+  readerUser: { findMany: vi.fn() }, supportNotification: { createMany: vi.fn() },
   supportTicket: { create: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn() },
   supportMessage: { create: vi.fn() }, $transaction: vi.fn(),
   prepare: vi.fn(), read: vi.fn(), remove: vi.fn(),
@@ -14,6 +16,7 @@ vi.mock("../lib/supportImages.js", async importOriginal => ({
   prepareSupportImages: mocks.prepare, readSupportImage: mocks.read, removeSupportImages: mocks.remove,
 }));
 const { createApp } = await import("../app.js");
+const { createSupportTicket } = await import("../controllers/supportController.js");
 const cookie = "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456";
 const input = { category: "TECHNICAL", subject: "Screenshot of a problem", body: "The latest release cannot open. Please inspect this screenshot." };
 const image = { storageKey: "private-key.webp", bytes: 100, width: 48, height: 32 };
@@ -22,6 +25,7 @@ const upload = () => request(createApp()).post("/api/support/tickets").set("Cook
 describe("private support screenshot boundaries", () => {
   beforeEach(async () => {
     vi.resetAllMocks();
+    mocks.readerUser.findMany.mockResolvedValue([]);
     await supportWriteRateLimit.resetKey("member-1");
     mocks.readerSession.findFirst.mockResolvedValue({ id: "session", user: { id: "member-1", emailVerifiedAt: null, marketplaceRoleGrants: [] } });
     mocks.prepare.mockResolvedValue([image]); mocks.remove.mockResolvedValue(undefined);
@@ -77,6 +81,15 @@ describe("private support screenshot boundaries", () => {
     expect(reply.status).toBe(409);
     expect(mocks.remove).toHaveBeenCalledTimes(2);
     expect(mocks.supportMessage.create).not.toHaveBeenCalled();
+  });
+
+  it("keeps committed images if sending the HTTP response fails", async () => {
+    const res = { locals: { reader: { id: "member-1" } }, status: vi.fn(), json: vi.fn() };
+    res.status.mockReturnValue(res);
+    res.json.mockImplementation(() => { throw new Error("Synthetic response failure"); });
+    await expect(createSupportTicket({ body: input } as Request, res as unknown as Response)).rejects.toThrow("Synthetic response failure");
+    expect(mocks.supportTicket.create).toHaveBeenCalled();
+    expect(mocks.remove).not.toHaveBeenCalled();
   });
 
   it("scopes every download to its owner before reading the private file", async () => {

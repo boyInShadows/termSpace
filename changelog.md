@@ -2,6 +2,38 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Private ticket notifications in the existing bell
+
+- **Owner scope / shared surfaces.** Next approved support phase: Prisma schema,
+  additive `202611090007_support_notifications` and this changelog. API mutation/
+  feed code and tests are required cross-lane work under the private support
+  contract. No publishing/provider permission, email worker or other pending
+  queue item changed.
+- **Events.** Creation, replies and resolution save recipient alerts in the same
+  transaction. Member actions notify active verified administrators; staff actions
+  notify the owner, excluding the actor. Repeated resolution is a successful no-op
+  and concurrent resolution cannot generate a duplicate event. Creation cleanup
+  now covers transaction failures only, preserving committed images if sending
+  the HTTP response fails.
+- **Feed.** Preserve moderation payloads and combine the newest twelve visible
+  records with a total unread count. Support previews carry only event type and
+  ticket reference, with member/staff links and EN/FA copy. Recipient read state
+  is independent; current ownership/verified administrator access is rechecked
+  for support reads and acknowledgments, hiding revoked staff alerts. Responses
+  are private/no-store; no support email or private message/image preview is sent.
+- **Verification.** Root typecheck/build, 932 tests / 44 existing integration skips,
+  web lint zero errors / two existing warnings. Full E2E 533 passed / 46 intentional
+  skips; focused combined-feed/private-thread checks pass. Real scratch-database
+  checks cover recipients, read isolation, revocation, repeated resolution and
+  rollback after forced notification failure. Twelve EN/FA/theme/320–1280px bell
+  captures pass overflow, Escape/focus restoration and independent Impeccable
+  finish/documentation review. Nine Lighthouse runs pass unchanged assertions.
+  Final API build includes the response-failure regression fix.
+- **Next.** Privacy/export/deletion and final release documentation. Existing
+  DockerHub403 image-build limitation remains; no production deployment.
+  Evidence: `docs/artifacts/support-2026-11-06/phase-notifications-*`.
+  Manual engineering/security diff review used Ponytail full; usage unavailable.
+
 ## 2026-11-09 — Private support screenshots and recovery cleanup
 
 - **Owner scope / shared surfaces.** Next approved ticketing phase. Prisma schema,
