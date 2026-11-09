@@ -93,8 +93,10 @@
   --container-copy: 44rem;
 }
 
-* {
-  border-color: var(--border);
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 }
 
 /* The `hidden` attribute must win.

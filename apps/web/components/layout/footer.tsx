@@ -4,6 +4,7 @@ import { Logo } from "./logo";
 import { copy, footerLabels, localePath } from "@/lib/i18n";
 import { getLocale } from "@/lib/serverLocale";
 import { legalLabels } from "@/lib/legal";
+import { supportLabel } from "@/features/support/support-label";
 
 export async function Footer() {
   const locale = await getLocale();
@@ -19,6 +20,7 @@ export async function Footer() {
     { heading: labels.company, links: [
       { label: labels.journal, href: `${blogUrl.replace(/\/$/, "")}${locale === "fa" ? "/fa/blog" : "/blog"}` },
       { label: labels.support, href: localePath("/account", locale) },
+      { label: supportLabel[locale], href: localePath("/support", locale) },
     ] },
     { heading: legalLabels[locale].legal, links: (["privacy", "terms", "content-policy"] as const).map((slug) => (
       { label: legalLabels[locale][slug], href: localePath(`/${slug}`, locale) }

@@ -2,6 +2,79 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Resume private support on current main
+
+- **Owner scope / shared surfaces.** Owner resumed the five-step ticketing plan,
+  requesting a verified commit and push to `ramtin` after each phase. Preserved
+  the rejected UI/partial-upload checkpoints in their existing archive/stash;
+  merged current `main` into published `ramtin` history and restored only ticket
+  creation and administrator conversations. Shared surfaces: API app mount,
+  Prisma schema/additive support migrations and this changelog. The other
+  maintainer's pending queue is unchanged.
+- **Baseline.** Private member creation/list/thread, administrator inbox/replies,
+  resolve/member-reopen, optimistic concurrency, EN/FA recovery and navigation.
+  Unverified members may seek help; staff access requires an existing verified
+  marketplace administrator. The atomic staff write also excludes resolved
+  tickets, preventing a concurrent resolution from being reopened by staff.
+- **Review fixes.** Freeze fields during pending writes to protect drafts; label
+  staff waiting states from the staff perspective. Move the universal border
+  default into the CSS base layer so existing input tokens win. Reviewed field
+  contrast measures at least 3.03:1 against fields and grounds in both themes.
+  Existing optional chat and below-fold review code load after hydration to meet
+  unchanged initial-JavaScript budgets; provider/authentication behavior is retained.
+- **Verification.** Root typecheck and tests: 904 passed / 44 existing database
+  integration skips. Web lint: zero errors, two existing warnings. Full web E2E:
+  529 passed / 46 intentional skips, including the existing JavaScript budgets.
+  All migrations applied to a separate scratch database; real API/database checks
+  passed owner/stranger isolation, staff replies, stale-write rejection and
+  resolve/reopen rules. Eighteen rendered form/member/staff captures cover EN/FA,
+  themes and responsive widths; first-stop skip link, one main, 16px fields and
+  overflow checked. Fresh Impeccable review scored both fixes resolved and its
+  documentation review retained the incumbent design records. Final root build
+  passed; subsequent focused browser checks passed 8 / 6 intentional skips.
+  All nine Lighthouse runs passed unchanged assertions. Reused the scope-tested
+  local Windows cleanup preload after Chrome left a temporary profile locked;
+  it changes only cleanup handling, not audit results or gates.
+- **Continuation.** Screenshots, private notifications and privacy/export/deletion
+  remain the next sequential phases in the ignored local queue. No production
+  operation or deployment. Usage metrics unavailable; engineering diff/security
+  review performed manually with Ponytail full.
+
+## 2026-11-06 - Private support tickets (approved implementation)
+
+- **Scope / ownership.** Ramtin approved the private support flow and ordered
+  sequential execution of five P0 tasks in the ignored local queue. The durable
+  contract is `docs/support-tickets.md`. This authorizes API/Prisma work outside
+  the usual presentation lane. Shared surfaces announced before implementation:
+  API app mount, Prisma schema/new migrations and this changelog. Existing
+  authentication/provider and unrelated migration acceptance remain deferred.
+- **Slice 1.** Add owner-scoped ticket creation/list/thread APIs and bounded
+  pagination, strict Zod validation, private/no-store responses, EN/FA support
+  pages and account/mobile-menu/dashboard/footer entry points. Support sits
+  outside the dashboard verification gate, so unverified members can ask for help.
+- **Verification so far.** Ten API authorization/validation tests and four web
+  draft-recovery/navigation tests pass; root typecheck/build and web lint pass
+  (two existing warnings). Twelve production browser renders cover EN/FA, both
+  themes and 320/768/1280 widths. A disposable unverified member created/viewed
+  a ticket through the real local API/database; fixture rows were removed.
+- **Local database.** Applied only `202611060001_support_tickets` to the verified
+  loopback database on port 5434, then recorded it with Prisma migrate resolve.
+  The migration ledger confirms no unrelated migration was applied. Restarted
+  the project API to release the Windows Prisma client lock; no config file changed.
+  This targeted SQL/resolve workflow follows the official
+  [Prisma v6 hotfix workflow](https://www.prisma.io/docs/orm/v6/prisma-migrate/workflows/patching-and-hotfixing).
+- **Evidence.** `docs/artifacts/support-2026-11-06/`. Browser rendering is not
+  physical-phone or real-provider authentication acceptance. Remaining slices
+  are in progress; full release gates run before the feature is pushed.
+- **Slice 2.** Add the existing-administrator shared inbox, private replies and
+  resolve/reopen transitions with optimistic version checks. Seventeen API
+  tests and five conversation/form component tests pass. A real local browser
+  conversation covered staff reply, member resolve, member reopening, inbox
+  visibility and stranger/moderator isolation; disposable rows were removed.
+  Applied only `202611060002_support_conversations` locally. Staff cannot reopen
+  a resolved ticket themselves. Stale replies retain the draft and refresh the
+  thread before retry. Next route type generation is refreshed as routes grow.
+
 ## 2026-11-09 — TermBuddy mascot and optional creator avatar
 
 - **Scope / shared surfaces (announce in commit body).** New migration `202611090004_marketplace_creator_avatar`,

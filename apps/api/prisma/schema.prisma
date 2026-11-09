@@ -284,6 +284,54 @@ model ReaderUser {
   moderationCaseEvents   MarketplaceModerationCaseEvent[]
   notifications          MarketplaceNotification[]
   releaseReviews         MarketplaceReleaseManifest[]             @relation("MarketplaceReleaseReviewer")
+  supportTickets         SupportTicket[]
+  supportMessages        SupportMessage[]
+}
+
+enum SupportCategory {
+  TECHNICAL
+  LISTING
+  GENERAL
+}
+
+enum SupportStatus {
+  WAITING_FOR_SUPPORT
+  WAITING_FOR_MEMBER
+  RESOLVED
+}
+
+enum SupportAuthorRole {
+  MEMBER
+  ADMINISTRATOR
+}
+
+model SupportTicket {
+  id        String          @id @default(cuid())
+  ownerId   String
+  category  SupportCategory
+  subject   String
+  status    SupportStatus   @default(WAITING_FOR_SUPPORT)
+  version   Int             @default(0)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  owner     ReaderUser      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  messages  SupportMessage[]
+
+  @@index([ownerId, updatedAt, id])
+  @@index([status, updatedAt, id])
+}
+
+model SupportMessage {
+  id         String            @id @default(cuid())
+  ticketId   String
+  authorId   String?
+  authorRole SupportAuthorRole
+  body       String
+  createdAt  DateTime          @default(now())
+  ticket     SupportTicket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author     ReaderUser?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId, createdAt, id])
 }
 
 enum TransactionalEmailStatus {

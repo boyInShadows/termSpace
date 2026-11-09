@@ -1,0 +1,1 @@
+ALTER TABLE "SupportTicket" ADD COLUMN "version" INTEGER NOT NULL DEFAULT 0;

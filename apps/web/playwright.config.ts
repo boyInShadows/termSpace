@@ -42,6 +42,7 @@ export default defineConfig({
     },
     {
       name: "transport",
+      use: { ...channel },
       testDir: "./tests/e2e",
       outputDir: "../../docs/artifacts/playwright-transport",
     },

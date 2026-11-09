@@ -1,0 +1,90 @@
+import type { Request, Response } from "express";
+import type { SupportStatus } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
+
+const ticketSelect = { id: true, category: true, subject: true, status: true, version: true, createdAt: true, updatedAt: true } as const;
+const messageSelect = { id: true, body: true, authorRole: true, createdAt: true } as const;
+
+function ticketScope(req: Request, res: Response) {
+  return { id: String(req.params.id), ...(res.locals.supportAdmin ? {} : { ownerId: String(res.locals.reader.id) }) };
+}
+
+function missingTicket(res: Response) {
+  res.status(404).json({ error: { code: "NOT_FOUND", message: "Ticket not found" } });
+}
+
+function staleTicket(res: Response) {
+  res.status(409).json({ error: { code: "SUPPORT_CONFLICT", message: "This ticket changed. Review the latest messages and try again." } });
+}
+
+export async function listSupportTickets(req: Request, res: Response) {
+  const page = Number(req.query.page);
+  const tickets = await prisma.supportTicket.findMany({
+    where: res.locals.supportAdmin
+      ? { ...(req.query.status ? { status: req.query.status as SupportStatus } : {}) }
+      : { ownerId: String(res.locals.reader.id) },
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+    select: ticketSelect, skip: (page - 1) * 20, take: 21,
+  });
+  res.json({ data: { tickets: tickets.slice(0, 20), hasMore: tickets.length > 20, page } });
+}
+
+export async function createSupportTicket(req: Request, res: Response) {
+  const { category, subject, body } = req.body;
+  const ownerId = String(res.locals.reader.id);
+  const ticket = await prisma.supportTicket.create({
+    data: { ownerId, category, subject, messages: { create: { body, authorId: ownerId, authorRole: "MEMBER" } } },
+    select: { id: true },
+  });
+  res.status(201).json({ data: ticket });
+}
+
+export async function getSupportTicket(req: Request, res: Response) {
+  const ticket = await prisma.supportTicket.findFirst({
+    where: ticketScope(req, res), select: ticketSelect,
+  });
+  if (!ticket) {
+    missingTicket(res);
+    return;
+  }
+  const page = Number(req.query.page);
+  const messages = await prisma.supportMessage.findMany({
+    where: { ticketId: ticket.id }, orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: messageSelect, skip: (page - 1) * 50, take: 51,
+  });
+  res.json({ data: { ...ticket, messages: messages.slice(0, 50).reverse(), hasMore: messages.length > 50, page } });
+}
+
+export async function replySupportTicket(req: Request, res: Response) {
+  const scope = ticketScope(req, res);
+  const ticket = await prisma.supportTicket.findFirst({ where: scope, select: { id: true, status: true } });
+  if (!ticket) { missingTicket(res); return; }
+  if (res.locals.supportAdmin && ticket.status === "RESOLVED") {
+    res.status(409).json({ error: { code: "TICKET_RESOLVED", message: "Only a new member reply can reopen a resolved ticket." } });
+    return;
+  }
+  const saved = await prisma.$transaction(async (tx) => {
+    const updated = await tx.supportTicket.updateMany({
+      where: { ...scope, version: req.body.expectedVersion, ...(res.locals.supportAdmin ? { status: { not: "RESOLVED" as const } } : {}) },
+      data: { status: res.locals.supportAdmin ? "WAITING_FOR_MEMBER" : "WAITING_FOR_SUPPORT", version: { increment: 1 } },
+    });
+    if (!updated.count) return false;
+    await tx.supportMessage.create({ data: {
+      ticketId: ticket.id, authorId: String(res.locals.reader.id),
+      authorRole: res.locals.supportAdmin ? "ADMINISTRATOR" : "MEMBER", body: req.body.body,
+    } });
+    return true;
+  });
+  if (!saved) { staleTicket(res); return; }
+  res.status(201).json({ data: { saved: true } });
+}
+
+export async function resolveSupportTicket(req: Request, res: Response) {
+  const scope = ticketScope(req, res);
+  if (!await prisma.supportTicket.findFirst({ where: scope, select: { id: true } })) { missingTicket(res); return; }
+  const updated = await prisma.supportTicket.updateMany({
+    where: { ...scope, version: req.body.expectedVersion }, data: { status: "RESOLVED", version: { increment: 1 } },
+  });
+  if (!updated.count) { staleTicket(res); return; }
+  res.json({ data: { saved: true } });
+}

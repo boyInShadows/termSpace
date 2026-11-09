@@ -1,0 +1,21 @@
+import { Router } from "express";
+import { requireMarketplaceRole, requireReader } from "../middleware/auth.js";
+import { validate, validateRouteParam } from "../middleware/validate.js";
+import { createSupportTicket, getSupportTicket, listSupportTickets, replySupportTicket, resolveSupportTicket } from "../controllers/supportController.js";
+import { routeIdSchema, supportCreateSchema, supportPageSchema, supportInboxSchema, supportReplySchema, supportVersionSchema } from "../validation/schemas.js";
+
+const router = Router();
+router.use(requireReader);
+router.use((_req, res, next) => { res.set("Cache-Control", "private, no-store"); next(); });
+router.param("id", validateRouteParam("id", routeIdSchema));
+router.use("/admin", requireMarketplaceRole("administrator"), (_req, res, next) => { res.locals.supportAdmin = true; next(); });
+router.get("/admin/tickets", validate(supportInboxSchema, "query"), listSupportTickets);
+router.get("/admin/tickets/:id", validate(supportPageSchema, "query"), getSupportTicket);
+router.post("/admin/tickets/:id/messages", validate(supportReplySchema), replySupportTicket);
+router.post("/admin/tickets/:id/resolve", validate(supportVersionSchema), resolveSupportTicket);
+router.get("/tickets", validate(supportPageSchema, "query"), listSupportTickets);
+router.post("/tickets", validate(supportCreateSchema), createSupportTicket);
+router.get("/tickets/:id", validate(supportPageSchema, "query"), getSupportTicket);
+router.post("/tickets/:id/messages", validate(supportReplySchema), replySupportTicket);
+router.post("/tickets/:id/resolve", validate(supportVersionSchema), resolveSupportTicket);
+export default router;

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { copy, footerLabels, type Locale } from "@/lib/i18n";
 import { legalLabels } from "@/lib/legal";
 import { Footer } from "./footer";
+import { supportCopy } from "@/features/support/support-copy";
 
 const state = vi.hoisted(() => ({ locale: "en" as Locale }));
 vi.mock("@/lib/serverLocale", () => ({ getLocale: async () => state.locale }));
@@ -12,6 +13,7 @@ describe("server-rendered footer", () => {
     state.locale = locale;
     render(await Footer());
     expect(screen.getByText(copy[locale].footer)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: supportCopy[locale].title })).toHaveAttribute("href", `${locale === "fa" ? "/fa" : ""}/support`);
     expect(screen.getByRole("link", { name: footerLabels[locale].explore })).toHaveAttribute("href", locale === "fa" ? "/fa/explore" : "/explore");
     expect(screen.getByRole("link", { name: footerLabels[locale].support })).toHaveAttribute("href", locale === "fa" ? "/fa/account" : "/account");
     expect(screen.getByRole("link", { name: locale === "fa" ? "جامعه‌ها" : "Communities" })).toHaveAttribute("href", `${locale === "fa" ? "/fa" : ""}/communities`);

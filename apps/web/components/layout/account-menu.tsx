@@ -10,6 +10,7 @@ import { logout } from "@/lib/api";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
+import { supportLabel } from "@/features/support/support-label";
 
 export function useSignOut() {
   const router = useRouter();
@@ -101,6 +102,9 @@ export function AccountMenu({ email }: { email: string }) {
             className={itemClass}
           >
             {t.dashboard}
+          </Link>
+          <Link href={localePath("/support", locale)} onClick={() => setOpen(false)} className={itemClass}>
+            {supportLabel[locale]}
           </Link>
           <div role="separator" className="my-1 h-px bg-border" />
           <button

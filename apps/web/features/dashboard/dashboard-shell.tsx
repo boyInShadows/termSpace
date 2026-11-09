@@ -6,6 +6,7 @@ import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { EmailVerification } from "@/features/account/email-verification";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
+import { supportLabel } from "@/features/support/support-label";
 import { DashboardSidebar, DashboardTabBar } from "./dashboard-nav";
 import { DashboardSearch } from "./dashboard-search";
 import { DashboardOverviewSkeleton } from "./overview";
@@ -71,6 +72,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <div className="mx-auto max-w-[1200px]">
             <div className="mb-6 flex items-center gap-2">
               <DashboardSearch />
+              <Link href={localePath("/support", locale)} className="inline-flex min-h-11 items-center px-2 text-sm font-medium text-primary underline-offset-4 hover:underline">{supportLabel[locale]}</Link>
               {Menu ? <Menu /> : <span aria-hidden className="size-11 shrink-0" />}
             </div>
             <div key={session.email}>

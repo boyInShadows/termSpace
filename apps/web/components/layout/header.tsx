@@ -1,4 +1,5 @@
 "use client";
+import { supportLabel } from "@/features/support/support-label";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -272,6 +273,9 @@ export function Header() {
                   className="rounded-nav border-t border-border/60 px-2 py-3 text-sm hover:bg-muted"
                 >
                   {t.dashboard}
+                </Link>
+                <Link href={localePath("/support", locale)} onClick={() => setIsMenuOpen(false)} className="rounded-nav px-2 py-3 text-sm hover:bg-muted">
+                  {supportLabel[locale]}
                 </Link>
                 <button
                   type="button"
