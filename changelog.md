@@ -14,6 +14,9 @@ Project changes completed from `pending.md` should be recorded here with the dat
   leaves the initials and nothing shifts. Settings form gains a URL field (EN/FA).
 - **Chat.** `deploy/chatwoot/set-avatar.rb` attaches the picture to the Termbuddy agent bot and both website inboxes.
   Separate from `bootstrap.rb` so a re-run never resets the admin password.
+- **Deployed 2026-11-09.** Backup `/opt/backups/pre-avatar-20261109-135334.sql.gz`, migration `202611090004` applied,
+  api/web rebuilt; `termbuddy` creator row set to the commit-pinned raw GitHub URL; `set-avatar.rb` attached the picture to
+  the Termbuddy bot and both inboxes. Checked live: creator page, listing cards and the chat widget header show the mascot.
 - **Verified.** typecheck, API tests (310), lint (0 errors), production build; web tests pass except
   `creator-draft-editor-ui` "browser storage fails", which spies on `Storage.prototype` and does not exercise this
   change (Node 26 localStorage quirk). e2e/lhci not run: no markup changes unless an avatar URL is set.
