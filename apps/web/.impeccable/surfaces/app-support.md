@@ -13,6 +13,8 @@ white panels and existing rounded controls. Primary submissions use #0864D1.
 
 STORY: Members understand who can see the conversation, choose a category and
 send a useful message. Staff scan waiting tickets and respond without losing context.
+Support staff means verified marketplace administrators and moderators; other
+members see only their own tickets. Privacy copy names both staff roles.
 
 FIRST VIEWPORT: Support heading and privacy explanation above a compact list;
 New ticket is the single primary action. The form is one readable column. A

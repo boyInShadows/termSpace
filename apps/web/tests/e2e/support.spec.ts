@@ -2,7 +2,8 @@ import { expect, test } from "@playwright/test";
 import { supportCopy } from "../../features/support/support-copy";
 
 for (const locale of ["en", "fa"] as const) {
-  test(`private support creation, replies and resolution (${locale})`, async ({ page, context, baseURL }) => {
+  for (const staffPersona of ["admin", "staff"] as const) {
+  test(`private support creation, replies and resolution (${locale}/${staffPersona})`, async ({ page, context, baseURL }) => {
     const c = supportCopy[locale];
     const prefix = locale === "fa" ? "/fa" : "";
     await context.addCookies([{ name: "e2e_persona", value: "reader", url: baseURL! }]);
@@ -36,7 +37,7 @@ for (const locale of ["en", "fa"] as const) {
     await page.getByRole("textbox", { name: c.message, exact: true }).fill("More details from the member.");
     await page.getByRole("button", { name: c.reply, exact: true }).click();
     await expect(page.getByText("More details from the member.", { exact: true })).toBeVisible();
-    await context.addCookies([{ name: "e2e_persona", value: "admin", url: baseURL! }]);
+    await context.addCookies([{ name: "e2e_persona", value: staffPersona, url: baseURL! }]);
     const adminURL = ticketURL.replace("/support/", "/support/admin/");
     await page.goto(adminURL);
     await page.getByRole("textbox", { name: c.message, exact: true }).fill("Please try opening it again.");
@@ -50,4 +51,5 @@ for (const locale of ["en", "fa"] as const) {
     await page.getByRole("button", { name: c.reply, exact: true }).click();
     await expect(page.getByText(c.statuses.WAITING_FOR_SUPPORT, { exact: true })).toBeVisible();
   });
+  }
 }

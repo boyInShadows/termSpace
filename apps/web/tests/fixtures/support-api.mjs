@@ -23,8 +23,8 @@ async function readInput(request, readJson, owner) {
 export async function handleSupportFixture({ request, response, pathname, searchParams, persona, send, readJson }) {
   if (!pathname.startsWith("/api/support/")) return false;
   const admin = pathname.startsWith("/api/support/admin/");
-  if (admin && persona !== "admin") {
-    send(response, 403, { error: { code: "FORBIDDEN", message: "Administrator access required" } });
+  if (admin && persona !== "admin" && persona !== "staff") {
+    send(response, 403, { error: { code: "FORBIDDEN", message: "Support staff access required" } });
     return true;
   }
   const download = /^\/api\/support\/(?:admin\/)?attachments\/([^/]+)$/.exec(pathname);

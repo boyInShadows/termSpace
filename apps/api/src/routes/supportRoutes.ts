@@ -10,7 +10,7 @@ const router = Router();
 router.use(requireReader);
 router.use((_req, res, next) => { res.set("Cache-Control", "private, no-store"); next(); });
 router.param("id", validateRouteParam("id", routeIdSchema));
-router.use("/admin", requireMarketplaceRole("administrator"), (_req, res, next) => { res.locals.supportAdmin = true; next(); });
+router.use("/admin", requireMarketplaceRole("administrator", "moderator"), (_req, res, next) => { res.locals.supportAdmin = true; next(); });
 router.get("/admin/tickets", validate(supportInboxSchema, "query"), listSupportTickets);
 router.get("/admin/tickets/:id", validate(supportPageSchema, "query"), getSupportTicket);
 router.post("/admin/tickets/:id/messages", supportWriteRateLimit, uploadSupportScreenshots, parseSupportPayload, validate(supportReplySchema), replySupportTicket);

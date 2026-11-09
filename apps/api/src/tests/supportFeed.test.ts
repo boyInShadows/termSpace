@@ -38,8 +38,10 @@ it("hides former staff alerts from revoked administrators and scopes individual 
   expect(db.supportNotification.updateMany).toHaveBeenCalledWith({ where: { userId: "member-1", ticket: { ownerId: "member-1" }, readAt: null, id: { in: ["someone-elses-alert"] } }, data: { readAt: expect.any(Date) } });
 });
 
-it("allows currently verified administrators to read their staff alerts", async () => {
-  db.readerSession.findFirst.mockResolvedValue({ id: "session", user: { id: "admin-1", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "ADMINISTRATOR" }] } });
+it.each(["ADMINISTRATOR", "MODERATOR"])("allows a currently verified %s to read and acknowledge staff alerts", async role => {
+  db.readerSession.findFirst.mockResolvedValue({ id: "session", user: { id: "admin-1", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role }] } });
   await request(createApp()).get("/api/marketplace/notifications").set("Cookie", cookie);
   expect(db.supportNotification.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: "admin-1" } }));
+  await request(createApp()).post("/api/marketplace/notifications/read").set("Cookie", cookie).set("Origin", "http://localhost:3000").send({ ids: ["support-1"] });
+  expect(db.supportNotification.updateMany).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: "admin-1", readAt: null, id: { in: ["support-1"] } } }));
 });

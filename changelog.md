@@ -2,6 +2,43 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Support staff includes administrators and moderators
+
+- **Owner correction / shared surface.** Both verified marketplace administrators
+  and moderators may read and handle private support tickets. This supersedes the
+  earlier administrator-only support rule. Shared `changelog.md` records the
+  decision; API routes/notification tests and web layouts/copy are required
+  cross-lane work. Updated the existing support contract and surface brief.
+- **Access.** Both roles can use the shared inbox, view threads/screenshots, reply
+  and resolve. The existing `/admin` URL remains the staff route; moderator access
+  does not grant an administrator role. Web guards and inbox links use one support
+  predicate. Ordinary members/creators retain owner-only access; editorial admin
+  alone grants none. Member replies remain the only way to reopen a resolved ticket.
+- **Alerts / privacy.** Member events notify active verified users with either
+  staff role, excluding the actor. Current staff visibility applies consistently
+  to notification reads/acknowledgments and account export. Revoking the role removes
+  that access on the next request. EN/FA support and privacy copy name both roles.
+  No migration, provider, dependency or environment change.
+- **Verification.** Red moderator regressions reproduced403/notification failures;
+  repaired tests pass. Root typecheck/build and946 tests pass /52 database-gated
+  skips (44 incumbent plus eight support cases executed separately). Sixteen real
+  PostgreSQL lifecycle cases pass, including both staff roles, private image access,
+  alert/read/export visibility and revocation. Web lint zero errors/two incumbent
+  warnings. Full E2E535 passed/46 intentional skips; final-copy web rebuild and four
+  focused role/language browser flows pass. Nine Lighthouse runs pass unchanged
+  assertions. Real administrator and moderator localhost flows pass EN/FA;28 fresh
+  support/thread/policy captures cover both themes and320/768/1280, with no overflow
+  and the skip link first. Independent Impeccable finish and documentation reviews
+  returned `ship`.
+  Manual engineering/security diff review used Ponytail full; usage unavailable.
+  Evidence: `docs/artifacts/support-2026-11-06/staff-roles-*` and `role-review-*`.
+- **Local review.** Bulk captures reached the existing API limiter; kept its policy
+  intact, restarted only the verified local API and bounded the final capture set.
+  Normal localhost remains running. Temporary fixtures were removed; real active
+  administrator and moderator grant counts are both zero. Account email/intended
+  role is still needed for owner staff setup through the existing audited tool.
+  Tonight's target remains localhost; no real privilege grant or production action.
+
 ## 2026-11-09 — Ticketing prioritized for tonight's localhost review
 
 - **Owner decision / shared surface.** Ticketing is now the first priority;

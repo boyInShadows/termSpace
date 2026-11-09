@@ -2,15 +2,16 @@
 
 Approved by Ramtin on 2026-11-06. This is private staff support, available to
 every signed-in marketplace member, including members awaiting email verification.
-Only existing marketplace administrators may read other members' tickets or reply
-as staff. Editorial administrators and marketplace moderators receive no access.
+Verified marketplace administrators and moderators may read other members' tickets
+and reply as staff (owner correction, 2026-11-09). Editorial administration alone
+does not grant marketplace support access.
 
 ## Flow
 
 `/support` lists the member's tickets and offers a new-ticket form. Categories
 are Technical problem, Listing/submission help and General question. Subject and
 message are required. Creation and member replies set Waiting for support.
-Administrator replies set Waiting for you for members and Waiting for member
+Staff replies set Waiting for you for members and Waiting for member
 for staff. Either participant may resolve a
 ticket; a member reply reopens it. `/support/admin` is the shared staff inbox.
 No assignment, public discussion, internal notes, live chat or email delivery in v1.
@@ -21,7 +22,7 @@ Use `http://localhost:3000/support` as the member and
 `http://localhost:3000/support/admin` as staff. Persian uses the `/fa` prefix.
 Keep the two accounts in separate browser profiles or an incognito window so
 their sessions do not replace each other. Staff must have the existing verified
-marketplace administrator role; a creator, moderator or editorial admin is not
+marketplace administrator or moderator role; a creator or editorial admin is not
 automatically support staff. Account setup uses the existing operator role tool,
 not a new support password or environment variable.
 
@@ -45,6 +46,8 @@ staff and unrelated-member accounts, then removed those fixtures and images.
 Creation/upload, staff inbox/reply, bell, resolve/reopen, private access and
 export/deletion passed in EN desktop/light and FA phone/dark. This verifies the
 software flow; the owner still needs to choose a local staff account for review.
+The revised role policy is also verified with both administrators and moderators,
+including revocation of inbox/image/notification/export access.
 
 Screenshots accept PNG/JPEG/WebP: three per message, 5 MiB each, 10 MiB combined.
 The API decodes and re-encodes images, stores them outside public media and checks
@@ -55,7 +58,7 @@ omit private message content. Existing moderation notifications must keep workin
 
 1. Private creation and viewing: additive schema/migration, strict API validation,
    owner-scoped reads, English/Persian pages, account/dashboard/footer links.
-2. Shared administrator inbox, private replies, resolve/reopen transitions and
+2. Shared staff inbox, private replies, resolve/reopen transitions and
    optimistic concurrency. Failed submissions preserve the draft.
 3. Private screenshot storage, previews, validation and failure cleanup.
 4. In-app notifications, unread counts and existing bell integration.
@@ -74,6 +77,9 @@ controllers, validation and Prisma, beyond the usual presentation lane. Shared
 surfaces are `apps/api/src/app.ts`, `apps/api/prisma/schema.prisma`, new migration
 directories and `changelog.md`. Feature API/types and copy stay in dedicated
 support modules. Authentication/provider flows and blog permissions stay separate.
+The existing `/admin` route segment and `ADMINISTRATOR` message classification
+denote support staff; moderator access uses current marketplace role grants and
+does not grant the administrator role or editorial permissions.
 
 ## Private screenshots
 
@@ -90,7 +96,7 @@ Files live in `apps/api/private/support`, outside public media. The database and
 thread payload contain attachment IDs and dimensions; storage keys are internal.
 Member downloads use `/api/support/attachments/:id`; staff use the corresponding
 `/api/support/admin/attachments/:id` path. Every read checks current ownership or
-administrator access and returns private/no-store with nosniff. The web app uses
+administrator or moderator access and returns private/no-store with nosniff. The web app uses
 the same-origin backend proxy and bypasses the public image optimizer.
 
 Failed writes/stale replies remove prepared files. The hourly `support-cleanup`
@@ -113,7 +119,7 @@ constitute a production deployment.
 
 Ticket creation, replies and resolution save their alerts in the same database
 transaction as the change. Member actions notify current verified marketplace
-administrators; staff actions notify the ticket owner. The actor is never notified
+administrators and moderators; staff actions notify the ticket owner. The actor is never notified
 about their own action. No support email is sent in this version.
 
 The existing dashboard bell combines support alerts with moderation decisions.
@@ -125,7 +131,7 @@ storage keys and participant identities are absent from support previews.
 
 The existing `/api/marketplace/notifications/read` endpoint marks supplied IDs or
 all visible alerts read, scoped to the recipient. Support visibility also checks
-current ticket ownership or verified administrator access on each read/update;
+current ticket ownership or verified administrator/moderator access on each read/update;
 revoked staff cannot see or acknowledge former staff alerts. Unverified members
 can receive updates to their own tickets. Feed responses are private/no-store.
 Apply `202611090007_support_notifications` before starting this API revision.
@@ -174,7 +180,7 @@ then start the API and hourly cleanup worker with the same private volume/databa
 Use the API's existing same-origin proxy and host-only session cookies.
 
 Release smoke checks: create a ticket as an unverified member, attach an image,
-reply/resolve as a verified administrator, reopen as the owner, inspect the bell,
+reply/resolve as a verified administrator and moderator, reopen as the owner, inspect the bell,
 export the owner data, and confirm a different member cannot read the thread or
 image. Confirm account closure removes its owned conversation and denies the old
 session. Verify both languages/themes and phone layouts. Keep database and private

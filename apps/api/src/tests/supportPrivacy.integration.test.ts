@@ -34,11 +34,11 @@ describe.skipIf(!databaseUrl)("private support account lifecycle on PostgreSQL",
   });
   afterAll(async () => { if (prisma) await prisma.$disconnect(); vi.unstubAllEnvs(); });
 
-  async function reader(staff = false) {
+  async function reader(staff = false, role: "ADMINISTRATOR" | "MODERATOR" = "ADMINISTRATOR") {
     const user = await prisma.readerUser.create({ data: {
       email: `${randomUUID()}@support-privacy.test`, passwordHash: await hash(password, 4),
       emailVerifiedAt: staff ? new Date() : null,
-      ...(staff ? { marketplaceRoleGrants: { create: { role: "ADMINISTRATOR" } } } : {}),
+      ...(staff ? { marketplaceRoleGrants: { create: { role } } } : {}),
     } });
     users.push(user.id);
     const token = randomBytes(32).toString("base64url");
@@ -85,8 +85,8 @@ describe.skipIf(!databaseUrl)("private support account lifecycle on PostgreSQL",
     expect((await request(app).get("/api/support/tickets").set("Cookie", owner.cookie)).status).toBe(401);
   });
 
-  it("exports only staff-authored content and erases it without deleting the member's ticket", async () => {
-    const owner = await reader(); const staff = await reader(true);
+  it.each(["ADMINISTRATOR", "MODERATOR"] as const)("exports only %s-authored content and erases it without deleting the member's ticket", async role => {
+    const owner = await reader(); const staff = await reader(true, role);
     const ticket = await createTicket(owner.cookie, "Member content not owned by the staff account.");
     expect((await request(app).post(`/api/support/admin/tickets/${ticket.id}/messages`).set("Cookie", staff.cookie).set("Origin", origin).send({ body: "Staff-authored private message.", expectedVersion: 0 })).status).toBe(201);
     await prisma.marketplaceRoleGrant.updateMany({ where: { userId: staff.id }, data: { revokedAt: new Date() } });
@@ -101,6 +101,27 @@ describe.skipIf(!databaseUrl)("private support account lifecycle on PostgreSQL",
     expect(thread.body.data.messages[0].body).toBe("Member content not owned by the staff account.");
     expect(thread.body.data.messages[1].body).toBe("");
     expect(await prisma.supportMessage.count({ where: { authorId: staff.id } })).toBe(0);
+  });
+
+  it.each(["ADMINISTRATOR", "MODERATOR"] as const)("gives current %s staff access and notifications, then denies revoked access", async role => {
+    const owner = await reader(); const staff = await reader(true, role);
+    const ticket = await createTicket(owner.cookie, "Private ticket for staff permission verification.");
+    const staffRequest = (path: string) => request(app).get(path).set("Cookie", staff.cookie);
+    expect((await staffRequest("/api/support/admin/tickets")).status).toBe(200);
+    expect((await staffRequest(`/api/support/admin/tickets/${ticket.id}`)).status).toBe(200);
+    expect((await staffRequest(`/api/support/admin/attachments/${ticket.images[0]!.id}`)).status).toBe(200);
+    const feed = await staffRequest("/api/marketplace/notifications");
+    const alert = feed.body.data.notifications.find((entry: { ticketId: string }) => entry.ticketId === ticket.id);
+    expect(alert).toMatchObject({ type: "support_created", staff: true });
+    expect((await request(app).post("/api/marketplace/notifications/read").set("Cookie", staff.cookie).set("Origin", origin).send({ ids: [alert.id] })).body.data.updated).toBe(1);
+    expect((await request(app).post(`/api/support/admin/tickets/${ticket.id}/messages`).set("Cookie", staff.cookie).set("Origin", origin).send({ body: "Support staff response.", expectedVersion: 0 })).status).toBe(201);
+    expect((await request(app).post(`/api/support/admin/tickets/${ticket.id}/resolve`).set("Cookie", staff.cookie).set("Origin", origin).send({ expectedVersion: 1 })).status).toBe(200);
+    await prisma.marketplaceRoleGrant.updateMany({ where: { userId: staff.id }, data: { revokedAt: new Date() } });
+    expect((await staffRequest("/api/support/admin/tickets")).status).toBe(403);
+    expect((await staffRequest(`/api/support/admin/attachments/${ticket.images[0]!.id}`)).status).toBe(403);
+    expect((await staffRequest("/api/marketplace/notifications")).body.data.notifications).toEqual([]);
+    expect((await request(app).post("/api/marketplace/notifications/read").set("Cookie", staff.cookie).set("Origin", origin).send({ ids: [alert.id] })).body.data.updated).toBe(0);
+    expect((await staffRequest("/api/readers/profile/export")).body.data.supportNotifications).toEqual([]);
   });
 
   it("waits for an in-flight ticket write before erasing the account", async () => {

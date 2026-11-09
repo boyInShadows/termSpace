@@ -1,5 +1,5 @@
 import request from "supertest";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { supportWriteRateLimit } from "../middleware/security.js";
 
 const db = vi.hoisted(() => ({
@@ -15,8 +15,10 @@ const cookie = "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456";
 const input = { category: "TECHNICAL", subject: "Cannot open listing", body: "The listing page fails when I open the latest release." };
 
 describe("private member support", () => {
+  afterEach(() => vi.unstubAllEnvs());
   beforeEach(async () => {
     vi.resetAllMocks();
+    vi.stubEnv("LOCAL_AUTO_VERIFY_EMAIL", "false");
     db.readerUser.findMany.mockResolvedValue([]);
     db.readerUser.count.mockImplementation(async ({ where }) => where.id.in.filter(Boolean).length);
     await supportWriteRateLimit.resetKey("member-1");
@@ -74,17 +76,23 @@ describe("private member support", () => {
     expect((await request(createApp()).get("/api/support/tickets?page=-1").set("Cookie", cookie)).status).toBe(400);
   });
 
-  it.each([{ roles: [] }, { roles: [{ role: "MODERATOR" }] }, { roles: [{ role: "CREATOR" }] }])("denies non-administrators the shared inbox", async ({ roles }) => {
+  it.each([{ roles: [] }, { roles: [{ role: "CREATOR" }] }])("denies non-staff the shared inbox", async ({ roles }) => {
     db.readerSession.findFirst.mockResolvedValue({ id: "session", user: { id: "member-1", email: "x@example.test", emailVerifiedAt: new Date(), marketplaceRoleGrants: roles } });
     expect((await request(createApp()).get("/api/support/admin/tickets").set("Cookie", cookie)).status).toBe(403);
     expect(db.supportTicket.findMany).not.toHaveBeenCalled();
   });
 
-  it("lets an existing administrator read the bounded inbox", async () => {
-    db.readerSession.findFirst.mockResolvedValue({ id: "session", user: { id: "admin-1", email: "x@example.test", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "ADMINISTRATOR" }] } });
+  it.each(["ADMINISTRATOR", "MODERATOR"])("lets a verified %s read the bounded inbox", async role => {
+    db.readerSession.findFirst.mockResolvedValue({ id: "session", user: { id: "admin-1", email: "x@example.test", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role }] } });
     const result = await request(createApp()).get("/api/support/admin/tickets?status=RESOLVED").set("Cookie", cookie);
     expect(result.status).toBe(200);
     expect(db.supportTicket.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { status: "RESOLVED" }, take: 21 }));
+  });
+
+  it.each(["ADMINISTRATOR", "MODERATOR"])("denies an unverified %s the shared inbox", async role => {
+    db.readerSession.findFirst.mockResolvedValue({ id: "session", user: { id: "admin-1", email: "x@example.test", emailVerifiedAt: null, marketplaceRoleGrants: [{ role }] } });
+    expect((await request(createApp()).get("/api/support/admin/tickets").set("Cookie", cookie)).status).toBe(403);
+    expect(db.supportTicket.findMany).not.toHaveBeenCalled();
   });
 
   it("member replies reopen resolved tickets atomically and cannot forge staff authorship", async () => {
@@ -106,8 +114,8 @@ describe("private member support", () => {
     expect(db.supportMessage.create).not.toHaveBeenCalled();
   });
 
-  it("administrator replies wait for the member and either participant can resolve", async () => {
-    db.readerSession.findFirst.mockResolvedValue({ id: "session", user: { id: "admin-1", email: "x@example.test", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "ADMINISTRATOR" }] } });
+  it.each(["ADMINISTRATOR", "MODERATOR"])("%s replies wait for the member and either participant can resolve", async role => {
+    db.readerSession.findFirst.mockResolvedValue({ id: "session", user: { id: "admin-1", email: "x@example.test", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role }] } });
     db.supportTicket.findFirst.mockResolvedValue({ id: "ticket-1", ownerId: "member-1", version: 0, status: "WAITING_FOR_SUPPORT" });
     expect((await request(createApp()).post("/api/support/admin/tickets/ticket-1/messages").set("Cookie", cookie)
       .set("Origin", "http://localhost:3000").send({ body: "Please try the latest release.", expectedVersion: 0 })).status).toBe(201);

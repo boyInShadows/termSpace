@@ -6,12 +6,12 @@ const db = { readerUser: { findMany: vi.fn() }, supportNotification: { createMan
 const tx = db as unknown as Prisma.TransactionClient;
 beforeEach(() => vi.resetAllMocks());
 
-it("addresses new tickets only to active, verified administrators other than the actor", async () => {
+it("addresses new tickets only to active, verified administrators and moderators other than the actor", async () => {
   db.readerUser.findMany.mockResolvedValue([{ id: "admin-1" }, { id: "admin-2" }]);
   await notifySupportParticipants(tx, { ticketId: "ticket-1", ownerId: "member-1", actorId: "member-1", type: "TICKET_CREATED", audience: "staff" });
   expect(db.readerUser.findMany).toHaveBeenCalledWith({ where: {
     id: { not: "member-1" }, deletedAt: null, emailVerifiedAt: { not: null },
-    marketplaceRoleGrants: { some: { role: "ADMINISTRATOR", revokedAt: null } },
+    marketplaceRoleGrants: { some: { role: { in: ["ADMINISTRATOR", "MODERATOR"] }, revokedAt: null } },
   }, select: { id: true } });
   expect(db.supportNotification.createMany).toHaveBeenCalledWith({ data: [
     { ticketId: "ticket-1", userId: "admin-1", type: "TICKET_CREATED" },

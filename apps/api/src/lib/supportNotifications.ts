@@ -1,8 +1,8 @@
 import type { Prisma, SupportNotificationType } from "@prisma/client";
 
 export function visibleSupportNotifications(reader: { id: string; emailVerified: boolean; marketplaceRoles: string[] }) {
-  const administrator = reader.emailVerified && reader.marketplaceRoles.includes("administrator");
-  return { userId: reader.id, ...(administrator ? {} : { ticket: { ownerId: reader.id } }) };
+  const staff = reader.emailVerified && reader.marketplaceRoles.some(role => role === "administrator" || role === "moderator");
+  return { userId: reader.id, ...(staff ? {} : { ticket: { ownerId: reader.id } }) };
 }
 
 export async function notifySupportParticipants(tx: Prisma.TransactionClient, event: {
@@ -10,7 +10,7 @@ export async function notifySupportParticipants(tx: Prisma.TransactionClient, ev
 }) {
   const recipients = event.audience === "staff"
     ? await tx.readerUser.findMany({
-      where: { id: { not: event.actorId }, deletedAt: null, emailVerifiedAt: { not: null }, marketplaceRoleGrants: { some: { role: "ADMINISTRATOR", revokedAt: null } } },
+      where: { id: { not: event.actorId }, deletedAt: null, emailVerifiedAt: { not: null }, marketplaceRoleGrants: { some: { role: { in: ["ADMINISTRATOR", "MODERATOR"] }, revokedAt: null } } },
       select: { id: true },
     })
     : event.ownerId === event.actorId ? [] : [{ id: event.ownerId }];
