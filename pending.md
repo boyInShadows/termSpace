@@ -95,7 +95,3 @@ they touch and need a written plan first.
 - `github-mcp-server` (published, v2.1.0) still lacks its icon and the Copilot, OpenCode,
   Windsurf and Zed compatibility: add them with its next upstream release, since a
   published version's metadata cannot change under the same label.
-- Install commands for the 24 published seed listings (`scripts/seed-termbuddy/listings.json`)
-  need a new release version label each, then Approve and Publish again. Use the
-  upstream's next real version where it has moved; otherwise decide on a catalog
-  revision label. Applied with `revise.mts` once decided.

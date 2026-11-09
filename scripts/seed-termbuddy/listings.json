@@ -208,14 +208,14 @@
         "icon": "https://avatars.githubusercontent.com/u/6154722?v=4"
       },
       "release": {
-        "version": "0.0.84",
+        "version": "0.0.84+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/microsoft/playwright-mcp",
           "authorship": "third_party",
           "originalAuthor": "Microsoft"
         },
-        "releaseNotes": "Tracks upstream release v0.0.84 (published 2026-10-31) and npm package @playwright/mcp 0.0.84.",
+        "releaseNotes": "Tracks upstream release v0.0.84 (published 2026-10-31) and npm package @playwright/mcp 0.0.84. Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -369,14 +369,14 @@
         "icon": "https://avatars.githubusercontent.com/u/74989412?v=4"
       },
       "release": {
-        "version": "4.5.1",
+        "version": "4.6.0",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/upstash/context7",
           "authorship": "third_party",
           "originalAuthor": "Upstash"
         },
-        "releaseNotes": "Tracks upstream release @upstash/context7-mcp@4.5.1 (published 2026-11-06).",
+        "releaseNotes": "Tracks upstream release @upstash/context7-mcp@4.6.0 (published 2026-11-09). Catalog update: adds per-OS install commands.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -501,14 +501,14 @@
         "icon": "https://avatars.githubusercontent.com/u/11260967?v=4"
       },
       "release": {
-        "version": "1.12.0",
+        "version": "1.12.0+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
           "authorship": "third_party",
           "originalAuthor": "Chrome DevTools team (Google)"
         },
-        "releaseNotes": "Tracks upstream release chrome-devtools-mcp-v1.12.0 (published 2026-10-22) and npm package chrome-devtools-mcp 1.12.0.",
+        "releaseNotes": "Tracks upstream release chrome-devtools-mcp-v1.12.0 (published 2026-10-22) and npm package chrome-devtools-mcp 1.12.0. Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -779,14 +779,14 @@
         "icon": "https://avatars.githubusercontent.com/u/135057108?v=4"
       },
       "release": {
-        "version": "3.38.0",
+        "version": "3.38.0+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/firecrawl/firecrawl-mcp-server",
           "authorship": "third_party",
           "originalAuthor": "Firecrawl"
         },
-        "releaseNotes": "Tracks npm package firecrawl-mcp 3.38.0 (upstream GitHub release v3.36.1 published 2026-11-03).",
+        "releaseNotes": "Tracks npm package firecrawl-mcp 3.38.0 (upstream GitHub release v3.36.1 published 2026-11-03). Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -941,14 +941,14 @@
         "icon": "https://avatars.githubusercontent.com/u/170207473?v=4"
       },
       "release": {
-        "version": "0.2.22",
+        "version": "0.2.22+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/tavily-ai/tavily-mcp",
           "authorship": "third_party",
           "originalAuthor": "Tavily"
         },
-        "releaseNotes": "Tracks npm package tavily-mcp 0.2.22. Upstream publishes no GitHub releases.",
+        "releaseNotes": "Tracks npm package tavily-mcp 0.2.22. Upstream publishes no GitHub releases. Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -1368,14 +1368,14 @@
         "issueTrackerUrl": "https://github.com/obra/superpowers/issues"
       },
       "release": {
-        "version": "7.0.2",
+        "version": "7.0.2+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/obra/superpowers",
           "authorship": "third_party",
           "originalAuthor": "obra (Prime Radiant)"
         },
-        "releaseNotes": "Tracks upstream release v7.0.2 (published 2026-11-03).",
+        "releaseNotes": "Tracks upstream release v7.0.2 (published 2026-11-03). Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -1506,14 +1506,14 @@
         "icon": "https://avatars.githubusercontent.com/u/76263028?v=4"
       },
       "release": {
-        "version": "snapshot-2026-11-06",
+        "version": "snapshot-2026-11-09",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/anthropics/skills",
           "authorship": "third_party",
           "originalAuthor": "Anthropic"
         },
-        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-06).",
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09). Catalog update: adds per-OS install commands.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -1634,14 +1634,14 @@
         "issueTrackerUrl": "https://github.com/wshobson/agents/issues"
       },
       "release": {
-        "version": "snapshot-2026-11-09",
+        "version": "snapshot-2026-11-09+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/wshobson/agents",
           "authorship": "third_party",
           "originalAuthor": "Seth Hobson (wshobson)"
         },
-        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09).",
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09). Catalog update: adds per-OS install commands.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -1777,14 +1777,14 @@
         "icon": "https://avatars.githubusercontent.com/u/225919603?v=4"
       },
       "release": {
-        "version": "1.37.0",
+        "version": "1.37.0+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/OpenHands/OpenHands",
           "authorship": "third_party",
           "originalAuthor": "OpenHands"
         },
-        "releaseNotes": "Tracks upstream release v1.37.0 (published 2026-11-06).",
+        "releaseNotes": "Tracks upstream release v1.37.0 (published 2026-11-06). Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "api",
@@ -1930,14 +1930,14 @@
         "icon": "https://avatars.githubusercontent.com/u/66570915?v=4"
       },
       "release": {
-        "version": "1.19.5",
+        "version": "1.19.5+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/anomalyco/opencode",
           "authorship": "third_party",
           "originalAuthor": "OpenCode (anomalyco)"
         },
-        "releaseNotes": "Tracks upstream release v1.19.5 (published 2026-10-28).",
+        "releaseNotes": "Tracks upstream release v1.19.5 (published 2026-10-28). Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "api",
@@ -2089,14 +2089,14 @@
         "icon": "https://avatars.githubusercontent.com/u/9919?v=4"
       },
       "release": {
-        "version": "1.3.2",
+        "version": "1.3.2+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/github/spec-kit",
           "authorship": "third_party",
           "originalAuthor": "GitHub"
         },
-        "releaseNotes": "Tracks upstream release v1.3.2 (published 2026-11-06).",
+        "releaseNotes": "Tracks upstream release v1.3.2 (published 2026-11-06). Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -2458,14 +2458,14 @@
         "issueTrackerUrl": "https://github.com/danielmiessler/Fabric/issues"
       },
       "release": {
-        "version": "1.4.567",
+        "version": "1.4.567+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/danielmiessler/Fabric",
           "authorship": "third_party",
           "originalAuthor": "Daniel Miessler"
         },
-        "releaseNotes": "Tracks upstream release v1.4.567 (published 2026-11-08).",
+        "releaseNotes": "Tracks upstream release v1.4.567 (published 2026-11-08). Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "api",
@@ -2581,14 +2581,14 @@
         "issueTrackerUrl": "https://github.com/karanb192/claude-code-hooks/issues"
       },
       "release": {
-        "version": "snapshot-2026-11-02",
+        "version": "snapshot-2026-11-09",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/karanb192/claude-code-hooks",
           "authorship": "third_party",
           "originalAuthor": "karanb192"
         },
-        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-02).",
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09). Catalog update: adds per-OS install commands.",
         "compatibility": [
           {
             "platform": "claude-code",
@@ -2709,14 +2709,14 @@
         "issueTrackerUrl": "https://github.com/davila7/claude-code-templates/issues"
       },
       "release": {
-        "version": "1.29.7",
+        "version": "1.29.7+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/davila7/claude-code-templates",
           "authorship": "third_party",
           "originalAuthor": "davila7"
         },
-        "releaseNotes": "Tracks upstream release v1.29.7 (published 2026-10-09).",
+        "releaseNotes": "Tracks upstream release v1.29.7 (published 2026-10-09). Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code",
@@ -2936,14 +2936,14 @@
         "icon": "https://avatars.githubusercontent.com/u/77690634?v=4"
       },
       "release": {
-        "version": "snapshot-2026-11-07",
+        "version": "snapshot-2026-11-09",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/neondatabase/mcp-server-neon",
           "authorship": "third_party",
           "originalAuthor": "Neon"
         },
-        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-07).",
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09). Catalog update: adds per-OS install commands.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -3081,14 +3081,14 @@
         "icon": "https://avatars.githubusercontent.com/u/7195757?v=4"
       },
       "release": {
-        "version": "2.2.0",
+        "version": "2.2.0+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/grafana/mcp-grafana",
           "authorship": "third_party",
           "originalAuthor": "Grafana Labs"
         },
-        "releaseNotes": "Tracks upstream release v2.2.0 (published 2026-11-02) and PyPI package mcp-grafana 2.2.0.",
+        "releaseNotes": "Tracks upstream release v2.2.0 (published 2026-11-02) and PyPI package mcp-grafana 2.2.0. Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -3233,14 +3233,14 @@
         "issueTrackerUrl": "https://github.com/Flux159/mcp-server-kubernetes/issues"
       },
       "release": {
-        "version": "4.2.1",
+        "version": "4.2.1+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/Flux159/mcp-server-kubernetes",
           "authorship": "third_party",
           "originalAuthor": "Flux159"
         },
-        "releaseNotes": "Tracks upstream release v4.2.1 (published 2026-10-26).",
+        "releaseNotes": "Tracks upstream release v4.2.1 (published 2026-10-26). Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -3384,14 +3384,14 @@
         "icon": "https://avatars.githubusercontent.com/u/761456?v=4"
       },
       "release": {
-        "version": "1.4.1",
+        "version": "1.4.1+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/hashicorp/terraform-mcp-server",
           "authorship": "third_party",
           "originalAuthor": "HashiCorp"
         },
-        "releaseNotes": "Tracks upstream release v1.4.1 (published 2026-10-23).",
+        "releaseNotes": "Tracks upstream release v1.4.1 (published 2026-10-23). Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -3665,14 +3665,14 @@
         "icon": "https://avatars.githubusercontent.com/u/30398729?v=4"
       },
       "release": {
-        "version": "2.4.1",
+        "version": "2.4.1+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/alpacahq/alpaca-mcp-server",
           "authorship": "third_party",
           "originalAuthor": "Alpaca"
         },
-        "releaseNotes": "Tracks upstream release v2.4.1 (published 2026-11-04) and PyPI package alpaca-mcp-server 2.4.1.",
+        "releaseNotes": "Tracks upstream release v2.4.1 (published 2026-11-04) and PyPI package alpaca-mcp-server 2.4.1. Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -3823,14 +3823,14 @@
         "icon": "https://avatars.githubusercontent.com/u/168166?v=4"
       },
       "release": {
-        "version": "snapshot-2026-11-07 (v2)",
+        "version": "snapshot-2026-11-09 (v2)",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/atlassian/atlassian-mcp-server",
           "authorship": "third_party",
           "originalAuthor": "Atlassian"
         },
-        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-07). Upstream recommends the v2 endpoint for new setups.",
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09). Upstream recommends the v2 endpoint for new setups. Catalog update: adds per-OS install commands.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -3965,14 +3965,14 @@
         "issueTrackerUrl": "https://github.com/taylorwilsdon/google_workspace_mcp/issues"
       },
       "release": {
-        "version": "2.4.0",
+        "version": "2.4.0+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/taylorwilsdon/google_workspace_mcp",
           "authorship": "third_party",
           "originalAuthor": "Taylor Wilsdon"
         },
-        "releaseNotes": "Tracks upstream release v2.4.0 (published 2026-11-09) and PyPI package workspace-mcp 2.4.0.",
+        "releaseNotes": "Tracks upstream release v2.4.0 (published 2026-11-09) and PyPI package workspace-mcp 2.4.0. Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -4121,14 +4121,14 @@
         "icon": "https://avatars.githubusercontent.com/u/2565372?v=4"
       },
       "release": {
-        "version": "13.11.2",
+        "version": "14.0.1",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/Doist/todoist-mcp",
           "authorship": "third_party",
           "originalAuthor": "Doist"
         },
-        "releaseNotes": "Tracks upstream release v13.11.2 (published 2026-11-09).",
+        "releaseNotes": "Tracks upstream release v14.0.1 (published 2026-11-09). Catalog update: adds per-OS install commands.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -4257,14 +4257,14 @@
         "issueTrackerUrl": "https://github.com/ahujasid/mcp-for-blender/issues"
       },
       "release": {
-        "version": "snapshot-2026-11-04",
+        "version": "snapshot-2026-11-09",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/ahujasid/mcp-for-blender",
           "authorship": "third_party",
           "originalAuthor": "ahujasid"
         },
-        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-04).",
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09). Catalog update: adds per-OS install commands.",
         "compatibility": [
           {
             "platform": "claude-code"
@@ -4562,14 +4562,14 @@
         "icon": "https://avatars.githubusercontent.com/u/4327788?v=4"
       },
       "release": {
-        "version": "1.1.0",
+        "version": "1.1.0+catalog.2",
         "source": {
           "kind": "external_link",
           "url": "https://github.com/googleanalytics/google-analytics-mcp",
           "authorship": "third_party",
           "originalAuthor": "Google (Google Analytics team)"
         },
-        "releaseNotes": "Tracks upstream release 1.1.0 (published 2026-11-06).",
+        "releaseNotes": "Tracks upstream release 1.1.0 (published 2026-11-06). Catalog update: adds per-OS install commands; no upstream change.",
         "compatibility": [
           {
             "platform": "claude-code"

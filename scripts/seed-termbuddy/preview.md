@@ -27,7 +27,7 @@ Upstream notes that for coding agents a CLI-plus-skills workflow can be more tok
 
 Listed by TermBuddy as a third-party project. Maintained by Microsoft; this listing is not endorsed by Microsoft.
 
-- slug: `playwright-mcp` · version 0.0.84 · licence Apache-2.0
+- slug: `playwright-mcp` · version 0.0.84+catalog.2 · licence Apache-2.0
 - author: Microsoft · source: https://github.com/microsoft/playwright-mcp
 - platforms: claude-code, claude, cursor, vscode, amp, cline, github-copilot, opencode, windsurf
 - permissions: browser_automation, process_execution, network_access
@@ -45,7 +45,7 @@ It runs as a hosted MCP server at mcp.context7.com, or locally through the publi
 
 Listed by TermBuddy as a third-party project. Maintained by Upstash; this listing is not endorsed by Upstash.
 
-- slug: `context7-mcp` · version 4.5.1 · licence MIT
+- slug: `context7-mcp` · version 4.6.0 · licence MIT
 - author: Upstash · source: https://github.com/upstash/context7
 - platforms: claude-code, claude, cursor, chatgpt, opencode
 - permissions: network_access, secret_access
@@ -63,7 +63,7 @@ Upstream warns that it exposes the content of the browser instance to the MCP cl
 
 Listed by TermBuddy as a third-party project. Maintained by Chrome DevTools team (Google); this listing is not endorsed by Chrome DevTools team (Google).
 
-- slug: `chrome-devtools-mcp` · version 1.12.0 · licence Apache-2.0
+- slug: `chrome-devtools-mcp` · version 1.12.0+catalog.2 · licence Apache-2.0
 - author: Chrome DevTools team (Google) · source: https://github.com/ChromeDevTools/chrome-devtools-mcp
 - platforms: claude-code, claude, cursor, vscode, github-copilot
 - permissions: browser_automation, process_execution, network_access, telemetry
@@ -99,7 +99,7 @@ A Firecrawl API key is required for the cloud service.
 
 Listed by TermBuddy as a third-party project. Maintained by Firecrawl; this listing is not endorsed by Firecrawl.
 
-- slug: `firecrawl-mcp-server` · version 3.38.0 · licence MIT
+- slug: `firecrawl-mcp-server` · version 3.38.0+catalog.2 · licence MIT
 - author: Firecrawl · source: https://github.com/firecrawl/firecrawl-mcp-server
 - platforms: claude-code, claude, cursor, windsurf
 - permissions: network_access, secret_access, external_account_access
@@ -117,7 +117,7 @@ It runs locally via npx with a Tavily API key, or you can connect to Tavily's re
 
 Listed by TermBuddy as a third-party project. Maintained by Tavily; this listing is not endorsed by Tavily.
 
-- slug: `tavily-mcp` · version 0.2.22 · licence MIT
+- slug: `tavily-mcp` · version 0.2.22+catalog.2 · licence MIT
 - author: Tavily · source: https://github.com/tavily-ai/tavily-mcp
 - platforms: claude-code, claude, cursor
 - permissions: network_access, secret_access, external_account_access
@@ -171,7 +171,7 @@ Skills in the repository include brainstorming, test-driven-development, systema
 
 Listed by TermBuddy as a third-party project. Maintained by obra (Prime Radiant); this listing is not endorsed by obra (Prime Radiant).
 
-- slug: `superpowers` · version 7.0.2 · licence MIT
+- slug: `superpowers` · version 7.0.2+catalog.2 · licence MIT
 - author: obra (Prime Radiant) · source: https://github.com/obra/superpowers
 - platforms: claude-code, codex, cursor, gemini-cli, github-copilot, opencode
 - permissions: filesystem_read, filesystem_write, process_execution, code_modification
@@ -189,7 +189,7 @@ Upstream states the skills are provided for demonstration and educational purpos
 
 Listed by TermBuddy as a third-party project. Maintained by Anthropic; this listing is not endorsed by Anthropic.
 
-- slug: `anthropic-agent-skills` · version snapshot-2026-11-06 · licence Apache-2.0 (per-skill LICENSE.txt; no root licence)
+- slug: `anthropic-agent-skills` · version snapshot-2026-11-09 · licence Apache-2.0 (per-skill LICENSE.txt; no root licence)
 - author: Anthropic · source: https://github.com/anthropics/skills
 - platforms: claude-code, claude, api
 - permissions: filesystem_read, filesystem_write, process_execution
@@ -207,7 +207,7 @@ Supported harnesses named upstream are Claude Code, OpenAI Codex CLI, Cursor, Op
 
 Listed by TermBuddy as a third-party project. Maintained by Seth Hobson (wshobson); this listing is not endorsed by Seth Hobson (wshobson).
 
-- slug: `wshobson-agents` · version snapshot-2026-11-09 · licence MIT
+- slug: `wshobson-agents` · version snapshot-2026-11-09+catalog.2 · licence MIT
 - author: Seth Hobson (wshobson) · source: https://github.com/wshobson/agents
 - platforms: claude-code, codex, cursor, github-copilot, opencode
 - permissions: filesystem_read, filesystem_write, process_execution, code_modification
@@ -225,7 +225,7 @@ Upstream warns that the quickstart runs the agent-server directly on your machin
 
 Listed by TermBuddy as a third-party project. Maintained by OpenHands; this listing is not endorsed by OpenHands.
 
-- slug: `openhands-agent-canvas` · version 1.37.0 · licence MIT
+- slug: `openhands-agent-canvas` · version 1.37.0+catalog.2 · licence MIT
 - author: OpenHands · source: https://github.com/OpenHands/OpenHands
 - platforms: api, claude-code, codex, gemini-cli
 - permissions: filesystem_read, filesystem_write, process_execution, network_access, code_modification, background_execution
@@ -241,7 +241,7 @@ OpenCode is an open source AI coding agent. It installs as a command line tool t
 
 Listed by TermBuddy as a third-party project. Maintained by OpenCode (anomalyco); this listing is not endorsed by OpenCode (anomalyco).
 
-- slug: `opencode` · version 1.19.5 · licence MIT
+- slug: `opencode` · version 1.19.5+catalog.2 · licence MIT
 - author: OpenCode (anomalyco) · source: https://github.com/anomalyco/opencode
 - platforms: api, opencode
 - permissions: filesystem_read, filesystem_write, process_execution, network_access, code_modification
@@ -259,7 +259,7 @@ Upstream documents many coding-agent integrations (43 options in total); the pag
 
 Listed by TermBuddy as a third-party project. Maintained by GitHub; this listing is not endorsed by GitHub.
 
-- slug: `github-spec-kit` · version 1.3.2 · licence MIT
+- slug: `github-spec-kit` · version 1.3.2+catalog.2 · licence MIT
 - author: GitHub · source: https://github.com/github/spec-kit
 - platforms: claude-code, codex, gemini-cli, vscode, github-copilot
 - permissions: filesystem_write, process_execution, code_modification
@@ -313,7 +313,7 @@ First-time setup is fabric --setup, where you choose providers and enter any API
 
 Listed by TermBuddy as a third-party project. Maintained by Daniel Miessler; this listing is not endorsed by Daniel Miessler.
 
-- slug: `fabric-patterns` · version 1.4.567 · licence MIT
+- slug: `fabric-patterns` · version 1.4.567+catalog.2 · licence MIT
 - author: Daniel Miessler · source: https://github.com/danielmiessler/Fabric
 - platforms: api
 - permissions: network_access, secret_access
@@ -331,7 +331,7 @@ Each hook is its own plugin with a script, tests and a README, grouped by the Cl
 
 Listed by TermBuddy as a third-party project. Maintained by karanb192; this listing is not endorsed by karanb192.
 
-- slug: `claude-code-hooks-marketplace` · version snapshot-2026-11-02 · licence MIT
+- slug: `claude-code-hooks-marketplace` · version snapshot-2026-11-09 · licence MIT
 - author: karanb192 · source: https://github.com/karanb192/claude-code-hooks
 - platforms: claude-code
 - permissions: filesystem_read, filesystem_write, process_execution
@@ -349,7 +349,7 @@ The CLI adds files from the registry to your project, so review each component b
 
 Listed by TermBuddy as a third-party project. Maintained by davila7; this listing is not endorsed by davila7.
 
-- slug: `claude-code-templates` · version 1.29.7 · licence MIT
+- slug: `claude-code-templates` · version 1.29.7+catalog.2 · licence MIT
 - author: davila7 · source: https://github.com/davila7/claude-code-templates
 - platforms: claude-code
 - permissions: network_access, filesystem_write, process_execution
@@ -385,7 +385,7 @@ If Neon's IP Allow is enabled, upstream says to allowlist the static IPs of mcp.
 
 Listed by TermBuddy as a third-party project. Maintained by Neon; this listing is not endorsed by Neon.
 
-- slug: `neon-mcp-server` · version snapshot-2026-11-07 · licence MIT
+- slug: `neon-mcp-server` · version snapshot-2026-11-09 · licence MIT
 - author: Neon · source: https://github.com/neondatabase/mcp-server-neon
 - platforms: claude-code, cursor, vscode, cline, github-copilot, windsurf, zed
 - permissions: network_access, external_account_access, secret_access
@@ -403,7 +403,7 @@ Authenticate with a Grafana service account token and point GRAFANA_URL at your 
 
 Listed by TermBuddy as a third-party project. Maintained by Grafana Labs; this listing is not endorsed by Grafana Labs.
 
-- slug: `grafana-mcp-server` · version 2.2.0 · licence Apache-2.0
+- slug: `grafana-mcp-server` · version 2.2.0+catalog.2 · licence Apache-2.0
 - author: Grafana Labs · source: https://github.com/grafana/mcp-grafana
 - platforms: claude-code, claude, cursor, vscode
 - permissions: network_access, secret_access, external_account_access
@@ -421,7 +421,7 @@ This can change real clusters. Point it at a development context first and read 
 
 Listed by TermBuddy as a third-party project. Maintained by Flux159; this listing is not endorsed by Flux159.
 
-- slug: `kubernetes-mcp-server` · version 4.2.1 · licence MIT
+- slug: `kubernetes-mcp-server` · version 4.2.1+catalog.2 · licence MIT
 - author: Flux159 · source: https://github.com/Flux159/mcp-server-kubernetes
 - platforms: claude-code, claude, codex, cursor, vscode
 - permissions: process_execution, filesystem_read, secret_access, external_account_access
@@ -439,7 +439,7 @@ HCP Terraform and Terraform Enterprise access needs a TFE_TOKEN and optionally a
 
 Listed by TermBuddy as a third-party project. Maintained by HashiCorp; this listing is not endorsed by HashiCorp.
 
-- slug: `terraform-mcp-server` · version 1.4.1 · licence MPL-2.0
+- slug: `terraform-mcp-server` · version 1.4.1+catalog.2 · licence MPL-2.0
 - author: HashiCorp · source: https://github.com/hashicorp/terraform-mcp-server
 - platforms: claude-code, claude, cursor, vscode, opencode
 - permissions: network_access, secret_access, external_account_access, process_execution
@@ -475,7 +475,7 @@ This can place real orders if you use live keys. Use paper keys, restrict toolse
 
 Listed by TermBuddy as a third-party project. Maintained by Alpaca; this listing is not endorsed by Alpaca.
 
-- slug: `alpaca-mcp-server` · version 2.4.1 · licence MIT
+- slug: `alpaca-mcp-server` · version 2.4.1+catalog.2 · licence MIT
 - author: Alpaca · source: https://github.com/alpacahq/alpaca-mcp-server
 - platforms: claude-code, claude, cursor, vscode
 - permissions: network_access, secret_access, external_account_access
@@ -493,7 +493,7 @@ See Atlassian's security and admin documentation for access requirements. The re
 
 Listed by TermBuddy as a third-party project. Maintained by Atlassian; this listing is not endorsed by Atlassian.
 
-- slug: `atlassian-rovo-mcp-server` · version snapshot-2026-11-07 (v2) · licence Apache-2.0
+- slug: `atlassian-rovo-mcp-server` · version snapshot-2026-11-09 (v2) · licence Apache-2.0
 - author: Atlassian · source: https://github.com/atlassian/atlassian-mcp-server
 - platforms: claude-code, claude, codex, cursor, vscode, github-copilot, windsurf
 - permissions: network_access, external_account_access
@@ -511,7 +511,7 @@ Setup needs an OAuth client in a Google Cloud project with the relevant APIs ena
 
 Listed by TermBuddy as a third-party project. Maintained by Taylor Wilsdon; this listing is not endorsed by Taylor Wilsdon.
 
-- slug: `google-workspace-mcp` · version 2.4.0 · licence MIT
+- slug: `google-workspace-mcp` · version 2.4.0+catalog.2 · licence MIT
 - author: Taylor Wilsdon · source: https://github.com/taylorwilsdon/google_workspace_mcp
 - platforms: claude-code, claude, cursor, vscode
 - permissions: network_access, secret_access, external_account_access, persistent_storage
@@ -529,7 +529,7 @@ OAuth runs in your browser the first time you use a Todoist tool. The hosted rou
 
 Listed by TermBuddy as a third-party project. Maintained by Doist; this listing is not endorsed by Doist.
 
-- slug: `todoist-mcp` · version 13.11.2 · licence MIT
+- slug: `todoist-mcp` · version 14.0.1 · licence MIT
 - author: Doist · source: https://github.com/Doist/todoist-mcp
 - platforms: claude-code, claude, cursor, gemini-cli, vscode
 - permissions: network_access, external_account_access
@@ -547,7 +547,7 @@ By default the AI can run any Python code in Blender; set BLENDER_MCP_SAFE_MODE=
 
 Listed by TermBuddy as a third-party project. Maintained by ahujasid; this listing is not endorsed by ahujasid.
 
-- slug: `blender-mcp` · version snapshot-2026-11-04 · licence MIT
+- slug: `blender-mcp` · version snapshot-2026-11-09 · licence MIT
 - author: ahujasid · source: https://github.com/ahujasid/mcp-for-blender
 - platforms: claude-code, claude, codex, cursor, vscode, opencode, windsurf
 - permissions: process_execution, filesystem_read, filesystem_write, network_access, code_modification
@@ -583,7 +583,7 @@ It is read-only by scope: it reports on your data and does not change your analy
 
 Listed by TermBuddy as a third-party project. Maintained by Google (Google Analytics team); this listing is not endorsed by Google (Google Analytics team).
 
-- slug: `google-analytics-mcp` · version 1.1.0 · licence Apache-2.0
+- slug: `google-analytics-mcp` · version 1.1.0+catalog.2 · licence Apache-2.0
 - author: Google (Google Analytics team) · source: https://github.com/googleanalytics/google-analytics-mcp
 - platforms: claude-code, claude, cursor, gemini-cli, vscode
 - permissions: network_access, secret_access, external_account_access

@@ -33,6 +33,14 @@ Project changes completed from `pending.md` should be recorded here with the dat
   command sets are **not applied yet**: a published release is immutable and the API
   refuses edits under the same version label (`VERSION_ALREADY_PUBLISHED`). The live
   installation endpoint was not exercised (it needs a reader who added a release).
+- **Commands applied (2026-11-09).** The 24 listings were resubmitted as new releases
+  through `revise.mts`: the real upstream version for Context7 (4.6.0) and Todoist
+  (14.0.1), a `snapshot-2026-11-09` label for projects without releases (the README
+  was re-read that day; `wshobson-agents` already had that label, so it is
+  `snapshot-2026-11-09+catalog.2`), and `<version>+catalog.2` with a "catalog update
+  only" release note for the rest. Previous versions stay public until each new one
+  is approved and published; 24 listings await review. Not covered: `github-mcp-server`
+  (no verified command; unchanged).
 
 ## 2026-11-09 — Remove the permissions row from listing cards
 
