@@ -67,20 +67,20 @@ describe("ProductCard", () => {
     expect(screen.getByRole("link", { name: "Codex" })).toBeInTheDocument();
   });
 
-  it("states what the listing declares as labelled rows: review state, permissions and licence", () => {
-    render(<ProductCard product={{ ...products[0], verified: true, license: "MIT", permissions: "Reads the current selection · no network access" }} />);
+  it("states what the listing declares as labelled rows: review state and licence, never permissions", () => {
+    render(<ProductCard product={{ ...products[0], verified: true, license: "MIT", permissions: "filesystem_read: The agent can read your files; upstream says the quickstart gives it full filesystem access." }} />);
     const terms = screen.getAllByRole("term").map((term) => term.textContent);
-    expect(terms).toEqual(["Review", "Permissions", "Licence"]);
+    expect(terms).toEqual(["Review", "Licence"]);
     expect(screen.getByText("Reviewed")).toBeInTheDocument();
     expect(screen.getByText("MIT")).toHaveAttribute("dir", "ltr");
-    expect(screen.getByText("Reads the current selection · no network access")).toBeInTheDocument();
+    expect(screen.queryByText(/filesystem_read/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Permissions")).not.toBeInTheDocument();
   });
 
-  it("says so when a listing is unreviewed or declares nothing, and marks undeclared access in red", () => {
+  it("says so when a listing is unreviewed or has no stated licence", () => {
     render(<ProductCard product={{ ...products[0], verified: false, license: null, permissions: null }} />);
     expect(screen.getByText("Not yet reviewed")).toBeInTheDocument();
     expect(screen.getByText("Not stated")).toBeInTheDocument();
-    expect(screen.getByText("Not declared")).toHaveClass("text-destructive");
     expect(screen.queryByText("Reviewed")).not.toBeInTheDocument();
   });
 
@@ -95,7 +95,6 @@ describe("ProductCard", () => {
   it("labels the strip and the creator badge in Persian", () => {
     render(<LocaleProvider locale="fa" messages={copy.fa}><ProductCard product={{ ...products[0], verified: true, permissions: null, creator: { ...products[0].creator, verified: true } }} /></LocaleProvider>);
     expect(screen.getByText("بررسی‌شده")).toBeInTheDocument();
-    expect(screen.getByText("اعلام نشده")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "سازندهٔ تأییدشده" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: products[0].creator.name })).toHaveAttribute("href", `/fa/creators/${products[0].creator.handle}`);
   });

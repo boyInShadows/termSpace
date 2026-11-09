@@ -111,7 +111,6 @@ export function ProductCard({
 
         <TrustStrip
           verified={product.verified}
-          permissions={product.permissions}
           license={product.license}
           labels={card}
         />

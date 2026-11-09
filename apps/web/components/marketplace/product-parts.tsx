@@ -93,10 +93,8 @@ type TrustStripLabels = {
   reviewLabel: string;
   safetyReviewed: string;
   notReviewed: string;
-  permissionsLabel: string;
   licenceLabel: string;
   licenceNone: string;
-  notDeclared: string;
   notStated: string;
 };
 
@@ -117,24 +115,21 @@ function ReviewState({ verified, labels }: { verified: boolean; labels: TrustStr
 
 /**
  * What a listing declares about itself, where the decision to trust it is
- * made: its review state, what it touches and its licence, each a labelled
- * row read at full weight. Values wrap rather than clip, because a trust
- * value you cannot read in full is worse than none. Undeclared access is the
- * one red mark on the card (red means absent, never error), so a reviewed
- * listing that declares nothing cannot pass for a safe one.
+ * made: its review state and its licence, each a labelled row read at full
+ * weight. Values wrap rather than clip, because a trust value you cannot
+ * read in full is worse than none. Permissions are deliberately not on the
+ * card: declared access can run to paragraphs, so it lives on the detail page.
  *
  * `compact` is the single line the landing shelf has room for: review state
  * and licence only.
  */
 export function TrustStrip({
   verified,
-  permissions,
   license,
   labels,
   compact = false,
 }: {
   verified: boolean;
-  permissions?: string | null;
   license?: string | null;
   labels: TrustStripLabels;
   compact?: boolean;
@@ -159,15 +154,6 @@ export function TrustStrip({
       <dt className="text-muted-foreground">{labels.reviewLabel}</dt>
       <dd>
         <ReviewState verified={verified} labels={labels} />
-      </dd>
-
-      <dt className="text-muted-foreground">{labels.permissionsLabel}</dt>
-      <dd className="ts-bidi text-foreground">
-        {permissions ?? (
-          <span className="inline-block rounded-chip border border-destructive/60 px-1.5 font-semibold text-destructive">
-            {labels.notDeclared}
-          </span>
-        )}
       </dd>
 
       <dt className="text-muted-foreground">{labels.licenceLabel}</dt>

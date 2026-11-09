@@ -12,10 +12,8 @@ export const catalog = {
       reviewLabel: "Review",
       safetyReviewed: "Reviewed",
       notReviewed: "Not yet reviewed",
-      permissionsLabel: "Permissions",
       licenceLabel: "Licence",
       licenceNone: "Licence not stated",
-      notDeclared: "Not declared",
       notStated: "Not stated",
       verifiedCreator: "Verified creator",
       types: {
@@ -75,10 +73,8 @@ export const catalog = {
       reviewLabel: "بررسی",
       safetyReviewed: "بررسی‌شده",
       notReviewed: "هنوز بررسی نشده",
-      permissionsLabel: "مجوزها",
       licenceLabel: "پروانهٔ استفاده",
       licenceNone: "پروانهٔ استفاده ذکر نشده",
-      notDeclared: "اعلام نشده",
       notStated: "ذکر نشده",
       verifiedCreator: "سازندهٔ تأییدشده",
       types: {

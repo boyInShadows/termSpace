@@ -2,6 +2,16 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Remove the permissions row from listing cards
+
+- **Scope.** `apps/web` presentation only (`TrustStrip`, both cards, card copy, two
+  tests) plus `changelog.md`. Owner-requested: seeded listings declare paragraph-long
+  permission text that blew up the card. Cards now show Review and Licence; declared
+  permissions stay on the detail page. The red "Not declared" card mark is gone with
+  the row, so an unreviewed listing is no longer flagged for undeclared access on the card.
+- **Verification.** Typecheck, lint (0 errors), card unit tests (11) and
+  `e2e/catalog.spec.ts` (51 passed) green. Not yet deployed. Usage metrics unavailable.
+
 ## 2026-11-09 — Seed catalog, platform registry expansion, listing icon, Chatwoot CSP
 
 - **Scope / shared surfaces (announce in commit body).** `apps/api/prisma/schema.prisma`,

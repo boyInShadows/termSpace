@@ -197,17 +197,17 @@ test.describe("explore", () => {
     await expect(page.locator("article")).toHaveCount(12);
   });
 
-  test("every card states its review state, licence and permissions, and the outline skips no level", async ({ page }) => {
+  test("every card states its review state and licence, never permissions, and the outline skips no level", async ({ page }) => {
     await page.goto("/explore");
     const cards = page.locator("article");
     await expect(cards).toHaveCount(12);
     for (const card of await cards.all()) {
       await expect(card.getByText(/^(Reviewed|Not yet reviewed)$/)).toHaveCount(1);
-      await expect(card.getByRole("term")).toHaveText(["Review", "Permissions", "Licence"]);
+      await expect(card.getByRole("term")).toHaveText(["Review", "Licence"]);
     }
     await expect(cards.first().getByText("Reviewed", { exact: true })).toBeVisible();
     await expect(cards.first().getByText("MIT")).toBeVisible();
-    await expect(cards.first().getByText("Reads the current selection · no network access")).toBeVisible();
+    await expect(cards.first().getByText("Reads the current selection · no network access")).toHaveCount(0);
 
     const levels = await page.locator("h1, h2, h3, h4").evaluateAll((nodes) => nodes.map((node) => Number(node.tagName[1])));
     for (let index = 1; index < levels.length; index++) expect(levels[index] - levels[index - 1]).toBeLessThanOrEqual(1);

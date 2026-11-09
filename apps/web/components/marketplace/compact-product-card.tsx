@@ -72,7 +72,6 @@ export function CompactProductCard({ product }: { product: Product }) {
 
       <TrustStrip
         verified={product.verified}
-        permissions={product.permissions}
         license={product.license}
         labels={card}
         compact
