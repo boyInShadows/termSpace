@@ -541,6 +541,8 @@ model MarketplaceProduct {
   trending                 Boolean                                @default(false)
   verified                 Boolean                                @default(false)
   tags                     String[]
+  // Optional creator icon; GitHub image CDNs only (DB CHECK "MarketplaceProduct_iconUrl_host").
+  iconUrl                  String?
   packageFileCount         Int?
   packageSizeBytes         Int?
   benefits                 String[]

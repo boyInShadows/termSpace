@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { formatNumber, intlLocale } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ProductIcon } from "./product-icon";
 import { useLocale } from "@/lib/locale-context";
 import {
   CompatibilityBadges,
@@ -85,19 +86,22 @@ export function ProductCard({
 
         {/* Named like the detail page header: on navigation the title
             travels from here into it (listing-link.tsx, docs/motion.md). */}
-        <h3
-          id={titleId}
-          className="ts-listing-title ts-bidi editorial mt-4 text-xl font-semibold leading-snug"
-          style={{ viewTransitionName: listingTransitionName(product.id) }}
-        >
-          <ListingLink
-            href={href}
-            listingId={product.id}
-            className="inline-block rounded-sm transition-colors group-hover:text-primary after:absolute after:inset-0 after:rounded-card after:content-['']"
+        <div className="mt-4 flex items-center gap-3">
+          <ProductIcon name={product.name} iconUrl={product.iconUrl} />
+          <h3
+            id={titleId}
+            className="ts-listing-title ts-bidi editorial min-w-0 flex-1 text-xl font-semibold leading-snug"
+            style={{ viewTransitionName: listingTransitionName(product.id) }}
           >
-            {product.name}
-          </ListingLink>
-        </h3>
+            <ListingLink
+              href={href}
+              listingId={product.id}
+              className="inline-block rounded-sm transition-colors group-hover:text-primary after:absolute after:inset-0 after:rounded-card after:content-['']"
+            >
+              {product.name}
+            </ListingLink>
+          </h3>
+        </div>
 
         {/* The single description. Clamped and floor-height so that every card
             in a row reaches its trust block at the same y-position. */}

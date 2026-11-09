@@ -60,6 +60,23 @@ describe("marketplace manifest v1", () => {
     expect(marketplaceManifestV1Schema.safeParse(environmentInput).success).toBe(false);
   });
 
+  it("accepts an optional icon only from GitHub's image hosts over HTTPS", () => {
+    const withIcon = (icon: string) => ({ ...manifest("skill"), listing: { ...manifest("skill").listing, icon } });
+    for (const ok of ["https://avatars.githubusercontent.com/u/9919?v=4", "https://raw.githubusercontent.com/o/r/main/logo.svg"]) {
+      expect(marketplaceManifestV1Schema.safeParse(withIcon(ok)).success).toBe(true);
+    }
+    for (const bad of [
+      "http://avatars.githubusercontent.com/u/1",
+      "https://example.com/logo.png",
+      "https://avatars.githubusercontent.com.evil.example/u/1",
+      "https://user:pass@avatars.githubusercontent.com/u/1",
+      "https://github.com/o.png",
+    ]) {
+      expect(marketplaceManifestV1Schema.safeParse(withIcon(bad)).success, bad).toBe(false);
+    }
+    expect(marketplaceManifestV1Schema.safeParse(manifest("skill")).success).toBe(true);
+  });
+
   it("accepts only controlled platform compatibility keys", () => {
     const input = manifest("skill");
     input.release.compatibility = [{ platform: "Codex", models: [] }];

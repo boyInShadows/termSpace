@@ -35,6 +35,10 @@ account_user = AccountUser.find_or_initialize_by(account: account, user: user)
 account_user.role = :administrator
 account_user.save!
 
+# Chatwoot splits this on commas to build `frame-ancestors`; a newline-separated
+# list leaks the second host into the CSP header as an invalid directive name.
+WIDGET_ALLOWED_DOMAINS = 'termspace.dev,www.termspace.dev'.freeze
+
 # Two widget inboxes so the welcome copy can be localized per locale. The same
 # agent bot answers both.
 def widget_inbox(account:, name:, title:, tagline:, color:)
@@ -48,9 +52,11 @@ def widget_inbox(account:, name:, title:, tagline:, color:)
       welcome_tagline: tagline,
       reply_time: 'in_a_few_minutes',
       continuity_via_email: false,
-      allowed_domains: "termspace.dev\nwww.termspace.dev"
+      allowed_domains: WIDGET_ALLOWED_DOMAINS
     )
   end
+  # Reruns repair inboxes created with the old newline-separated value.
+  inbox.channel.update!(allowed_domains: WIDGET_ALLOWED_DOMAINS) if !inbox.new_record? && inbox.channel.allowed_domains != WIDGET_ALLOWED_DOMAINS
   # Termbuddy is the only responder: never ask visitors for an email and never
   # send transcript/notification mail.
   inbox.enable_email_collect = false

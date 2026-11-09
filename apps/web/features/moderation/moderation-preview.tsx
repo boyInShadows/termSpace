@@ -18,6 +18,7 @@ import { intlLocale } from "@/lib/format";
 import { ModerationReviews } from "@/features/moderation/moderation-reviews";
 import { capabilityLabel, changedSections, diffCapabilities, isRecord, needsCloserLook, readCapabilities, type DeclaredCapability, type ManifestSection } from "./capabilities";
 import { CloserLook, listingStateLabel, Panel, StateMark } from "./moderation-ui";
+import { ProductIcon } from "@/components/marketplace/product-icon";
 
 type Manifest = { listing?: Record<string, unknown>; release?: Record<string, unknown>; typeDetails?: Record<string, unknown> };
 type Action = "APPROVE" | "PUBLISH" | "REQUEST_CHANGES" | "REJECT" | "SUSPEND" | "REINSTATE" | "ARCHIVE" | "RESTORE";
@@ -214,6 +215,16 @@ export function ModerationPreview({ productId }: { productId: string }) {
         <Panel id="install-title" title={m.installAndRequirements} aside={changed("installation", "requirements", "license", "compatibility") ? <ChangeMark label={m.changedMark} /> : undefined}>
           <InstallAndRequirements release={release} m={m} />
         </Panel>
+
+        {typeof listing.icon === "string" && listing.icon && (
+          <Panel id="icon-title" title={m.icon}>
+            <p className="text-sm text-muted-foreground">{m.iconHint}</p>
+            <div className="mt-3 flex items-center gap-3">
+              <ProductIcon name={String((listing.name as { en?: string } | undefined)?.en ?? listing.slug ?? "?")} iconUrl={listing.icon} size="lg" />
+              <code className="min-w-0 break-all text-sm" dir="ltr">{listing.icon}</code>
+            </div>
+          </Panel>
+        )}
 
         <Panel id="screenshots-title" title={m.screenshots}>
           {screenshots.length ? <>

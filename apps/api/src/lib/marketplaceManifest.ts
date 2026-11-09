@@ -57,6 +57,11 @@ const httpsUrl = z.string().url().max(2048).refine((value) => {
   const parsed = new URL(value);
   return parsed.protocol === "https:" && !parsed.username && !parsed.password;
 }, "URL must use HTTPS and must not contain credentials");
+// The site never fetches creator-supplied images; an icon is the one exception, limited to GitHub's
+// image CDNs so a listing cannot point visitors' browsers at an arbitrary host. Keep in step with the
+// "MarketplaceProduct_iconUrl_host" CHECK constraint in prisma/migrations.
+export const MARKETPLACE_ICON_HOSTS = ["avatars.githubusercontent.com", "raw.githubusercontent.com"] as const;
+const iconUrl = httpsUrl.refine((value) => (MARKETPLACE_ICON_HOSTS as readonly string[]).includes(new URL(value).hostname), `Icon must be hosted on ${MARKETPLACE_ICON_HOSTS.join(" or ")}`);
 const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(160);
 const platformKey = z.enum(MARKETPLACE_PLATFORM_KEYS);
 const repositoryPath = boundedText(1, 500).refine((value) => !value.startsWith("/") && !value.includes("\\") && value.split("/").every((segment) => segment !== "." && segment !== ".."), "Path must be a safe repository-relative path");
@@ -93,6 +98,7 @@ const listingSchema = z.object({
   categorySlug: slug,
   communitySlugs: z.array(slug).max(20).default([]),
   tags: z.array(slug).max(20),
+  icon: iconUrl.optional(),
   screenshots: z.array(z.object({ url: httpsUrl, alt: localizedText }).strict()).max(12).default([]),
   documentationUrl: httpsUrl.optional(),
   supportUrl: httpsUrl.optional(),

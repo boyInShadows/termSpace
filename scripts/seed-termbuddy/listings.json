@@ -1,0 +1,4434 @@
+[
+  {
+    "sources": [
+      "https://github.com/github/github-mcp-server",
+      "https://github.com/github/github-mcp-server/releases/tag/v2.1.0"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "github-mcp-server",
+        "name": {
+          "en": "GitHub MCP Server"
+        },
+        "outcome": {
+          "en": "Let your coding agent read repositories, manage issues and pull requests, and inspect Actions runs on GitHub."
+        },
+        "description": {
+          "en": "GitHub's official Model Context Protocol server. It connects an MCP-capable coding agent to GitHub so the agent can browse and search repositories and code, read commits, create and update issues and pull requests, check GitHub Actions workflow runs and review security findings such as Dependabot alerts.\n\nIt runs either as GitHub's hosted remote server (authenticated with OAuth or a personal access token) or as a local server you run yourself from the published binary or container image. Tools are grouped into toolsets (the defaults are context, repos, issues, pull_requests and users), and you can enable only the toolsets you need to keep the agent's tool list small.\n\nListed by TermBuddy as a third-party project. Maintained by GitHub; this listing is not endorsed by GitHub."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "codex",
+          "cursor",
+          "vscode",
+          "gemini-cli"
+        ],
+        "tags": [
+          "mcp",
+          "github",
+          "pull-requests",
+          "issues",
+          "github-actions",
+          "code-review"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/github/github-mcp-server#readme",
+        "issueTrackerUrl": "https://github.com/github/github-mcp-server/issues"
+      },
+      "release": {
+        "version": "2.1.0",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/github/github-mcp-server",
+          "authorship": "third_party",
+          "originalAuthor": "GitHub"
+        },
+        "releaseNotes": "Tracks upstream release v2.1.0 (published 2026-11-03). See the upstream releases page for the full change log.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          },
+          {
+            "platform": "gemini-cli"
+          }
+        ],
+        "installation": {
+          "method": "hosted",
+          "instructions": [
+            "Remote (recommended): add an HTTP MCP server pointing at https://api.githubcopilot.com/mcp/ in your MCP host and sign in with GitHub OAuth, or send a GitHub personal access token in the Authorization header.",
+            "Local alternative: run the published container image or binary with the GITHUB_PERSONAL_ACCESS_TOKEN environment variable set; see the upstream installation guide for your host.",
+            "Optionally restrict capabilities with the toolsets setting (for example GITHUB_TOOLSETS=repos,issues,pull_requests)."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [
+            "GitHub account"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP-capable host with remote (HTTP) server support, or Docker/Go to run the local server"
+          ],
+          "environmentVariables": [
+            {
+              "name": "GITHUB_PERSONAL_ACCESS_TOKEN",
+              "purpose": "Authenticates the local server to the GitHub API.",
+              "required": false,
+              "sensitive": true
+            },
+            {
+              "name": "GITHUB_TOOLSETS",
+              "purpose": "Comma-separated list of toolsets to enable.",
+              "required": false,
+              "sensitive": false
+            }
+          ]
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "api.githubcopilot.com",
+              "api.github.com"
+            ],
+            "purpose": "Sends requests to GitHub to read and change repository data."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "scope": "Whatever the signed-in GitHub account or token can access",
+            "destinations": [
+              "github.com"
+            ],
+            "purpose": "Acts on your behalf in your GitHub account, including creating and updating issues and pull requests."
+          },
+          {
+            "capability": "secret_access",
+            "required": false,
+            "purpose": "Reads a personal access token when you authenticate with a token instead of OAuth."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/github/github-mcp-server#readme",
+        "supportUrl": "https://github.com/github/github-mcp-server/issues"
+      },
+      "typeDetails": {
+        "transport": "streamable_http",
+        "connectionMethod": "HTTP endpoint https://api.githubcopilot.com/mcp/ (remote), or stdio when run locally from the binary or container image.",
+        "distributionIdentity": "github/github-mcp-server (GitHub official MCP server)",
+        "exposedTools": [
+          "Toolsets: context, repos, issues, pull_requests, users (defaults); optional: actions, code_security, and others documented upstream"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "GitHub OAuth (remote) or a GitHub personal access token.",
+        "networkDestinations": [
+          "api.githubcopilot.com",
+          "api.github.com"
+        ],
+        "dataHandling": "Requests go to GitHub; repository content you ask the agent to read is passed to your model provider through your MCP host. Review upstream documentation for GitHub's data handling and your host's policies."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/microsoft/playwright-mcp",
+      "https://www.npmjs.com/package/@playwright/mcp"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "playwright-mcp",
+        "name": {
+          "en": "Playwright MCP"
+        },
+        "outcome": {
+          "en": "Give your coding agent a real browser to navigate, click, fill forms and inspect pages through structured snapshots."
+        },
+        "description": {
+          "en": "Microsoft's Playwright MCP server lets an MCP-capable coding agent drive a browser using Playwright. Instead of screenshots it works from the page's accessibility tree, so actions are deterministic and need no vision model. Typical uses are exploratory testing, reproducing a bug in a running web app, filling forms and checking what a page actually renders.\n\nUpstream notes that for coding agents a CLI-plus-skills workflow can be more token-efficient than MCP, while MCP stays useful for loops that need persistent browser state and rich introspection.\n\nListed by TermBuddy as a third-party project. Maintained by Microsoft; this listing is not endorsed by Microsoft."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "browser-automation",
+          "playwright",
+          "testing",
+          "web"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/microsoft/playwright-mcp#readme",
+        "issueTrackerUrl": "https://github.com/microsoft/playwright-mcp/issues"
+      },
+      "release": {
+        "version": "0.0.84",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/microsoft/playwright-mcp",
+          "authorship": "third_party",
+          "originalAuthor": "Microsoft"
+        },
+        "releaseNotes": "Tracks upstream release v0.0.84 (published 2026-10-31) and npm package @playwright/mcp 0.0.84.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Add an MCP server to your client that runs: npx @playwright/mcp@latest",
+            "For Claude Code the upstream one-liner is: claude mcp add playwright npx @playwright/mcp@latest",
+            "Other clients: use the standard config from the upstream README (command npx, args @playwright/mcp@latest)."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js 18 or newer"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "browser_automation",
+            "required": true,
+            "destinations": [],
+            "purpose": "Opens and controls a browser to navigate pages, click, type and read page content."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "Launches a local browser process via Playwright."
+          },
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Loads whichever web pages the agent is told to visit."
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://github.com/microsoft/playwright-mcp#readme",
+        "supportUrl": "https://github.com/microsoft/playwright-mcp/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Local stdio process started with npx @playwright/mcp@latest.",
+        "distributionIdentity": "npm package @playwright/mcp (github.com/microsoft/playwright-mcp)",
+        "exposedTools": [
+          "browser_navigate",
+          "browser_snapshot",
+          "browser_click",
+          "browser_type",
+          "browser_fill_form",
+          "browser_take_screenshot",
+          "browser_evaluate",
+          "browser_run_code_unsafe",
+          "browser_network_requests",
+          "browser_console_messages",
+          "browser_wait_for",
+          "browser_tabs"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "None; runs locally with your user permissions.",
+        "networkDestinations": [
+          "Any site the agent is directed to visit"
+        ],
+        "dataHandling": "Page content, snapshots and any data in the controlled browser are passed to your model provider through your MCP client. Do not point it at sessions holding data you would not share with the model."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/upstash/context7",
+      "https://www.npmjs.com/package/@upstash/context7-mcp"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "context7-mcp",
+        "name": {
+          "en": "Context7"
+        },
+        "outcome": {
+          "en": "Pull current, version-specific library documentation and code examples into your coding agent's prompt."
+        },
+        "description": {
+          "en": "Context7 by Upstash fetches up-to-date documentation and code examples for the libraries you use and hands them to your coding agent, so answers are not based on stale training data or invented APIs. Add \"use context7\" to a prompt, or let the agent call the tools itself.\n\nIt runs as a hosted MCP server at mcp.context7.com, or locally through the published npm package. An API key from context7.com is passed in an Authorization header; see the upstream docs for current limits and plans.\n\nListed by TermBuddy as a third-party project. Maintained by Upstash; this listing is not endorsed by Upstash."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "codex"
+        ],
+        "tags": [
+          "mcp",
+          "documentation",
+          "libraries",
+          "context",
+          "docs"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/upstash/context7#readme",
+        "issueTrackerUrl": "https://github.com/upstash/context7/issues"
+      },
+      "release": {
+        "version": "4.5.1",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/upstash/context7",
+          "authorship": "third_party",
+          "originalAuthor": "Upstash"
+        },
+        "releaseNotes": "Tracks upstream release @upstash/context7-mcp@4.5.1 (published 2026-11-06).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "chatgpt"
+          }
+        ],
+        "installation": {
+          "method": "hosted",
+          "instructions": [
+            "Run the upstream setup helper: npx ctx7 setup",
+            "Or add the remote MCP server manually: URL https://mcp.context7.com/mcp, with your API key in an Authorization: Bearer header.",
+            "In prompts, add \"use context7\" when you want current library docs."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [
+            "Context7 account/API key (see upstream)"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP-capable client"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "mcp.context7.com",
+              "context7.com"
+            ],
+            "purpose": "Sends library names and your documentation questions to Context7 and receives documentation back."
+          },
+          {
+            "capability": "secret_access",
+            "required": false,
+            "destinations": [],
+            "purpose": "Reads the Context7 API key you configure."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/upstash/context7#readme",
+        "supportUrl": "https://github.com/upstash/context7/issues"
+      },
+      "typeDetails": {
+        "transport": "streamable_http",
+        "connectionMethod": "Remote HTTP endpoint https://mcp.context7.com/mcp, or a local process from the @upstash/context7-mcp npm package.",
+        "distributionIdentity": "Context7 by Upstash (github.com/upstash/context7, npm @upstash/context7-mcp)",
+        "exposedTools": [
+          "resolve-library-id",
+          "query-docs"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "API key in an Authorization: Bearer header (see upstream docs).",
+        "networkDestinations": [
+          "mcp.context7.com",
+          "context7.com"
+        ],
+        "dataHandling": "The library you name and the question you ask are sent to Context7's service to retrieve documentation. Review Context7's own privacy terms before using it with proprietary context."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+      "https://www.npmjs.com/package/chrome-devtools-mcp"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "chrome-devtools-mcp",
+        "name": {
+          "en": "Chrome DevTools MCP"
+        },
+        "outcome": {
+          "en": "Let your coding agent control and inspect a live Chrome browser: debugging, network, console and performance traces."
+        },
+        "description": {
+          "en": "Chrome DevTools for agents (chrome-devtools-mcp) gives an AI coding assistant access to Chrome DevTools. The agent can record performance traces and extract insights, analyze network requests, read console messages with source-mapped stack traces, take screenshots and automate actions in the browser. It is available as an MCP server and as a CLI.\n\nUpstream warns that it exposes the content of the browser instance to the MCP client, so avoid sharing sensitive information in the controlled browser. Usage statistics are collected by default; they can be disabled with the --no-usage-statistics flag.\n\nListed by TermBuddy as a third-party project. Maintained by Chrome DevTools team (Google); this listing is not endorsed by Chrome DevTools team (Google)."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "chrome",
+          "devtools",
+          "debugging",
+          "performance"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/ChromeDevTools/chrome-devtools-mcp#readme",
+        "issueTrackerUrl": "https://github.com/ChromeDevTools/chrome-devtools-mcp/issues"
+      },
+      "release": {
+        "version": "1.12.0",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+          "authorship": "third_party",
+          "originalAuthor": "Chrome DevTools team (Google)"
+        },
+        "releaseNotes": "Tracks upstream release chrome-devtools-mcp-v1.12.0 (published 2026-10-22) and npm package chrome-devtools-mcp 1.12.0.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Add an MCP server to your client that runs: npx -y chrome-devtools-mcp@latest",
+            "To opt out of usage statistics add the --no-usage-statistics argument.",
+            "Server parameters such as --headless and --isolated are described in the upstream Configuration Guide."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js (current LTS)"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "Google Chrome (current stable)",
+            "An MCP client"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "browser_automation",
+            "required": true,
+            "destinations": [],
+            "purpose": "Controls and inspects a live Chrome browser instance."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "Starts or attaches to a local Chrome process."
+          },
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Browser pages load whatever sites the agent visits."
+          },
+          {
+            "capability": "telemetry",
+            "required": false,
+            "destinations": [],
+            "purpose": "Sends usage statistics to Google by default; disable with --no-usage-statistics."
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://github.com/ChromeDevTools/chrome-devtools-mcp#readme",
+        "supportUrl": "https://github.com/ChromeDevTools/chrome-devtools-mcp/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Local stdio process started with npx -y chrome-devtools-mcp@latest.",
+        "distributionIdentity": "npm package chrome-devtools-mcp (github.com/ChromeDevTools/chrome-devtools-mcp)",
+        "exposedTools": [
+          "Performance trace recording and insights",
+          "Network request inspection",
+          "Console messages with source-mapped stack traces",
+          "Screenshots",
+          "Browser automation actions"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "None; runs locally with your user permissions.",
+        "networkDestinations": [
+          "Any site the agent is directed to visit"
+        ],
+        "dataHandling": "Browser and DevTools content is exposed to the MCP client and your model provider. Usage statistics are sent by default unless --no-usage-statistics is set."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/supabase-community/supabase-mcp",
+      "https://supabase.com/mcp"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "supabase-mcp",
+        "name": {
+          "en": "Supabase MCP Server"
+        },
+        "outcome": {
+          "en": "Connect your Supabase projects to your coding agent to manage tables, query data and read docs."
+        },
+        "description": {
+          "en": "Supabase's MCP server connects AI assistants to your Supabase projects so they can perform tasks such as managing tables and fetching data. It is hosted at mcp.supabase.com and asks you to log in to Supabase and choose an organization when you set it up.\n\nThe server URL accepts options such as project_ref (limit it to one project), read_only=true and features=database,docs to narrow what the agent can do. Upstream recommends reading its security best practices first, because connecting an LLM to a database carries real risk; prefer a development project and read-only mode.\n\nListed by TermBuddy as a third-party project. Maintained by Supabase; this listing is not endorsed by Supabase."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "supabase",
+          "database",
+          "postgres",
+          "backend"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://supabase.com/mcp",
+        "issueTrackerUrl": "https://github.com/supabase-community/supabase-mcp/issues"
+      },
+      "release": {
+        "version": "0.16.1",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/supabase-community/supabase-mcp",
+          "authorship": "third_party",
+          "originalAuthor": "Supabase"
+        },
+        "releaseNotes": "Tracks upstream release mcp-server-supabase-v0.16.1 (published 2026-11-06).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "hosted",
+          "instructions": [
+            "Add an HTTP MCP server with URL https://mcp.supabase.com/mcp to your client; your client will prompt you to log in to Supabase.",
+            "Restrict it by appending query parameters, for example ?project_ref=<project-ref>&read_only=true&features=database,docs.",
+            "Read Supabase's MCP security best practices before connecting a project with real data."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [
+            "Supabase account"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client with remote (HTTP) server support"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "mcp.supabase.com"
+            ],
+            "purpose": "Sends requests to Supabase's hosted MCP endpoint."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "supabase.com"
+            ],
+            "purpose": "Acts in your Supabase organization and projects, including managing tables and reading data; read_only mode narrows this.",
+            "scope": "Projects in the Supabase organization you authorize"
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://supabase.com/mcp",
+        "supportUrl": "https://github.com/supabase-community/supabase-mcp/issues"
+      },
+      "typeDetails": {
+        "transport": "streamable_http",
+        "connectionMethod": "Remote HTTP endpoint https://mcp.supabase.com/mcp with Supabase login (OAuth) in your MCP client.",
+        "distributionIdentity": "Supabase MCP server (github.com/supabase-community/supabase-mcp)",
+        "exposedTools": [
+          "Feature groups selectable with the features parameter, for example database and docs; see upstream for the full list"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "Supabase login via OAuth in your MCP client, scoped to the organization you choose.",
+        "networkDestinations": [
+          "mcp.supabase.com"
+        ],
+        "dataHandling": "Database rows and schema the agent reads are passed to your model provider through your MCP client. Use read_only mode and a non-production project where possible."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/firecrawl/firecrawl-mcp-server",
+      "https://www.npmjs.com/package/firecrawl-mcp"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "firecrawl-mcp-server",
+        "name": {
+          "en": "Firecrawl MCP Server"
+        },
+        "outcome": {
+          "en": "Search, scrape, crawl and map the live web from your agent and get back clean Markdown or structured data."
+        },
+        "description": {
+          "en": "Firecrawl's official MCP server brings Firecrawl to MCP-compatible clients. The agent can search the web (optionally with full page content), scrape a URL into Markdown or structured JSON, parse PDFs and documents, crawl or map a site, interact with dynamic pages in a real browser, and run multi-source research jobs. It also exposes credit-usage checks, and supports cloud and self-hosted Firecrawl with automatic retries and rate limiting.\n\nA Firecrawl API key is required for the cloud service.\n\nListed by TermBuddy as a third-party project. Maintained by Firecrawl; this listing is not endorsed by Firecrawl."
+        },
+        "categorySlug": "research",
+        "communitySlugs": [
+          "claude-code",
+          "cursor"
+        ],
+        "tags": [
+          "mcp",
+          "web-scraping",
+          "crawling",
+          "search",
+          "research"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/firecrawl/firecrawl-mcp-server#readme",
+        "issueTrackerUrl": "https://github.com/firecrawl/firecrawl-mcp-server/issues"
+      },
+      "release": {
+        "version": "3.38.0",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/firecrawl/firecrawl-mcp-server",
+          "authorship": "third_party",
+          "originalAuthor": "Firecrawl"
+        },
+        "releaseNotes": "Tracks npm package firecrawl-mcp 3.38.0 (upstream GitHub release v3.36.1 published 2026-11-03).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Add an MCP server to your client that runs: npx -y firecrawl-mcp",
+            "Set FIRECRAWL_API_KEY in the server's environment (get a key from firecrawl.dev).",
+            "For a self-hosted Firecrawl instance, also set FIRECRAWL_API_URL."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js"
+          ],
+          "accounts": [
+            "Firecrawl account/API key"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client"
+          ],
+          "environmentVariables": [
+            {
+              "name": "FIRECRAWL_API_KEY",
+              "purpose": "Authenticates to the Firecrawl cloud API.",
+              "required": true,
+              "sensitive": true
+            },
+            {
+              "name": "FIRECRAWL_API_URL",
+              "purpose": "Base URL of a self-hosted Firecrawl instance.",
+              "required": false,
+              "sensitive": false
+            }
+          ]
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "api.firecrawl.dev"
+            ],
+            "purpose": "Sends search, scrape and crawl requests to Firecrawl and fetches pages through it."
+          },
+          {
+            "capability": "secret_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Reads FIRECRAWL_API_KEY from the environment."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "firecrawl.dev"
+            ],
+            "purpose": "Uses your Firecrawl account and credits.",
+            "scope": "Your Firecrawl account"
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/firecrawl/firecrawl-mcp-server#readme",
+        "supportUrl": "https://github.com/firecrawl/firecrawl-mcp-server/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Local stdio process started with npx -y firecrawl-mcp (a remote/SSE option is described upstream).",
+        "distributionIdentity": "npm package firecrawl-mcp (github.com/firecrawl/firecrawl-mcp-server)",
+        "exposedTools": [
+          "firecrawl_search",
+          "firecrawl_scrape",
+          "firecrawl_crawl",
+          "firecrawl_check_crawl_status",
+          "firecrawl_map",
+          "firecrawl_interact",
+          "firecrawl_interact_stop",
+          "firecrawl_agent",
+          "firecrawl_agent_status",
+          "firecrawl_developer_search",
+          "firecrawl_gov_search",
+          "firecrawl_credit_usage",
+          "firecrawl_feedback",
+          "firecrawl_find_tools"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "Firecrawl API key in the FIRECRAWL_API_KEY environment variable.",
+        "networkDestinations": [
+          "api.firecrawl.dev",
+          "Any site the agent is asked to scrape or crawl"
+        ],
+        "dataHandling": "URLs, queries and scraped page content pass through Firecrawl's service (or your self-hosted instance) and on to your model provider via your MCP client."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/tavily-ai/tavily-mcp",
+      "https://www.npmjs.com/package/tavily-mcp"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "tavily-mcp",
+        "name": {
+          "en": "Tavily MCP Server"
+        },
+        "outcome": {
+          "en": "Real-time web search, page extraction, site mapping and crawling for your agent through Tavily."
+        },
+        "description": {
+          "en": "Tavily's MCP server provides search, extract, map and crawl tools. The agent gets real-time web search through tavily-search, intelligent extraction of page content through tavily-extract, a structured map of a website and a crawler that explores sites systematically.\n\nIt runs locally via npx with a Tavily API key, or you can connect to Tavily's remote MCP server at mcp.tavily.com. Remote requests can carry default parameters in a DEFAULT_PARAMETERS header.\n\nListed by TermBuddy as a third-party project. Maintained by Tavily; this listing is not endorsed by Tavily."
+        },
+        "categorySlug": "research",
+        "communitySlugs": [
+          "claude-code",
+          "cursor"
+        ],
+        "tags": [
+          "mcp",
+          "web-search",
+          "crawling",
+          "extraction",
+          "research"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/tavily-ai/tavily-mcp#readme",
+        "issueTrackerUrl": "https://github.com/tavily-ai/tavily-mcp/issues"
+      },
+      "release": {
+        "version": "0.2.22",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/tavily-ai/tavily-mcp",
+          "authorship": "third_party",
+          "originalAuthor": "Tavily"
+        },
+        "releaseNotes": "Tracks npm package tavily-mcp 0.2.22. Upstream publishes no GitHub releases.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Add an MCP server to your client that runs: npx -y tavily-mcp@latest",
+            "Set TAVILY_API_KEY in the server's environment (get a key from tavily.com).",
+            "Or connect to the remote server at https://mcp.tavily.com/mcp using an Authorization: Bearer header with your key."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js"
+          ],
+          "accounts": [
+            "Tavily account/API key"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client"
+          ],
+          "environmentVariables": [
+            {
+              "name": "TAVILY_API_KEY",
+              "purpose": "Authenticates to the Tavily API.",
+              "required": true,
+              "sensitive": true
+            }
+          ]
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "api.tavily.com",
+              "mcp.tavily.com"
+            ],
+            "purpose": "Sends search, extract, map and crawl requests to Tavily."
+          },
+          {
+            "capability": "secret_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Reads TAVILY_API_KEY from the environment."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "tavily.com"
+            ],
+            "purpose": "Uses your Tavily account and quota.",
+            "scope": "Your Tavily account"
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/tavily-ai/tavily-mcp#readme",
+        "supportUrl": "https://github.com/tavily-ai/tavily-mcp/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Local stdio process started with npx -y tavily-mcp@latest, or the remote server at https://mcp.tavily.com/mcp.",
+        "distributionIdentity": "npm package tavily-mcp (github.com/tavily-ai/tavily-mcp)",
+        "exposedTools": [
+          "tavily-search",
+          "tavily-extract",
+          "tavily-map",
+          "tavily-crawl"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "Tavily API key via TAVILY_API_KEY (local) or an Authorization: Bearer header (remote).",
+        "networkDestinations": [
+          "api.tavily.com",
+          "mcp.tavily.com",
+          "Any site the agent is asked to extract or crawl"
+        ],
+        "dataHandling": "Queries and URLs are sent to Tavily; returned content is passed to your model provider via your MCP client."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/anthropics/claude-code-action",
+      "https://github.com/anthropics/claude-code-action/blob/main/docs/setup.md"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "integration",
+      "listing": {
+        "slug": "claude-code-github-action",
+        "name": {
+          "en": "Claude Code GitHub Action"
+        },
+        "outcome": {
+          "en": "Run Claude Code in GitHub Actions to answer @claude mentions, review pull requests and implement changes."
+        },
+        "description": {
+          "en": "A general-purpose Claude Code action for GitHub pull requests and issues. It detects when to activate from your workflow context and can answer questions about code, review a PR, implement fixes or features and report progress with updating checklists. It runs on your own GitHub runner; Anthropic API calls go to your chosen provider (Anthropic, AWS Bedrock, Google Vertex AI or Microsoft Foundry).\n\nThe quickest setup is to open Claude Code in your repository and run /install-github-app. You must be a repository admin to install the GitHub app and add secrets.\n\nListed by TermBuddy as a third-party project. Maintained by Anthropic; this listing is not endorsed by Anthropic."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code"
+        ],
+        "tags": [
+          "github-actions",
+          "ci",
+          "code-review",
+          "pull-requests",
+          "automation"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/anthropics/claude-code-action#readme",
+        "issueTrackerUrl": "https://github.com/anthropics/claude-code-action/issues"
+      },
+      "release": {
+        "version": "1.0.269",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/anthropics/claude-code-action",
+          "authorship": "third_party",
+          "originalAuthor": "Anthropic"
+        },
+        "releaseNotes": "Tracks upstream release v1.0.269 (published 2026-11-06). Workflows normally pin the moving v1 tag.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          }
+        ],
+        "installation": {
+          "method": "hosted",
+          "instructions": [
+            "In Claude Code, run /install-github-app to install the GitHub app and add the required secrets (repository admin required).",
+            "Or add a workflow step: uses: anthropics/claude-code-action@v1 and store ANTHROPIC_API_KEY (or CLAUDE_CODE_OAUTH_TOKEN) as a repository secret.",
+            "Grant the workflow only the permissions it needs; the upstream setup guide lists the minimum app permissions."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [
+            "GitHub repository admin access",
+            "Anthropic API key or Claude OAuth token (or Bedrock/Vertex/Foundry credentials)"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "GitHub Actions runner"
+          ],
+          "environmentVariables": [
+            {
+              "name": "ANTHROPIC_API_KEY",
+              "purpose": "Authenticates the action to the Claude API (alternative: CLAUDE_CODE_OAUTH_TOKEN).",
+              "required": false,
+              "sensitive": true
+            },
+            {
+              "name": "CLAUDE_CODE_OAUTH_TOKEN",
+              "purpose": "OAuth token alternative for Claude Pro and Max users.",
+              "required": false,
+              "sensitive": true
+            }
+          ]
+        },
+        "permissions": [
+          {
+            "capability": "code_modification",
+            "required": true,
+            "destinations": [],
+            "purpose": "Can implement fixes and features by committing changes to your repository."
+          },
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "Reads repository files on the Actions runner."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "Edits files in the runner's checkout."
+          },
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "api.anthropic.com",
+              "api.github.com"
+            ],
+            "purpose": "Calls the Claude API and the GitHub API."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "github.com"
+            ],
+            "purpose": "Comments on and changes pull requests and issues using the GitHub app/token permissions you grant.",
+            "scope": "Repositories where the workflow runs"
+          },
+          {
+            "capability": "secret_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Reads the API key or token stored as a repository secret."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/anthropics/claude-code-action#readme",
+        "supportUrl": "https://github.com/anthropics/claude-code-action/issues"
+      },
+      "typeDetails": {
+        "integrationKind": "extension",
+        "hostPlatform": "claude-code",
+        "installationIdentifier": "anthropics/claude-code-action@v1",
+        "connectedService": "GitHub pull requests and issues",
+        "requestedScopes": [
+          "Contents: read and write",
+          "Pull requests: write",
+          "Issues: write"
+        ],
+        "authentication": "ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN repository secret, or workload identity federation; plus the Claude GitHub app.",
+        "dataFlow": "Repository content, issue and PR text are processed on your GitHub runner and sent to your configured model provider (Anthropic, Bedrock, Vertex or Foundry)."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/google-github-actions/run-gemini-cli",
+      "https://github.com/google-gemini/gemini-cli"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "integration",
+      "listing": {
+        "slug": "run-gemini-cli-github-action",
+        "name": {
+          "en": "Run Gemini CLI GitHub Action"
+        },
+        "outcome": {
+          "en": "Run Gemini CLI in GitHub Actions to review pull requests, triage issues and make code changes on demand."
+        },
+        "description": {
+          "en": "run-gemini-cli is a GitHub Action that brings Gemini into your development workflow through the Gemini CLI. It works as an autonomous agent for routine coding tasks and as an on-demand collaborator you can call conversationally (for example @gemini-cli fix this issue). Use it for pull request reviews, issue triage and code analysis and modification.\n\nAuthenticate with a GEMINI_API_KEY repository secret, or with Workload Identity Federation for Google Cloud when you have a GCP project. Upstream recommends pinning the action version.\n\nListed by TermBuddy as a third-party project. Maintained by Google; this listing is not endorsed by Google."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "gemini-cli"
+        ],
+        "tags": [
+          "github-actions",
+          "gemini",
+          "code-review",
+          "issue-triage",
+          "automation"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/google-github-actions/run-gemini-cli#readme",
+        "issueTrackerUrl": "https://github.com/google-github-actions/run-gemini-cli/issues"
+      },
+      "release": {
+        "version": "0.1.22",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/google-github-actions/run-gemini-cli",
+          "authorship": "third_party",
+          "originalAuthor": "Google"
+        },
+        "releaseNotes": "Tracks upstream release v0.1.22 (published 2026-04-24).",
+        "compatibility": [
+          {
+            "platform": "gemini-cli"
+          }
+        ],
+        "installation": {
+          "method": "hosted",
+          "instructions": [
+            "Store your Gemini API key as a repository secret named GEMINI_API_KEY (or configure Workload Identity Federation).",
+            "Add a workflow step that uses google-github-actions/run-gemini-cli, pinned to a version, as shown in the upstream README.",
+            "Grant the workflow only the permissions it needs."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [
+            "GitHub repository",
+            "Gemini API key from Google AI Studio, or a GCP project for Workload Identity Federation"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "GitHub Actions runner"
+          ],
+          "environmentVariables": [
+            {
+              "name": "GEMINI_API_KEY",
+              "purpose": "Authenticates to the Gemini API (not needed with Workload Identity Federation).",
+              "required": false,
+              "sensitive": true
+            }
+          ]
+        },
+        "permissions": [
+          {
+            "capability": "code_modification",
+            "required": true,
+            "destinations": [],
+            "purpose": "Can modify code in your repository when asked."
+          },
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "Reads repository files on the Actions runner."
+          },
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "generativelanguage.googleapis.com",
+              "api.github.com"
+            ],
+            "purpose": "Calls the Gemini API and the GitHub API."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "github.com"
+            ],
+            "purpose": "Comments on and changes pull requests and issues using the permissions you grant the workflow.",
+            "scope": "Repositories where the workflow runs"
+          },
+          {
+            "capability": "secret_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Reads GEMINI_API_KEY or federation settings stored as repository secrets/variables."
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://github.com/google-github-actions/run-gemini-cli#readme",
+        "supportUrl": "https://github.com/google-github-actions/run-gemini-cli/issues"
+      },
+      "typeDetails": {
+        "integrationKind": "extension",
+        "hostPlatform": "gemini-cli",
+        "installationIdentifier": "google-github-actions/run-gemini-cli",
+        "connectedService": "GitHub pull requests and issues",
+        "requestedScopes": [],
+        "authentication": "GEMINI_API_KEY repository secret, or Workload Identity Federation (GCP_WIF_PROVIDER) for Google Cloud.",
+        "dataFlow": "Repository content, issue and PR text are processed on your GitHub runner and sent to the Gemini API."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/obra/superpowers",
+      "https://github.com/obra/superpowers/releases/tag/v7.0.2"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "skill",
+      "listing": {
+        "slug": "superpowers",
+        "name": {
+          "en": "Superpowers"
+        },
+        "outcome": {
+          "en": "A software development methodology for coding agents, delivered as composable skills that trigger automatically."
+        },
+        "description": {
+          "en": "Superpowers is a complete development methodology built from composable skills plus initial instructions that make your agent use them. When it sees you are building something it does not jump straight into code: it asks what you are really trying to do, shows a spec in chunks short enough to read, then writes an implementation plan, and runs a subagent-driven development process in which agents work through tasks while their work is inspected and reviewed.\n\nSkills in the repository include brainstorming, test-driven-development, systematic-debugging, requesting and receiving code review, using git worktrees, dispatching parallel agents and verification-before-completion. Installation differs per agent harness; install it separately for each one you use.\n\nListed by TermBuddy as a third-party project. Maintained by obra (Prime Radiant); this listing is not endorsed by obra (Prime Radiant)."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "codex",
+          "cursor",
+          "gemini-cli"
+        ],
+        "tags": [
+          "skills",
+          "methodology",
+          "tdd",
+          "code-review",
+          "subagents",
+          "planning"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/obra/superpowers#readme",
+        "issueTrackerUrl": "https://github.com/obra/superpowers/issues"
+      },
+      "release": {
+        "version": "7.0.2",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/obra/superpowers",
+          "authorship": "third_party",
+          "originalAuthor": "obra (Prime Radiant)"
+        },
+        "releaseNotes": "Tracks upstream release v7.0.2 (published 2026-11-03).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "gemini-cli"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Claude Code: run /plugin install superpowers@claude-plugins-official (a separate superpowers-marketplace is also documented upstream).",
+            "Codex, Cursor and Gemini CLI each have their own install section in the upstream README; install it separately for each harness you use.",
+            "Start a session and describe what you want to build; the skills trigger automatically."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A supported coding agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "Skills direct your agent to read the project while planning and reviewing."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "Skills direct your agent to write specs, plans, tests and code."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "Skills direct your agent to run tests and git commands, and the repository includes a few helper scripts."
+          },
+          {
+            "capability": "code_modification",
+            "required": true,
+            "destinations": [],
+            "purpose": "The methodology has your agent implement changes in your codebase."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/obra/superpowers#readme",
+        "supportUrl": "https://github.com/obra/superpowers/issues"
+      },
+      "typeDetails": {
+        "format": "Agent Skills (SKILL.md folders) packaged as a plugin",
+        "entryPath": "skills/",
+        "activation": "Triggered automatically by the agent when it detects relevant work, starting from the using-superpowers skill.",
+        "bundledExecutables": true,
+        "inputs": [
+          "Your description of what to build or change"
+        ],
+        "outputs": [
+          "Design spec",
+          "Implementation plan",
+          "Code with tests",
+          "Code review feedback"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/anthropics/skills",
+      "https://github.com/anthropics/skills/blob/main/README.md"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "skill",
+      "listing": {
+        "slug": "anthropic-agent-skills",
+        "name": {
+          "en": "Anthropic Agent Skills"
+        },
+        "outcome": {
+          "en": "Anthropic's public repository of Agent Skills, from frontend design and webapp testing to document handling."
+        },
+        "description": {
+          "en": "A public repository of Agent Skills: folders of instructions, scripts and resources that Claude loads dynamically to improve performance on specialised tasks. Each skill is self-contained in its own folder with a SKILL.md file. The collection spans creative and design skills, technical skills such as testing web apps and building MCP servers, enterprise and communication skills, and the document skills (docx, pdf, pptx, xlsx) that Anthropic describes as powering Claude's document capabilities.\n\nUpstream states the skills are provided for demonstration and educational purposes only, and that implementations in Claude itself may differ. The repository has no single root licence: individual skills carry their own LICENSE.txt (the docx and frontend-design skills checked are Apache 2.0), so read the licence file inside a skill before reusing it. It can also be registered as a Claude Code plugin marketplace.\n\nListed by TermBuddy as a third-party project. Maintained by Anthropic; this listing is not endorsed by Anthropic."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code"
+        ],
+        "tags": [
+          "skills",
+          "agent-skills",
+          "claude",
+          "frontend-design",
+          "documents",
+          "mcp-builder"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/anthropics/skills#readme",
+        "issueTrackerUrl": "https://github.com/anthropics/skills/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-11-06",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/anthropics/skills",
+          "authorship": "third_party",
+          "originalAuthor": "Anthropic"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-06).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "api"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Claude Code: run /plugin marketplace add anthropics/skills, then /plugin install document-skills@anthropic-agent-skills or example-skills@anthropic-agent-skills.",
+            "Claude.ai and the API: see the upstream README section Try in Claude Code, Claude.ai, and the API.",
+            "Check the LICENSE.txt inside each skill folder before reusing it."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "Claude Code, Claude.ai or the Claude API"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "Skills read files such as the documents or projects you point them at."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "Document and design skills create and edit files."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "Many skills bundle scripts (Python, shell, JavaScript) that run when the skill is used."
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0 (per-skill LICENSE.txt; no root licence)"
+        },
+        "documentationUrl": "https://github.com/anthropics/skills#readme",
+        "supportUrl": "https://github.com/anthropics/skills/issues"
+      },
+      "typeDetails": {
+        "format": "Agent Skills (SKILL.md folders)",
+        "entryPath": "skills/<skill-name>/SKILL.md",
+        "activation": "Claude loads a skill dynamically when its SKILL.md description matches the task.",
+        "bundledExecutables": true,
+        "inputs": [
+          "A task that matches a skill's description",
+          "Files to read or edit"
+        ],
+        "outputs": [
+          "Task-specific results such as edited documents, designs or tests"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/wshobson/agents"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "agent",
+      "listing": {
+        "slug": "wshobson-agents",
+        "name": {
+          "en": "Agents, Skills and Plugins Collection (wshobson)"
+        },
+        "outcome": {
+          "en": "A large catalog of plugins, subagents, skills and commands for Claude Code, Codex CLI, Cursor, OpenCode and more."
+        },
+        "description": {
+          "en": "One collection of plugins, agents, skills and commands, written once in Markdown in the Claude Code plugin format and adapted to each tool by generators with validation and evals. The upstream catalog lists 94 plugins (92 local, 2 external) containing 202 agents, 185 skills and 105 commands, covering areas such as Python and JavaScript development.\n\nSupported harnesses named upstream are Claude Code, OpenAI Codex CLI, Cursor, OpenCode, Antigravity CLI, GitHub Copilot and Pi. Which components are available depends on the installation route and the harness's capabilities.\n\nListed by TermBuddy as a third-party project. Maintained by Seth Hobson (wshobson); this listing is not endorsed by Seth Hobson (wshobson)."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "codex",
+          "cursor"
+        ],
+        "tags": [
+          "subagents",
+          "plugins",
+          "skills",
+          "claude-code",
+          "marketplace",
+          "agents"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/wshobson/agents#readme",
+        "issueTrackerUrl": "https://github.com/wshobson/agents/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-11-09",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/wshobson/agents",
+          "authorship": "third_party",
+          "originalAuthor": "Seth Hobson (wshobson)"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "cursor"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Claude Code: run /plugin marketplace add wshobson/agents, then /plugin install <plugin>@claude-code-workflows (for example python-development).",
+            "Codex: run codex plugin marketplace add wshobson/agents.",
+            "Other harnesses use make install-opencode, install-antigravity, install-copilot or install-pi; see the upstream README."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A supported coding agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "Subagents read project files to do their work."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "Subagents and commands edit files in your project."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "Commands and agents may run shell tools; plugin-specific hooks and MCP configuration can start processes."
+          },
+          {
+            "capability": "code_modification",
+            "required": true,
+            "destinations": [],
+            "purpose": "The agents are meant to implement and refactor code."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/wshobson/agents#readme",
+        "supportUrl": "https://github.com/wshobson/agents/issues"
+      },
+      "typeDetails": {
+        "scope": "subagent",
+        "entryPath": "plugins/<plugin-name>/agents/",
+        "invocation": "Install a plugin, then Claude Code delegates to its subagents automatically or you ask for one by name.",
+        "tools": [],
+        "capabilities": [
+          "Specialist subagents grouped into plugins by language and domain"
+        ],
+        "modelRequirements": [],
+        "inputs": [
+          "A task in your project"
+        ],
+        "outputs": [
+          "Code changes, reviews and analysis"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/OpenHands/OpenHands",
+      "https://github.com/OpenHands/OpenHands/releases/tag/v1.37.0"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "agent",
+      "listing": {
+        "slug": "openhands-agent-canvas",
+        "name": {
+          "en": "OpenHands Agent Canvas"
+        },
+        "outcome": {
+          "en": "A self-hosted control center for running coding agents locally, in Docker, on VMs or in the cloud."
+        },
+        "description": {
+          "en": "OpenHands Agent Canvas is a self-hosted developer control center for starting conversations and automating everyday tasks with coding agents. It runs the open source OpenHands agent out of the box and can also use third-party agents such as Claude Code, Codex, Gemini CLI, Pi and OpenCode, over local, remote and cloud backends. It runs locally by default and can connect to agent backends running in Docker containers, on VMs or in your own infrastructure.\n\nUpstream warns that the quickstart runs the agent-server directly on your machine, giving the agent full access to your filesystem.\n\nListed by TermBuddy as a third-party project. Maintained by OpenHands; this listing is not endorsed by OpenHands."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "codex",
+          "gemini-cli"
+        ],
+        "tags": [
+          "agent",
+          "self-hosted",
+          "automation",
+          "docker",
+          "openhands",
+          "control-center"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/OpenHands/OpenHands#readme",
+        "issueTrackerUrl": "https://github.com/OpenHands/OpenHands/issues"
+      },
+      "release": {
+        "version": "1.37.0",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/OpenHands/OpenHands",
+          "authorship": "third_party",
+          "originalAuthor": "OpenHands"
+        },
+        "releaseNotes": "Tracks upstream release v1.37.0 (published 2026-11-06).",
+        "compatibility": [
+          {
+            "platform": "api",
+            "notes": "Standalone agent; configure the model provider in the app."
+          },
+          {
+            "platform": "claude-code",
+            "notes": "Can run Claude Code as a third-party agent backend."
+          },
+          {
+            "platform": "codex",
+            "notes": "Can run Codex as a third-party agent backend."
+          },
+          {
+            "platform": "gemini-cli",
+            "notes": "Can run Gemini CLI as a third-party agent backend."
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Install the control center: npm install -g @openhands/agent-canvas, then follow the upstream Quickstart.",
+            "Or run it in Docker as shown in the upstream README.",
+            "Read the self-hosting docs before exposing it beyond your machine."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js",
+            "Docker (optional)"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A model provider or a supported third-party agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "The agent can read your files; upstream says the quickstart gives it full filesystem access."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "The agent edits files in the workspaces it operates on."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "Runs agent servers, shell commands and containers."
+          },
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Connects to model providers, remote backends and the web."
+          },
+          {
+            "capability": "code_modification",
+            "required": true,
+            "destinations": [],
+            "purpose": "Implements changes in your repositories."
+          },
+          {
+            "capability": "background_execution",
+            "required": false,
+            "destinations": [],
+            "purpose": "Supports always-on automations and long-running agent conversations."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/OpenHands/OpenHands#readme",
+        "supportUrl": "https://github.com/OpenHands/OpenHands/issues"
+      },
+      "typeDetails": {
+        "scope": "primary",
+        "entryPath": "@openhands/agent-canvas (npm) or the upstream Docker image",
+        "invocation": "Start Agent Canvas, open a conversation and describe the task.",
+        "tools": [],
+        "capabilities": [
+          "Runs the OpenHands agent or third-party agents",
+          "Local, Docker, VM and cloud backends",
+          "Automations"
+        ],
+        "modelRequirements": [],
+        "inputs": [
+          "Task descriptions"
+        ],
+        "outputs": [
+          "Code changes and task results"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/anomalyco/opencode",
+      "https://opencode.ai"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "agent",
+      "listing": {
+        "slug": "opencode",
+        "name": {
+          "en": "OpenCode"
+        },
+        "outcome": {
+          "en": "An open source AI coding agent for the terminal, with a desktop app and many install routes."
+        },
+        "description": {
+          "en": "OpenCode is an open source AI coding agent. It installs as a command line tool through a shell installer, npm or Homebrew, and a desktop app is available through Homebrew cask. Check the upstream README and opencode.ai for supported model providers, configuration and permissions, because those are not summarised here.\n\nListed by TermBuddy as a third-party project. Maintained by OpenCode (anomalyco); this listing is not endorsed by OpenCode (anomalyco)."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [],
+        "tags": [
+          "agent",
+          "terminal",
+          "cli",
+          "open-source",
+          "coding-agent"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://opencode.ai",
+        "issueTrackerUrl": "https://github.com/anomalyco/opencode/issues"
+      },
+      "release": {
+        "version": "1.19.5",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/anomalyco/opencode",
+          "authorship": "third_party",
+          "originalAuthor": "OpenCode (anomalyco)"
+        },
+        "releaseNotes": "Tracks upstream release v1.19.5 (published 2026-10-28).",
+        "compatibility": [
+          {
+            "platform": "api",
+            "notes": "Standalone terminal agent; connects to the model providers you configure (see upstream docs)."
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Shell installer: curl -fsSL https://opencode.ai/v2/install | bash",
+            "Or: npm i -g @opencode/cli@latest, or brew install anomalyco/tap/opencode-v2 (macOS and Linux).",
+            "Upstream says to remove versions older than 0.1.x before installing."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A model provider account or key of your choice"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "A coding agent reads your project files."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "A coding agent edits files."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "A coding agent runs shell commands."
+          },
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Calls the model provider you configure."
+          },
+          {
+            "capability": "code_modification",
+            "required": true,
+            "destinations": [],
+            "purpose": "Implements changes in your codebase."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://opencode.ai",
+        "supportUrl": "https://github.com/anomalyco/opencode/issues"
+      },
+      "typeDetails": {
+        "scope": "primary",
+        "entryPath": "opencode command (npm @opencode/cli)",
+        "invocation": "Run opencode in a project directory and describe the task.",
+        "tools": [],
+        "capabilities": [
+          "Terminal coding agent",
+          "Desktop app"
+        ],
+        "modelRequirements": [],
+        "inputs": [
+          "Task descriptions in a project directory"
+        ],
+        "outputs": [
+          "Code changes"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/github/spec-kit",
+      "https://github.github.io/spec-kit/"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "workflow",
+      "listing": {
+        "slug": "github-spec-kit",
+        "name": {
+          "en": "Spec Kit"
+        },
+        "outcome": {
+          "en": "GitHub's toolkit for spec-driven development: a structured process your coding agent follows from spec to implementation."
+        },
+        "description": {
+          "en": "Spec Kit is an open source toolkit that gives AI coding agents structured processes, reusable templates and documented outcomes. Its main process, Spec-Driven Development, carries a specification through planning, implementation and convergence: you create a constitution of project principles once, then run specify, plan, tasks, implement and converge, repeating implement and converge until the convergence step reports Converged. Other processes cover diagnosing and repairing broken behaviour and assessing whether an idea deserves investment, and you can adopt or build your own.\n\nUpstream documents many coding-agent integrations (43 options in total); the page names Copilot, Gemini, Codex, Claude, Kilo Code, Zed, Forge and Kiro.\n\nListed by TermBuddy as a third-party project. Maintained by GitHub; this listing is not endorsed by GitHub."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "codex",
+          "gemini-cli",
+          "vscode"
+        ],
+        "tags": [
+          "spec-driven-development",
+          "planning",
+          "workflow",
+          "templates",
+          "specify",
+          "agents"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.github.io/spec-kit/",
+        "issueTrackerUrl": "https://github.com/github/spec-kit/issues"
+      },
+      "release": {
+        "version": "1.3.2",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/github/spec-kit",
+          "authorship": "third_party",
+          "originalAuthor": "GitHub"
+        },
+        "releaseNotes": "Tracks upstream release v1.3.2 (published 2026-11-06).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "gemini-cli"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Install the CLI (needs Python 3.11+ and uv): uv tool install specify-cli",
+            "Initialise a project: specify init my-project --integration copilot (choose the integration for your coding agent).",
+            "In your agent run the slash commands: constitution, specify, plan, tasks, implement, converge."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Python 3.11+"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "uv",
+            "A supported coding agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "Initialisation and the process write templates, specs, plans and code into your project."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "The specify CLI runs locally and the process directs your agent to run project commands."
+          },
+          {
+            "capability": "code_modification",
+            "required": true,
+            "destinations": [],
+            "purpose": "The implement step has your agent change your codebase."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.github.io/spec-kit/",
+        "supportUrl": "https://github.com/github/spec-kit/issues"
+      },
+      "typeDetails": {
+        "stages": [
+          {
+            "name": "Constitution",
+            "description": "Define the project's principles for quality, testing and maintainability once per project.",
+            "humanApproval": false
+          },
+          {
+            "name": "Specify",
+            "description": "Describe what to build and why; the agent produces a specification.",
+            "humanApproval": false
+          },
+          {
+            "name": "Plan",
+            "description": "Turn the specification into a technical plan with your chosen stack.",
+            "humanApproval": false
+          },
+          {
+            "name": "Tasks",
+            "description": "Break the plan into tasks.",
+            "humanApproval": false
+          },
+          {
+            "name": "Implement",
+            "description": "The agent implements the tasks.",
+            "humanApproval": false
+          },
+          {
+            "name": "Converge",
+            "description": "Check the result against the specification; repeat implement and converge until it reports Converged.",
+            "humanApproval": false
+          }
+        ],
+        "dependencies": [
+          "Python 3.11+",
+          "uv",
+          "A supported coding agent"
+        ],
+        "executionMethod": "Slash commands in your coding agent after running specify init.",
+        "initialInputs": [
+          "Project principles",
+          "Description of the feature or application"
+        ],
+        "intermediateState": "Specification, plan and task documents kept in your project repository.",
+        "finalOutputs": [
+          "Implemented feature",
+          "Convergence result"
+        ],
+        "retryBehavior": "Repeat implement and converge until convergence reports Converged.",
+        "rollbackBehavior": "Not specified upstream; use version control.",
+        "partialFailureBehavior": "Not specified upstream; earlier artifacts remain in your repository to inspect and re-run from."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/PatrickJS/awesome-cursorrules"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "rule",
+      "listing": {
+        "slug": "awesome-cursorrules",
+        "name": {
+          "en": "Awesome Cursor Rules"
+        },
+        "outcome": {
+          "en": "A community collection of Cursor Project Rules (.mdc files) for frameworks, languages and workflows."
+        },
+        "description": {
+          "en": "A curated repository of Cursor Project Rules: Markdown-based .mdc files that live in .cursor/rules/ and tell Cursor how to behave for specific projects, file types, frameworks and workflows. Add selected .mdc files to your project's .cursor/rules/ folder to use them directly. Rules can describe local architecture, preferred libraries and coding standards so suggestions fit your codebase on the first pass.\n\nThe repository is released under CC0 1.0 (public domain dedication). It names sponsors in its README; this listing does not imply any endorsement by them.\n\nListed by TermBuddy as a third-party project. Maintained by PatrickJS and contributors; this listing is not endorsed by PatrickJS and contributors."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "cursor"
+        ],
+        "tags": [
+          "cursor",
+          "rules",
+          "mdc",
+          "coding-standards",
+          "prompts"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/PatrickJS/awesome-cursorrules#readme",
+        "issueTrackerUrl": "https://github.com/PatrickJS/awesome-cursorrules/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-05-30",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/PatrickJS/awesome-cursorrules",
+          "authorship": "third_party",
+          "originalAuthor": "PatrickJS and contributors"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-05-30).",
+        "compatibility": [
+          {
+            "platform": "cursor"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Browse the rules/ folder of the repository and pick the rules that match your stack.",
+            "Copy the chosen .mdc files into .cursor/rules/ in your project.",
+            "Review each rule before use; they change how Cursor writes code in your project."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "Cursor"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [],
+        "license": {
+          "identifier": "CC0-1.0"
+        },
+        "documentationUrl": "https://github.com/PatrickJS/awesome-cursorrules#readme",
+        "supportUrl": "https://github.com/PatrickJS/awesome-cursorrules/issues"
+      },
+      "typeDetails": {
+        "format": ".mdc Cursor Project Rules",
+        "destinationScope": "Project (.cursor/rules/)",
+        "entryPath": "rules/",
+        "activation": "Cursor applies project rules from .cursor/rules/ according to each rule's settings.",
+        "applicablePaths": [],
+        "expectedEffect": "Guides Cursor toward project- or framework-specific coding standards and conventions."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/agentsmd/agents.md",
+      "https://agents.md"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "rule",
+      "listing": {
+        "slug": "agents-md",
+        "name": {
+          "en": "AGENTS.md"
+        },
+        "outcome": {
+          "en": "A simple, open format for guiding coding agents: a README written for agents."
+        },
+        "description": {
+          "en": "AGENTS.md is a simple, open format for guiding coding agents. Think of it as a README for agents: a dedicated, predictable place to give coding agents the context and instructions they need, such as dev environment tips, testing instructions and conventions, kept separate from the human-facing README. The agents.md site lists the tools that support it, including Codex, Cursor, Gemini CLI, VS Code, Aider, goose, opencode, Zed, Amp, Windsurf, Jules and others.\n\nThis listing covers the open format and its reference repository, not any one tool's behaviour; check your agent's documentation for how it loads the file.\n\nListed by TermBuddy as a third-party project. Maintained by AGENTS.md community (agentsmd); this listing is not endorsed by AGENTS.md community (agentsmd)."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "codex",
+          "cursor",
+          "gemini-cli",
+          "vscode"
+        ],
+        "tags": [
+          "agents-md",
+          "instructions",
+          "open-format",
+          "conventions",
+          "rules"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://agents.md",
+        "issueTrackerUrl": "https://github.com/agentsmd/agents.md/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-09-10",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/agentsmd/agents.md",
+          "authorship": "third_party",
+          "originalAuthor": "AGENTS.md community (agentsmd)"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-09-10).",
+        "compatibility": [
+          {
+            "platform": "codex",
+            "notes": "Listed as supported on agents.md."
+          },
+          {
+            "platform": "cursor",
+            "notes": "Listed as supported on agents.md."
+          },
+          {
+            "platform": "gemini-cli",
+            "notes": "Listed as supported on agents.md."
+          },
+          {
+            "platform": "vscode",
+            "notes": "Listed as supported on agents.md."
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Create an AGENTS.md file at the root of your repository (nested files in subdirectories are also possible; see the site).",
+            "Add dev environment tips, testing instructions and conventions your agent should follow.",
+            "Check your agent's documentation for how it discovers the file."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A coding agent that reads AGENTS.md"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://agents.md",
+        "supportUrl": "https://github.com/agentsmd/agents.md/issues"
+      },
+      "typeDetails": {
+        "format": "AGENTS.md (Markdown)",
+        "destinationScope": "Repository root, optionally nested in subdirectories",
+        "entryPath": "AGENTS.md",
+        "activation": "Read by supporting coding agents when they work in the repository.",
+        "applicablePaths": [],
+        "expectedEffect": "Gives agents project-specific setup, testing and convention guidance so they behave consistently."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/danielmiessler/Fabric",
+      "https://github.com/danielmiessler/Fabric/releases/tag/v1.4.567"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "prompt",
+      "listing": {
+        "slug": "fabric-patterns",
+        "name": {
+          "en": "Fabric"
+        },
+        "outcome": {
+          "en": "An open source framework and a large crowdsourced library of AI prompts (patterns) you run from the command line."
+        },
+        "description": {
+          "en": "Fabric is an open-source framework for augmenting humans using AI. It provides a modular system for solving specific problems using a crowdsourced set of AI prompts (called patterns) that can be used anywhere. The repository's data/patterns folder holds 266 patterns at the time of checking, plus a strategies folder, and the fabric command line tool runs a pattern against text you pipe in using the model provider you configure (OpenAI, Azure, Ollama and others are mentioned upstream).\n\nFirst-time setup is fabric --setup, where you choose providers and enter any API keys.\n\nListed by TermBuddy as a third-party project. Maintained by Daniel Miessler; this listing is not endorsed by Daniel Miessler."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [],
+        "tags": [
+          "prompts",
+          "patterns",
+          "cli",
+          "fabric",
+          "llm"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/danielmiessler/Fabric#readme",
+        "issueTrackerUrl": "https://github.com/danielmiessler/Fabric/issues"
+      },
+      "release": {
+        "version": "1.4.567",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/danielmiessler/Fabric",
+          "authorship": "third_party",
+          "originalAuthor": "Daniel Miessler"
+        },
+        "releaseNotes": "Tracks upstream release v1.4.567 (published 2026-11-08).",
+        "compatibility": [
+          {
+            "platform": "api",
+            "notes": "Works with the model providers you configure in fabric --setup."
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Install: brew install fabric-ai, or go install github.com/danielmiessler/fabric/cmd/fabric@latest, or the upstream shell installer.",
+            "Run fabric --setup to choose a provider and add any API key.",
+            "Pipe text into a pattern, for example: cat notes.md | fabric --pattern <pattern-name>."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Go (only if installing with go install)"
+          ],
+          "accounts": [
+            "Account or API key for your chosen model provider, or a local Ollama"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "A model provider"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Sends the text you pipe in to the model provider you configure."
+          },
+          {
+            "capability": "secret_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Stores and uses the provider API keys you enter during setup."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/danielmiessler/Fabric#readme",
+        "supportUrl": "https://github.com/danielmiessler/Fabric/issues"
+      },
+      "typeDetails": {
+        "format": "bundle",
+        "entryPaths": [
+          "data/patterns/",
+          "data/strategies/"
+        ],
+        "variables": [],
+        "requiredInputs": [
+          "Text or content piped into the fabric command"
+        ],
+        "outputContract": "Model output shaped by the chosen pattern's instructions.",
+        "intendedModels": [
+          "Any model available through your configured Fabric provider"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/karanb192/claude-code-hooks"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "hook",
+      "listing": {
+        "slug": "claude-code-hooks-marketplace",
+        "name": {
+          "en": "Claude Code Hooks Marketplace"
+        },
+        "outcome": {
+          "en": "A marketplace of 22 tested, installable hook plugins for Claude Code: safety guards, logging, formatting and notifications."
+        },
+        "description": {
+          "en": "Ready-to-use hooks for Claude Code, shipped as a 22-plugin installable marketplace covering safety, automation and notifications. Examples include block-dangerous-commands (blocks things like rm -rf ~, fork bombs, curl piped to a shell and force pushes to main), protect-secrets (stops reading, modifying or exfiltrating sensitive files), git-safety, protect-tests (blocks deleting or skip-disabling tests instead of fixing the code), format-code (runs ruff and prettier after edits), session-logger and config-watch.\n\nEach hook is its own plugin with a script, tests and a README, grouped by the Claude Code event that fires it. Because hooks run commands on your machine, read a plugin's script before installing it.\n\nListed by TermBuddy as a third-party project. Maintained by karanb192; this listing is not endorsed by karanb192."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code"
+        ],
+        "tags": [
+          "hooks",
+          "claude-code",
+          "safety",
+          "guardrails",
+          "plugins"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/karanb192/claude-code-hooks#readme",
+        "issueTrackerUrl": "https://github.com/karanb192/claude-code-hooks/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-11-02",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/karanb192/claude-code-hooks",
+          "authorship": "third_party",
+          "originalAuthor": "karanb192"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-02).",
+        "compatibility": [
+          {
+            "platform": "claude-code",
+            "notes": "Installs as Claude Code plugins."
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "In Claude Code run /plugin marketplace add karanb192/claude-code-hooks",
+            "Then install the hooks you want: /plugin install <name>@claude-code-hooks",
+            "Read each plugin's script and README first; hooks execute on your machine."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js (the guard hooks run on Node; some utilities use Python)"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "Claude Code",
+            "ruff and prettier for the format-code hook"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "Guard hooks inspect tool calls and file paths."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": false,
+            "destinations": [],
+            "purpose": "Some hooks write logs, and format-code reformats files after edits."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "Hooks run local scripts on Claude Code events; format-code runs ruff and prettier."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/karanb192/claude-code-hooks#readme",
+        "supportUrl": "https://github.com/karanb192/claude-code-hooks/issues"
+      },
+      "typeDetails": {
+        "events": [
+          "SessionStart",
+          "PreToolUse",
+          "PostToolUse",
+          "PostToolUseFailure",
+          "Stop",
+          "SubagentStop",
+          "SessionEnd",
+          "ConfigChange"
+        ],
+        "hostPlatform": "claude-code",
+        "entryPaths": [
+          "plugins/"
+        ],
+        "runtime": "Node.js (some utilities use Python)",
+        "behavior": "synchronous",
+        "failurePolicy": "Blocking hooks stop the tool call with exit code 2; see each plugin's README for its exact behaviour.",
+        "effects": [
+          "filesystem_read",
+          "filesystem_write",
+          "process_execution"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/davila7/claude-code-templates",
+      "https://aitmpl.com"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "template",
+      "listing": {
+        "slug": "claude-code-templates",
+        "name": {
+          "en": "Claude Code Templates"
+        },
+        "outcome": {
+          "en": "An open registry and CLI for Claude Code components: agents, commands, skills, hooks, MCPs, settings and mods."
+        },
+        "description": {
+          "en": "An open-source catalog of components for Claude Code that installs with one command: npx claude-code-templates@latest. Components include agents, commands, skills, hooks, MCP servers, settings and mods, and a single one can be installed directly, for example with --skill or --agent. Every component page on aitmpl.com shows its exact install command.\n\nThe CLI adds files from the registry to your project, so review each component before keeping it.\n\nListed by TermBuddy as a third-party project. Maintained by davila7; this listing is not endorsed by davila7."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code"
+        ],
+        "tags": [
+          "claude-code",
+          "templates",
+          "registry",
+          "cli",
+          "components"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://aitmpl.com",
+        "issueTrackerUrl": "https://github.com/davila7/claude-code-templates/issues"
+      },
+      "release": {
+        "version": "1.29.7",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/davila7/claude-code-templates",
+          "authorship": "third_party",
+          "originalAuthor": "davila7"
+        },
+        "releaseNotes": "Tracks upstream release v1.29.7 (published 2026-10-09).",
+        "compatibility": [
+          {
+            "platform": "claude-code",
+            "notes": "Installs components for Claude Code."
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Run npx claude-code-templates@latest and follow the prompts.",
+            "Install one component directly, for example: npx claude-code-templates@latest --skill creative-design/frontend-design",
+            "Add --yes to skip the confirmation prompt, and review installed components."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "Claude Code"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "aitmpl.com",
+              "github.com"
+            ],
+            "purpose": "Downloads components from the registry."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "Writes the chosen component files into your project."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "Runs the installer CLI via npx; installed hooks and MCP components can run commands later."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://aitmpl.com",
+        "supportUrl": "https://github.com/davila7/claude-code-templates/issues"
+      },
+      "typeDetails": {
+        "templateKind": "Component registry and installer CLI",
+        "includedPaths": [
+          "cli-tool/",
+          "docs/"
+        ],
+        "outputFormat": "Claude Code component files (agents, commands, skills, hooks, MCP and settings) written into your project",
+        "initializationMethod": "Run npx claude-code-templates@latest, or install one component with --skill, --agent and similar flags.",
+        "replacementVariables": [],
+        "executesScripts": true
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/anthropics/claude-plugins-official"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "integration",
+      "listing": {
+        "slug": "claude-plugins-official",
+        "name": {
+          "en": "Claude Code Plugins Directory"
+        },
+        "outcome": {
+          "en": "Anthropic's managed directory of Claude Code plugins, with internal and third-party entries installable by name."
+        },
+        "description": {
+          "en": "A curated directory of plugins for Claude Code. The repository separates internal plugins developed and maintained by Anthropic (/plugins) from third-party plugins submitted by partners and the community (/external_plugins), which must meet quality and security standards for approval. Install a plugin with /plugin install {plugin-name}@claude-plugins-official, or browse in /plugin > Discover.\n\nUpstream warns to trust a plugin before installing, updating or using it, because Anthropic does not control what MCP servers, files or other software a plugin includes.\n\nListed by TermBuddy as a third-party project. Maintained by Anthropic; this listing is not endorsed by Anthropic."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code"
+        ],
+        "tags": [
+          "claude-code",
+          "plugins",
+          "marketplace",
+          "directory",
+          "extensions"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://code.claude.com/docs/en/plugins",
+        "issueTrackerUrl": "https://github.com/anthropics/claude-plugins-official/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-11-08",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/anthropics/claude-plugins-official",
+          "authorship": "third_party",
+          "originalAuthor": "Anthropic"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-08).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "In Claude Code run /plugin install {plugin-name}@claude-plugins-official, or open /plugin and choose Discover.",
+            "Trust a plugin before installing, updating or using it; plugins can include MCP servers, hooks and other software.",
+            "See /plugins/example-plugin in the repository for a reference implementation."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "Claude Code"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "github.com"
+            ],
+            "purpose": "Fetches plugin files from the repository."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "Installing a plugin writes its files into your Claude Code configuration."
+          },
+          {
+            "capability": "process_execution",
+            "required": false,
+            "destinations": [],
+            "purpose": "Installed plugins can start MCP servers and run hooks."
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://code.claude.com/docs/en/plugins",
+        "supportUrl": "https://github.com/anthropics/claude-plugins-official/issues"
+      },
+      "typeDetails": {
+        "integrationKind": "plugin",
+        "hostPlatform": "claude-code",
+        "installationIdentifier": "claude-plugins-official",
+        "connectedService": "Anthropic-managed Claude Code plugin directory",
+        "requestedScopes": [],
+        "authentication": "None for the directory itself; individual plugins may need their own credentials.",
+        "dataFlow": "Plugin files are fetched from the GitHub repository; each installed plugin's own components may send data elsewhere, so review them first."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/neondatabase/mcp-server-neon"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "neon-mcp-server",
+        "name": {
+          "en": "Neon MCP Server"
+        },
+        "outcome": {
+          "en": "Manage Neon Postgres projects, branches and queries from your coding agent in natural language."
+        },
+        "description": {
+          "en": "An MCP server for interacting with Neon's management API and databases. It translates natural-language requests into Neon API calls so an agent can create projects and databases, run queries, summarise projects and run schema migrations using Neon's branching. Neon documents three ways to connect: a quick setup with npx neon@latest init (which works with Cursor, VS Code and Claude Code, authenticates via OAuth and creates an API key for you), the remote server with OAuth, or the remote server with an API key.\n\nIf Neon's IP Allow is enabled, upstream says to allowlist the static IPs of mcp.neon.tech. Prefer a non-production project, because the agent can change real databases.\n\nListed by TermBuddy as a third-party project. Maintained by Neon; this listing is not endorsed by Neon."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "neon",
+          "postgres",
+          "database",
+          "migrations"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/neondatabase/mcp-server-neon#readme",
+        "issueTrackerUrl": "https://github.com/neondatabase/mcp-server-neon/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-11-07",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/neondatabase/mcp-server-neon",
+          "authorship": "third_party",
+          "originalAuthor": "Neon"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-07).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "hosted",
+          "instructions": [
+            "Quick setup: run npx neon@latest init; it authenticates via OAuth and configures your editor.",
+            "Or connect to the remote server at https://mcp.neon.tech/mcp using OAuth, or an API key in an Authorization header.",
+            "If IP Allow is enabled on your Neon project, add the mcp.neon.tech static IPs listed upstream."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js (for npx neon@latest init)"
+          ],
+          "accounts": [
+            "Neon account"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "mcp.neon.tech"
+            ],
+            "purpose": "Sends requests to Neon's hosted MCP endpoint."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "neon.com"
+            ],
+            "purpose": "Acts on your Neon projects, including creating databases, running queries and running migrations.",
+            "scope": "Neon projects you authorise"
+          },
+          {
+            "capability": "secret_access",
+            "required": false,
+            "destinations": [],
+            "purpose": "Uses a Neon API key when you authenticate that way instead of OAuth."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/neondatabase/mcp-server-neon#readme",
+        "supportUrl": "https://github.com/neondatabase/mcp-server-neon/issues"
+      },
+      "typeDetails": {
+        "transport": "streamable_http",
+        "connectionMethod": "Remote HTTP endpoint https://mcp.neon.tech/mcp with OAuth or an API key.",
+        "distributionIdentity": "Neon MCP server (github.com/neondatabase/mcp-server-neon)",
+        "exposedTools": [
+          "Tool categories selectable in the server URL: projects, branches, endpoints, querying (see upstream for the full list)"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "OAuth, or a Neon API key in an Authorization header.",
+        "networkDestinations": [
+          "mcp.neon.tech"
+        ],
+        "dataHandling": "Schema and query results the agent reads pass to your model provider through your MCP client. Use a non-production project where possible."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/grafana/mcp-grafana",
+      "https://github.com/grafana/mcp-grafana/releases/tag/v2.2.0"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "grafana-mcp-server",
+        "name": {
+          "en": "Grafana MCP Server"
+        },
+        "outcome": {
+          "en": "Query dashboards, metrics, logs and alerts in Grafana from your coding agent."
+        },
+        "description": {
+          "en": "Grafana's MCP server connects an agent to a Grafana instance (self-hosted or Grafana Cloud). It can read dashboards and run panel queries with custom time ranges, and the upstream README documents further tool groups. Several groups are disabled by default and must be enabled with the --enabled-tools flag: panel query execution, query examples, InfluxDB, SQL (including ClickHouse, Snowflake and Athena) and CloudWatch.\n\nAuthenticate with a Grafana service account token and point GRAFANA_URL at your instance. Use a service account with only the permissions you need.\n\nListed by TermBuddy as a third-party project. Maintained by Grafana Labs; this listing is not endorsed by Grafana Labs."
+        },
+        "categorySlug": "operations",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "grafana",
+          "observability",
+          "dashboards",
+          "monitoring"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/grafana/mcp-grafana#readme",
+        "issueTrackerUrl": "https://github.com/grafana/mcp-grafana/issues"
+      },
+      "release": {
+        "version": "2.2.0",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/grafana/mcp-grafana",
+          "authorship": "third_party",
+          "originalAuthor": "Grafana Labs"
+        },
+        "releaseNotes": "Tracks upstream release v2.2.0 (published 2026-11-02) and PyPI package mcp-grafana 2.2.0.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Add an MCP server to your client that runs: uvx mcp-grafana",
+            "Set GRAFANA_URL (for example http://localhost:3000, or your Grafana Cloud URL) and GRAFANA_SERVICE_ACCOUNT_TOKEN.",
+            "Docker, binary and Helm installs are described in the upstream Usage section."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Python with uv (for uvx), or Docker"
+          ],
+          "accounts": [
+            "A Grafana instance and service account"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client"
+          ],
+          "environmentVariables": [
+            {
+              "name": "GRAFANA_URL",
+              "purpose": "Base URL of your Grafana instance.",
+              "required": true,
+              "sensitive": false
+            },
+            {
+              "name": "GRAFANA_SERVICE_ACCOUNT_TOKEN",
+              "purpose": "Service account token used for API calls.",
+              "required": true,
+              "sensitive": true
+            }
+          ]
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "Your GRAFANA_URL host"
+            ],
+            "purpose": "Calls your Grafana instance's API."
+          },
+          {
+            "capability": "secret_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Reads the Grafana service account token from the environment."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "Your Grafana instance"
+            ],
+            "purpose": "Reads dashboards, panels and data sources with the permissions of the service account.",
+            "scope": "Whatever the service account can access"
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://github.com/grafana/mcp-grafana#readme",
+        "supportUrl": "https://github.com/grafana/mcp-grafana/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Local process started with uvx mcp-grafana (SSE and other transports are described upstream).",
+        "distributionIdentity": "PyPI package mcp-grafana (github.com/grafana/mcp-grafana)",
+        "exposedTools": [
+          "Dashboard and panel tools",
+          "Run panel query (disabled by default)",
+          "Query examples (disabled by default)",
+          "InfluxDB, SQL and CloudWatch (disabled by default)",
+          "See upstream for the full list"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "Grafana service account token (GRAFANA_SERVICE_ACCOUNT_TOKEN).",
+        "networkDestinations": [
+          "Your Grafana instance"
+        ],
+        "dataHandling": "Dashboard definitions and query results the agent reads pass to your model provider through your MCP client. Scope the service account narrowly."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/Flux159/mcp-server-kubernetes",
+      "https://www.npmjs.com/package/mcp-server-kubernetes"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "kubernetes-mcp-server",
+        "name": {
+          "en": "Kubernetes MCP Server"
+        },
+        "outcome": {
+          "en": "Let your agent inspect and manage a Kubernetes cluster through kubectl and Helm."
+        },
+        "description": {
+          "en": "An MCP server that connects to a Kubernetes cluster and manages it. It loads your kubeconfig (by default from ~/.kube/config; other sources are described in the upstream advanced guide) and works through kubectl, with optional Helm v3 support. It is also available as an mcpb extension for Claude Desktop.\n\nThis can change real clusters. Point it at a development context first and read the upstream documentation on available safeguards before connecting it to anything important.\n\nListed by TermBuddy as a third-party project. Maintained by Flux159; this listing is not endorsed by Flux159."
+        },
+        "categorySlug": "operations",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "kubernetes",
+          "kubectl",
+          "helm",
+          "devops"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/Flux159/mcp-server-kubernetes#readme",
+        "issueTrackerUrl": "https://github.com/Flux159/mcp-server-kubernetes/issues"
+      },
+      "release": {
+        "version": "4.2.1",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/Flux159/mcp-server-kubernetes",
+          "authorship": "third_party",
+          "originalAuthor": "Flux159"
+        },
+        "releaseNotes": "Tracks upstream release v4.2.1 (published 2026-10-26).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Claude Code: claude mcp add kubernetes -- npx mcp-server-kubernetes",
+            "Codex: codex mcp add kubernetes -- npx mcp-server-kubernetes",
+            "Check the connection first by running kubectl get pods in a terminal."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js"
+          ],
+          "accounts": [
+            "Access to a Kubernetes cluster"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "kubectl in PATH",
+            "A kubeconfig with contexts",
+            "Helm v3 (optional)"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "Runs kubectl and Helm against your cluster."
+          },
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "Reads your kubeconfig (default ~/.kube/config)."
+          },
+          {
+            "capability": "secret_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Uses the credentials stored in your kubeconfig."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Acts on the cluster your kubeconfig context points to, which can include changing or deleting resources.",
+            "scope": "The selected kubeconfig context"
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/Flux159/mcp-server-kubernetes#readme",
+        "supportUrl": "https://github.com/Flux159/mcp-server-kubernetes/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Local stdio process started with npx mcp-server-kubernetes.",
+        "distributionIdentity": "npm package mcp-server-kubernetes (github.com/Flux159/mcp-server-kubernetes)",
+        "exposedTools": [
+          "Kubernetes management commands via kubectl",
+          "Helm operations (optional)",
+          "See upstream for the full list"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "Your local kubeconfig credentials.",
+        "networkDestinations": [
+          "The Kubernetes API server of your selected context"
+        ],
+        "dataHandling": "Cluster state, manifests and logs the agent reads pass to your model provider through your MCP client."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/hashicorp/terraform-mcp-server",
+      "https://github.com/hashicorp/terraform-mcp-server/releases/tag/v1.4.1"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "terraform-mcp-server",
+        "name": {
+          "en": "Terraform MCP Server"
+        },
+        "outcome": {
+          "en": "Give your agent Terraform Registry lookups and HCP Terraform / Terraform Enterprise workspace access."
+        },
+        "description": {
+          "en": "HashiCorp's Terraform MCP server integrates with the Terraform ecosystem for infrastructure-as-code work. It talks to the public Terraform Registry APIs for providers, modules and policies, and can work with HCP Terraform and Terraform Enterprise for workspace management, organization and project listing and private registry access. Tools are grouped into toolsets that you can select with the --toolsets and --tools flags.\n\nHCP Terraform and Terraform Enterprise access needs a TFE_TOKEN and optionally a TFE_ADDRESS. Treat that token like any infrastructure credential and scope it narrowly. Note the licence is MPL-2.0.\n\nListed by TermBuddy as a third-party project. Maintained by HashiCorp; this listing is not endorsed by HashiCorp."
+        },
+        "categorySlug": "operations",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "terraform",
+          "infrastructure-as-code",
+          "hashicorp",
+          "devops"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/hashicorp/terraform-mcp-server#readme",
+        "issueTrackerUrl": "https://github.com/hashicorp/terraform-mcp-server/issues"
+      },
+      "release": {
+        "version": "1.4.1",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/hashicorp/terraform-mcp-server",
+          "authorship": "third_party",
+          "originalAuthor": "HashiCorp"
+        },
+        "releaseNotes": "Tracks upstream release v1.4.1 (published 2026-10-23).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "container",
+          "instructions": [
+            "Run the published image: docker run -i --rm hashicorp/terraform-mcp-server",
+            "For HCP Terraform or Terraform Enterprise, pass TFE_TOKEN (and TFE_ADDRESS if not using app.terraform.io) to the container.",
+            "A streamable-http mode and an organization allowlist are described upstream for hosted deployments."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [
+            "HCP Terraform or Terraform Enterprise account (optional, for workspace tools)"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "Docker, or the upstream binary"
+          ],
+          "environmentVariables": [
+            {
+              "name": "TFE_TOKEN",
+              "purpose": "HCP Terraform / Terraform Enterprise API token.",
+              "required": false,
+              "sensitive": true
+            },
+            {
+              "name": "TFE_ADDRESS",
+              "purpose": "Address of HCP Terraform or Terraform Enterprise, including the protocol.",
+              "required": false,
+              "sensitive": false
+            }
+          ]
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "registry.terraform.io",
+              "app.terraform.io"
+            ],
+            "purpose": "Calls the public Terraform Registry and, if configured, HCP Terraform or Terraform Enterprise."
+          },
+          {
+            "capability": "secret_access",
+            "required": false,
+            "destinations": [],
+            "purpose": "Reads TFE_TOKEN when you configure it."
+          },
+          {
+            "capability": "external_account_access",
+            "required": false,
+            "destinations": [
+              "app.terraform.io"
+            ],
+            "purpose": "Reads and manages workspaces, organizations and projects with the permissions of your token.",
+            "scope": "Whatever your TFE_TOKEN can access"
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "Runs as a local container or process."
+          }
+        ],
+        "license": {
+          "identifier": "MPL-2.0"
+        },
+        "documentationUrl": "https://github.com/hashicorp/terraform-mcp-server#readme",
+        "supportUrl": "https://github.com/hashicorp/terraform-mcp-server/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Container started with docker run -i --rm hashicorp/terraform-mcp-server; a streamable-http mode is also available.",
+        "distributionIdentity": "Container image hashicorp/terraform-mcp-server (github.com/hashicorp/terraform-mcp-server)",
+        "exposedTools": [
+          "Terraform Registry search for providers, modules and policies",
+          "HCP Terraform / Terraform Enterprise workspace, organization and project tools",
+          "Toolsets selectable with --toolsets"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "TFE_TOKEN for HCP Terraform or Terraform Enterprise; none for public registry lookups.",
+        "networkDestinations": [
+          "registry.terraform.io",
+          "Your HCP Terraform or Terraform Enterprise address"
+        ],
+        "dataHandling": "Registry and workspace data the agent reads pass to your model provider through your MCP client."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/stripe/ai",
+      "https://docs.stripe.com/mcp"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "stripe-mcp-server",
+        "name": {
+          "en": "Stripe MCP Server"
+        },
+        "outcome": {
+          "en": "Connect your agent to Stripe through Stripe's hosted MCP server, authenticated with OAuth."
+        },
+        "description": {
+          "en": "Stripe hosts a remote MCP server at mcp.stripe.com that gives MCP clients access to Stripe through OAuth. The stripe/ai repository is Stripe's collection for building AI-powered products and businesses: the agent toolkit packages use native MCP support with the Stripe MCP server, and the repository also contains agent skills. Stripe's documentation covers connecting a client and building autonomous agents.\n\nThis touches a payments account. Use a sandbox or test account while experimenting and check what permissions your authorization grants before connecting a live account.\n\nListed by TermBuddy as a third-party project. Maintained by Stripe; this listing is not endorsed by Stripe."
+        },
+        "categorySlug": "finance",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "stripe",
+          "payments",
+          "finance",
+          "billing"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://docs.stripe.com/mcp",
+        "issueTrackerUrl": "https://github.com/stripe/ai/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-11-09",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/stripe/ai",
+          "authorship": "third_party",
+          "originalAuthor": "Stripe"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "hosted",
+          "instructions": [
+            "Add a remote MCP server with URL https://mcp.stripe.com to your client and complete the OAuth sign-in.",
+            "Follow the Connect section of Stripe's MCP documentation for your client.",
+            "Start with a Stripe sandbox account."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [
+            "Stripe account"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client with remote (HTTP) server support"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "mcp.stripe.com"
+            ],
+            "purpose": "Sends requests to Stripe's hosted MCP server."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "stripe.com"
+            ],
+            "purpose": "Acts in your Stripe account within the permissions you authorize, which can include reading and creating payments objects.",
+            "scope": "The Stripe account you authorize"
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://docs.stripe.com/mcp",
+        "supportUrl": "https://github.com/stripe/ai/issues"
+      },
+      "typeDetails": {
+        "transport": "streamable_http",
+        "connectionMethod": "Remote HTTP endpoint https://mcp.stripe.com with OAuth.",
+        "distributionIdentity": "Stripe hosted MCP server (docs.stripe.com/mcp; repository stripe/ai)",
+        "exposedTools": [
+          "See Stripe's MCP documentation for the current tool list"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "OAuth to your Stripe account.",
+        "networkDestinations": [
+          "mcp.stripe.com"
+        ],
+        "dataHandling": "Account data the agent reads passes to your model provider through your MCP client. Avoid connecting live customer data to a model you do not trust."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/alpacahq/alpaca-mcp-server",
+      "https://github.com/alpacahq/alpaca-mcp-server/releases/tag/v2.4.1"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "alpaca-mcp-server",
+        "name": {
+          "en": "Alpaca MCP Server"
+        },
+        "outcome": {
+          "en": "Market data, analysis and (paper or live) trading with Alpaca from your agent, in plain English."
+        },
+        "description": {
+          "en": "Alpaca's official MCP server lets an LLM tool trade stocks, ETFs, crypto and options, run data analysis and build strategies against the Alpaca API. It needs Alpaca Trading API keys, and upstream recommends starting with a free paper trading account. Version 2 supports server-side tool filtering through the ALPACA_TOOLSETS environment variable; use it to withhold trading tools when you only want market data.\n\nThis can place real orders if you use live keys. Use paper keys, restrict toolsets, and never expose the server directly to the public internet with your keys (upstream warns about this for remote setups). This is not financial advice.\n\nListed by TermBuddy as a third-party project. Maintained by Alpaca; this listing is not endorsed by Alpaca."
+        },
+        "categorySlug": "finance",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "alpaca",
+          "trading",
+          "market-data",
+          "finance"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/alpacahq/alpaca-mcp-server#readme",
+        "issueTrackerUrl": "https://github.com/alpacahq/alpaca-mcp-server/issues"
+      },
+      "release": {
+        "version": "2.4.1",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/alpacahq/alpaca-mcp-server",
+          "authorship": "third_party",
+          "originalAuthor": "Alpaca"
+        },
+        "releaseNotes": "Tracks upstream release v2.4.1 (published 2026-11-04) and PyPI package alpaca-mcp-server 2.4.1.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Create a free Alpaca paper trading account and generate API keys in the dashboard.",
+            "Add an MCP server to your client that runs: uvx alpaca-mcp-server (see the upstream README for the exact serve arguments).",
+            "Set ALPACA_API_KEY and ALPACA_SECRET_KEY, and use ALPACA_TOOLSETS to restrict tools."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Python with uv (for uvx)"
+          ],
+          "accounts": [
+            "Alpaca account (paper trading is free)"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client"
+          ],
+          "environmentVariables": [
+            {
+              "name": "ALPACA_API_KEY",
+              "purpose": "Alpaca API key ID.",
+              "required": true,
+              "sensitive": true
+            },
+            {
+              "name": "ALPACA_SECRET_KEY",
+              "purpose": "Alpaca API secret key.",
+              "required": true,
+              "sensitive": true
+            },
+            {
+              "name": "ALPACA_TOOLSETS",
+              "purpose": "Restricts which tool groups the server exposes.",
+              "required": false,
+              "sensitive": false
+            }
+          ]
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "alpaca.markets"
+            ],
+            "purpose": "Calls the Alpaca trading and market data APIs."
+          },
+          {
+            "capability": "secret_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Reads Alpaca API keys from the environment."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "alpaca.markets"
+            ],
+            "purpose": "Acts in your Alpaca account, including placing orders when trading tools are enabled and live keys are used.",
+            "scope": "The Alpaca account the keys belong to"
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/alpacahq/alpaca-mcp-server#readme",
+        "supportUrl": "https://github.com/alpacahq/alpaca-mcp-server/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Local process started with uvx alpaca-mcp-server.",
+        "distributionIdentity": "PyPI package alpaca-mcp-server (github.com/alpacahq/alpaca-mcp-server)",
+        "exposedTools": [
+          "Market data and analysis tools",
+          "Trading tools for stocks, ETFs, crypto and options",
+          "Selectable with ALPACA_TOOLSETS; see upstream for the full list"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "Alpaca API key and secret in environment variables.",
+        "networkDestinations": [
+          "alpaca.markets API hosts"
+        ],
+        "dataHandling": "Account, position and market data the agent reads pass to your model provider through your MCP client."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/atlassian/atlassian-mcp-server"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "atlassian-rovo-mcp-server",
+        "name": {
+          "en": "Atlassian MCP Server"
+        },
+        "outcome": {
+          "en": "Bring Jira, Confluence, Jira Service Management, Bitbucket and Compass into your agent through Atlassian's hosted MCP server."
+        },
+        "description": {
+          "en": "The official Atlassian MCP server is a cloud-hosted bridge between your Atlassian Cloud site and compatible AI tools. Once connected, an agent can summarise and search Jira, Jira Service Management, Confluence, Bitbucket and more without you switching tools. Upstream says v2 is now the recommended version for new setups, at https://mcp.atlassian.com/v2/mcp, and that it supports OAuth 2.1 or API tokens.\n\nSee Atlassian's security and admin documentation for access requirements. The repository holds documentation for Atlassian's hosted service; the server itself is operated by Atlassian.\n\nListed by TermBuddy as a third-party project. Maintained by Atlassian; this listing is not endorsed by Atlassian."
+        },
+        "categorySlug": "product",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "atlassian",
+          "jira",
+          "confluence",
+          "product-management"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/atlassian/atlassian-mcp-server#readme",
+        "issueTrackerUrl": "https://github.com/atlassian/atlassian-mcp-server/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-11-07 (v2)",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/atlassian/atlassian-mcp-server",
+          "authorship": "third_party",
+          "originalAuthor": "Atlassian"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-07). Upstream recommends the v2 endpoint for new setups.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "hosted",
+          "instructions": [
+            "Claude Code: claude mcp add --transport http atlassian https://mcp.atlassian.com/v2/mcp, then run /mcp in a session to authenticate.",
+            "Codex: codex mcp add atlassian --url https://mcp.atlassian.com/v2/mcp",
+            "VS Code / GitHub Copilot: search @mcp Atlassian in the Extensions view; other clients use the server URL directly."
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [
+            "Atlassian Cloud site (Jira, Confluence, Bitbucket or other products)"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client with remote (HTTP) server support"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "mcp.atlassian.com"
+            ],
+            "purpose": "Sends requests to Atlassian's hosted MCP endpoint."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "atlassian.com"
+            ],
+            "purpose": "Reads and acts on Jira, Confluence and other Atlassian content within the permissions you authorize.",
+            "scope": "Your Atlassian Cloud site and the products you authorize"
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://github.com/atlassian/atlassian-mcp-server#readme",
+        "supportUrl": "https://github.com/atlassian/atlassian-mcp-server/issues"
+      },
+      "typeDetails": {
+        "transport": "streamable_http",
+        "connectionMethod": "Remote HTTP endpoint https://mcp.atlassian.com/v2/mcp.",
+        "distributionIdentity": "Atlassian hosted MCP server (github.com/atlassian/atlassian-mcp-server documents it)",
+        "exposedTools": [
+          "Jira, Jira Service Management, Confluence, Bitbucket, Compass, Projects and Goals tools; see upstream for the full list"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "OAuth 2.1 or an API token.",
+        "networkDestinations": [
+          "mcp.atlassian.com"
+        ],
+        "dataHandling": "Issue, page and repository content the agent reads passes to your model provider through your MCP client. Review Atlassian's security and admin documentation."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/taylorwilsdon/google_workspace_mcp",
+      "https://workspacemcp.com"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "google-workspace-mcp",
+        "name": {
+          "en": "Google Workspace MCP"
+        },
+        "outcome": {
+          "en": "Gmail, Calendar, Docs, Sheets, Slides, Chat, Forms, Tasks and Drive from your agent, with your own OAuth client."
+        },
+        "description": {
+          "en": "A Google Workspace MCP server and CLI that connects AI assistants to twelve Google Workspace services, with 120+ tools behind one server. It offers OAuth 2.1 multi-user authentication, progressive tool tiers (for example core and extended) and a read-only mode. By default it sends no data anywhere except Google's APIs, on behalf of the authenticated user, using your own OAuth client credentials from your own Google Cloud project.\n\nSetup needs an OAuth client in a Google Cloud project with the relevant APIs enabled. Start with the core tier or read-only mode, because the tools can send mail and edit documents.\n\nListed by TermBuddy as a third-party project. Maintained by Taylor Wilsdon; this listing is not endorsed by Taylor Wilsdon."
+        },
+        "categorySlug": "productivity",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "google-workspace",
+          "gmail",
+          "calendar",
+          "docs",
+          "productivity"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://workspacemcp.com",
+        "issueTrackerUrl": "https://github.com/taylorwilsdon/google_workspace_mcp/issues"
+      },
+      "release": {
+        "version": "2.4.0",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/taylorwilsdon/google_workspace_mcp",
+          "authorship": "third_party",
+          "originalAuthor": "Taylor Wilsdon"
+        },
+        "releaseNotes": "Tracks upstream release v2.4.0 (published 2026-11-09) and PyPI package workspace-mcp 2.4.0.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Create an OAuth client in a Google Cloud project and enable the Google APIs for the services you plan to use (upstream gives a gcloud command).",
+            "Export GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET, then run: uvx workspace-mcp --tool-tier core",
+            "Use --tool-tier extended or the read-only option only when you need more."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Python with uv (for uvx)"
+          ],
+          "accounts": [
+            "Google account",
+            "Google Cloud project with an OAuth client"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client"
+          ],
+          "environmentVariables": [
+            {
+              "name": "GOOGLE_OAUTH_CLIENT_ID",
+              "purpose": "Your Google Cloud OAuth client ID.",
+              "required": true,
+              "sensitive": false
+            },
+            {
+              "name": "GOOGLE_OAUTH_CLIENT_SECRET",
+              "purpose": "Your Google Cloud OAuth client secret.",
+              "required": true,
+              "sensitive": true
+            }
+          ]
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "googleapis.com"
+            ],
+            "purpose": "Calls Google's Workspace APIs."
+          },
+          {
+            "capability": "secret_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Uses your OAuth client credentials and stored tokens."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "google.com"
+            ],
+            "purpose": "Reads and changes Gmail, Calendar, Drive and other Workspace data within the scopes you authorize, including sending mail and editing documents.",
+            "scope": "Your Google account and the scopes you grant"
+          },
+          {
+            "capability": "persistent_storage",
+            "required": false,
+            "destinations": [],
+            "purpose": "Stores OAuth credentials and tokens for later sessions."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://workspacemcp.com",
+        "supportUrl": "https://github.com/taylorwilsdon/google_workspace_mcp/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Local process started with uvx workspace-mcp (stateless and hosted deployment modes are described upstream).",
+        "distributionIdentity": "PyPI package workspace-mcp (github.com/taylorwilsdon/google_workspace_mcp)",
+        "exposedTools": [
+          "120+ tools across Gmail, Calendar, Docs, Sheets, Slides, Chat, Forms, Tasks, Search and Drive grouped into progressive tiers"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "OAuth 2.1 with your own Google Cloud OAuth client.",
+        "networkDestinations": [
+          "Google APIs"
+        ],
+        "dataHandling": "Mail, calendar and document content the agent reads passes to your model provider through your MCP client. Upstream states the server itself sends no usage reporting or analytics."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/Doist/todoist-mcp",
+      "https://github.com/Doist/todoist-mcp/releases/tag/v13.11.2"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "todoist-mcp",
+        "name": {
+          "en": "Todoist MCP"
+        },
+        "outcome": {
+          "en": "Let your agent manage your Todoist tasks, using Todoist's hosted MCP server or a local npx server."
+        },
+        "description": {
+          "en": "Doist's tools for connecting AI agents to Todoist on a user's behalf, including MCP support. You can use the hosted server at https://ai.todoist.net/mcp and sign in with OAuth, or run the MCP server locally with npx @doist/todoist-mcp. The same tools can also be imported into other projects as a library.\n\nOAuth runs in your browser the first time you use a Todoist tool. The hosted route needs no API key or local server.\n\nListed by TermBuddy as a third-party project. Maintained by Doist; this listing is not endorsed by Doist."
+        },
+        "categorySlug": "productivity",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "todoist",
+          "tasks",
+          "productivity",
+          "planning"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/Doist/todoist-mcp#readme",
+        "issueTrackerUrl": "https://github.com/Doist/todoist-mcp/issues"
+      },
+      "release": {
+        "version": "13.11.2",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/Doist/todoist-mcp",
+          "authorship": "third_party",
+          "originalAuthor": "Doist"
+        },
+        "releaseNotes": "Tracks upstream release v13.11.2 (published 2026-11-09).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "gemini-cli"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "hosted",
+          "instructions": [
+            "Hosted: add a remote MCP server with URL https://ai.todoist.net/mcp and complete OAuth in your client.",
+            "Local: run npx @doist/todoist-mcp in your MCP client's server configuration.",
+            "Gemini CLI: after adding the server run /mcp auth todoist and sign in."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js (only for the local npx server)"
+          ],
+          "accounts": [
+            "Todoist account"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "ai.todoist.net",
+              "todoist.com"
+            ],
+            "purpose": "Calls Todoist's hosted MCP server or API."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "todoist.com"
+            ],
+            "purpose": "Reads and changes tasks and projects in your Todoist account.",
+            "scope": "Your Todoist account"
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/Doist/todoist-mcp#readme",
+        "supportUrl": "https://github.com/Doist/todoist-mcp/issues"
+      },
+      "typeDetails": {
+        "transport": "streamable_http",
+        "connectionMethod": "Remote HTTP endpoint https://ai.todoist.net/mcp, or a local process started with npx @doist/todoist-mcp.",
+        "distributionIdentity": "Doist Todoist MCP (github.com/Doist/todoist-mcp, npm @doist/todoist-mcp)",
+        "exposedTools": [
+          "Todoist task and project tools; see upstream for the full list"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "OAuth in the browser for the hosted server; see upstream for the local server.",
+        "networkDestinations": [
+          "ai.todoist.net",
+          "todoist.com"
+        ],
+        "dataHandling": "Task and project data the agent reads passes to your model provider through your MCP client."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/ahujasid/mcp-for-blender",
+      "https://www.mcp-for-blender.com/"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "blender-mcp",
+        "name": {
+          "en": "Blender MCP"
+        },
+        "outcome": {
+          "en": "Control Blender 3D from your agent: build and edit scenes, and pull in assets, through a Blender addon."
+        },
+        "description": {
+          "en": "A community plugin that lets any LLM control Blender 3D. It has two parts: a Blender addon that opens a socket server inside Blender to receive and execute commands, and an MCP server your client connects to. One command (uvx mcp-for-blender setup) finds supported MCP clients on your machine, including Claude Desktop, Claude Code, Codex, Cursor and VS Code, and installs the addon. It can bring in Poly Haven, Sketchfab and Poly Pizza assets, and the README describes AI 3D generation through providers such as Meshy, Tripo and Hyper3D Rodin.\n\nBy default the AI can run any Python code in Blender; set BLENDER_MCP_SAFE_MODE=1 to check scripts and block risky code such as direct file access. It is not affiliated with the Blender Foundation. The README also advertises a paid premium option.\n\nListed by TermBuddy as a third-party project. Maintained by ahujasid; this listing is not endorsed by ahujasid."
+        },
+        "categorySlug": "creative",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "blender",
+          "3d",
+          "creative",
+          "addon"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://www.mcp-for-blender.com/",
+        "issueTrackerUrl": "https://github.com/ahujasid/mcp-for-blender/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-11-04",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/ahujasid/mcp-for-blender",
+          "authorship": "third_party",
+          "originalAuthor": "ahujasid"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-04).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Install uv with the official installer (not pip install uv).",
+            "Run uvx mcp-for-blender setup to configure your MCP clients and install the Blender addon.",
+            "Fully quit and reopen your AI app, open Blender, then ask it to build something. Consider setting BLENDER_MCP_SAFE_MODE=1."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Python with uv"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "Blender",
+            "An MCP client"
+          ],
+          "environmentVariables": [
+            {
+              "name": "BLENDER_MCP_SAFE_MODE",
+              "purpose": "When set to 1, checks scripts and blocks risky code before they run in Blender.",
+              "required": false,
+              "sensitive": false
+            }
+          ]
+        },
+        "permissions": [
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "Runs Python code and commands inside Blender, and a local socket server."
+          },
+          {
+            "capability": "filesystem_read",
+            "required": false,
+            "destinations": [],
+            "purpose": "Blender scripts and imports can read local files unless safe mode blocks it."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": false,
+            "destinations": [],
+            "purpose": "Scenes and assets are saved and imported on your machine."
+          },
+          {
+            "capability": "network_access",
+            "required": false,
+            "destinations": [
+              "polyhaven.com",
+              "sketchfab.com"
+            ],
+            "purpose": "Downloads assets from services such as Poly Haven and Sketchfab and calls AI 3D providers you enable."
+          },
+          {
+            "capability": "code_modification",
+            "required": true,
+            "destinations": [],
+            "purpose": "By default the AI can run arbitrary Python inside Blender."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://www.mcp-for-blender.com/",
+        "supportUrl": "https://github.com/ahujasid/mcp-for-blender/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Local process started by your client (uvx), talking to a socket server inside Blender created by the addon.",
+        "distributionIdentity": "mcp-for-blender (github.com/ahujasid/mcp-for-blender); the older blender-mcp command still works",
+        "exposedTools": [
+          "Scene and object control",
+          "Run Python in Blender",
+          "Poly Haven, Sketchfab and Poly Pizza asset import",
+          "AI 3D model generation providers; see upstream for the full list"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "None for the local server; asset or generation providers you enable may need their own keys.",
+        "networkDestinations": [
+          "Asset and generation providers you enable"
+        ],
+        "dataHandling": "Scene contents and any scripts or prompts pass to your model provider through your MCP client. The README mentions a telemetry control; review it before use."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/GLips/Figma-Context-MCP",
+      "https://www.framelink.ai/",
+      "https://www.npmjs.com/package/figma-developer-mcp"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "figma-context-mcp",
+        "name": {
+          "en": "Figma Context MCP"
+        },
+        "outcome": {
+          "en": "Give AI coding agents your Figma layout information so they can build designs accurately."
+        },
+        "description": {
+          "en": "An MCP server (published as the npm package figma-developer-mcp) that provides Figma layout information to AI coding agents such as Cursor. Point an agent at a Figma file or frame and it can work from the real layout data instead of a screenshot. It is a community project by Framelink and is separate from Figma's own tools.\n\nIt needs a Figma API key, passed with the --figma-api-key option or the FIGMA_API_KEY environment variable.\n\nListed by TermBuddy as a third-party project. Maintained by Framelink (GLips); this listing is not endorsed by Framelink (GLips)."
+        },
+        "categorySlug": "creative",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "figma",
+          "design",
+          "frontend",
+          "design-to-code"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://www.framelink.ai/",
+        "issueTrackerUrl": "https://github.com/GLips/Figma-Context-MCP/issues"
+      },
+      "release": {
+        "version": "0.13.2",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/GLips/Figma-Context-MCP",
+          "authorship": "third_party",
+          "originalAuthor": "Framelink (GLips)"
+        },
+        "releaseNotes": "Tracks upstream release v0.13.2 (published 2026-06-18) and npm package figma-developer-mcp 0.13.2.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Create a Figma API key (personal access token) in your Figma account settings.",
+            "Add an MCP server to your client that runs: npx -y figma-developer-mcp --figma-api-key=YOUR-KEY --stdio (or set FIGMA_API_KEY in the environment).",
+            "Give your agent a link to a Figma file or frame to work from."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js"
+          ],
+          "accounts": [
+            "Figma account and API key"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client"
+          ],
+          "environmentVariables": [
+            {
+              "name": "FIGMA_API_KEY",
+              "purpose": "Figma API key used to read files.",
+              "required": true,
+              "sensitive": true
+            },
+            {
+              "name": "PORT",
+              "purpose": "Port for HTTP mode (optional).",
+              "required": false,
+              "sensitive": false
+            }
+          ]
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "api.figma.com"
+            ],
+            "purpose": "Calls the Figma API."
+          },
+          {
+            "capability": "secret_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Reads the Figma API key."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "figma.com"
+            ],
+            "purpose": "Reads Figma files your key can access.",
+            "scope": "Figma files your API key can read"
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://www.framelink.ai/",
+        "supportUrl": "https://github.com/GLips/Figma-Context-MCP/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Local stdio process started with npx -y figma-developer-mcp --stdio.",
+        "distributionIdentity": "npm package figma-developer-mcp (github.com/GLips/Figma-Context-MCP)",
+        "exposedTools": [
+          "Retrieves Figma file and layout information for coding agents; see upstream for tool names"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "Figma API key.",
+        "networkDestinations": [
+          "api.figma.com"
+        ],
+        "dataHandling": "Design data from the Figma files you reference passes to your model provider through your MCP client."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/googleanalytics/google-analytics-mcp"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "google-analytics-mcp",
+        "name": {
+          "en": "Google Analytics MCP Server"
+        },
+        "outcome": {
+          "en": "Read-only access to Google Analytics reports, realtime data and property details from your agent."
+        },
+        "description": {
+          "en": "Google's Analytics MCP server lets an agent query Google Analytics. Its tools include get_account_summaries, get_property_details, list_google_ads_links, run_report, run_realtime_report and get_custom_dimensions_and_metrics. Credentials must include the Google Analytics read-only scope (analytics.readonly), and upstream describes setting up Application Default Credentials with an OAuth desktop or web client.\n\nIt is read-only by scope: it reports on your data and does not change your analytics configuration.\n\nListed by TermBuddy as a third-party project. Maintained by Google (Google Analytics team); this listing is not endorsed by Google (Google Analytics team)."
+        },
+        "categorySlug": "marketing",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "google-analytics",
+          "analytics",
+          "marketing",
+          "reporting"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/googleanalytics/google-analytics-mcp#readme",
+        "issueTrackerUrl": "https://github.com/googleanalytics/google-analytics-mcp/issues"
+      },
+      "release": {
+        "version": "1.1.0",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/googleanalytics/google-analytics-mcp",
+          "authorship": "third_party",
+          "originalAuthor": "Google (Google Analytics team)"
+        },
+        "releaseNotes": "Tracks upstream release 1.1.0 (published 2026-11-06).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "gemini-cli"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Set up Application Default Credentials with the analytics.readonly scope, using a Google Cloud OAuth client (see the upstream README).",
+            "Add an MCP server to your client that runs: pipx run analytics-mcp",
+            "Ask the agent about your GA4 properties."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Python with pipx"
+          ],
+          "accounts": [
+            "Google account with Google Analytics access",
+            "Google Cloud project with an OAuth client"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "googleapis.com"
+            ],
+            "purpose": "Calls the Google Analytics APIs."
+          },
+          {
+            "capability": "secret_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Uses your Application Default Credentials."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "analytics.google.com"
+            ],
+            "purpose": "Reads Google Analytics accounts and properties your credentials can access (read-only scope).",
+            "scope": "analytics.readonly scope"
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://github.com/googleanalytics/google-analytics-mcp#readme",
+        "supportUrl": "https://github.com/googleanalytics/google-analytics-mcp/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Local stdio process started with pipx run analytics-mcp.",
+        "distributionIdentity": "analytics-mcp (github.com/googleanalytics/google-analytics-mcp)",
+        "exposedTools": [
+          "get_account_summaries",
+          "get_property_details",
+          "list_google_ads_links",
+          "run_report",
+          "run_realtime_report",
+          "get_custom_dimensions_and_metrics"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "Google Application Default Credentials with the analytics.readonly scope.",
+        "networkDestinations": [
+          "Google Analytics APIs"
+        ],
+        "dataHandling": "Report data the agent reads passes to your model provider through your MCP client."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/googleads/google-ads-mcp",
+      "https://github.com/googleads/google-ads-mcp/releases/tag/v0.0.6"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "mcp_server",
+      "listing": {
+        "slug": "google-ads-mcp",
+        "name": {
+          "en": "Google Ads MCP Server"
+        },
+        "outcome": {
+          "en": "Query Google Ads accounts and (optionally) manage assets and labels from your agent, with propose-and-confirm for writes."
+        },
+        "description": {
+          "en": "Google's Ads MCP server connects an agent to Google Ads. A default tools_config.yaml with all tools enabled is bundled, and for a strictly read-only deployment you can disable the write/mutate tool categories in that configuration. The mutate tools (create_asset, upload_video_asset, manage_labels and manage_label_associations) enforce a two-step Propose and Confirm workflow. Access through a manager account needs GOOGLE_ADS_LOGIN_CUSTOMER_ID, and OAuth settings use environment variables such as GOOGLE_ADS_MCP_OAUTH_CLIENT_ID.\n\nThis is an early (0.0.x) release connected to advertising accounts with real spend. Start read-only and read the upstream documentation first.\n\nListed by TermBuddy as a third-party project. Maintained by Google (Google Ads API team); this listing is not endorsed by Google (Google Ads API team)."
+        },
+        "categorySlug": "marketing",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "vscode"
+        ],
+        "tags": [
+          "mcp",
+          "google-ads",
+          "advertising",
+          "marketing",
+          "campaigns"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/googleads/google-ads-mcp#readme",
+        "issueTrackerUrl": "https://github.com/googleads/google-ads-mcp/issues"
+      },
+      "release": {
+        "version": "0.0.6",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/googleads/google-ads-mcp",
+          "authorship": "third_party",
+          "originalAuthor": "Google (Google Ads API team)"
+        },
+        "releaseNotes": "Tracks upstream release v0.0.6 (published 2026-11-02). Early release; pin versions.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "claude"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "gemini-cli"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Add an MCP server to your client that runs: pipx run --spec \"google-ads-mcp==X.Y.Z\" google-ads-mcp (pin a version).",
+            "Configure OAuth as described upstream (for example GOOGLE_ADS_MCP_OAUTH_CLIENT_ID and GOOGLE_ADS_MCP_OAUTH_CLIENT_SECRET) and GOOGLE_ADS_LOGIN_CUSTOMER_ID if you use a manager account.",
+            "For a read-only server, disable the write/mutate categories in tools_config.yaml."
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Python with pipx"
+          ],
+          "accounts": [
+            "Google Ads account",
+            "Google Cloud OAuth client"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "An MCP client"
+          ],
+          "environmentVariables": [
+            {
+              "name": "GOOGLE_ADS_MCP_OAUTH_CLIENT_ID",
+              "purpose": "Google Cloud OAuth 2.0 client ID.",
+              "required": true,
+              "sensitive": false
+            },
+            {
+              "name": "GOOGLE_ADS_MCP_OAUTH_CLIENT_SECRET",
+              "purpose": "Google Cloud OAuth 2.0 client secret.",
+              "required": true,
+              "sensitive": true
+            },
+            {
+              "name": "GOOGLE_ADS_LOGIN_CUSTOMER_ID",
+              "purpose": "Manager account customer ID, if access is through a manager account.",
+              "required": false,
+              "sensitive": false
+            }
+          ]
+        },
+        "permissions": [
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [
+              "googleads.googleapis.com"
+            ],
+            "purpose": "Calls the Google Ads API."
+          },
+          {
+            "capability": "secret_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Uses your OAuth client credentials and tokens."
+          },
+          {
+            "capability": "external_account_access",
+            "required": true,
+            "destinations": [
+              "ads.google.com"
+            ],
+            "purpose": "Reads Google Ads accounts and, unless disabled, can create assets and manage labels after a propose-and-confirm step.",
+            "scope": "Google Ads accounts you authorize"
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://github.com/googleads/google-ads-mcp#readme",
+        "supportUrl": "https://github.com/googleads/google-ads-mcp/issues"
+      },
+      "typeDetails": {
+        "transport": "stdio",
+        "connectionMethod": "Local process started with pipx run google-ads-mcp.",
+        "distributionIdentity": "google-ads-mcp (github.com/googleads/google-ads-mcp)",
+        "exposedTools": [
+          "Google Ads query tools",
+          "create_asset",
+          "upload_video_asset",
+          "manage_labels",
+          "manage_label_associations"
+        ],
+        "exposedResources": [],
+        "exposedPrompts": [],
+        "authenticationMethod": "Google OAuth 2.0 client credentials.",
+        "networkDestinations": [
+          "Google Ads API"
+        ],
+        "dataHandling": "Campaign and account data the agent reads passes to your model provider through your MCP client."
+      }
+    }
+  }
+]

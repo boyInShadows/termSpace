@@ -1,4 +1,5 @@
 import { CreatorIdentity, Rating } from "@/components/marketplace/product-parts";
+import { ProductIcon } from "@/components/marketplace/product-icon";
 import { formatNumber } from "@/lib/format";
 import { copy, localePath, type Locale } from "@/lib/i18n";
 import { listingTransitionName } from "@/lib/listing-transition";
@@ -23,13 +24,16 @@ export function ProductHeader({ product, typeLabel, locale }: { product: Product
   return (
     <header className="min-w-0">
       {/* Shares its name with the card title, so the title travels from the card into this header on navigation. */}
-      <h1
-        className="ts-listing-title ts-bidi max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl"
-        style={{ viewTransitionName: listingTransitionName(product.id) }}
-        data-listing-header={product.id}
-      >
-        {product.name}
-      </h1>
+      <div className="flex items-start gap-4">
+        <ProductIcon name={product.name} iconUrl={product.iconUrl} size="lg" className="mt-0.5 sm:mt-1.5" />
+        <h1
+          className="ts-listing-title ts-bidi min-w-0 max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl"
+          style={{ viewTransitionName: listingTransitionName(product.id) }}
+          data-listing-header={product.id}
+        >
+          {product.name}
+        </h1>
+      </div>
       <p className="ts-bidi mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{product.outcome}</p>
       <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm tabular-nums text-muted-foreground">
         <span>{typeLabel}</span>

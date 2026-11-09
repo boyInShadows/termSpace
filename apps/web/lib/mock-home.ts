@@ -222,6 +222,12 @@ const products: Product[] = seeds.map((seed, index) => ({
   permissions: seed.permissions,
   license: seed.license,
   tags: seed.tags,
+  // Fixture only: the first and third carry an icon so the grid shows both the image and the initials tile.
+  iconUrl: [
+    "https://avatars.githubusercontent.com/u/9919?v=4",
+    null,
+    "https://avatars.githubusercontent.com/u/6154722?v=4",
+  ][index] ?? null,
 }));
 
 const categories: MarketplaceCategory[] = [

@@ -128,7 +128,9 @@ same-listing snapshot, manifest, and release references.
 The staff workspace is available at `/moderation`. Its queue defaults to
 submitted and approved listings, supports bounded search and state filters, and
 shows source and ownership readiness without fetching external artifacts. The
-snapshot preview renders stored text only, provides listing decisions and
+snapshot preview renders stored text only (the one exception is the optional
+listing icon, which the manifest limits to GitHub image hosts and which staff
+see exactly as visitors will), provides listing decisions and
 standalone internal notes, and includes the append-only audit trail. The APIs
 are restricted to marketplace moderators and administrators:
 

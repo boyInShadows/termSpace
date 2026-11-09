@@ -2,6 +2,41 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Seed catalog, platform registry expansion, listing icon, Chatwoot CSP
+
+- **Scope / shared surfaces (announce in commit body).** `apps/api/prisma/schema.prisma`,
+  new migrations `202611090001_marketplace_platform_expansion` and
+  `202611090002_marketplace_listing_icon`, `apps/web/lib/types.ts`, `changelog.md`,
+  `pending.md`. Also `apps/web` presentation (product card, compact card, title
+  block, creator editor, moderation preview) for the icon, and
+  `deploy/chatwoot/bootstrap.rb`. Owner-requested; nothing here deployed yet.
+- **Seed.** `scripts/seed-termbuddy/` (validate, submit, preview, 34 listings, all
+  `external_link` + credited third-party author). 34 submitted to production via
+  the public API as TermBuddy; 1 published by the owner, 33 await Approve/Publish.
+  Resumable state file is git-ignored.
+- **Platforms.** Registry gained Aider, Amp, Cline, GitHub Copilot, OpenCode,
+  Windsurf, Zed, with a migration that inserts the platform rows and one community
+  each (idempotent; applied cleanly through the full chain on a scratch DB).
+- **Icon.** Optional `listing.icon` in manifest v1, limited to
+  `avatars.githubusercontent.com` / `raw.githubusercontent.com` (Zod plus a DB
+  CHECK on `MarketplaceProduct.iconUrl`). Rendered by `ProductIcon`: decorative,
+  `referrerPolicy="no-referrer"`, fixed box (no layout shift), initials tile on
+  absence or load failure. The moderation preview shows it; copy and docs state it
+  is the one exception to "stored text only".
+- **Chatwoot CSP.** `allowed_domains` was newline-separated, but Chatwoot splits on
+  commas, so `www.termspace.dev` became an invalid `frame-ancestors` directive.
+  Bootstrap now uses a comma list and repairs existing inboxes on rerun. Not yet
+  applied to the live Chatwoot (needs the bootstrap rerun on the VPS).
+- **Verification.** Root typecheck clean; API suite 308 passed / 44 DB-integration
+  skipped; web 511 passed with Node 26's `--localstorage-file` flag, 1 environmental
+  failure (storage-failure test spies on jsdom `Storage.prototype`); lint 0 errors;
+  build OK; Lighthouse CI assertions pass; e2e 518 passed. Visually checked EN/FA
+  (RTL), both themes, 360px. Bootstrap.rb not run (no Ruby locally).
+  **Unresolved:** the first-load JS budget already fails at `HEAD` (dashboard 171.6
+  vs 170 kB, detail 167.5 vs 165 kB); the icon adds about 0.7 kB to each. The
+  reporting e2e spec fails when the desktop and mobile projects share one mock API
+  and passes alone; also pre-existing. Usage metrics unavailable.
+
 ## 2026-11-06 — Grant owner-requested production marketplace administrator access
 
 - **Scope / shared surface.** Production role operation and `changelog.md` only;

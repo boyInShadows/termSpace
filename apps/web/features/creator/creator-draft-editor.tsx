@@ -11,6 +11,7 @@ import { creatorWorkspace } from "./workspace-copy";
 import { localePath, type DraftMessages } from "@/lib/i18n";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ProductIcon } from "@/components/marketplace/product-icon";
 import { ContextHelp } from "@/components/ui/context-help";
 import { helpHints } from "@/components/ui/context-help-hints";
 import type { HelpTopic } from "@/components/ui/context-help-copy";
@@ -354,7 +355,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
   const descriptionOf = localized(listing.description);
   const translationsFilled = Boolean(descriptionOf[otherLang.toLowerCase()] || localized(listing.outcome).fa);
   const defaultMethod = source.kind === sourceKind && stringValue(installation.method) ? stringValue(installation.method) : installMethodFor[sourceKind];
-  const moreAboutFilled = translationsFilled || Boolean((Array.isArray(listing.tags) && listing.tags.length) || (listing.communitySlugs as string[] | undefined)?.length || screenshots.length || listing.documentationUrl || listing.supportUrl || listing.issueTrackerUrl);
+  const moreAboutFilled = translationsFilled || Boolean((Array.isArray(listing.tags) && listing.tags.length) || (listing.communitySlugs as string[] | undefined)?.length || screenshots.length || listing.icon || listing.documentationUrl || listing.supportUrl || listing.issueTrackerUrl);
   const moreRequirementsFilled = Boolean(["runtimes", "accounts", "operatingSystems", "dependencies"].some((key) => Array.isArray(requirements[key as keyof typeof requirements]) && (requirements[key as keyof typeof requirements] as unknown[]).length) || environmentVariables.length);
   const optionalDetailFilled = detailFields[type].some((field) => !isPrimaryDetail(field) && (Array.isArray(details[field.key]) ? (details[field.key] as unknown[]).length > 0 : Boolean(details[field.key])));
   const moreDetailsFilled = optionalDetailFilled || moreRequirementsFilled;
@@ -415,6 +416,12 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
         <fieldset><legend className="w-full text-sm font-semibold"><span className="flex items-center justify-between gap-2">{copy.communities}<ContextHelp label={copy.communities} topic="communities" /></span></legend><p className="mt-1 text-xs text-muted-foreground">{copy.communitiesHint}</p><div className="mt-3 grid gap-3 sm:grid-cols-2">
           {options.communities.map((community) => <label key={community.slug} className="flex min-h-11 items-start gap-3 rounded-control border p-3 text-sm"><input className="mt-1" type="checkbox" name="communitySlugs" value={community.slug} defaultChecked={(listing.communitySlugs as string[] | undefined)?.includes(community.slug)} /><span><strong className="block">{locale === "fa" ? community.nameFa ?? community.nameEn : community.nameEn}</strong><span className="text-xs text-muted-foreground">{locale === "fa" ? community.descriptionFa ?? community.descriptionEn : community.descriptionEn}</span></span></label>)}
         </div></fieldset>
+        <Field label={copy.icon} hint={copy.iconHint}>
+          <div className="flex items-center gap-3">
+            <ProductIcon name={stringValue(localized(listing.name).en) || stringValue(listing.slug) || "?"} iconUrl={stringValue(listing.icon) || null} />
+            <Input name="icon" type="url" inputMode="url" defaultValue={stringValue(listing.icon)} dir="ltr" placeholder="https://avatars.githubusercontent.com/…" className="min-w-0 flex-1" />
+          </div>
+        </Field>
         <DeclarationRows messages={copy} name="screenshots" label={copy.screenshots} onChange={markDirty} initialRows={screenshots.map((item) => [item.url, item.alt.en, item.alt.fa ?? ""])} columns={[{ label: copy.imageUrl, type: "url" }, { label: copy.altEn }, { label: copy.altFa, optional: true }]} />
         <div className="grid gap-5 sm:grid-cols-3"><Field label={copy.documentationUrl}><Input name="documentationUrl" type="url" defaultValue={stringValue(listing.documentationUrl)} dir="ltr" /></Field><Field label={copy.supportUrl}><Input name="supportUrl" type="url" defaultValue={stringValue(listing.supportUrl)} dir="ltr" /></Field><Field label={copy.issueTrackerUrl}><Input name="issueTrackerUrl" type="url" defaultValue={stringValue(listing.issueTrackerUrl)} dir="ltr" /></Field></div>
       </FormDisclosure>
@@ -477,6 +484,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
               <div><dt className="font-semibold">{copy.permissions}</dt><dd>{preview.release.permissions.length ? <ul>{preview.release.permissions.map((item, index) => <li key={index}>{item.capability.replaceAll("_", " ")}: {item.purpose} ({item.required ? copy.required : copy.optional}) <bdi dir="ltr">{item.scope} {item.destinations.join(", ")}</bdi></li>)}</ul> : copy.noDeclarations}</dd></div>
               <div><dt className="font-semibold">{copy.environmentVariables}</dt><dd>{preview.release.requirements.environmentVariables.length ? <ul>{preview.release.requirements.environmentVariables.map((item, index) => <li key={index}><bdi dir="ltr">{item.name}</bdi>: {item.purpose} ({item.required ? copy.required : copy.optional}{item.sensitive ? `, ${copy.sensitive}` : ""})</li>)}</ul> : copy.noDeclarations}</dd></div>
               <div><dt className="font-semibold">{copy.licenseTitle}</dt><dd><bdi dir="ltr">{Object.values(preview.release.license).join("")}</bdi></dd></div>
+              {preview.listing.icon && <div><dt className="font-semibold">{copy.icon}</dt><dd className="break-all"><bdi dir="ltr">{preview.listing.icon}</bdi></dd></div>}
               <div><dt className="font-semibold">{copy.screenshots}</dt><dd>{preview.listing.screenshots.length ? <ul>{preview.listing.screenshots.map((item, index) => <li key={index} className="break-all"><bdi dir="ltr">{item.url}</bdi> — {locale === "fa" ? item.alt.fa ?? item.alt.en : item.alt.en}</li>)}</ul> : copy.noDeclarations}</dd></div>
             </dl>
             <p className="text-sm text-muted-foreground">{copy.previewComplete}</p>
@@ -577,6 +585,7 @@ export function buildManifest(data: FormData, type: MarketplaceItemTypeKey, sour
       slug: text(data, "slug"), name: { en: text(data, "nameEn") }, outcome: localized(text(data, "outcomeEn"), text(data, "outcomeFa")), description: optionalLocalized(text(data, "descriptionEn"), text(data, "descriptionFa")),
       categorySlug: text(data, "categorySlug"), communitySlugs: data.getAll("communitySlugs").map(String), tags: lines(text(data, "tags")),
       screenshots: rows(text(data, "screenshots")).map(([url, altEn, altFa]) => ({ url, alt: localized(altEn, altFa) })),
+      ...(optionalText(data, "icon") ? { icon: optionalText(data, "icon") } : {}),
       ...(optionalText(data, "documentationUrl") ? { documentationUrl: optionalText(data, "documentationUrl") } : {}),
       ...(optionalText(data, "supportUrl") ? { supportUrl: optionalText(data, "supportUrl") } : {}),
       ...(optionalText(data, "issueTrackerUrl") ? { issueTrackerUrl: optionalText(data, "issueTrackerUrl") } : {}),
