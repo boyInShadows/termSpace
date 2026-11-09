@@ -5,7 +5,7 @@ import { supportWriteRateLimit } from "../middleware/security.js";
 
 const mocks = vi.hoisted(() => ({
   readerSession: { findFirst: vi.fn() }, supportAttachment: { findFirst: vi.fn() },
-  readerUser: { findMany: vi.fn() }, supportNotification: { createMany: vi.fn() },
+  readerUser: { findMany: vi.fn(), count: vi.fn() }, $executeRaw: vi.fn(), supportNotification: { createMany: vi.fn() },
   supportTicket: { create: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn() },
   supportMessage: { create: vi.fn() }, $transaction: vi.fn(),
   prepare: vi.fn(), read: vi.fn(), remove: vi.fn(),
@@ -26,11 +26,12 @@ describe("private support screenshot boundaries", () => {
   beforeEach(async () => {
     vi.resetAllMocks();
     mocks.readerUser.findMany.mockResolvedValue([]);
+    mocks.readerUser.count.mockImplementation(async ({ where }) => where.id.in.filter(Boolean).length);
     await supportWriteRateLimit.resetKey("member-1");
     mocks.readerSession.findFirst.mockResolvedValue({ id: "session", user: { id: "member-1", emailVerifiedAt: null, marketplaceRoleGrants: [] } });
     mocks.prepare.mockResolvedValue([image]); mocks.remove.mockResolvedValue(undefined);
     mocks.supportTicket.create.mockResolvedValue({ id: "ticket-1" });
-    mocks.supportTicket.findFirst.mockResolvedValue({ id: "ticket-1", status: "WAITING_FOR_SUPPORT" });
+    mocks.supportTicket.findFirst.mockResolvedValue({ id: "ticket-1", ownerId: "member-1", status: "WAITING_FOR_SUPPORT" });
     mocks.$transaction.mockImplementation(async run => run(mocks));
   });
 

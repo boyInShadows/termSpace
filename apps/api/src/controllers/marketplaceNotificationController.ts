@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
+import { visibleSupportNotifications } from "../lib/supportNotifications.js";
 
 const NOTIFICATION_LIMIT = 12;
 
@@ -15,12 +16,6 @@ const supportTypeKeys = {
   STAFF_REPLIED: "support_reply", RESOLVED: "support_resolved",
 } as const;
 
-function supportScope(res: Response) {
-  const reader = res.locals.reader;
-  const administrator = reader.emailVerified && reader.marketplaceRoles.includes("administrator");
-  return { userId: String(reader.id), ...(administrator ? {} : { ticket: { ownerId: String(reader.id) } }) };
-}
-
 /**
  * Private decisions and support events, newest first. Support previews contain
  * only an event type and ticket reference; no subject, message or screenshot.
@@ -28,7 +23,7 @@ function supportScope(res: Response) {
 export async function listMarketplaceNotifications(_req: Request, res: Response) {
   const userId = String(res.locals.reader.id);
   res.set("Cache-Control", "private, no-store");
-  const supportWhere = supportScope(res);
+  const supportWhere = visibleSupportNotifications(res.locals.reader);
   const [rows, unread, supportRows, supportUnread] = await prisma.$transaction([
     prisma.marketplaceNotification.findMany({
       where: { userId },
@@ -69,7 +64,7 @@ export async function markMarketplaceNotificationsRead(req: Request, res: Respon
   const userId = String(res.locals.reader.id);
   const ids = req.body.ids as string[] | undefined;
   res.set("Cache-Control", "private, no-store");
-  const supportWhere = supportScope(res);
+  const supportWhere = visibleSupportNotifications(res.locals.reader);
   const selection = { readAt: null, ...(ids === undefined ? {} : { id: { in: ids } }) };
   const data = { readAt: new Date() };
   const [moderation, support] = await prisma.$transaction([

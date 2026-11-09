@@ -2,6 +2,48 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Support account privacy and release handoff
+
+- **Owner scope / shared surfaces.** Final authorized ticketing phase, including
+  account API/controller tests, existing settings/privacy copy and this changelog.
+  No new migration, provider flow or unrelated pending item. Manual engineering/
+  security diff review used Ponytail full; usage is unavailable.
+- **Export.** Account JSON includes owned ticket conversations, own authored
+  replies on other members' tickets and currently visible support alerts. Explicit
+  selections exclude credentials, other members' content/identities, storage keys
+  and original filenames. Screenshots have metadata/authenticated download paths;
+  separate image downloads still require current access. Notification visibility
+  is shared with the bell so revoked staff alerts cannot leak through export.
+- **Deletion.** After existing ownership proof and creator restrictions, erase
+  owned tickets/attachments/alerts, recipient alerts and sessions. Erase the
+  closing account's authored replies/images on other members' tickets without
+  deleting their conversations; EN/FA threads explain the removed message.
+  Short support-write/deletion transactions share an advisory lock and recheck
+  active participants so concurrent writes cannot resurrect erased data.
+  Remove private files only after commit; failed physical cleanup preserves the
+  successful closure and leaves inaccessible orphans for the existing worker.
+- **Verification.** Root typecheck/build and 936 tests pass / 49 integration skips
+  (44 incumbent plus five new database-gated cases run separately). Thirteen real
+  PostgreSQL account lifecycle checks pass, including export isolation, revoked
+  staff visibility, deletion/write contention and failed-file-removal recovery.
+  Web lint has zero errors / two existing warnings. Full E2E 533 passed / 46
+  intentional skips; all nine Lighthouse runs pass unchanged assertions.
+  Thirty-six EN/FA/light/dark/320–1280px settings, erased-message and privacy
+  captures have no horizontal overflow; independent Impeccable finish review
+  and documentation reviews returned `ship`. Release/export/deletion behavior is
+  in `docs/support-tickets.md`.
+  Evidence: `docs/artifacts/support-2026-11-06/phase-privacy-*`.
+- **Local runtime / limits.** Applied only task-owned attachment/notification
+  migrations `202611090006`/`202611090007` to the ordinary local DB; its prior two
+  support migrations already existed. Restarted API :4001: health 200 and anonymous
+  private-ticket access 401. Other main migrations remain deferred; the local
+  catalog returns 500 because its existing database lacks `MarketplaceProduct.iconUrl`.
+  The fully migrated scratch database passes lifecycle checks. Exact API Docker
+  image build remains blocked by DockerHub403; no container run or production
+  deployment claimed. Older rejected UI/authentication experiments remain preserved
+  and deferred. Ticketing implementation phases are complete; rollout/owner
+  acceptance is separate.
+
 ## 2026-11-09 — Private ticket notifications in the existing bell
 
 - **Owner scope / shared surfaces.** Next approved support phase: Prisma schema,

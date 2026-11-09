@@ -4,7 +4,7 @@ import { supportWriteRateLimit } from "../middleware/security.js";
 
 const db = vi.hoisted(() => ({
   readerSession: { findFirst: vi.fn() },
-  readerUser: { findMany: vi.fn() }, supportNotification: { createMany: vi.fn() },
+  readerUser: { findMany: vi.fn(), count: vi.fn() }, $executeRaw: vi.fn(), supportNotification: { createMany: vi.fn() },
   supportTicket: { findMany: vi.fn(), findFirst: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   supportMessage: { findMany: vi.fn(), create: vi.fn() },
   $transaction: vi.fn(),
@@ -18,6 +18,7 @@ describe("private member support", () => {
   beforeEach(async () => {
     vi.resetAllMocks();
     db.readerUser.findMany.mockResolvedValue([]);
+    db.readerUser.count.mockImplementation(async ({ where }) => where.id.in.filter(Boolean).length);
     await supportWriteRateLimit.resetKey("member-1");
     await supportWriteRateLimit.resetKey("admin-1");
     db.readerSession.findFirst.mockResolvedValue({ id: "session", user: {
@@ -118,7 +119,7 @@ describe("private member support", () => {
 
   it("keeps the staff reopen restriction inside the optimistic write", async () => {
     db.readerSession.findFirst.mockResolvedValue({ id: "session", user: { id: "admin-1", email: "x@example.test", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "ADMINISTRATOR" }] } });
-    db.supportTicket.findFirst.mockResolvedValue({ id: "ticket-1", status: "WAITING_FOR_SUPPORT" });
+    db.supportTicket.findFirst.mockResolvedValue({ id: "ticket-1", ownerId: "member-1", status: "WAITING_FOR_SUPPORT" });
     db.supportTicket.updateMany.mockResolvedValue({ count: 0 });
     const result = await request(createApp()).post("/api/support/admin/tickets/ticket-1/messages").set("Cookie", cookie)
       .set("Origin", "http://localhost:3000").send({ body: "A concurrent reply", expectedVersion: 1 });

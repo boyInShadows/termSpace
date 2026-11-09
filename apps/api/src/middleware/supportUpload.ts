@@ -1,6 +1,7 @@
 import type { ErrorRequestHandler, RequestHandler } from "express";
 import multer from "multer";
 import { SupportImageError, SUPPORT_IMAGE_BYTES } from "../lib/supportImages.js";
+import { SupportSessionError } from "../lib/supportAccess.js";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -23,6 +24,9 @@ export const parseSupportPayload: RequestHandler = (req, res, next) => {
 };
 
 export const supportUploadError: ErrorRequestHandler = (error, _req, res, next) => {
+  if (error instanceof SupportSessionError) {
+    res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Sign in again to contact support" } }); return;
+  }
   if (!(error instanceof SupportImageError)) { next(error); return; }
   res.status(error.status).json({ error: { code: error.code, message: error.message } });
 };

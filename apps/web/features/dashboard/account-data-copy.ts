@@ -2,6 +2,8 @@
 export const accountDataCopy = {
   en: {
     dataTitle: "Your data",
+    supportExport: "Private ticket messages, screenshot references and visible support notifications are included. Download screenshots separately while you still have access to their tickets.",
+    supportDelete: "Your support tickets, screenshots and notifications are removed. Your past staff replies are erased while other members' tickets remain.",
     dataIntro: "Download a copy of the data tied to your account: profile, favourites, bookmarks, reading progress, acquisitions, reviews, reports you filed and your creator profile. Passwords, session tokens and stored credentials are never included.",
     exportButton: "Download my data",
     exporting: "Preparing…",
@@ -28,6 +30,8 @@ export const accountDataCopy = {
   },
   fa: {
     dataTitle: "داده‌های شما",
+    supportExport: "پیام‌های تیکت‌های خصوصی، مشخصات تصویرها و اعلان‌های پشتیبانی در دسترس شما نیز در فایل هستند. تصویرها را تا زمانی که به تیکت دسترسی دارید جداگانه دریافت کنید.",
+    supportDelete: "تیکت‌ها، تصویرها و اعلان‌های پشتیبانی شما حذف می‌شوند. پاسخ‌های قبلی شما به‌عنوان پشتیبان پاک می‌شوند، اما تیکت‌های دیگر کاربران باقی می‌مانند.",
     dataIntro: "نسخه‌ای از داده‌های مرتبط با حسابتان را دریافت کنید: نمایه، علاقه‌مندی‌ها، نشانک‌ها، پیشرفت مطالعه، دریافت‌ها، نقدها، گزارش‌هایی که ثبت کرده‌اید و نمایهٔ سازنده. رمز عبور، توکن‌های نشست و اطلاعات دسترسی ذخیره‌شده هرگز شامل نمی‌شوند.",
     exportButton: "دریافت داده‌های من",
     exporting: "در حال آماده‌سازی…",

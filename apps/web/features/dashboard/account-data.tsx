@@ -84,6 +84,7 @@ export function AccountData({ profile: state }: { profile: ProfileState }) {
     <section className="border border-border bg-surface p-5" aria-labelledby="account-data-title">
       <h2 id="account-data-title" className="text-xl font-semibold">{copy.dataTitle}</h2>
       <p className="mt-3 max-w-prose text-sm text-muted-foreground">{copy.dataIntro}</p>
+      <p className="mt-2 max-w-prose text-sm text-muted-foreground">{copy.supportExport}</p>
       <Button className="mt-4" variant="secondary" disabled={exporting} onClick={() => void exportData()}>{exporting ? copy.exporting : copy.exportButton}</Button>
       {exportMessage && <p role={exportMessage.failed ? "alert" : "status"} className={`mt-3 text-sm ${exportMessage.failed ? "text-destructive" : "text-foreground"}`}>{exportMessage.text}</p>}
     </section>
@@ -92,6 +93,7 @@ export function AccountData({ profile: state }: { profile: ProfileState }) {
       <h2 id="account-delete-title" className="text-xl font-semibold">{copy.deleteTitle}</h2>
       <p className="mt-3 max-w-prose text-sm text-muted-foreground">{copy.deleteIntro}</p>
       <p className="mt-2 max-w-prose text-sm text-muted-foreground">{copy.deleteKeeps}</p>
+      <p className="mt-2 max-w-prose text-sm text-muted-foreground">{copy.supportDelete}</p>
       {session.marketplaceRoles.includes("creator") && <p className="mt-2 max-w-prose text-sm font-medium">{copy.creatorNote}</p>}
       {state.status === "loading" ? <p role="status" className="mt-4 text-sm text-muted-foreground">{copy.loading}</p>
         : state.status === "error" ? <p className="mt-4 text-sm text-muted-foreground">{copy.loadError}</p>

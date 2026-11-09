@@ -1,5 +1,10 @@
 import type { Prisma, SupportNotificationType } from "@prisma/client";
 
+export function visibleSupportNotifications(reader: { id: string; emailVerified: boolean; marketplaceRoles: string[] }) {
+  const administrator = reader.emailVerified && reader.marketplaceRoles.includes("administrator");
+  return { userId: reader.id, ...(administrator ? {} : { ticket: { ownerId: reader.id } }) };
+}
+
 export async function notifySupportParticipants(tx: Prisma.TransactionClient, event: {
   ticketId: string; ownerId: string; actorId: string; type: SupportNotificationType; audience: "member" | "staff";
 }) {

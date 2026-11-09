@@ -3,6 +3,7 @@ import type { Locale } from "@/lib/i18n";
 
 export const supportCopy = {
   en: {
+    removedMessage: "Message removed after account deletion.",
     rateLimited: "Too many support messages. Wait 15 minutes and try again. Your draft is still here.",
     screenshots: "Screenshots (optional)", screenshotHelp: "Up to 3 PNG, JPEG or WebP images. 5 MiB each, 10 MiB total. Remove passwords and personal details first.",
     screenshot: "Screenshot", removeScreenshot: "Remove screenshot", openScreenshot: "Open screenshot",
@@ -29,6 +30,7 @@ export const supportCopy = {
     statuses: { WAITING_FOR_SUPPORT: "Waiting for support", WAITING_FOR_MEMBER: "Waiting for you", RESOLVED: "Resolved" },
   },
   fa: {
+    removedMessage: "این پیام پس از حذف حساب پاک شده است.",
     rateLimited: "تعداد پیام‌های پشتیبانی زیاد است. ۱۵ دقیقه بعد دوباره تلاش کنید. پیش‌نویس شما حفظ شده است.",
     screenshots: "تصویرهای صفحه (اختیاری)", screenshotHelp: "حداکثر ۳ تصویر PNG، JPEG یا WebP؛ هر تصویر ۵ و مجموع ۱۰ مگابایت. ابتدا رمزها و اطلاعات شخصی را حذف کنید.",
     screenshot: "تصویر صفحه", removeScreenshot: "حذف تصویر", openScreenshot: "باز کردن تصویر",

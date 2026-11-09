@@ -3,6 +3,7 @@ import type { SupportStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { prepareSupportImages, readSupportImage, removeSupportImages } from "../lib/supportImages.js";
 import { notifySupportParticipants } from "../lib/supportNotifications.js";
+import { requireActiveSupportAccounts } from "../lib/supportAccess.js";
 
 const ticketSelect = { id: true, category: true, subject: true, status: true, version: true, createdAt: true, updatedAt: true } as const;
 const messageSelect = { id: true, body: true, authorRole: true, createdAt: true, attachments: { select: { id: true, bytes: true, width: true, height: true } } } as const;
@@ -36,6 +37,7 @@ export async function createSupportTicket(req: Request, res: Response) {
   const ownerId = String(res.locals.reader.id);
   const images = await prepareSupportImages(req.files as Express.Multer.File[] | undefined);
   const ticket = await prisma.$transaction(async tx => {
+    await requireActiveSupportAccounts(tx, [ownerId]);
     const created = await tx.supportTicket.create({
       data: { ownerId, category, subject, messages: { create: { body, authorId: ownerId, authorRole: "MEMBER", ...(images.length ? { attachments: { create: images } } : {}) } } },
       select: { id: true },
@@ -73,6 +75,7 @@ export async function replySupportTicket(req: Request, res: Response) {
   const images = await prepareSupportImages(req.files as Express.Multer.File[] | undefined);
   let saved: boolean;
   try { saved = await prisma.$transaction(async (tx) => {
+    await requireActiveSupportAccounts(tx, [ticket.ownerId, String(res.locals.reader.id)]);
     const updated = await tx.supportTicket.updateMany({
       where: { ...scope, version: req.body.expectedVersion, ...(res.locals.supportAdmin ? { status: { not: "RESOLVED" as const } } : {}) },
       data: { status: res.locals.supportAdmin ? "WAITING_FOR_MEMBER" : "WAITING_FOR_SUPPORT", version: { increment: 1 } },
@@ -99,6 +102,7 @@ export async function resolveSupportTicket(req: Request, res: Response) {
   if (!ticket) { missingTicket(res); return; }
   if (ticket.status === "RESOLVED") { res.json({ data: { saved: true } }); return; }
   const saved = await prisma.$transaction(async tx => {
+    await requireActiveSupportAccounts(tx, [ticket.ownerId, String(res.locals.reader.id)]);
     const updated = await tx.supportTicket.updateMany({
       where: { ...scope, version: req.body.expectedVersion, status: { not: "RESOLVED" } }, data: { status: "RESOLVED", version: { increment: 1 } },
     });

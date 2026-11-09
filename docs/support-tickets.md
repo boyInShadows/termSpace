@@ -98,3 +98,59 @@ current ticket ownership or verified administrator access on each read/update;
 revoked staff cannot see or acknowledge former staff alerts. Unverified members
 can receive updates to their own tickets. Feed responses are private/no-store.
 Apply `202611090007_support_notifications` before starting this API revision.
+
+## Account export and deletion
+
+Account settings export includes the member's owned ticket conversations,
+their own authored replies on other members' tickets, and currently visible
+support notifications. Replies authored on another member's ticket do not export
+that member's subject or messages. These support collections exclude participant IDs,
+storage keys, original filenames or account credentials. Screenshot metadata
+includes authenticated API download paths; image bytes are separate downloads.
+Download screenshots before deleting the account or losing staff access.
+
+Account closure retains the existing password/Google confirmation and creator
+listing restrictions. It deletes owned tickets and their messages, attachments
+and alerts. For replies authored on someone else's ticket, it removes the body,
+author reference and screenshots while retaining the other member's conversation.
+The thread shows a localized removed-message explanation. The closing account's
+notification records and sessions are removed.
+
+Short support-write and account-deletion transactions share a PostgreSQL
+transaction advisory lock and recheck that both participating accounts remain
+active. A reply already in progress completes before deletion removes its data;
+a later write cannot recreate support data for the deleted account. This serializes
+support writes across API processes; use ordered account locks if write volume
+outgrows this small-service limit. File decoding happens outside the transaction.
+
+Private image removal happens only after a successful database commit. If the
+filesystem is temporarily unavailable, account closure still succeeds: downloads
+are denied immediately because attachment records are gone, and the existing
+old-unreferenced-image worker retries removal after its 24-hour grace period.
+Database rollback or blocked closure never removes committed files. Existing
+backups are separate from live-data deletion and require the operator's retention
+policy; this feature does not delete backups or assert a legal retention period.
+
+## Release handoff
+
+Apply the additive ticket migrations in order: `202611060001_support_tickets`,
+`202611060002_support_conversations`, `202611090006_support_attachments`, then
+`202611090007_support_notifications`. The account privacy phase adds no migration.
+Check the target migration ledger first and coordinate any other pending main
+migrations with their owner; never use this support rollout to resume deferred
+authentication/provider work. Regenerate Prisma and build the API/web revision,
+then start the API and hourly cleanup worker with the same private volume/database.
+Use the API's existing same-origin proxy and host-only session cookies.
+
+Release smoke checks: create a ticket as an unverified member, attach an image,
+reply/resolve as a verified administrator, reopen as the owner, inspect the bell,
+export the owner data, and confirm a different member cannot read the thread or
+image. Confirm account closure removes its owned conversation and denies the old
+session. Verify both languages/themes and phone layouts. Keep database and private
+volume backups together and verify cleanup logs without printing private content.
+
+Local source/build, browser and scratch-database verification are recorded in
+`changelog.md`; generated evidence lives under `docs/artifacts/support-2026-11-06/`.
+The exact Docker API image build could not fetch its frontend from DockerHub
+(HTTP 403; exact base image was not cached), so container execution and production
+rollout remain unverified. No production deployment is part of this continuation.
