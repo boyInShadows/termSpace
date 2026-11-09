@@ -81,11 +81,6 @@ they touch and need a written plan first.
   worker that include creator notifications: reader queries select the new
   column and the worker claims the new outbox target. The change is additive;
   old API versions keep working after the migration.
-- Apply migrations `202611090001_marketplace_platform_expansion` and
-  `202611090002_marketplace_listing_icon` before starting the API that reads
-  `MarketplaceProduct.iconUrl` (the generated client selects it on every product
-  query). Both are additive. Then rerun `deploy/chatwoot/bootstrap.rb` on the VPS
-  so existing widget inboxes get the comma-separated `allowed_domains`.
 
 ## Follow-ups from the 2026-11-09 seed phase
 

@@ -36,6 +36,14 @@ Project changes completed from `pending.md` should be recorded here with the dat
   vs 170 kB, detail 167.5 vs 165 kB); the icon adds about 0.7 kB to each. The
   reporting e2e spec fails when the desktop and mobile projects share one mock API
   and passes alone; also pre-existing. Usage metrics unavailable.
+- **Deployment (2026-11-09).** Pushed `59e9a01` to `v.3`; the VPS checkout
+  fast-forwarded. Pre-change dump `/opt/backups/termspace-pre-icon-20261109-112539.sql.gz`
+  (gzip-verified). Built `api` and `web`, ran the `migrate` service (both migrations
+  applied), restarted api, web, scheduler, email-worker and source-worker, all
+  healthy. Read back 16 platforms and 13 communities; the public products API
+  returns `iconUrl`; no errors in api/web logs. The widget now answers with
+  `content-security-policy: frame-ancestors termspace.dev www.termspace.dev`.
+  Seeded listings carry no icon yet; the 33 submitted ones still await review.
 
 ## 2026-11-06 — Grant owner-requested production marketplace administrator access
 
