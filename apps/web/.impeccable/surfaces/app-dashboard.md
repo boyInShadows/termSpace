@@ -33,6 +33,10 @@ The root layout supplies the main site's global header on every dashboard route.
 Workspace search is a content control, without a second toolbar or repeated
 breadcrumb. Profile lives in the dashboard, not the shared account dropdown.
 Account, theme, locale and role-aware global navigation have one implementation.
+Tickets is a workspace sidebar/tab entry with the shared ticket icon. It opens
+the staff inbox for verified marketplace administrators/moderators and owned
+tickets for other members. Phone moderation uses the compact Review label while
+keeping the full accessible name. Do not put Support beside workspace search.
 The root header hydrates with the session provider, without a separate boundary
 that could race sign-in. Provider connections work without a listing and fail
 independently of release history. The root skip link

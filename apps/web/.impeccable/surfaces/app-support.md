@@ -15,6 +15,9 @@ STORY: Members understand who can see the conversation, choose a category and
 send a useful message. Staff scan waiting tickets and respond without losing context.
 Support staff means verified marketplace administrators and moderators; other
 members see only their own tickets. Privacy copy names both staff roles.
+Tickets lives in the shared dashboard sidebar with a ticket icon, and in the phone
+tabs. Support routes reuse the dashboard shell and keep Tickets selected. Members
+awaiting email verification may still use their private support conversations.
 
 FIRST VIEWPORT: Support heading and privacy explanation above a compact list;
 New ticket is the single primary action. The form is one readable column. A

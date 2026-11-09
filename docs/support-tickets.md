@@ -18,7 +18,14 @@ No assignment, public discussion, internal notes, live chat or email delivery in
 
 ## Localhost review
 
-Use `http://localhost:3000/support` as the member and
+Open **Tickets** in the dashboard sidebar (ticket icon) or phone tabs. It opens
+owned tickets for members and the shared inbox for verified marketplace
+administrators/moderators. Ticket lists and threads keep the dashboard shell,
+search and notification bell, with Tickets selected. Support is no longer a
+shortcut beside workspace search. The support layout permits signed-in members
+awaiting email verification; other dashboard sections retain their verification gate.
+
+Direct review links remain `http://localhost:3000/support` as the member and
 `http://localhost:3000/support/admin` as staff. Persian uses the `/fa` prefix.
 Keep the two accounts in separate browser profiles or an incognito window so
 their sessions do not replace each other. Staff must have the existing verified

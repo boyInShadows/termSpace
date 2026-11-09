@@ -2,6 +2,43 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Tickets in workspace navigation and local staff setup
+
+- **Owner request / shared surface.** Grant the designated localhost account
+  marketplace administrator access and move support from beside search into the
+  sidebar as Tickets with a ticket icon. Shared `changelog.md` records this phase;
+  the implementation remains in web presentation/layout modules and existing
+  documentation. The verified local account received the requested role through
+  the existing audited operator; no production account was changed.
+- **Navigation.** Tickets appears in the sidebar and phone tabs. It opens the
+  shared inbox for verified administrators/moderators and owned tickets for other
+  members. Lists and threads reuse the dashboard shell, retain the selected entry,
+  and render one global header and focusable content main. Removed the toolbar
+  Support shortcut. Mobile moderation uses Review while retaining the full
+  accessible name; the extra ticket tab fits the supported phone widths.
+- **Member access.** The support layout explicitly permits signed-in members
+  awaiting email verification. Other dashboard routes keep their verification
+  gate; server/API ownership and staff-role checks are unchanged. The existing
+  verification form now loads only when that gate needs it, with the established
+  skeleton while loading. This repairs the initial170.3KB dashboard result against
+  the unchanged170KB budget without changing verification behavior.
+- **Verification.** Root typecheck/build and951 tests pass/52 database-gated skips;
+  web lint zero errors/two incumbent warnings. Final full E2E551 passed/46
+  intentional skips; nine Lighthouse runs pass unchanged assertions. Browser
+  coverage includes member/moderator/administrator navigation, one
+  header/main, active-ticket state, skip focus and unverified access boundaries.
+  The real localhost administrator/member flow passes upload/private download,
+  inbox/reply, bell, resolve/reopen and export/deletion; temporary fixtures removed.
+  Forty-eight synthetic EN/FA/theme/320–1280 member/staff list/thread captures have
+  no overflow and navigation targets at least24px. Independent Impeccable finish
+  and documentation reviews returned `ship`; the final lazy gate was separately
+  reviewed. DESIGN.md, both briefs and `docs/support-tickets.md` match the result.
+  Manual engineering/security review used Ponytail full; usage unavailable.
+  Evidence: `docs/artifacts/support-2026-11-06/ticket-nav-*` and `nav-review-*`.
+- **Review.** Refresh localhost to reload the account's role, then open Tickets
+  from the sidebar or phone tabs. This is the owner's selected localhost review;
+  no production deployment or environment change.
+
 ## 2026-11-09 — Support staff includes administrators and moderators
 
 - **Owner correction / shared surface.** Both verified marketplace administrators

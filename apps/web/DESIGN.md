@@ -241,6 +241,11 @@ session gate, workspace search, sidebar and phone tabs; it reuses the global
 account, language and theme controls. Pages/loading boundaries must not add a
 second header. Keep the header in the root hydration tree to avoid session races.
 
+Tickets belongs in the workspace sidebar and phone tabs with the shared ticket
+icon, rather than beside search. Support routes reuse the dashboard shell and
+keep that entry selected. Staff open the inbox; other members open owned tickets.
+Phone moderation uses the compact Review label with its full accessible name.
+
 Use the measured `--site-header-height` for content that sticks beneath the
 header, including discovery controls; account for announcement dismissal,
 condensation and mobile disclosure. Fixed dashboard actions and native focus

@@ -1,12 +1,14 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, LibraryBig, Plus, UserRound, ShieldCheck, Store } from "lucide-react";
+import { LayoutGrid, LibraryBig, Plus, UserRound, ShieldCheck, Store, Ticket } from "lucide-react";
 import { libraryCopy } from "@/features/library/library-copy";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
 import { cn } from "@/lib/utils";
+import { canManageSupport } from "@/features/support/support-access";
+import { dashboardNavCopy } from "./dashboard-nav-copy";
 
 /**
  * Dashboard navigation: a sidebar from `lg` up, a bottom tab bar and a
@@ -30,12 +32,15 @@ function useDashboardNav() {
     { href: "/dashboard/studio", label: t.navStudio, icon: Store },
     { href: "/dashboard/library", label: libraryCopy[locale].label, icon: LibraryBig },
     ...(canModerate ? [{ href: "/dashboard/moderation", label: t.moderationNav, icon: ShieldCheck }] : []),
+    { href: canManageSupport(session) ? "/support/admin" : "/support", label: dashboardNavCopy[locale].tickets, icon: Ticket },
     { href: "/dashboard/settings", label: t.profile, icon: UserRound },
   ].map((item) => ({
     ...item,
+    mobileLabel: item.href === "/dashboard/moderation" ? dashboardNavCopy[locale].moderation : item.label,
     href: localePath(item.href, locale),
     // `/dashboard` would otherwise match every nested route.
-    active: item.href === "/dashboard" ? current === "/dashboard" : current.startsWith(item.href),
+    active: item.href.startsWith("/support") ? current === "/support" || current.startsWith("/support/")
+      : item.href === "/dashboard" ? current === "/dashboard" : current.startsWith(item.href),
   }));
 }
 
@@ -104,10 +109,11 @@ export function DashboardTabBar() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <ul className="grid" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr)) 3.25rem` }}>
-        {items.map(({ href, label, icon: Icon, active }) => (
+        {items.map(({ href, label, mobileLabel, icon: Icon, active }) => (
           <li key={href}>
             <Link
               href={href}
+              aria-label={label}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex min-h-14 flex-col items-center justify-center gap-1 text-[11px]",
@@ -115,7 +121,7 @@ export function DashboardTabBar() {
               )}
             >
               <Icon aria-hidden className="size-5" />
-              <span className="px-1 text-center leading-tight">{label}</span>
+              <span className="px-1 text-center leading-tight">{mobileLabel}</span>
             </Link>
           </li>
         ))}

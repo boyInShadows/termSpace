@@ -1,15 +1,15 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState, type ComponentType } from "react";
+import { lazy, Suspense, useEffect, useState, type ComponentType } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
-import { EmailVerification } from "@/features/account/email-verification";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
-import { supportLabel } from "@/features/support/support-label";
 import { DashboardSidebar, DashboardTabBar } from "./dashboard-nav";
 import { DashboardSearch } from "./dashboard-search";
 import { DashboardOverviewSkeleton } from "./overview";
+
+const EmailVerification = lazy(() => import("@/features/account/email-verification").then(module => ({ default: module.EmailVerification })));
 
 /**
  * Workspace search, sidebar, bottom tabs and the reader session gate below
@@ -19,7 +19,7 @@ import { DashboardOverviewSkeleton } from "./overview";
  * accidentally ship ungated. It is a convenience, not a security boundary — the
  * API authenticates every creator request independently.
  */
-export function DashboardShell({ children }: { children: React.ReactNode }) {
+export function DashboardShell({ children, allowUnverified = false }: { children: React.ReactNode; allowUnverified?: boolean }) {
   const { locale, t } = useLocale();
   const session = useMarketplaceSession();
   const router = useRouter();
@@ -72,11 +72,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <div className="mx-auto max-w-[1200px]">
             <div className="mb-6 flex items-center gap-2">
               <DashboardSearch />
-              <Link href={localePath("/support", locale)} className="inline-flex min-h-11 items-center px-2 text-sm font-medium text-primary underline-offset-4 hover:underline">{supportLabel[locale]}</Link>
               {Menu ? <Menu /> : <span aria-hidden className="size-11 shrink-0" />}
             </div>
             <div key={session.email}>
-                {session.identityLoading ? <DashboardOverviewSkeleton /> : !session.emailVerified ? <EmailVerification /> : children}
+                {session.identityLoading ? <DashboardOverviewSkeleton /> : !session.emailVerified && !allowUnverified
+                  ? <Suspense fallback={<DashboardOverviewSkeleton />}><EmailVerification /></Suspense> : children}
             </div>
           </div>
         </main>

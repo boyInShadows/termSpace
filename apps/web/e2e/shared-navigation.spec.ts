@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { copy } from "../lib/i18n";
 import { libraryCopy } from "../features/library/library-copy";
+import { dashboardNavCopy } from "../features/dashboard/dashboard-nav-copy";
 
 async function globalNavigation(page: Page, locale: "en" | "fa") {
   const header = page.locator("[data-site-header]");
@@ -13,6 +14,34 @@ async function globalNavigation(page: Page, locale: "en" | "fa") {
 
 for (const locale of ["en", "fa"] as const) {
   const prefix = locale === "fa" ? "/fa" : "";
+  for (const persona of ["reader", "staff", "admin"] as const) {
+    test(`Tickets stays in workspace navigation (${locale}/${persona})`, async ({ page, context, baseURL }) => {
+      await context.addCookies([{ name: "e2e_persona", value: persona, url: baseURL! }]);
+      await page.goto(`${prefix}/dashboard`);
+      const name = (page.viewportSize()?.width ?? 1280) < 1024 ? copy[locale].dashboardHome.tabsLabel : copy[locale].dashboard;
+      const tickets = page.getByRole("navigation", { name }).getByRole("link", { name: dashboardNavCopy[locale].tickets, exact: true });
+      const path = `${prefix}/support${persona === "reader" ? "" : "/admin"}`;
+      await expect(tickets).toHaveAttribute("href", path);
+      await tickets.click();
+      await expect(page).toHaveURL(path);
+      await expect(page.getByRole("navigation", { name }).getByRole("link", { name: dashboardNavCopy[locale].tickets, exact: true })).toHaveAttribute("aria-current", "page");
+      await expect(page.locator("main#content")).toHaveCount(1);
+      await expect(page.locator("[data-site-header]")).toHaveCount(1);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    });
+  }
+  test(`unverified members can open Tickets without opening the verified dashboard (${locale})`, async ({ page, context, baseURL }) => {
+    await context.addCookies([{ name: "e2e_persona", value: "reader", url: baseURL! }]);
+    await page.route("**/api/readers/session", route => route.fulfill({ json: { data: { authenticated: true, user: {
+      id: "reader-reader", email: "reader@e2e.test", emailVerified: false, marketplaceRoles: [], onboardingRequired: false,
+    } } } }));
+    await page.goto(`${prefix}/support/new`);
+    await expect(page.locator("#ticket-subject")).toBeVisible();
+    await expect(page.locator("main#content")).toHaveCount(1);
+    await expect(page.getByRole("heading", { name: copy[locale].verifyEmail })).toHaveCount(0);
+    await page.goto(`${prefix}/dashboard`);
+    await expect(page.getByRole("heading", { name: copy[locale].verifyEmail })).toBeVisible();
+  });
   test(`fast sessions hydrate the shared header without mismatches (${locale})`, async ({ page, context, baseURL }) => {
     test.setTimeout(60_000);
     await context.addCookies([{ name: "e2e_persona", value: "creator", url: baseURL! }]);
@@ -61,7 +90,7 @@ for (const locale of ["en", "fa"] as const) {
 
   test(`the root skip link focuses content across sections (${locale})`, async ({ page, context, baseURL }) => {
     await context.addCookies([{ name: "e2e_persona", value: "creator", url: baseURL! }]);
-    for (const path of ["/", "/dashboard", "/explore", "/products/conversion-copywriter", "/account", "/privacy", "/terms", "/content-policy"]) {
+    for (const path of ["/", "/dashboard", "/support", "/explore", "/products/conversion-copywriter", "/account", "/privacy", "/terms", "/content-policy"]) {
       await page.goto(`${prefix}${path === "/" ? "" : path}`);
       await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
       await page.keyboard.press("Tab");
