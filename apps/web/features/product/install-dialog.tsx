@@ -2,36 +2,80 @@
 
 import { useState, type RefObject } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Copy, ExternalLink, ShieldCheck, X } from "lucide-react";
+import { ExternalLink, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { copyToClipboard } from "@/components/patterns/copy-block";
+import { CopyBlock } from "@/components/patterns/copy-block";
 import { intlLocale } from "@/lib/format";
 import { useLocale } from "@/lib/locale-context";
-import type { MarketplaceInstallation } from "@/lib/types";
+import type { InstallCommand, MarketplaceInstallation } from "@/lib/types";
+
+const OS_ORDER: InstallCommand["os"][] = ["macos", "linux", "windows", "any"];
+
+/** The reader's own system, so the matching group opens first. Runs only after the reader opened the dialog, never during SSR. */
+function detectOs(): InstallCommand["os"] | null {
+  const agent = typeof navigator === "undefined" ? "" : navigator.userAgent;
+  if (/Windows/i.test(agent)) return "windows";
+  if (/Android/i.test(agent)) return null;
+  if (/Mac|iPhone|iPad/i.test(agent)) return "macos";
+  if (/Linux|X11/i.test(agent)) return "linux";
+  return null;
+}
+
+/** Commands grouped by operating system; one toggle per system that has any, the reader's own pre-selected. */
+function InstallCommands({ commands, copy }: { commands: InstallCommand[]; copy: Record<string, string> }) {
+  const present = OS_ORDER.filter((os) => commands.some((command) => command.os === os));
+  const [selected, setSelected] = useState(() => {
+    const own = detectOs();
+    return own && present.includes(own) ? own : present[0];
+  });
+  const shown = commands.filter((command) => command.os === selected);
+  return (
+    <div className="mt-6">
+      <p className="eyebrow">{copy.commands}</p>
+      {present.length > 1 && (
+        <div role="group" aria-label={copy.system} className="mt-3 flex flex-wrap gap-2">
+          {present.map((os) => (
+            <Button key={os} type="button" size="sm" variant={os === selected ? "primary" : "secondary"} aria-pressed={os === selected} onClick={() => setSelected(os)}>{copy[`os_${os}`]}</Button>
+          ))}
+        </div>
+      )}
+      <div className="mt-3 space-y-3">
+        {shown.map((item, index) => (
+          <CopyBlock key={`${selected}-${index}`} label={item.label ?? copy[`os_${item.os}`]} text={item.command} copyLabel={copy.copyCommand} copiedLabel={copy.commandCopied} failedLabel={copy.failed} wrap />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /** Loaded only once a reader opens their installation, so it stays out of the page's first-load JS. */
 export function InstallDialogContent({ installation, onOpenChange, trigger }: { installation: MarketplaceInstallation; onOpenChange: (open: boolean) => void; trigger: RefObject<HTMLButtonElement | null> }) {
   const { fa, locale } = useLocale();
-  const [status, setStatus] = useState<"copied" | "failed" | null>(null);
   const copy = fa ? {
     title: "نصب نسخهٔ دریافت‌شده", intro: "این اطلاعات به همان نسخه‌ای متصل است که به کتابخانهٔ شما افزوده شد.", close: "بستن",
     exactVersion: "نسخهٔ دقیق", sourceStatus: "وضعیت منبع", immutableRef: "مرجع تغییرناپذیر", checked: "آخرین بررسی",
     linkOnly: "این نسخه فقط یک پیوند است. مالکیت تأیید نشده و محتوا ممکن است پس از بررسی تغییر کرده باشد.",
     stale: "بررسی ارائه‌دهنده موقتاً قدیمی است؛ آخرین مرجع تأییدشده بدون تغییر باقی مانده است.", steps: "مراحل نصب",
-    openPackage: "باز کردن بستهٔ تأییدشده", copyUrl: "کپی پیوند", copied: "پیوند کپی شد.", failed: "کپی خودکار انجام نشد. متن را انتخاب کنید و Ctrl+C را بزنید.",
+    commands: "دستورهای نصب", system: "سیستم‌عامل", os_macos: "macOS", os_linux: "لینوکس", os_windows: "ویندوز", os_any: "هر سیستم",
+    copyCommand: "کپی", commandCopied: "کپی شد",
+    openPackage: "باز کردن بستهٔ تأییدشده", copyUrl: "کپی", copied: "کپی شد", sourceLink: "پیوند منبع", statusLinkOnly: "فقط پیوند", statusStale: "قدیمی", statusVerified: "تأییدشده", failed: "کپی خودکار انجام نشد. متن را انتخاب کنید و Ctrl+C را بزنید.",
   } : {
     title: "Install acquired release", intro: "These details are pinned to the exact version added to your library.", close: "Close",
     exactVersion: "Exact version", sourceStatus: "Source status", immutableRef: "Immutable reference", checked: "Last checked",
     linkOnly: "This release is a plain link. Ownership is not verified, and the content may have changed since review.",
     stale: "The provider check is temporarily stale; the last verified reference remains unchanged.", steps: "Installation steps",
-    openPackage: "Open verified package", copyUrl: "Copy link", copied: "Link copied.", failed: "Couldn’t copy automatically. Select the text and press Ctrl+C.",
+    commands: "Install commands", system: "Operating system", os_macos: "macOS", os_linux: "Linux", os_windows: "Windows", os_any: "Any system",
+    copyCommand: "Copy", commandCopied: "Copied",
+    openPackage: "Open verified package", copyUrl: "Copy", copied: "Copied", sourceLink: "Source link", statusLinkOnly: "Link only", statusStale: "Stale", statusVerified: "Verified", failed: "Couldn’t copy automatically. Select the text and press Ctrl+C.",
   };
   const { release } = installation;
+  const sourceStatus = release.source.status === "link_only" ? copy.statusLinkOnly : release.source.status === "stale" ? copy.statusStale : copy.statusVerified;
+  const notice = release.source.status === "link_only" ? copy.linkOnly : release.source.status === "stale" ? copy.stale : null;
   return (
     <Dialog.Root open onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/55" />
-        <Dialog.Content onCloseAutoFocus={(event) => { event.preventDefault(); trigger.current?.focus(); }} className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(94vw,48rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border bg-background p-6">
+        <Dialog.Content onCloseAutoFocus={(event) => { event.preventDefault(); trigger.current?.focus(); }} className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(94vw,48rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-card border border-border bg-background p-6 shadow-panel">
           <div className="flex items-start justify-between gap-5">
             <div>
               <Dialog.Title className="editorial text-3xl">{copy.title}</Dialog.Title>
@@ -39,30 +83,25 @@ export function InstallDialogContent({ installation, onOpenChange, trigger }: { 
             </div>
             <Dialog.Close asChild><Button variant="ghost" size="icon" aria-label={copy.close}><X /></Button></Dialog.Close>
           </div>
-          <div className="mt-6 grid gap-3 rounded-xl border bg-surface p-4 text-sm sm:grid-cols-2">
+          <div className="mt-6 grid gap-3 rounded-card border border-border bg-surface p-4 text-sm sm:grid-cols-2">
             <InstallFact label={copy.exactVersion} value={`v${release.version}`} />
-            <InstallFact label={copy.sourceStatus} value={release.source.status} />
+            <InstallFact label={copy.sourceStatus} value={sourceStatus} />
             {release.source.kind !== "external_link" && <InstallFact label={copy.immutableRef} value={release.source.ref} mono />}
             <InstallFact label={copy.checked} value={release.source.checkedAt ? new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" }).format(new Date(release.source.checkedAt)) : "—"} />
           </div>
-          {release.source.status === "link_only" && <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-800 dark:text-amber-300">{copy.linkOnly}</p>}
-          {release.source.status === "stale" && <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-800 dark:text-amber-300">{copy.stale}</p>}
+          {notice && <p role="note" className="mt-4 rounded-control border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">{notice}</p>}
+          {release.installation.commands && release.installation.commands.length > 0 && <InstallCommands commands={release.installation.commands} copy={copy} />}
           <div className="mt-6">
             <p className="eyebrow">{copy.steps}</p>
             <ol className="mt-3 space-y-3">
               {release.installation.instructions.map((step, index) => (
-                <li className="flex gap-3 text-sm" key={`${index}-${step}`}><span className="font-mono text-xs text-primary">{String(index + 1).padStart(2, "0")}</span><span>{step}</span></li>
+                <li className="flex gap-3 text-sm" key={`${index}-${step}`}><span className="font-mono text-xs text-primary">{String(index + 1).padStart(2, "0")}</span><span className="ts-bidi min-w-0 break-words">{step}</span></li>
               ))}
             </ol>
           </div>
-          <div className="mt-6 rounded-lg bg-foreground p-4 text-background">
-            <div className="flex items-center gap-2 text-xs font-semibold"><ShieldCheck className="size-4" />{release.installation.method} · {release.source.kind}</div>
-            <p className="mt-3 break-all font-mono text-xs text-background/75" dir="ltr">{release.installation.url}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <a className={buttonVariants({ size: "sm", variant: "secondary" })} href={release.installation.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="size-4" />{copy.openPackage}</a>
-              <Button size="sm" variant="secondary" onClick={() => void copyToClipboard(release.installation.url).then((ok) => setStatus(ok ? "copied" : "failed"))}><Copy className="size-4" />{copy.copyUrl}</Button>
-            </div>
-            <p role="status" className="mt-2 min-h-4 text-xs text-background/75">{status === "copied" ? copy.copied : status === "failed" ? copy.failed : ""}</p>
+          <div className="mt-6">
+            <CopyBlock label={`${copy.sourceLink} · ${release.installation.method} · ${release.source.kind}`} text={release.installation.url} copyLabel={copy.copyUrl} copiedLabel={copy.copied} failedLabel={copy.failed} wrap />
+            <a className={`${buttonVariants({ size: "sm", variant: "secondary" })} mt-1`} href={release.installation.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="size-4" />{copy.openPackage}</a>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

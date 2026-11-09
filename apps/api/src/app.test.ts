@@ -969,6 +969,31 @@ describe("API", () => {
     expect(prismaMock.marketplaceCreator.update).not.toHaveBeenCalled();
   });
 
+  it("accepts a GitHub-hosted creator avatar, lets it be cleared, and rejects other hosts", async () => {
+    const asCreator = () => request(createApp())
+      .patch("/api/marketplace/creator/profile")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456");
+    const base = { name: "Updated Creator", bio: "An updated biography long enough for profile validation." };
+    prismaMock.readerSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+    });
+    prismaMock.marketplaceCreator.findUnique.mockResolvedValue({ id: "creator-1" });
+    prismaMock.marketplaceCreator.update.mockResolvedValue({ id: "creator-1", name: "Updated Creator", handle: "updated", initials: "UC", avatarUrl: null, verified: false, bio: base.bio, followers: 0, createdAt: new Date(), updatedAt: new Date(), _count: { products: 0 } });
+
+    expect((await asCreator().send({ ...base, avatarUrl: "https://evil.example/a.png" })).status).toBe(400);
+    expect((await asCreator().send({ ...base, avatarUrl: "http://avatars.githubusercontent.com/u/1" })).status).toBe(400);
+    expect(prismaMock.marketplaceCreator.update).not.toHaveBeenCalled();
+
+    expect((await asCreator().send({ ...base, avatarUrl: "https://avatars.githubusercontent.com/u/1?v=4" })).status).toBe(200);
+    expect(prismaMock.marketplaceCreator.update).toHaveBeenLastCalledWith(expect.objectContaining({ data: expect.objectContaining({ avatarUrl: "https://avatars.githubusercontent.com/u/1?v=4" }) }));
+    expect((await asCreator().send({ ...base, avatarUrl: null })).status).toBe(200);
+    expect(prismaMock.marketplaceCreator.update).toHaveBeenLastCalledWith(expect.objectContaining({ data: expect.objectContaining({ avatarUrl: null }) }));
+    expect((await asCreator().send(base)).status).toBe(200);
+    expect(prismaMock.marketplaceCreator.update.mock.lastCall?.[0].data).not.toHaveProperty("avatarUrl");
+  });
+
   it("submits only an owned proposal whose exact release source was verified", async () => {
     prismaMock.readerSession.findFirst.mockResolvedValue({
       id: "session-1",

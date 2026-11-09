@@ -6,6 +6,16 @@ on:
   pull_request:
 
 jobs:
+  termbuddy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test deploy/chatwoot/bot/*.test.mjs
+      - run: bash -n deploy/chatwoot/backup.sh deploy/chatwoot/verify-backup.sh
+
   verify:
     runs-on: ubuntu-latest
     strategy:

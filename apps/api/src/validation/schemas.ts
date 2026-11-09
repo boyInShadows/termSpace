@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { englishDisplayName, marketplaceManifestV1Schema, permissionCapabilities } from "../lib/marketplaceManifest.js";
+import { englishDisplayName, iconUrl, marketplaceManifestV1Schema, permissionCapabilities } from "../lib/marketplaceManifest.js";
 import { MARKETPLACE_PLATFORM_KEYS } from "../lib/marketplacePlatforms.js";
 import { MARKETPLACE_ITEM_TYPES } from "../lib/marketplaceManifest.js";
 
@@ -232,7 +232,8 @@ export const creatorOnboardingSchema = z.object({
   bio: z.string().trim().min(20).max(500),
 });
 
-export const creatorProfileUpdateSchema = creatorOnboardingSchema.pick({ name: true, bio: true });
+// avatarUrl: omitted = unchanged, null = remove, otherwise a GitHub-hosted image (same hosts as listing icons).
+export const creatorProfileUpdateSchema = creatorOnboardingSchema.pick({ name: true, bio: true }).extend({ avatarUrl: iconUrl.nullable().optional() });
 
 export const creatorDashboardQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),

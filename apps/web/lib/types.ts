@@ -1,9 +1,9 @@
 export type ProductType = "Prompt" | "Prompt pack" | "Skill" | "Agent" | "Workflow" | "MCP server" | "Integration" | "Rule" | "Hook" | "Template" | "AI tool" | "Developer utility";
 export type MarketplaceItemTypeKey = "skill" | "agent" | "mcp_server" | "integration" | "rule" | "prompt" | "hook" | "template" | "workflow";
 export interface MarketplaceItemType { key: MarketplaceItemTypeKey; en: string; fa: string; definition: string; }
-export type Platform = "API" | "ChatGPT" | "Claude" | "Claude Code" | "Codex" | "Cursor" | "Gemini" | "Gemini CLI" | "VS Code";
+export type Platform = "API" | "ChatGPT" | "Claude" | "Claude Code" | "Codex" | "Cursor" | "Gemini" | "Gemini CLI" | "VS Code" | "Aider" | "Amp" | "Cline" | "GitHub Copilot" | "OpenCode" | "Windsurf" | "Zed";
 export type AIModel = "GPT-5" | "Claude 4" | "Gemini 2.5" | "Model agnostic";
-export interface Creator { id: string; name: string; handle: string; initials: string; verified: boolean; bio: string; products: number; followers: number; }
+export interface Creator { id: string; name: string; handle: string; initials: string; avatarUrl?: string | null; verified: boolean; bio: string; products: number; followers: number; }
 export interface OwnedCreatorProfile extends Creator { createdAt: string; updatedAt: string; accessActive: boolean; }
 export interface ReaderProfile {
   email: string; createdAt: string; hasPassword: boolean; connectedGoogle: boolean; emailVerified: boolean;
@@ -117,6 +117,8 @@ export interface Product {
   creator: Creator; pricing: Pricing; compatibility: Compatibility; category: string; rating: number;
   reviewCount: number; usageCount: number; purchaseCount: number; updatedAt: string; version: string;
   featured?: boolean; trending?: boolean; verified: boolean; tags: string[];
+  /** Creator-supplied icon on a GitHub image host (validated by the API); absent for most listings. */
+  iconUrl?: string | null;
   /** One-line summaries the listing declares; list endpoints carry them, a listing may declare neither. */
   permissions?: string | null; license?: string | null;
   communities: Array<{ slug: string; nameEn: string; nameFa: string | null; primaryPlatform: string }>;
@@ -153,6 +155,9 @@ export interface ProductDetail extends Product {
   versions: ProductVersion[]; reviews: Review[]; related: Product[];
   release: ProductRelease | null;
 }
+/** One copy-ready command for an operating system, as declared in the release manifest. */
+export type InstallCommand = { os: "any" | "macos" | "linux" | "windows"; label?: string; command: string };
+
 export interface MarketplaceInstallation {
   acquisition: { id: string; status: string; acquiredAt: string };
   product: { slug: string; name: string };
@@ -162,7 +167,7 @@ export interface MarketplaceInstallation {
       kind: string; url: string; ref: string; path: string | null; originalAuthor?: string | null; integrityDigest: string | null;
       artifactSizeBytes: number | null; status: "verified" | "stale" | "link_only"; checkedAt: string | null;
     };
-    installation: { method: string; url: string; instructions: string[] };
+    installation: { method: string; url: string; instructions: string[]; commands?: InstallCommand[] };
     requirements: { runtimes: string[]; accounts: string[]; operatingSystems: string[]; dependencies: string[] };
     license: string | null; documentationUrl: string | null; supportUrl: string | null;
   };

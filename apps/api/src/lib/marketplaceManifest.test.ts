@@ -60,6 +60,37 @@ describe("marketplace manifest v1", () => {
     expect(marketplaceManifestV1Schema.safeParse(environmentInput).success).toBe(false);
   });
 
+  it("accepts an optional icon only from GitHub's image hosts over HTTPS", () => {
+    const withIcon = (icon: string) => ({ ...manifest("skill"), listing: { ...manifest("skill").listing, icon } });
+    for (const ok of ["https://avatars.githubusercontent.com/u/9919?v=4", "https://raw.githubusercontent.com/o/r/main/logo.svg"]) {
+      expect(marketplaceManifestV1Schema.safeParse(withIcon(ok)).success).toBe(true);
+    }
+    for (const bad of [
+      "http://avatars.githubusercontent.com/u/1",
+      "https://example.com/logo.png",
+      "https://avatars.githubusercontent.com.evil.example/u/1",
+      "https://user:pass@avatars.githubusercontent.com/u/1",
+      "https://github.com/o.png",
+    ]) {
+      expect(marketplaceManifestV1Schema.safeParse(withIcon(bad)).success, bad).toBe(false);
+    }
+    expect(marketplaceManifestV1Schema.safeParse(manifest("skill")).success).toBe(true);
+  });
+
+  it("accepts optional per-OS install commands, one line each, from a controlled OS list", () => {
+    const withCommands = (commands: unknown[]) => {
+      const input = manifest("skill");
+      (input.release.installation as { commands?: unknown[] }).commands = commands;
+      return marketplaceManifestV1Schema.safeParse(input);
+    };
+    expect(withCommands([{ os: "macos", label: "npm", command: "npm install -g example" }, { os: "any", command: "npx example@latest" }]).success).toBe(true);
+    expect(withCommands([]).success).toBe(true);
+    expect(withCommands([{ os: "beos", command: "x" }]).success).toBe(false);
+    expect(withCommands([{ os: "linux", command: "one\ntwo" }]).success).toBe(false);
+    expect(withCommands([{ os: "linux", command: "x", extra: true }]).success).toBe(false);
+    expect(withCommands(Array.from({ length: 13 }, () => ({ os: "any", command: "x" }))).success).toBe(false);
+  });
+
   it("accepts only controlled platform compatibility keys", () => {
     const input = manifest("skill");
     input.release.compatibility = [{ platform: "Codex", models: [] }];

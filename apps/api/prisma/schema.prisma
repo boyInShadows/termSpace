@@ -449,6 +449,7 @@ model MarketplaceCreator {
   name                String
   handle              String                          @unique
   initials            String
+  avatarUrl           String?
   verified            Boolean                         @default(false)
   bio                 String
   followers           Int                             @default(0)
@@ -541,6 +542,8 @@ model MarketplaceProduct {
   trending                 Boolean                                @default(false)
   verified                 Boolean                                @default(false)
   tags                     String[]
+  // Optional creator icon; GitHub image CDNs only (DB CHECK "MarketplaceProduct_iconUrl_host").
+  iconUrl                  String?
   packageFileCount         Int?
   packageSizeBytes         Int?
   benefits                 String[]
@@ -934,6 +937,8 @@ model MarketplaceReleaseManifest {
   verifiedConnectionId     String?
   installationMethod       MarketplaceInstallationMethod
   installationInstructions String[]
+  // Per-OS commands: [{ os: any|macos|linux|windows, label?, command }]. Validated by the manifest schema.
+  installationCommands     Json                                    @default("[]")
   runtimeRequirements      String[]
   accountRequirements      String[]
   operatingSystems         String[]

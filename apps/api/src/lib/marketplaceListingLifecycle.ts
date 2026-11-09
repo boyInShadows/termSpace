@@ -129,6 +129,7 @@ export function marketplaceProductProjectionFromManifest(manifest: MarketplaceMa
     description: manifest.listing.description.en ?? manifest.listing.description.fa!,
     categoryId,
     tags: manifest.listing.tags,
+    iconUrl: manifest.listing.icon ?? null,
     platforms: platformKeys,
     compatibility: {
       deleteMany: {},

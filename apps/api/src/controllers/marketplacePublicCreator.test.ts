@@ -27,7 +27,7 @@ describe("public creator profiles", () => {
     expect(response.body.meta).toEqual({ page: 1, limit: 12, total: 1, totalPages: 1 });
     expect(db.creator).toHaveBeenCalledWith({
       where: { handle: "public-creator", products: { some: visible } },
-      select: { id: true, name: true, handle: true, initials: true, verified: true, bio: true, followers: true },
+      select: { id: true, name: true, handle: true, initials: true, avatarUrl: true, verified: true, bio: true, followers: true },
     });
     const query = db.products.mock.calls[0][0];
     expect(query.where).toEqual({ ...visible, creatorId: "creator-1" });

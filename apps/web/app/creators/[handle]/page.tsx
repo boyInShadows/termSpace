@@ -56,7 +56,7 @@ export default async function CreatorPage({ params, searchParams }: Props) {
       <Link href={localePath("/explore", locale)} className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">{text.back}</Link>
       <header className="mt-6 border-b border-border-strong pb-8">
         <div className="flex min-w-0 items-start gap-4">
-          <Avatar initials={creator.initials} className="size-14 text-lg" />
+          <Avatar initials={creator.initials} src={creator.avatarUrl} className="size-14 text-lg" />
           <div className="min-w-0">
             <h1 className="break-words text-3xl font-semibold sm:text-4xl"><bdi>{creator.name}</bdi></h1>
             <p className="mt-2 break-all text-sm text-muted-foreground"><bdi dir="ltr">@{creator.handle}</bdi></p>

@@ -78,6 +78,22 @@ describe("marketplace listing lifecycle", () => {
     }));
   });
 
+  it("projects the icon, and clears it when a republished manifest drops it", () => {
+    const base = {
+      type: "skill",
+      listing: { slug: "icon-item", name: { en: "Icon Item" }, outcome: { en: "Shows an icon" }, description: { en: "Has an icon" }, tags: [] },
+      release: {
+        version: "1.0.0", compatibility: [], installation: { instructions: [] },
+        requirements: { runtimes: [], accounts: [], operatingSystems: [], dependencies: [], environmentVariables: [] },
+        permissions: [], license: { identifier: "MIT" },
+      },
+    };
+    const icon = "https://avatars.githubusercontent.com/u/9919?v=4";
+    const withIcon = { ...base, listing: { ...base.listing, icon } } as unknown as MarketplaceManifestV1;
+    expect(marketplaceProductProjectionFromManifest(withIcon, "category-1").iconUrl).toBe(icon);
+    expect(marketplaceProductProjectionFromManifest(base as unknown as MarketplaceManifestV1, "category-1").iconUrl).toBeNull();
+  });
+
   it("uses a Persian-only description in the public projection", () => {
     const manifest = {
       type: "skill",

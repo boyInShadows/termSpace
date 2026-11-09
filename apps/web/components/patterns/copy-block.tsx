@@ -20,8 +20,10 @@ export async function copyToClipboard(value: string): Promise<boolean> {
  * denied or missing (insecure origin, embedded browsers), so a failure selects
  * the text and says so rather than silently doing nothing.
  */
-export function CopyBlock({ label, text, copyLabel, copiedLabel, failedLabel }: {
+export function CopyBlock({ label, text, copyLabel, copiedLabel, failedLabel, wrap = false }: {
   label: string; text: string; copyLabel: string; copiedLabel: string; failedLabel: string;
+  /** Wrap long commands instead of scrolling sideways, so the whole command is readable before it is copied. */
+  wrap?: boolean;
 }) {
   const code = useRef<HTMLElement>(null);
   const [status, setStatus] = useState<Status>("idle");
@@ -46,7 +48,7 @@ export function CopyBlock({ label, text, copyLabel, copiedLabel, failedLabel }: 
     <div>
       <p className="eyebrow">{label}</p>
       <div className="mt-2 flex items-start gap-3 rounded-lg border bg-surface p-3">
-        <pre dir="ltr" className="min-w-0 flex-1 overflow-x-auto text-start font-mono text-xs leading-6 text-foreground"><code ref={code}>{text}</code></pre>
+        <pre dir="ltr" className={`min-w-0 flex-1 text-start font-mono text-xs leading-6 text-foreground ${wrap ? "whitespace-pre-wrap break-all" : "overflow-x-auto"}`}><code ref={code}>{text}</code></pre>
         <Button type="button" size="sm" variant="secondary" className="min-h-11 sm:min-h-9" onClick={() => void copy()}>
           {status === "copied" ? <Check size={15} /> : <Copy size={15} />}
           {status === "copied" ? copiedLabel : copyLabel}

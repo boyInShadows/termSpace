@@ -166,7 +166,7 @@ export function Header() {
           )}
         >
           <div className="justify-self-start">
-            <Logo />
+            <Logo concept="mark" />
           </div>
 
           <nav

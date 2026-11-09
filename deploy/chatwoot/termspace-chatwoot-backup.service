@@ -1,0 +1,13 @@
+[Unit]
+Description=Back up TermSpace Chatwoot database, storage and recovery configuration
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/bin/bash /opt/termspace/deploy/chatwoot/backup.sh
+TimeoutStartSec=600
+Nice=10
+IOSchedulingClass=idle

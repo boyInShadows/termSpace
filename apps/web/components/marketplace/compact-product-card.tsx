@@ -12,6 +12,7 @@ import { useLocale } from "@/lib/locale-context";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CreatorIdentity, ProductTypeBadge, TrustStrip } from "./product-parts";
+import { ProductIcon } from "./product-icon";
 
 /**
  * The listing card at hero scale: promise, trust line, creator, rating.
@@ -49,18 +50,21 @@ export function CompactProductCard({ product }: { product: Product }) {
         </Button>
       </div>
 
-      <h3
-        className="ts-listing-title ts-bidi editorial -mt-1 text-lg font-semibold leading-snug"
-        style={{ viewTransitionName: listingTransitionName(product.id) }}
-      >
-        <ListingLink
-          href={href}
-          listingId={product.id}
-          className="-my-1 inline-block rounded-sm py-1 group-hover:text-primary focus-visible:outline-none focus-visible:underline"
+      <div className="-mt-1 flex items-center gap-2.5">
+        <ProductIcon name={product.name} iconUrl={product.iconUrl} size="sm" />
+        <h3
+          className="ts-listing-title ts-bidi editorial min-w-0 flex-1 text-lg font-semibold leading-snug"
+          style={{ viewTransitionName: listingTransitionName(product.id) }}
         >
-          {product.name}
-        </ListingLink>
-      </h3>
+          <ListingLink
+            href={href}
+            listingId={product.id}
+            className="-my-1 inline-block rounded-sm py-1 group-hover:text-primary focus-visible:outline-none focus-visible:underline"
+          >
+            {product.name}
+          </ListingLink>
+        </h3>
+      </div>
 
       <p className="ts-bidi mt-1 line-clamp-2 fit-short:line-clamp-1 text-sm leading-5 text-muted-foreground">
         {product.outcome}
@@ -68,7 +72,6 @@ export function CompactProductCard({ product }: { product: Product }) {
 
       <TrustStrip
         verified={product.verified}
-        permissions={product.permissions}
         license={product.license}
         labels={card}
         compact
