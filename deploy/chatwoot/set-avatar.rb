@@ -10,8 +10,8 @@ require 'open-uri'
 url = ENV.fetch('TERMBUDDY_AVATAR_URL')
 abort "refusing #{url[0, 60]}: only https://raw.githubusercontent.com is accepted" unless url.start_with?('https://raw.githubusercontent.com/')
 
-png = URI.parse(url).open(read_timeout: 15, open_timeout: 10, redirect: false, &:read)
-abort 'downloaded file is not a PNG' unless png.byteslice(0, 8) == "\x89PNG\r\n\x1a\n".b
+png = URI.parse(url).open(read_timeout: 15, open_timeout: 10, redirect: false, &:read).b # binary: open-uri may tag it UTF-8
+abort 'downloaded file is not a PNG' unless png.start_with?("\x89PNG\r\n\x1a\n".b)
 
 targets = [AgentBot.find_by!(name: 'Termbuddy')] + Inbox.where(name: ['TermSpace Website (EN)', 'TermSpace Website (FA)']).to_a
 abort 'expected the bot and two inboxes' unless targets.size == 3
