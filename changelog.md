@@ -2,6 +2,29 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Ticketing prioritized for tonight's localhost review
+
+- **Owner decision / shared surface.** Ticketing is now the first priority;
+  tonight's target is localhost review, explicitly selected instead of production.
+  This changelog and the existing support contract record acceptance evidence and
+  the review procedure. No application code or environment file changed.
+- **Real browser acceptance.** Separate Chrome member/staff sessions against the
+  running Next proxy, Express API and ordinary fully migrated database passed EN
+  desktop/light and FA phone/dark flows: create/upload and decoded WebP download,
+  staff shared inbox/reply, actual dashboard bell, resolve, member reopen, export,
+  account deletion and immediate private-file removal. A third member receives404
+  for another member's ticket/image and403 for the staff inbox. No browser
+  exceptions or backend500s. All temporary accounts/sessions/tickets/images removed.
+  Evidence: `docs/artifacts/support-2026-11-06/tonight-local-acceptance.log` and
+  `tonight-{member,staff,bell}-{en,fa}.png`.
+- **Remaining owner input.** The ordinary local DB currently has zero active
+  verified marketplace administrators. Requested the account email to grant local
+  staff access through the existing audited operator tool; no real account role
+  was changed without that identity. No extra support credential or env variable
+  is needed. Source tests/build were not repeated for documentation-only changes.
+  A release-readiness API Docker build retry still receives DockerHub403; container
+  verification and production remain outside the selected localhost deliverable.
+
 ## 2026-11-09 — Repair localhost dashboard database mismatch
 
 - **Scope / shared surface.** Owner reported creator-profile500 on dashboard

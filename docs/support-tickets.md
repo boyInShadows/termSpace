@@ -15,6 +15,37 @@ for staff. Either participant may resolve a
 ticket; a member reply reopens it. `/support/admin` is the shared staff inbox.
 No assignment, public discussion, internal notes, live chat or email delivery in v1.
 
+## Localhost review
+
+Use `http://localhost:3000/support` as the member and
+`http://localhost:3000/support/admin` as staff. Persian uses the `/fa` prefix.
+Keep the two accounts in separate browser profiles or an incognito window so
+their sessions do not replace each other. Staff must have the existing verified
+marketplace administrator role; a creator, moderator or editorial admin is not
+automatically support staff. Account setup uses the existing operator role tool,
+not a new support password or environment variable.
+
+1. As a member, open New ticket, choose a category, enter a subject/message and
+   optionally add screenshots. The saved thread starts Waiting for support.
+2. As staff, open the shared inbox and reply to that ticket. The member sees
+   Waiting for you; staff see Waiting for member. Staff replies generate a generic
+   support alert in the member's dashboard bell, linked to the private thread.
+3. Either account can mark the ticket resolved. A new member reply reopens it;
+   staff cannot reopen a resolved conversation by replying.
+4. Check that a different member cannot open the ticket or its screenshots.
+   Account settings export includes support messages and image references.
+   Use a disposable member account for the account-deletion check.
+
+Open/reopen the dashboard bell to refresh its alerts, and reload the thread to
+see replies made in another browser. This version has no live message stream or
+support email delivery. Screenshots remain private authenticated downloads.
+
+The November9 localhost review used the real API/database, with temporary member,
+staff and unrelated-member accounts, then removed those fixtures and images.
+Creation/upload, staff inbox/reply, bell, resolve/reopen, private access and
+export/deletion passed in EN desktop/light and FA phone/dark. This verifies the
+software flow; the owner still needs to choose a local staff account for review.
+
 Screenshots accept PNG/JPEG/WebP: three per message, 5 MiB each, 10 MiB combined.
 The API decodes and re-encodes images, stores them outside public media and checks
 ticket access on every download. Notifications have individual read state and
