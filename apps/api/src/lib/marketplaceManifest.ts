@@ -105,6 +105,12 @@ const listingSchema = z.object({
   issueTrackerUrl: httpsUrl.optional(),
 }).strict();
 
+const installCommand = z.object({
+  os: z.enum(["any", "macos", "linux", "windows"]),
+  label: boundedText(1, 40).optional(),
+  command: boundedText(1, 600).refine((value) => !/[\r\n]/.test(value), "One command per entry, without line breaks"),
+}).strict();
+
 const sourceSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("github_repository"), repositoryUrl: httpsUrl.refine((value) => new URL(value).hostname === "github.com", "Repository must be hosted on github.com"), commitSha: z.string().regex(/^[a-f0-9]{40}$/), path: repositoryPath.optional() }).strict(),
   z.object({ kind: z.literal("github_release"), repositoryUrl: httpsUrl.refine((value) => new URL(value).hostname === "github.com", "Repository must be hosted on github.com"), tag: boundedText(1, 100), releaseCommitSha: z.string().regex(/^[a-f0-9]{40}$/), assetName: boundedText(1, 255).refine((value) => !value.includes("/") && !value.includes("\\"), "Asset name must not contain path separators"), assetDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/).optional() }).strict(),
@@ -117,7 +123,12 @@ const releaseSchema = z.object({
   source: sourceSchema,
   releaseNotes: boundedText(3, 10_000),
   compatibility: z.array(z.object({ platform: platformKey, models: stringList(30, 100).default([]), notes: boundedText(1, 500).optional() }).strict()).min(1).max(30),
-  installation: z.object({ method: z.enum(["manual", "npm", "git", "download", "container", "hosted"]), instructions: stringList(30, 1_000).min(1) }).strict(),
+  installation: z.object({
+    method: z.enum(["manual", "npm", "git", "download", "container", "hosted"]),
+    instructions: stringList(30, 1_000).min(1),
+    // Optional copy-ready commands per operating system. Shown only to readers who added the release.
+    commands: z.array(installCommand).max(12).optional(),
+  }).strict(),
   requirements: z.object({
     runtimes: stringList(30).default([]), accounts: stringList(30).default([]), operatingSystems: stringList(20).default([]),
     dependencies: stringList(100).default([]), environmentVariables: z.array(environmentVariable).max(50).default([]),

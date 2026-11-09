@@ -433,6 +433,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
         <SourceFields key={sourceKind} kind={sourceKind} source={source} copy={copy} />
         <div className="mt-5"><ChoiceRows name="compatibility" label={copy.compatibility} help="compatibility" hint={copy.platformsHint} required messages={copy} onChange={markDirty} choices={platformChoices} initialRows={compatibility.map((item) => [item.platform, item.models.join(", "), item.notes ?? ""])} extras={[{ cell: 1, label: copy.models, optional: true }, { cell: 2, label: copy.notes, optional: true }]} /></div>
         <div className="mt-5"><Field label={copy.installationInstructions} help="installation" hint={copy.lineHint}><Textarea name="installationInstructions" required defaultValue={listValue(installation.instructions)} /></Field></div>
+        <div className="mt-5"><Field label={copy.installCommands} help="installation" hint={copy.installCommandsHint}><Textarea name="installCommands" spellCheck={false} dir="ltr" className="font-mono" defaultValue={formatCommands(installation.commands)} /></Field></div>
         <div className="mt-5"><Field label={copy.licenseField} help="license" hint={copy.licenseHint}><Input name="license" required defaultValue={customLicense ? stringValue(license.customUrl) : stringValue(license.identifier)} dir="ltr" onInput={(event) => setCustomLicense(event.currentTarget.value.trim().startsWith("https://"))} /></Field></div>
         <div className="mt-5"><FormDisclosure summary={copy.moreRelease} defaultOpen={Boolean(productId)}>
           <div className="grid gap-5 sm:grid-cols-2">
@@ -556,6 +557,15 @@ const selectClass = "min-h-11 w-full rounded-control border border-input bg-surf
 const stringValue = (value: unknown) => typeof value === "string" ? value : "";
 const text = (data: FormData, key: string) => String(data.get(key) ?? "").trim();
 const optionalText = (data: FormData, key: string) => text(data, key) || undefined;
+/** `os/label: command` per line (label optional); a bare line is a command for any system. Commands keep their commas. */
+const commandLine = /^([a-z]+)(?:\/([^:]{1,40}))?:\s+(.+)$/iu;
+const parseCommands = (value: string) => value.split(/\r?\n/u).map((line) => line.trim()).filter(Boolean).map((line) => {
+  const match = commandLine.exec(line);
+  return match ? { os: match[1].toLowerCase(), ...(match[2]?.trim() ? { label: match[2].trim() } : {}), command: match[3].trim() } : { os: "any", command: line };
+});
+const formatCommands = (value: unknown) => Array.isArray(value)
+  ? (value as Array<{ os?: string; label?: string; command?: string }>).map((item) => `${item.os ?? "any"}${item.label ? `/${item.label}` : ""}: ${item.command ?? ""}`).join("\n")
+  : "";
 const lines = (value: string) => value.split(/\r?\n|,/u).map((item) => item.trim()).filter(Boolean);
 const rows = (value: string): string[][] => value ? JSON.parse(value) as string[][] : [];
 const bool = (value: string | undefined) => value === "true";
@@ -593,7 +603,7 @@ export function buildManifest(data: FormData, type: MarketplaceItemTypeKey, sour
     release: {
       version: text(data, "releaseVersion"), source, releaseNotes: text(data, "releaseNotes"),
       compatibility: rows(text(data, "compatibility")).map(([platform, models, notes]) => ({ platform, models: lines(models), ...(notes ? { notes } : {}) })),
-      installation: { method: text(data, "installationMethod"), instructions: lines(text(data, "installationInstructions")) },
+      installation: { method: text(data, "installationMethod"), instructions: lines(text(data, "installationInstructions")), ...(text(data, "installCommands") ? { commands: parseCommands(text(data, "installCommands")) } : {}) },
       requirements: {
         runtimes: lines(text(data, "runtimes")), accounts: lines(text(data, "accounts")), operatingSystems: lines(text(data, "operatingSystems")), dependencies: lines(text(data, "dependencies")),
         environmentVariables: rows(text(data, "environmentVariables")).map(([name, purpose, required, sensitive]) => ({ name, purpose, required: bool(required), sensitive: bool(sensitive) })),

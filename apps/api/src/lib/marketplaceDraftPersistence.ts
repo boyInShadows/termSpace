@@ -76,6 +76,7 @@ export async function createDraftReleaseManifest(
       ...source,
       installationMethod: upper(manifest.release.installation.method),
       installationInstructions: manifest.release.installation.instructions,
+      installationCommands: manifest.release.installation.commands ?? [],
       runtimeRequirements: manifest.release.requirements.runtimes,
       accountRequirements: manifest.release.requirements.accounts,
       operatingSystems: manifest.release.requirements.operatingSystems,

@@ -2,6 +2,31 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Per-OS install commands in the installation dialog
+
+- **Scope / shared surfaces (announce in commit body).** New migration
+  `202611090003_marketplace_install_commands`, `apps/api/prisma/schema.prisma`,
+  `lib/types.ts`, `changelog.md`, `pending.md`. Manifest v1 gains an optional
+  `release.installation.commands` (not a version bump: optional, strict, absent
+  means none). Web: install dialog, creator editor field, moderation preview.
+- **Dialog.** Each command is a read-only mono field with a Copy button
+  (`CopyBlock`, now with a `wrap` option), grouped by macOS/Linux/Windows/Any with
+  the reader's own system pre-selected. The dialog also moved off hardcoded amber
+  and the inverted foreground block onto the design tokens (`rounded-card`,
+  `warning` role, a plain copy field for the source link) and shows readable
+  source-status labels instead of the raw enum.
+- **Seed.** 37 commands on 24 listings, each checked as an exact substring of the
+  project's own README before use; unverifiable ones were dropped (Figma, GitHub MCP,
+  `claude-plugins-official` placeholder). Applying them needs the API deployed
+  first (production's manifest schema is still strict).
+- **Verification.** Migration applied to a scratch database through the full chain,
+  no Prisma drift, trigger covers the new column. API 309 passed; web 515 passed
+  with the Node 26 localstorage flag, 1 known environmental failure; typecheck,
+  lint and build clean; e2e 515 passed. Remaining e2e failures are the pre-existing
+  budget and reporting ones, a shared-navigation timeout and a creator-profiles
+  canonical-link race that both pass alone. Visually checked at desktop and 375px,
+  dark theme only. Not deployed. Usage metrics unavailable.
+
 ## 2026-11-09 — Remove the permissions row from listing cards
 
 - **Scope.** `apps/web` presentation only (`TrustStrip`, both cards, card copy, two

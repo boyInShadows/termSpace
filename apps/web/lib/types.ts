@@ -155,6 +155,9 @@ export interface ProductDetail extends Product {
   versions: ProductVersion[]; reviews: Review[]; related: Product[];
   release: ProductRelease | null;
 }
+/** One copy-ready command for an operating system, as declared in the release manifest. */
+export type InstallCommand = { os: "any" | "macos" | "linux" | "windows"; label?: string; command: string };
+
 export interface MarketplaceInstallation {
   acquisition: { id: string; status: string; acquiredAt: string };
   product: { slug: string; name: string };
@@ -164,7 +167,7 @@ export interface MarketplaceInstallation {
       kind: string; url: string; ref: string; path: string | null; originalAuthor?: string | null; integrityDigest: string | null;
       artifactSizeBytes: number | null; status: "verified" | "stale" | "link_only"; checkedAt: string | null;
     };
-    installation: { method: string; url: string; instructions: string[] };
+    installation: { method: string; url: string; instructions: string[]; commands?: InstallCommand[] };
     requirements: { runtimes: string[]; accounts: string[]; operatingSystems: string[]; dependencies: string[] };
     license: string | null; documentationUrl: string | null; supportUrl: string | null;
   };

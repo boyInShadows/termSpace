@@ -936,6 +936,8 @@ model MarketplaceReleaseManifest {
   verifiedConnectionId     String?
   installationMethod       MarketplaceInstallationMethod
   installationInstructions String[]
+  // Per-OS commands: [{ os: any|macos|linux|windows, label?, command }]. Validated by the manifest schema.
+  installationCommands     Json                                    @default("[]")
   runtimeRequirements      String[]
   accountRequirements      String[]
   operatingSystems         String[]

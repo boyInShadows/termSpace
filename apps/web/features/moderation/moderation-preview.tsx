@@ -380,6 +380,13 @@ function InstallAndRequirements({ release, m }: { release: Record<string, unknow
       <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2"><Fact label={m.installMethod}>{(m.installMethods as Labels)[stringValue(installation.method)] ?? stringValue(installation.method)}</Fact></dl>
       <h3 className="mt-3 text-sm font-semibold">{m.installSteps}</h3>
       <ol dir="auto" className="mt-1 list-decimal space-y-1 ps-5 text-sm">{strings(installation.instructions).map((step, index) => <li key={index} className="break-words">{step}</li>)}</ol>
+      {Array.isArray(installation.commands) && installation.commands.filter(isRecord).length > 0 && <>
+        <h3 className="mt-3 text-sm font-semibold">{m.installCommands}</h3>
+        <ul className="mt-1 space-y-1.5">{installation.commands.filter(isRecord).map((entry, index) => <li key={index} className="flex min-w-0 items-start gap-2 text-sm">
+          <span className="shrink-0 rounded-chip border border-border px-1.5 text-xs font-semibold text-muted-foreground">{stringValue(entry.os)}{stringValue(entry.label) ? ` · ${stringValue(entry.label)}` : ""}</span>
+          <code dir="ltr" className="min-w-0 break-all rounded-control bg-muted px-2 py-0.5 font-mono text-xs">{stringValue(entry.command)}</code>
+        </li>)}</ul>
+      </>}
     </div>}
     <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
       {lists.filter(([, items]) => items.length > 0).map(([name, items]) => <Fact key={name} label={name}>{items.join(", ")}</Fact>)}

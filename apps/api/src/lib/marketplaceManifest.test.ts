@@ -77,6 +77,20 @@ describe("marketplace manifest v1", () => {
     expect(marketplaceManifestV1Schema.safeParse(manifest("skill")).success).toBe(true);
   });
 
+  it("accepts optional per-OS install commands, one line each, from a controlled OS list", () => {
+    const withCommands = (commands: unknown[]) => {
+      const input = manifest("skill");
+      (input.release.installation as { commands?: unknown[] }).commands = commands;
+      return marketplaceManifestV1Schema.safeParse(input);
+    };
+    expect(withCommands([{ os: "macos", label: "npm", command: "npm install -g example" }, { os: "any", command: "npx example@latest" }]).success).toBe(true);
+    expect(withCommands([]).success).toBe(true);
+    expect(withCommands([{ os: "beos", command: "x" }]).success).toBe(false);
+    expect(withCommands([{ os: "linux", command: "one\ntwo" }]).success).toBe(false);
+    expect(withCommands([{ os: "linux", command: "x", extra: true }]).success).toBe(false);
+    expect(withCommands(Array.from({ length: 13 }, () => ({ os: "any", command: "x" }))).success).toBe(false);
+  });
+
   it("accepts only controlled platform compatibility keys", () => {
     const input = manifest("skill");
     input.release.compatibility = [{ platform: "Codex", models: [] }];

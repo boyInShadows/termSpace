@@ -545,6 +545,7 @@ export async function getMarketplaceInstallation(req: Request, res: Response) {
         sourceCheckedAt: true,
         installationMethod: true,
         installationInstructions: true,
+        installationCommands: true,
         runtimeRequirements: true,
         accountRequirements: true,
         operatingSystems: true,
@@ -583,6 +584,7 @@ export async function getMarketplaceInstallation(req: Request, res: Response) {
         method: release.installationMethod.toLowerCase(),
         url: release.resolvedInstallationUrl,
         instructions: release.installationInstructions,
+        commands: release.installationCommands,
       },
       requirements: {
         runtimes: release.runtimeRequirements,

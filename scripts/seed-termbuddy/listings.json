@@ -251,6 +251,18 @@
             "Add an MCP server to your client that runs: npx @playwright/mcp@latest",
             "For Claude Code the upstream one-liner is: claude mcp add playwright npx @playwright/mcp@latest",
             "Other clients: use the standard config from the upstream README (command npx, args @playwright/mcp@latest)."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npx",
+              "command": "npx @playwright/mcp@latest"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "claude mcp add playwright npx @playwright/mcp@latest"
+            }
           ]
         },
         "requirements": {
@@ -388,6 +400,13 @@
             "Run the upstream setup helper: npx ctx7 setup",
             "Or add the remote MCP server manually: URL https://mcp.context7.com/mcp, with your API key in an Authorization: Bearer header.",
             "In prompts, add \"use context7\" when you want current library docs."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Setup helper",
+              "command": "npx ctx7 setup"
+            }
           ]
         },
         "requirements": {
@@ -513,6 +532,23 @@
             "Add an MCP server to your client that runs: npx -y chrome-devtools-mcp@latest",
             "To opt out of usage statistics add the --no-usage-statistics argument.",
             "Server parameters such as --headless and --isolated are described in the upstream Configuration Guide."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npm",
+              "command": "npm i chrome-devtools-mcp@latest -g"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin marketplace add ChromeDevTools/chrome-devtools-mcp"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin install chrome-devtools-mcp@chrome-devtools-plugins"
+            }
           ]
         },
         "requirements": {
@@ -771,6 +807,13 @@
             "Add an MCP server to your client that runs: npx -y firecrawl-mcp",
             "Set FIRECRAWL_API_KEY in the server's environment (get a key from firecrawl.dev).",
             "For a self-hosted Firecrawl instance, also set FIRECRAWL_API_URL."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npx",
+              "command": "env FIRECRAWL_API_KEY=fc-YOUR_API_KEY npx -y firecrawl-mcp"
+            }
           ]
         },
         "requirements": {
@@ -923,6 +966,13 @@
             "Add an MCP server to your client that runs: npx -y tavily-mcp@latest",
             "Set TAVILY_API_KEY in the server's environment (get a key from tavily.com).",
             "Or connect to the remote server at https://mcp.tavily.com/mcp using an Authorization: Bearer header with your key."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npx",
+              "command": "npx -y tavily-mcp@latest"
+            }
           ]
         },
         "requirements": {
@@ -1352,6 +1402,13 @@
             "Claude Code: run /plugin install superpowers@claude-plugins-official (a separate superpowers-marketplace is also documented upstream).",
             "Codex, Cursor and Gemini CLI each have their own install section in the upstream README; install it separately for each harness you use.",
             "Start a session and describe what you want to build; the skills trigger automatically."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin install superpowers@claude-plugins-official"
+            }
           ]
         },
         "requirements": {
@@ -1474,6 +1531,18 @@
             "Claude Code: run /plugin marketplace add anthropics/skills, then /plugin install document-skills@anthropic-agent-skills or example-skills@anthropic-agent-skills.",
             "Claude.ai and the API: see the upstream README section Try in Claude Code, Claude.ai, and the API.",
             "Check the LICENSE.txt inside each skill folder before reusing it."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin marketplace add anthropics/skills"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin install document-skills@anthropic-agent-skills"
+            }
           ]
         },
         "requirements": {
@@ -1596,6 +1665,18 @@
             "Claude Code: run /plugin marketplace add wshobson/agents, then /plugin install <plugin>@claude-code-workflows (for example python-development).",
             "Codex: run codex plugin marketplace add wshobson/agents.",
             "Other harnesses use make install-opencode, install-antigravity, install-copilot or install-pi; see the upstream README."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin marketplace add wshobson/agents"
+            },
+            {
+              "os": "any",
+              "label": "Codex",
+              "command": "codex plugin marketplace add wshobson/agents"
+            }
           ]
         },
         "requirements": {
@@ -1728,6 +1809,13 @@
             "Install the control center: npm install -g @openhands/agent-canvas, then follow the upstream Quickstart.",
             "Or run it in Docker as shown in the upstream README.",
             "Read the self-hosting docs before exposing it beyond your machine."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npm",
+              "command": "npm install -g @openhands/agent-canvas"
+            }
           ]
         },
         "requirements": {
@@ -1865,6 +1953,33 @@
             "Shell installer: curl -fsSL https://opencode.ai/v2/install | bash",
             "Or: npm i -g @opencode/cli@latest, or brew install anomalyco/tap/opencode-v2 (macOS and Linux).",
             "Upstream says to remove versions older than 0.1.x before installing."
+          ],
+          "commands": [
+            {
+              "os": "macos",
+              "label": "Shell installer",
+              "command": "curl -fsSL https://opencode.ai/v2/install | bash"
+            },
+            {
+              "os": "linux",
+              "label": "Shell installer",
+              "command": "curl -fsSL https://opencode.ai/v2/install | bash"
+            },
+            {
+              "os": "macos",
+              "label": "Homebrew",
+              "command": "brew install anomalyco/tap/opencode-v2"
+            },
+            {
+              "os": "linux",
+              "label": "Homebrew",
+              "command": "brew install anomalyco/tap/opencode-v2"
+            },
+            {
+              "os": "any",
+              "label": "npm",
+              "command": "npm i -g @opencode/cli@latest"
+            }
           ]
         },
         "requirements": {
@@ -2005,6 +2120,13 @@
             "Install the CLI (needs Python 3.11+ and uv): uv tool install specify-cli",
             "Initialise a project: specify init my-project --integration copilot (choose the integration for your coding agent).",
             "In your agent run the slash commands: constitution, specify, plan, tasks, implement, converge."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "uv",
+              "command": "uv tool install specify-cli"
+            }
           ]
         },
         "requirements": {
@@ -2356,6 +2478,23 @@
             "Install: brew install fabric-ai, or go install github.com/danielmiessler/fabric/cmd/fabric@latest, or the upstream shell installer.",
             "Run fabric --setup to choose a provider and add any API key.",
             "Pipe text into a pattern, for example: cat notes.md | fabric --pattern <pattern-name>."
+          ],
+          "commands": [
+            {
+              "os": "macos",
+              "label": "Homebrew",
+              "command": "brew install fabric-ai"
+            },
+            {
+              "os": "any",
+              "label": "Go",
+              "command": "go install github.com/danielmiessler/fabric/cmd/fabric@latest"
+            },
+            {
+              "os": "any",
+              "label": "Setup",
+              "command": "fabric --setup"
+            }
           ]
         },
         "requirements": {
@@ -2462,6 +2601,13 @@
             "In Claude Code run /plugin marketplace add karanb192/claude-code-hooks",
             "Then install the hooks you want: /plugin install <name>@claude-code-hooks",
             "Read each plugin's script and README first; hooks execute on your machine."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin marketplace add karanb192/claude-code-hooks"
+            }
           ]
         },
         "requirements": {
@@ -2583,6 +2729,13 @@
             "Run npx claude-code-templates@latest and follow the prompts.",
             "Install one component directly, for example: npx claude-code-templates@latest --skill creative-design/frontend-design",
             "Add --yes to skip the confirmation prompt, and review installed components."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npx",
+              "command": "npx claude-code-templates@latest"
+            }
           ]
         },
         "requirements": {
@@ -2820,6 +2973,13 @@
             "Quick setup: run npx neon@latest init; it authenticates via OAuth and configures your editor.",
             "Or connect to the remote server at https://mcp.neon.tech/mcp using OAuth, or an API key in an Authorization header.",
             "If IP Allow is enabled on your Neon project, add the mcp.neon.tech static IPs listed upstream."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npx",
+              "command": "npx neon@latest init"
+            }
           ]
         },
         "requirements": {
@@ -2949,6 +3109,13 @@
             "Add an MCP server to your client that runs: uvx mcp-grafana",
             "Set GRAFANA_URL (for example http://localhost:3000, or your Grafana Cloud URL) and GRAFANA_SERVICE_ACCOUNT_TOKEN.",
             "Docker, binary and Helm installs are described in the upstream Usage section."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "uvx",
+              "command": "uvx mcp-grafana"
+            }
           ]
         },
         "requirements": {
@@ -3097,6 +3264,18 @@
             "Claude Code: claude mcp add kubernetes -- npx mcp-server-kubernetes",
             "Codex: codex mcp add kubernetes -- npx mcp-server-kubernetes",
             "Check the connection first by running kubectl get pods in a terminal."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "claude mcp add kubernetes -- npx mcp-server-kubernetes"
+            },
+            {
+              "os": "any",
+              "label": "Codex",
+              "command": "codex mcp add kubernetes -- npx mcp-server-kubernetes"
+            }
           ]
         },
         "requirements": {
@@ -3236,6 +3415,13 @@
             "Run the published image: docker run -i --rm hashicorp/terraform-mcp-server",
             "For HCP Terraform or Terraform Enterprise, pass TFE_TOKEN (and TFE_ADDRESS if not using app.terraform.io) to the container.",
             "A streamable-http mode and an organization allowlist are described upstream for hosted deployments."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Docker",
+              "command": "docker run -i --rm hashicorp/terraform-mcp-server"
+            }
           ]
         },
         "requirements": {
@@ -3507,6 +3693,13 @@
             "Create a free Alpaca paper trading account and generate API keys in the dashboard.",
             "Add an MCP server to your client that runs: uvx alpaca-mcp-server (see the upstream README for the exact serve arguments).",
             "Set ALPACA_API_KEY and ALPACA_SECRET_KEY, and use ALPACA_TOOLSETS to restrict tools."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "uvx",
+              "command": "uvx alpaca-mcp-server"
+            }
           ]
         },
         "requirements": {
@@ -3667,6 +3860,18 @@
             "Claude Code: claude mcp add --transport http atlassian https://mcp.atlassian.com/v2/mcp, then run /mcp in a session to authenticate.",
             "Codex: codex mcp add atlassian --url https://mcp.atlassian.com/v2/mcp",
             "VS Code / GitHub Copilot: search @mcp Atlassian in the Extensions view; other clients use the server URL directly."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "claude mcp add --transport http atlassian https://mcp.atlassian.com/v2/mcp"
+            },
+            {
+              "os": "any",
+              "label": "Codex",
+              "command": "codex mcp add atlassian --url https://mcp.atlassian.com/v2/mcp"
+            }
           ]
         },
         "requirements": {
@@ -3788,6 +3993,13 @@
             "Create an OAuth client in a Google Cloud project and enable the Google APIs for the services you plan to use (upstream gives a gcloud command).",
             "Export GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET, then run: uvx workspace-mcp --tool-tier core",
             "Use --tool-tier extended or the read-only option only when you need more."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "uvx",
+              "command": "uvx workspace-mcp --tool-tier core"
+            }
           ]
         },
         "requirements": {
@@ -3940,6 +4152,13 @@
             "Hosted: add a remote MCP server with URL https://ai.todoist.net/mcp and complete OAuth in your client.",
             "Local: run npx @doist/todoist-mcp in your MCP client's server configuration.",
             "Gemini CLI: after adding the server run /mcp auth todoist and sign in."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npx",
+              "command": "npx @doist/todoist-mcp"
+            }
           ]
         },
         "requirements": {
@@ -4075,6 +4294,13 @@
             "Install uv with the official installer (not pip install uv).",
             "Run uvx mcp-for-blender setup to configure your MCP clients and install the Blender addon.",
             "Fully quit and reopen your AI app, open Blender, then ask it to build something. Consider setting BLENDER_MCP_SAFE_MODE=1."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Setup",
+              "command": "uvx mcp-for-blender setup"
+            }
           ]
         },
         "requirements": {
@@ -4367,6 +4593,13 @@
             "Set up Application Default Credentials with the analytics.readonly scope, using a Google Cloud OAuth client (see the upstream README).",
             "Add an MCP server to your client that runs: pipx run analytics-mcp",
             "Ask the agent about your GA4 properties."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "pipx",
+              "command": "pipx run analytics-mcp"
+            }
           ]
         },
         "requirements": {
