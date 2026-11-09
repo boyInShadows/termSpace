@@ -45,6 +45,16 @@ Project changes completed from `pending.md` should be recorded here with the dat
   `content-security-policy: frame-ancestors termspace.dev www.termspace.dev`.
   Seeded listings carry no icon yet; the 33 submitted ones still await review.
 
+- **Seed revision (2026-11-09).** `scripts/seed-termbuddy/revise.mts` withdrew, re-saved
+  and resubmitted 26 submitted listings with the new platforms and GitHub org
+  avatars as icons (individual maintainers keep the initials tile). Platform
+  claims come only from each project's own README or install guides (and the
+  agents.md site for `agents-md`): 34 compatibility entries across 15 listings,
+  plus matching community placement requests. 24 icon URLs checked as 200 images.
+  `github-mcp-server` is published and its listing is unchanged: the API refuses
+  `VERSION_ALREADY_PUBLISHED` metadata edits without a new version label and
+  upstream is still v2.1.0.
+
 ## 2026-11-06 — Grant owner-requested production marketplace administrator access
 
 - **Scope / shared surface.** Production role operation and `changelog.md` only;

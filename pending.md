@@ -92,3 +92,6 @@ they touch and need a written plan first.
   page (167.5 vs 165 kB) already fail at `HEAD`; trim or re-baseline.
 - `e2e/reporting.spec.ts` fails when the desktop and mobile projects run against one
   shared stateful mock API; isolate state per project.
+- `github-mcp-server` (published, v2.1.0) still lacks its icon and the Copilot, OpenCode,
+  Windsurf and Zed compatibility: add them with its next upstream release, since a
+  published version's metadata cannot change under the same label.

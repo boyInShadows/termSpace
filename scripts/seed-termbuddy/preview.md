@@ -11,9 +11,9 @@ Listed by TermBuddy as a third-party project. Maintained by GitHub; this listing
 
 - slug: `github-mcp-server` · version 2.1.0 · licence MIT
 - author: GitHub · source: https://github.com/github/github-mcp-server
-- platforms: claude-code, claude, codex, cursor, vscode, gemini-cli
+- platforms: claude-code, claude, codex, cursor, vscode, gemini-cli, github-copilot, opencode, windsurf, zed
 - permissions: network_access, external_account_access, secret_access
-- tags: mcp, github, pull-requests, issues, github-actions, code-review · communities: claude-code, codex, cursor, vscode, gemini-cli
+- tags: mcp, github, pull-requests, issues, github-actions, code-review · communities: claude-code, codex, cursor, vscode, gemini-cli, github-copilot, opencode, windsurf, zed
 - checked: https://github.com/github/github-mcp-server https://github.com/github/github-mcp-server/releases/tag/v2.1.0
 
 ---
@@ -29,9 +29,9 @@ Listed by TermBuddy as a third-party project. Maintained by Microsoft; this list
 
 - slug: `playwright-mcp` · version 0.0.84 · licence Apache-2.0
 - author: Microsoft · source: https://github.com/microsoft/playwright-mcp
-- platforms: claude-code, claude, cursor, vscode
+- platforms: claude-code, claude, cursor, vscode, amp, cline, github-copilot, opencode, windsurf
 - permissions: browser_automation, process_execution, network_access
-- tags: mcp, browser-automation, playwright, testing, web · communities: claude-code, cursor, vscode
+- tags: mcp, browser-automation, playwright, testing, web · communities: claude-code, cursor, vscode, amp, cline, github-copilot, opencode, windsurf
 - checked: https://github.com/microsoft/playwright-mcp https://www.npmjs.com/package/@playwright/mcp
 
 ---
@@ -47,9 +47,9 @@ Listed by TermBuddy as a third-party project. Maintained by Upstash; this listin
 
 - slug: `context7-mcp` · version 4.5.1 · licence MIT
 - author: Upstash · source: https://github.com/upstash/context7
-- platforms: claude-code, claude, cursor, chatgpt
+- platforms: claude-code, claude, cursor, chatgpt, opencode
 - permissions: network_access, secret_access
-- tags: mcp, documentation, libraries, context, docs · communities: claude-code, cursor, codex
+- tags: mcp, documentation, libraries, context, docs · communities: claude-code, cursor, codex, opencode
 - checked: https://github.com/upstash/context7 https://www.npmjs.com/package/@upstash/context7-mcp
 
 ---
@@ -65,9 +65,9 @@ Listed by TermBuddy as a third-party project. Maintained by Chrome DevTools team
 
 - slug: `chrome-devtools-mcp` · version 1.12.0 · licence Apache-2.0
 - author: Chrome DevTools team (Google) · source: https://github.com/ChromeDevTools/chrome-devtools-mcp
-- platforms: claude-code, claude, cursor, vscode
+- platforms: claude-code, claude, cursor, vscode, github-copilot
 - permissions: browser_automation, process_execution, network_access, telemetry
-- tags: mcp, chrome, devtools, debugging, performance · communities: claude-code, cursor, vscode
+- tags: mcp, chrome, devtools, debugging, performance · communities: claude-code, cursor, vscode, github-copilot
 - checked: https://github.com/ChromeDevTools/chrome-devtools-mcp https://www.npmjs.com/package/chrome-devtools-mcp
 
 ---
@@ -83,9 +83,9 @@ Listed by TermBuddy as a third-party project. Maintained by Supabase; this listi
 
 - slug: `supabase-mcp` · version 0.16.1 · licence Apache-2.0
 - author: Supabase · source: https://github.com/supabase-community/supabase-mcp
-- platforms: claude-code, claude, cursor, vscode
+- platforms: claude-code, claude, cursor, vscode, windsurf
 - permissions: network_access, external_account_access
-- tags: mcp, supabase, database, postgres, backend · communities: claude-code, cursor, vscode
+- tags: mcp, supabase, database, postgres, backend · communities: claude-code, cursor, vscode, windsurf
 - checked: https://github.com/supabase-community/supabase-mcp https://supabase.com/mcp
 
 ---
@@ -101,9 +101,9 @@ Listed by TermBuddy as a third-party project. Maintained by Firecrawl; this list
 
 - slug: `firecrawl-mcp-server` · version 3.38.0 · licence MIT
 - author: Firecrawl · source: https://github.com/firecrawl/firecrawl-mcp-server
-- platforms: claude-code, claude, cursor
+- platforms: claude-code, claude, cursor, windsurf
 - permissions: network_access, secret_access, external_account_access
-- tags: mcp, web-scraping, crawling, search, research · communities: claude-code, cursor
+- tags: mcp, web-scraping, crawling, search, research · communities: claude-code, cursor, windsurf
 - checked: https://github.com/firecrawl/firecrawl-mcp-server https://www.npmjs.com/package/firecrawl-mcp
 
 ---
@@ -173,9 +173,9 @@ Listed by TermBuddy as a third-party project. Maintained by obra (Prime Radiant)
 
 - slug: `superpowers` · version 7.0.2 · licence MIT
 - author: obra (Prime Radiant) · source: https://github.com/obra/superpowers
-- platforms: claude-code, codex, cursor, gemini-cli
+- platforms: claude-code, codex, cursor, gemini-cli, github-copilot, opencode
 - permissions: filesystem_read, filesystem_write, process_execution, code_modification
-- tags: skills, methodology, tdd, code-review, subagents, planning · communities: claude-code, codex, cursor, gemini-cli
+- tags: skills, methodology, tdd, code-review, subagents, planning · communities: claude-code, codex, cursor, gemini-cli, github-copilot, opencode
 - checked: https://github.com/obra/superpowers https://github.com/obra/superpowers/releases/tag/v7.0.2
 
 ---
@@ -209,9 +209,9 @@ Listed by TermBuddy as a third-party project. Maintained by Seth Hobson (wshobso
 
 - slug: `wshobson-agents` · version snapshot-2026-11-09 · licence MIT
 - author: Seth Hobson (wshobson) · source: https://github.com/wshobson/agents
-- platforms: claude-code, codex, cursor
+- platforms: claude-code, codex, cursor, github-copilot, opencode
 - permissions: filesystem_read, filesystem_write, process_execution, code_modification
-- tags: subagents, plugins, skills, claude-code, marketplace, agents · communities: claude-code, codex, cursor
+- tags: subagents, plugins, skills, claude-code, marketplace, agents · communities: claude-code, codex, cursor, github-copilot, opencode
 - checked: https://github.com/wshobson/agents
 
 ---
@@ -243,9 +243,9 @@ Listed by TermBuddy as a third-party project. Maintained by OpenCode (anomalyco)
 
 - slug: `opencode` · version 1.19.5 · licence MIT
 - author: OpenCode (anomalyco) · source: https://github.com/anomalyco/opencode
-- platforms: api
+- platforms: api, opencode
 - permissions: filesystem_read, filesystem_write, process_execution, network_access, code_modification
-- tags: agent, terminal, cli, open-source, coding-agent · communities: none
+- tags: agent, terminal, cli, open-source, coding-agent · communities: opencode
 - checked: https://github.com/anomalyco/opencode https://opencode.ai
 
 ---
@@ -261,9 +261,9 @@ Listed by TermBuddy as a third-party project. Maintained by GitHub; this listing
 
 - slug: `github-spec-kit` · version 1.3.2 · licence MIT
 - author: GitHub · source: https://github.com/github/spec-kit
-- platforms: claude-code, codex, gemini-cli, vscode
+- platforms: claude-code, codex, gemini-cli, vscode, github-copilot
 - permissions: filesystem_write, process_execution, code_modification
-- tags: spec-driven-development, planning, workflow, templates, specify, agents · communities: claude-code, codex, gemini-cli, vscode
+- tags: spec-driven-development, planning, workflow, templates, specify, agents · communities: claude-code, codex, gemini-cli, vscode, github-copilot
 - checked: https://github.com/github/spec-kit https://github.github.io/spec-kit/
 
 ---
@@ -297,9 +297,9 @@ Listed by TermBuddy as a third-party project. Maintained by AGENTS.md community 
 
 - slug: `agents-md` · version snapshot-2026-09-10 · licence MIT
 - author: AGENTS.md community (agentsmd) · source: https://github.com/agentsmd/agents.md
-- platforms: codex, cursor, gemini-cli, vscode
+- platforms: codex, cursor, gemini-cli, vscode, aider, amp, github-copilot, opencode, windsurf, zed
 - permissions: none
-- tags: agents-md, instructions, open-format, conventions, rules · communities: codex, cursor, gemini-cli, vscode
+- tags: agents-md, instructions, open-format, conventions, rules · communities: codex, cursor, gemini-cli, vscode, aider, amp, github-copilot, opencode, windsurf, zed
 - checked: https://github.com/agentsmd/agents.md https://agents.md
 
 ---
@@ -387,9 +387,9 @@ Listed by TermBuddy as a third-party project. Maintained by Neon; this listing i
 
 - slug: `neon-mcp-server` · version snapshot-2026-11-07 · licence MIT
 - author: Neon · source: https://github.com/neondatabase/mcp-server-neon
-- platforms: claude-code, cursor, vscode
+- platforms: claude-code, cursor, vscode, cline, github-copilot, windsurf, zed
 - permissions: network_access, external_account_access, secret_access
-- tags: mcp, neon, postgres, database, migrations · communities: claude-code, cursor, vscode
+- tags: mcp, neon, postgres, database, migrations · communities: claude-code, cursor, vscode, cline, github-copilot, windsurf, zed
 - checked: https://github.com/neondatabase/mcp-server-neon
 
 ---
@@ -441,9 +441,9 @@ Listed by TermBuddy as a third-party project. Maintained by HashiCorp; this list
 
 - slug: `terraform-mcp-server` · version 1.4.1 · licence MPL-2.0
 - author: HashiCorp · source: https://github.com/hashicorp/terraform-mcp-server
-- platforms: claude-code, claude, cursor, vscode
+- platforms: claude-code, claude, cursor, vscode, opencode
 - permissions: network_access, secret_access, external_account_access, process_execution
-- tags: mcp, terraform, infrastructure-as-code, hashicorp, devops · communities: claude-code, cursor, vscode
+- tags: mcp, terraform, infrastructure-as-code, hashicorp, devops · communities: claude-code, cursor, vscode, opencode
 - checked: https://github.com/hashicorp/terraform-mcp-server https://github.com/hashicorp/terraform-mcp-server/releases/tag/v1.4.1
 
 ---
@@ -495,9 +495,9 @@ Listed by TermBuddy as a third-party project. Maintained by Atlassian; this list
 
 - slug: `atlassian-rovo-mcp-server` · version snapshot-2026-11-07 (v2) · licence Apache-2.0
 - author: Atlassian · source: https://github.com/atlassian/atlassian-mcp-server
-- platforms: claude-code, claude, codex, cursor, vscode
+- platforms: claude-code, claude, codex, cursor, vscode, github-copilot, windsurf
 - permissions: network_access, external_account_access
-- tags: mcp, atlassian, jira, confluence, product-management · communities: claude-code, cursor, vscode
+- tags: mcp, atlassian, jira, confluence, product-management · communities: claude-code, cursor, vscode, github-copilot, windsurf
 - checked: https://github.com/atlassian/atlassian-mcp-server
 
 ---
@@ -549,9 +549,9 @@ Listed by TermBuddy as a third-party project. Maintained by ahujasid; this listi
 
 - slug: `blender-mcp` · version snapshot-2026-11-04 · licence MIT
 - author: ahujasid · source: https://github.com/ahujasid/mcp-for-blender
-- platforms: claude-code, claude, codex, cursor, vscode
+- platforms: claude-code, claude, codex, cursor, vscode, opencode, windsurf
 - permissions: process_execution, filesystem_read, filesystem_write, network_access, code_modification
-- tags: mcp, blender, 3d, creative, addon · communities: claude-code, cursor, vscode
+- tags: mcp, blender, 3d, creative, addon · communities: claude-code, cursor, vscode, opencode, windsurf
 - checked: https://github.com/ahujasid/mcp-for-blender https://www.mcp-for-blender.com/
 
 ---

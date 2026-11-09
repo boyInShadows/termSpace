@@ -24,7 +24,11 @@
           "codex",
           "cursor",
           "vscode",
-          "gemini-cli"
+          "gemini-cli",
+          "github-copilot",
+          "opencode",
+          "windsurf",
+          "zed"
         ],
         "tags": [
           "mcp",
@@ -36,7 +40,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/github/github-mcp-server#readme",
-        "issueTrackerUrl": "https://github.com/github/github-mcp-server/issues"
+        "issueTrackerUrl": "https://github.com/github/github-mcp-server/issues",
+        "icon": "https://avatars.githubusercontent.com/u/9919?v=4"
       },
       "release": {
         "version": "2.1.0",
@@ -65,6 +70,18 @@
           },
           {
             "platform": "gemini-cli"
+          },
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "opencode"
+          },
+          {
+            "platform": "windsurf"
+          },
+          {
+            "platform": "zed"
           }
         ],
         "installation": {
@@ -171,7 +188,12 @@
         "communitySlugs": [
           "claude-code",
           "cursor",
-          "vscode"
+          "vscode",
+          "amp",
+          "cline",
+          "github-copilot",
+          "opencode",
+          "windsurf"
         ],
         "tags": [
           "mcp",
@@ -182,7 +204,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/microsoft/playwright-mcp#readme",
-        "issueTrackerUrl": "https://github.com/microsoft/playwright-mcp/issues"
+        "issueTrackerUrl": "https://github.com/microsoft/playwright-mcp/issues",
+        "icon": "https://avatars.githubusercontent.com/u/6154722?v=4"
       },
       "release": {
         "version": "0.0.84",
@@ -205,6 +228,21 @@
           },
           {
             "platform": "vscode"
+          },
+          {
+            "platform": "amp"
+          },
+          {
+            "platform": "cline"
+          },
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "opencode"
+          },
+          {
+            "platform": "windsurf"
           }
         ],
         "installation": {
@@ -303,7 +341,8 @@
         "communitySlugs": [
           "claude-code",
           "cursor",
-          "codex"
+          "codex",
+          "opencode"
         ],
         "tags": [
           "mcp",
@@ -314,7 +353,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/upstash/context7#readme",
-        "issueTrackerUrl": "https://github.com/upstash/context7/issues"
+        "issueTrackerUrl": "https://github.com/upstash/context7/issues",
+        "icon": "https://avatars.githubusercontent.com/u/74989412?v=4"
       },
       "release": {
         "version": "4.5.1",
@@ -337,6 +377,9 @@
           },
           {
             "platform": "chatgpt"
+          },
+          {
+            "platform": "opencode"
           }
         ],
         "installation": {
@@ -423,7 +466,8 @@
         "communitySlugs": [
           "claude-code",
           "cursor",
-          "vscode"
+          "vscode",
+          "github-copilot"
         ],
         "tags": [
           "mcp",
@@ -434,7 +478,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/ChromeDevTools/chrome-devtools-mcp#readme",
-        "issueTrackerUrl": "https://github.com/ChromeDevTools/chrome-devtools-mcp/issues"
+        "issueTrackerUrl": "https://github.com/ChromeDevTools/chrome-devtools-mcp/issues",
+        "icon": "https://avatars.githubusercontent.com/u/11260967?v=4"
       },
       "release": {
         "version": "1.12.0",
@@ -457,6 +502,9 @@
           },
           {
             "platform": "vscode"
+          },
+          {
+            "platform": "github-copilot"
           }
         ],
         "installation": {
@@ -555,7 +603,8 @@
         "communitySlugs": [
           "claude-code",
           "cursor",
-          "vscode"
+          "vscode",
+          "windsurf"
         ],
         "tags": [
           "mcp",
@@ -566,7 +615,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://supabase.com/mcp",
-        "issueTrackerUrl": "https://github.com/supabase-community/supabase-mcp/issues"
+        "issueTrackerUrl": "https://github.com/supabase-community/supabase-mcp/issues",
+        "icon": "https://avatars.githubusercontent.com/u/87650496?v=4"
       },
       "release": {
         "version": "0.16.1",
@@ -589,6 +639,9 @@
           },
           {
             "platform": "vscode"
+          },
+          {
+            "platform": "windsurf"
           }
         ],
         "installation": {
@@ -674,7 +727,8 @@
         "categorySlug": "research",
         "communitySlugs": [
           "claude-code",
-          "cursor"
+          "cursor",
+          "windsurf"
         ],
         "tags": [
           "mcp",
@@ -685,7 +739,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/firecrawl/firecrawl-mcp-server#readme",
-        "issueTrackerUrl": "https://github.com/firecrawl/firecrawl-mcp-server/issues"
+        "issueTrackerUrl": "https://github.com/firecrawl/firecrawl-mcp-server/issues",
+        "icon": "https://avatars.githubusercontent.com/u/135057108?v=4"
       },
       "release": {
         "version": "3.38.0",
@@ -705,6 +760,9 @@
           },
           {
             "platform": "cursor"
+          },
+          {
+            "platform": "windsurf"
           }
         ],
         "installation": {
@@ -836,7 +894,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/tavily-ai/tavily-mcp#readme",
-        "issueTrackerUrl": "https://github.com/tavily-ai/tavily-mcp/issues"
+        "issueTrackerUrl": "https://github.com/tavily-ai/tavily-mcp/issues",
+        "icon": "https://avatars.githubusercontent.com/u/170207473?v=4"
       },
       "release": {
         "version": "0.2.22",
@@ -972,7 +1031,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/anthropics/claude-code-action#readme",
-        "issueTrackerUrl": "https://github.com/anthropics/claude-code-action/issues"
+        "issueTrackerUrl": "https://github.com/anthropics/claude-code-action/issues",
+        "icon": "https://avatars.githubusercontent.com/u/76263028?v=4"
       },
       "release": {
         "version": "1.0.269",
@@ -1118,7 +1178,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/google-github-actions/run-gemini-cli#readme",
-        "issueTrackerUrl": "https://github.com/google-github-actions/run-gemini-cli/issues"
+        "issueTrackerUrl": "https://github.com/google-github-actions/run-gemini-cli/issues",
+        "icon": "https://avatars.githubusercontent.com/u/71461757?v=4"
       },
       "release": {
         "version": "0.1.22",
@@ -1240,7 +1301,9 @@
           "claude-code",
           "codex",
           "cursor",
-          "gemini-cli"
+          "gemini-cli",
+          "github-copilot",
+          "opencode"
         ],
         "tags": [
           "skills",
@@ -1275,6 +1338,12 @@
           },
           {
             "platform": "gemini-cli"
+          },
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "opencode"
           }
         ],
         "installation": {
@@ -1376,7 +1445,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/anthropics/skills#readme",
-        "issueTrackerUrl": "https://github.com/anthropics/skills/issues"
+        "issueTrackerUrl": "https://github.com/anthropics/skills/issues",
+        "icon": "https://avatars.githubusercontent.com/u/76263028?v=4"
       },
       "release": {
         "version": "snapshot-2026-11-06",
@@ -1478,7 +1548,9 @@
         "communitySlugs": [
           "claude-code",
           "codex",
-          "cursor"
+          "cursor",
+          "github-copilot",
+          "opencode"
         ],
         "tags": [
           "subagents",
@@ -1510,6 +1582,12 @@
           },
           {
             "platform": "cursor"
+          },
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "opencode"
           }
         ],
         "installation": {
@@ -1614,7 +1692,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/OpenHands/OpenHands#readme",
-        "issueTrackerUrl": "https://github.com/OpenHands/OpenHands/issues"
+        "issueTrackerUrl": "https://github.com/OpenHands/OpenHands/issues",
+        "icon": "https://avatars.githubusercontent.com/u/225919603?v=4"
       },
       "release": {
         "version": "1.37.0",
@@ -1747,7 +1826,9 @@
           "en": "OpenCode is an open source AI coding agent. It installs as a command line tool through a shell installer, npm or Homebrew, and a desktop app is available through Homebrew cask. Check the upstream README and opencode.ai for supported model providers, configuration and permissions, because those are not summarised here.\n\nListed by TermBuddy as a third-party project. Maintained by OpenCode (anomalyco); this listing is not endorsed by OpenCode (anomalyco)."
         },
         "categorySlug": "development",
-        "communitySlugs": [],
+        "communitySlugs": [
+          "opencode"
+        ],
         "tags": [
           "agent",
           "terminal",
@@ -1757,7 +1838,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://opencode.ai",
-        "issueTrackerUrl": "https://github.com/anomalyco/opencode/issues"
+        "issueTrackerUrl": "https://github.com/anomalyco/opencode/issues",
+        "icon": "https://avatars.githubusercontent.com/u/66570915?v=4"
       },
       "release": {
         "version": "1.19.5",
@@ -1772,6 +1854,9 @@
           {
             "platform": "api",
             "notes": "Standalone terminal agent; connects to the model providers you configure (see upstream docs)."
+          },
+          {
+            "platform": "opencode"
           }
         ],
         "installation": {
@@ -1872,7 +1957,8 @@
           "claude-code",
           "codex",
           "gemini-cli",
-          "vscode"
+          "vscode",
+          "github-copilot"
         ],
         "tags": [
           "spec-driven-development",
@@ -1884,7 +1970,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.github.io/spec-kit/",
-        "issueTrackerUrl": "https://github.com/github/spec-kit/issues"
+        "issueTrackerUrl": "https://github.com/github/spec-kit/issues",
+        "icon": "https://avatars.githubusercontent.com/u/9919?v=4"
       },
       "release": {
         "version": "1.3.2",
@@ -1907,6 +1994,9 @@
           },
           {
             "platform": "vscode"
+          },
+          {
+            "platform": "github-copilot"
           }
         ],
         "installation": {
@@ -2114,7 +2204,13 @@
           "codex",
           "cursor",
           "gemini-cli",
-          "vscode"
+          "vscode",
+          "aider",
+          "amp",
+          "github-copilot",
+          "opencode",
+          "windsurf",
+          "zed"
         ],
         "tags": [
           "agents-md",
@@ -2125,7 +2221,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://agents.md",
-        "issueTrackerUrl": "https://github.com/agentsmd/agents.md/issues"
+        "issueTrackerUrl": "https://github.com/agentsmd/agents.md/issues",
+        "icon": "https://avatars.githubusercontent.com/u/247225942?v=4"
       },
       "release": {
         "version": "snapshot-2026-09-10",
@@ -2152,6 +2249,24 @@
           {
             "platform": "vscode",
             "notes": "Listed as supported on agents.md."
+          },
+          {
+            "platform": "aider"
+          },
+          {
+            "platform": "amp"
+          },
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "opencode"
+          },
+          {
+            "platform": "windsurf"
+          },
+          {
+            "platform": "zed"
           }
         ],
         "installation": {
@@ -2554,7 +2669,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://code.claude.com/docs/en/plugins",
-        "issueTrackerUrl": "https://github.com/anthropics/claude-plugins-official/issues"
+        "issueTrackerUrl": "https://github.com/anthropics/claude-plugins-official/issues",
+        "icon": "https://avatars.githubusercontent.com/u/76263028?v=4"
       },
       "release": {
         "version": "snapshot-2026-11-08",
@@ -2648,7 +2764,11 @@
         "communitySlugs": [
           "claude-code",
           "cursor",
-          "vscode"
+          "vscode",
+          "cline",
+          "github-copilot",
+          "windsurf",
+          "zed"
         ],
         "tags": [
           "mcp",
@@ -2659,7 +2779,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/neondatabase/mcp-server-neon#readme",
-        "issueTrackerUrl": "https://github.com/neondatabase/mcp-server-neon/issues"
+        "issueTrackerUrl": "https://github.com/neondatabase/mcp-server-neon/issues",
+        "icon": "https://avatars.githubusercontent.com/u/77690634?v=4"
       },
       "release": {
         "version": "snapshot-2026-11-07",
@@ -2679,6 +2800,18 @@
           },
           {
             "platform": "vscode"
+          },
+          {
+            "platform": "cline"
+          },
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "windsurf"
+          },
+          {
+            "platform": "zed"
           }
         ],
         "installation": {
@@ -2784,7 +2917,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/grafana/mcp-grafana#readme",
-        "issueTrackerUrl": "https://github.com/grafana/mcp-grafana/issues"
+        "issueTrackerUrl": "https://github.com/grafana/mcp-grafana/issues",
+        "icon": "https://avatars.githubusercontent.com/u/7195757?v=4"
       },
       "release": {
         "version": "2.2.0",
@@ -3055,7 +3189,8 @@
         "communitySlugs": [
           "claude-code",
           "cursor",
-          "vscode"
+          "vscode",
+          "opencode"
         ],
         "tags": [
           "mcp",
@@ -3066,7 +3201,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/hashicorp/terraform-mcp-server#readme",
-        "issueTrackerUrl": "https://github.com/hashicorp/terraform-mcp-server/issues"
+        "issueTrackerUrl": "https://github.com/hashicorp/terraform-mcp-server/issues",
+        "icon": "https://avatars.githubusercontent.com/u/761456?v=4"
       },
       "release": {
         "version": "1.4.1",
@@ -3089,6 +3225,9 @@
           },
           {
             "platform": "vscode"
+          },
+          {
+            "platform": "opencode"
           }
         ],
         "installation": {
@@ -3215,7 +3354,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://docs.stripe.com/mcp",
-        "issueTrackerUrl": "https://github.com/stripe/ai/issues"
+        "issueTrackerUrl": "https://github.com/stripe/ai/issues",
+        "icon": "https://avatars.githubusercontent.com/u/856813?v=4"
       },
       "release": {
         "version": "snapshot-2026-11-09",
@@ -3335,7 +3475,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/alpacahq/alpaca-mcp-server#readme",
-        "issueTrackerUrl": "https://github.com/alpacahq/alpaca-mcp-server/issues"
+        "issueTrackerUrl": "https://github.com/alpacahq/alpaca-mcp-server/issues",
+        "icon": "https://avatars.githubusercontent.com/u/30398729?v=4"
       },
       "release": {
         "version": "2.4.1",
@@ -3472,7 +3613,9 @@
         "communitySlugs": [
           "claude-code",
           "cursor",
-          "vscode"
+          "vscode",
+          "github-copilot",
+          "windsurf"
         ],
         "tags": [
           "mcp",
@@ -3483,7 +3626,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/atlassian/atlassian-mcp-server#readme",
-        "issueTrackerUrl": "https://github.com/atlassian/atlassian-mcp-server/issues"
+        "issueTrackerUrl": "https://github.com/atlassian/atlassian-mcp-server/issues",
+        "icon": "https://avatars.githubusercontent.com/u/168166?v=4"
       },
       "release": {
         "version": "snapshot-2026-11-07 (v2)",
@@ -3509,6 +3653,12 @@
           },
           {
             "platform": "vscode"
+          },
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "windsurf"
           }
         ],
         "installation": {
@@ -3755,7 +3905,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/Doist/todoist-mcp#readme",
-        "issueTrackerUrl": "https://github.com/Doist/todoist-mcp/issues"
+        "issueTrackerUrl": "https://github.com/Doist/todoist-mcp/issues",
+        "icon": "https://avatars.githubusercontent.com/u/2565372?v=4"
       },
       "release": {
         "version": "13.11.2",
@@ -3871,7 +4022,9 @@
         "communitySlugs": [
           "claude-code",
           "cursor",
-          "vscode"
+          "vscode",
+          "opencode",
+          "windsurf"
         ],
         "tags": [
           "mcp",
@@ -3908,6 +4061,12 @@
           },
           {
             "platform": "vscode"
+          },
+          {
+            "platform": "opencode"
+          },
+          {
+            "platform": "windsurf"
           }
         ],
         "installation": {
@@ -4173,7 +4332,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/googleanalytics/google-analytics-mcp#readme",
-        "issueTrackerUrl": "https://github.com/googleanalytics/google-analytics-mcp/issues"
+        "issueTrackerUrl": "https://github.com/googleanalytics/google-analytics-mcp/issues",
+        "icon": "https://avatars.githubusercontent.com/u/4327788?v=4"
       },
       "release": {
         "version": "1.1.0",
@@ -4310,7 +4470,8 @@
         ],
         "screenshots": [],
         "documentationUrl": "https://github.com/googleads/google-ads-mcp#readme",
-        "issueTrackerUrl": "https://github.com/googleads/google-ads-mcp/issues"
+        "issueTrackerUrl": "https://github.com/googleads/google-ads-mcp/issues",
+        "icon": "https://avatars.githubusercontent.com/u/4551618?v=4"
       },
       "release": {
         "version": "0.0.6",
