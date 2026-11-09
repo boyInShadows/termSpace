@@ -23,10 +23,16 @@ for (const locale of ["en", "fa"] as const) {
     }
     await page.getByLabel(c.subject, { exact: true }).fill("Cannot open a listing");
     await page.getByRole("textbox", { name: c.message, exact: true }).fill("The latest release fails to open from my library.");
+    await page.getByLabel(c.screenshots).setInputFiles({ name: "screen.png", mimeType: "image/png", buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWQAAAABJRU5ErkJggg==", "base64") });
+    await expect(page.getByRole("img", { name: `${c.screenshot} 1`, exact: true })).toBeVisible();
     await page.getByRole("button", { name: c.send, exact: true }).click();
     await expect(page).toHaveURL(/\/support\/[a-f0-9-]+$/);
     const ticketURL = page.url();
     await expect(page.getByRole("heading", { name: "Cannot open a listing" })).toBeVisible();
+    const screenshot = page.getByRole("img", { name: `${c.screenshot} 1`, exact: true });
+    await expect(screenshot).toBeVisible();
+    const source = await screenshot.getAttribute("src");
+    await expect.poll(async () => (await page.request.get(source!)).status()).toBe(200);
     await page.getByRole("textbox", { name: c.message, exact: true }).fill("More details from the member.");
     await page.getByRole("button", { name: c.reply, exact: true }).click();
     await expect(page.getByText("More details from the member.", { exact: true })).toBeVisible();

@@ -43,3 +43,37 @@ controllers, validation and Prisma, beyond the usual presentation lane. Shared
 surfaces are `apps/api/src/app.ts`, `apps/api/prisma/schema.prisma`, new migration
 directories and `changelog.md`. Feature API/types and copy stay in dedicated
 support modules. Authentication/provider flows and blog permissions stay separate.
+
+## Private screenshots
+
+Creation and reply endpoints still accept JSON when there are no screenshots.
+With files, send `multipart/form-data`: one `payload` field containing the same
+JSON object and up to three `screenshots` file parts. Let the browser set the
+multipart boundary. PNG/JPEG/WebP content is decoded, checked against its MIME
+type, limited to 16 million pixels and a single frame, resized within 2048 pixels,
+then re-encoded as WebP without original metadata or filenames. Limits are 5 MiB
+per source file and 10 MiB combined. Creation/reply writes are limited to ten per
+authenticated member per fifteen minutes before uploads are buffered.
+
+Files live in `apps/api/private/support`, outside public media. The database and
+thread payload contain attachment IDs and dimensions; storage keys are internal.
+Member downloads use `/api/support/attachments/:id`; staff use the corresponding
+`/api/support/admin/attachments/:id` path. Every read checks current ownership or
+administrator access and returns private/no-store with nosniff. The web app uses
+the same-origin backend proxy and bypasses the public image optimizer.
+
+Failed writes/stale replies remove prepared files. The hourly `support-cleanup`
+service removes only recognized image files older than 24 hours that have no
+attachment row. The grace period protects in-flight uploads; database failures
+stop cleanup. `npm run support:cleanup -w apps/api` runs the same job manually.
+Always use the API's database and matching private directory; never pair a
+scratch database with another environment's stored images.
+Existing referenced images, fresh files, unrelated files and symlinks are retained.
+
+Before deploying, apply `202611090006_support_attachments`, rebuild the API image
+and start `support-cleanup` alongside the API. Both mount the private `api_support`
+volume as the existing node user. Back up that volume together with the database;
+do not publish it through media storage or an object-storage public bucket.
+The Docker build context excludes private files, local environment variants and
+generated evidence. Local application builds and scratch-database checks do not
+constitute a production deployment.

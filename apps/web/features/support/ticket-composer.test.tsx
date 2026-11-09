@@ -38,7 +38,7 @@ describe("private ticket conversation", () => {
     expect(mocks.refresh).toHaveBeenCalledOnce();
     rerender(view({ ...ticket, version: 3 }));
     fireEvent.submit(screen.getByRole("button", { name: "Send reply" }).closest("form")!);
-    await waitFor(() => expect(mocks.reply).toHaveBeenLastCalledWith("ticket-1", { body: "My unsent answer", expectedVersion: 3 }, false));
+    await waitFor(() => expect(mocks.reply).toHaveBeenLastCalledWith("ticket-1", { body: "My unsent answer", expectedVersion: 3 }, false, []));
     await waitFor(() => expect(screen.getByLabelText("Message")).toHaveValue(""));
   });
   it("uses a separate resolve action that preserves the unsent reply", async () => {

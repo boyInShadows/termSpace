@@ -1,5 +1,6 @@
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { supportWriteRateLimit } from "../middleware/security.js";
 
 const db = vi.hoisted(() => ({
   readerSession: { findFirst: vi.fn() },
@@ -13,8 +14,10 @@ const cookie = "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456";
 const input = { category: "TECHNICAL", subject: "Cannot open listing", body: "The listing page fails when I open the latest release." };
 
 describe("private member support", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetAllMocks();
+    await supportWriteRateLimit.resetKey("member-1");
+    await supportWriteRateLimit.resetKey("admin-1");
     db.readerSession.findFirst.mockResolvedValue({ id: "session", user: {
       id: "member-1", email: "member@example.test", emailVerifiedAt: null, marketplaceRoleGrants: [],
     } });

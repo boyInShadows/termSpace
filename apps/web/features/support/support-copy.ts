@@ -1,7 +1,15 @@
 import { supportLabel } from "./support-label";
+import type { Locale } from "@/lib/i18n";
 
 export const supportCopy = {
   en: {
+    rateLimited: "Too many support messages. Wait 15 minutes and try again. Your draft is still here.",
+    screenshots: "Screenshots (optional)", screenshotHelp: "Up to 3 PNG, JPEG or WebP images. 5 MiB each, 10 MiB total. Remove passwords and personal details first.",
+    screenshot: "Screenshot", removeScreenshot: "Remove screenshot", openScreenshot: "Open screenshot",
+    imageLimit: "Use at most 3 screenshots, 5 MiB each and 10 MiB total.",
+    invalidImage: "Choose a readable, still PNG, JPEG or WebP screenshot under 16 million pixels.",
+    invalidUpload: "The screenshot upload could not be read. Choose the files again and retry.",
+    imageUnavailable: "This screenshot could not be loaded. Try again.",
     staffWaiting: "Waiting for member", title: supportLabel.en, privacy: "Private conversations with TermSpace administrators. Only you and administrators can read your tickets.",
     newTicket: "New ticket", tickets: "Your tickets", empty: "No tickets yet. Tell us what you need help with.",
     category: "Category", subject: "Subject", message: "Message", send: "Send ticket", sending: "Sending…", back: "Back to tickets",
@@ -21,6 +29,13 @@ export const supportCopy = {
     statuses: { WAITING_FOR_SUPPORT: "Waiting for support", WAITING_FOR_MEMBER: "Waiting for you", RESOLVED: "Resolved" },
   },
   fa: {
+    rateLimited: "تعداد پیام‌های پشتیبانی زیاد است. ۱۵ دقیقه بعد دوباره تلاش کنید. پیش‌نویس شما حفظ شده است.",
+    screenshots: "تصویرهای صفحه (اختیاری)", screenshotHelp: "حداکثر ۳ تصویر PNG، JPEG یا WebP؛ هر تصویر ۵ و مجموع ۱۰ مگابایت. ابتدا رمزها و اطلاعات شخصی را حذف کنید.",
+    screenshot: "تصویر صفحه", removeScreenshot: "حذف تصویر", openScreenshot: "باز کردن تصویر",
+    imageLimit: "حداکثر ۳ تصویر، هرکدام ۵ و در مجموع ۱۰ مگابایت انتخاب کنید.",
+    invalidImage: "یک تصویر ثابت و سالم PNG، JPEG یا WebP با کمتر از ۱۶ میلیون پیکسل انتخاب کنید.",
+    invalidUpload: "تصویرها دریافت نشدند. فایل‌ها را دوباره انتخاب و ارسال کنید.",
+    imageUnavailable: "تصویر بارگیری نشد. دوباره تلاش کنید.",
     staffWaiting: "در انتظار پاسخ کاربر",
     title: "پشتیبانی", privacy: "گفت‌وگوی خصوصی با مدیران ترم‌اسپیس. فقط شما و مدیران می‌توانید تیکت‌های شما را بخوانید.",
     newTicket: "تیکت جدید", tickets: "تیکت‌های شما", empty: "هنوز تیکتی ندارید. بگویید در چه موردی به کمک نیاز دارید.",
@@ -41,3 +56,12 @@ export const supportCopy = {
     statuses: { WAITING_FOR_SUPPORT: "در انتظار پشتیبانی", WAITING_FOR_MEMBER: "در انتظار پاسخ شما", RESOLVED: "حل‌شده" },
   },
 } as const;
+
+export function supportFailureCopy(code: string, locale: Locale) {
+  const c = supportCopy[locale];
+  if (code === "FILE_TOO_LARGE" || code === "SCREENSHOTS_TOO_LARGE") return c.imageLimit;
+  if (code === "INVALID_IMAGE") return c.invalidImage;
+  if (code === "INVALID_UPLOAD" || code === "UPLOAD_ERROR") return c.invalidUpload;
+  if (code === "RATE_LIMITED") return c.rateLimited;
+  return null;
+}

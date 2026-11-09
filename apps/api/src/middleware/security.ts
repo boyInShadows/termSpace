@@ -88,6 +88,10 @@ export const emailChangeRequestRateLimit = authRateLimit("email-change");
 export const accountExportRateLimit = authRateLimit("account-export");
 export const accountDeleteRateLimit = authRateLimit("account-delete");
 export const readerPreferencesRateLimit = authRateLimit("reader-preferences");
+export const supportWriteRateLimit = limiter("support-write", {
+  windowMs: 15 * 60 * 1000, limit: 10,
+  keyGenerator: (_req, res) => String(res.locals.reader.id),
+});
 export const authRateLimiters = [loginRateLimit, adminLoginRateLimit, registerRateLimit, googleSignInRateLimit, passwordChangeRateLimit, sessionRevokeRateLimit, emailChangeRequestRateLimit, accountExportRateLimit, accountDeleteRateLimit, readerPreferencesRateLimit];
 
 /**

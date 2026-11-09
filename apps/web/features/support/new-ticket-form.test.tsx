@@ -25,6 +25,6 @@ describe("new support ticket", () => {
     fireEvent.submit(screen.getByRole("button", { name: c.sending }).closest("form")!);
     await waitFor(() => expect(mocks.push).toHaveBeenCalledWith(`${locale === "fa" ? "/fa" : ""}/support/ticket-1`));
     expect(mocks.create).toHaveBeenCalledTimes(2);
-    expect(mocks.create).toHaveBeenLastCalledWith(expect.objectContaining({ category: "TECHNICAL", subject: "Listing fails" }));
+    expect(mocks.create).toHaveBeenLastCalledWith(expect.objectContaining({ category: "TECHNICAL", subject: "Listing fails" }), []);
   });
 });

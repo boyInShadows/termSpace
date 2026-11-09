@@ -2,6 +2,41 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Private support screenshots and recovery cleanup
+
+- **Owner scope / shared surfaces.** Next approved ticketing phase. Prisma schema,
+  additive `202611090006_support_attachments`, web `lib/api.ts` and this changelog.
+  API routes/controller, multipart middleware, image storage/cleanup worker,
+  Docker files and `.dockerignore` are outside the usual presentation lane but
+  required by the owner-approved private support contract. No unrelated queue
+  item, provider flow or production environment changed.
+- **Images.** Optional multipart screenshots on creation/reply, three per message,
+  5 MiB each / 10 MiB combined. Decode/check MIME, reject corrupt/animated/oversized
+  content, cap 16 million pixels, fit within 2048 pixels and re-encode as WebP
+  without original metadata or filenames. Per-member writes are limited before
+  buffering. Downloads recheck owner/current administrator access; private,
+  no-store, nosniff responses never disclose storage keys or use the image optimizer.
+- **Recovery.** Local removable previews revoke object URLs; pending fields freeze;
+  failed sends retain text/files and image failures offer retry. Failed database
+  writes/stale replies remove prepared files. Private Docker volume and hourly
+  cleanup retain referenced/fresh files and remove only recognized, unreferenced
+  images older than 24 hours, stopping on database failure. Docker context now
+  excludes private storage, environment variants and generated evidence.
+- **Verification.** Root typecheck/build and 923 tests passed (44 existing database
+  integration skips); lint zero errors / two existing warnings. Full web E2E:
+  529 passed / 46 intentional skips, including unchanged JavaScript budgets and
+  EN/FA screenshot creation/download flows. Scratch migration and real-database
+  image checks passed encoding, metadata stripping, stranger isolation, staff
+  revocation and disguised-content rejection. Twenty-four fresh picker/thread
+  captures cover locales/themes/320–1280px; independent Impeccable finish and
+  documentation reviews report ship. Compose syntax validates without interpolation.
+- **Limitations / continuation.** Exact API container build is blocked by Docker
+  Hub returning 403 for its Dockerfile frontend; the required base image is not
+  cached. Application builds pass; no container execution or deployment is claimed.
+  Notifications and privacy/export/deletion are next. Evidence remains under
+  `docs/artifacts/support-2026-11-06/phase-images-*`; manual engineering/security
+  diff review used Ponytail full. Usage metrics unavailable.
+
 ## 2026-11-09 — Resume private support on current main
 
 - **Owner scope / shared surfaces.** Owner resumed the five-step ticketing plan,

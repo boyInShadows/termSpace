@@ -15,6 +15,7 @@
     "seed": "tsx prisma/seed.ts",
     "marketplace:role": "tsx src/scripts/manageMarketplaceRole.ts",
     "publish:scheduled": "tsx src/jobs/publishScheduled.ts",
+    "support:cleanup": "tsx src/jobs/cleanupSupportImages.ts",
     "email:worker": "tsx src/jobs/sendTransactionalEmails.ts",
     "marketplace:source-worker": "tsx src/jobs/processMarketplaceSourceChecks.ts",
     "marketplace:source-worker:watch": "sh -c 'while true; do tsx src/jobs/processMarketplaceSourceChecks.ts; sleep 15; done'",

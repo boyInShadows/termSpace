@@ -34,6 +34,7 @@ COPY --from=build --chown=node:node /app/apps/api/package.json apps/api/package.
 COPY --from=build --chown=node:node /app/apps/api/dist apps/api/dist
 COPY --from=build --chown=node:node /app/apps/api/prisma apps/api/prisma
 RUN mkdir -p apps/api/uploads && chown node:node apps/api/uploads
+RUN mkdir -p apps/api/private/support && chown -R node:node apps/api/private
 
 EXPOSE 4001
 USER node

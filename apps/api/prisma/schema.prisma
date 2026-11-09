@@ -330,8 +330,21 @@ model SupportMessage {
   createdAt  DateTime          @default(now())
   ticket     SupportTicket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   author     ReaderUser?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  attachments SupportAttachment[]
 
   @@index([ticketId, createdAt, id])
+}
+
+model SupportAttachment {
+  id         String         @id @default(cuid())
+  messageId  String
+  storageKey String         @unique
+  bytes      Int
+  width      Int
+  height     Int
+  message    SupportMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
 }
 
 enum TransactionalEmailStatus {

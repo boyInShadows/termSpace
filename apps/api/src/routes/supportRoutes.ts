@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { requireMarketplaceRole, requireReader } from "../middleware/auth.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
-import { createSupportTicket, getSupportTicket, listSupportTickets, replySupportTicket, resolveSupportTicket } from "../controllers/supportController.js";
+import { createSupportTicket, getSupportTicket, listSupportTickets, replySupportTicket, resolveSupportTicket, getSupportAttachment } from "../controllers/supportController.js";
+import { parseSupportPayload, supportUploadError, uploadSupportScreenshots } from "../middleware/supportUpload.js";
+import { supportWriteRateLimit } from "../middleware/security.js";
 import { routeIdSchema, supportCreateSchema, supportPageSchema, supportInboxSchema, supportReplySchema, supportVersionSchema } from "../validation/schemas.js";
 
 const router = Router();
@@ -11,11 +13,14 @@ router.param("id", validateRouteParam("id", routeIdSchema));
 router.use("/admin", requireMarketplaceRole("administrator"), (_req, res, next) => { res.locals.supportAdmin = true; next(); });
 router.get("/admin/tickets", validate(supportInboxSchema, "query"), listSupportTickets);
 router.get("/admin/tickets/:id", validate(supportPageSchema, "query"), getSupportTicket);
-router.post("/admin/tickets/:id/messages", validate(supportReplySchema), replySupportTicket);
+router.post("/admin/tickets/:id/messages", supportWriteRateLimit, uploadSupportScreenshots, parseSupportPayload, validate(supportReplySchema), replySupportTicket);
 router.post("/admin/tickets/:id/resolve", validate(supportVersionSchema), resolveSupportTicket);
+router.get("/admin/attachments/:id", getSupportAttachment);
 router.get("/tickets", validate(supportPageSchema, "query"), listSupportTickets);
-router.post("/tickets", validate(supportCreateSchema), createSupportTicket);
+router.post("/tickets", supportWriteRateLimit, uploadSupportScreenshots, parseSupportPayload, validate(supportCreateSchema), createSupportTicket);
 router.get("/tickets/:id", validate(supportPageSchema, "query"), getSupportTicket);
-router.post("/tickets/:id/messages", validate(supportReplySchema), replySupportTicket);
+router.post("/tickets/:id/messages", supportWriteRateLimit, uploadSupportScreenshots, parseSupportPayload, validate(supportReplySchema), replySupportTicket);
 router.post("/tickets/:id/resolve", validate(supportVersionSchema), resolveSupportTicket);
+router.get("/attachments/:id", getSupportAttachment);
+router.use(supportUploadError);
 export default router;

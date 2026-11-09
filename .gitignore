@@ -6,6 +6,7 @@ node_modules/
 out/
 dist/
 uploads/
+apps/api/private/
 
 # Storybook build output
 storybook-static/

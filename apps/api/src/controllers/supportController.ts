@@ -1,9 +1,10 @@
 import type { Request, Response } from "express";
 import type { SupportStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
+import { prepareSupportImages, readSupportImage, removeSupportImages } from "../lib/supportImages.js";
 
 const ticketSelect = { id: true, category: true, subject: true, status: true, version: true, createdAt: true, updatedAt: true } as const;
-const messageSelect = { id: true, body: true, authorRole: true, createdAt: true } as const;
+const messageSelect = { id: true, body: true, authorRole: true, createdAt: true, attachments: { select: { id: true, bytes: true, width: true, height: true } } } as const;
 
 function ticketScope(req: Request, res: Response) {
   return { id: String(req.params.id), ...(res.locals.supportAdmin ? {} : { ownerId: String(res.locals.reader.id) }) };
@@ -32,11 +33,14 @@ export async function listSupportTickets(req: Request, res: Response) {
 export async function createSupportTicket(req: Request, res: Response) {
   const { category, subject, body } = req.body;
   const ownerId = String(res.locals.reader.id);
-  const ticket = await prisma.supportTicket.create({
-    data: { ownerId, category, subject, messages: { create: { body, authorId: ownerId, authorRole: "MEMBER" } } },
-    select: { id: true },
-  });
-  res.status(201).json({ data: ticket });
+  const images = await prepareSupportImages(req.files as Express.Multer.File[] | undefined);
+  try {
+    const ticket = await prisma.supportTicket.create({
+      data: { ownerId, category, subject, messages: { create: { body, authorId: ownerId, authorRole: "MEMBER", ...(images.length ? { attachments: { create: images } } : {}) } } },
+      select: { id: true },
+    });
+    res.status(201).json({ data: ticket });
+  } catch (error) { await removeSupportImages(images.map(image => image.storageKey)); throw error; }
 }
 
 export async function getSupportTicket(req: Request, res: Response) {
@@ -63,7 +67,9 @@ export async function replySupportTicket(req: Request, res: Response) {
     res.status(409).json({ error: { code: "TICKET_RESOLVED", message: "Only a new member reply can reopen a resolved ticket." } });
     return;
   }
-  const saved = await prisma.$transaction(async (tx) => {
+  const images = await prepareSupportImages(req.files as Express.Multer.File[] | undefined);
+  let saved: boolean;
+  try { saved = await prisma.$transaction(async (tx) => {
     const updated = await tx.supportTicket.updateMany({
       where: { ...scope, version: req.body.expectedVersion, ...(res.locals.supportAdmin ? { status: { not: "RESOLVED" as const } } : {}) },
       data: { status: res.locals.supportAdmin ? "WAITING_FOR_MEMBER" : "WAITING_FOR_SUPPORT", version: { increment: 1 } },
@@ -72,10 +78,11 @@ export async function replySupportTicket(req: Request, res: Response) {
     await tx.supportMessage.create({ data: {
       ticketId: ticket.id, authorId: String(res.locals.reader.id),
       authorRole: res.locals.supportAdmin ? "ADMINISTRATOR" : "MEMBER", body: req.body.body,
+      ...(images.length ? { attachments: { create: images } } : {}),
     } });
     return true;
-  });
-  if (!saved) { staleTicket(res); return; }
+  }); } catch (error) { await removeSupportImages(images.map(image => image.storageKey)); throw error; }
+  if (!saved) { await removeSupportImages(images.map(image => image.storageKey)); staleTicket(res); return; }
   res.status(201).json({ data: { saved: true } });
 }
 
@@ -87,4 +94,17 @@ export async function resolveSupportTicket(req: Request, res: Response) {
   });
   if (!updated.count) { staleTicket(res); return; }
   res.json({ data: { saved: true } });
+}
+
+export async function getSupportAttachment(req: Request, res: Response) {
+  const attachment = await prisma.supportAttachment.findFirst({
+    where: { id: String(req.params.id), message: { ticket: res.locals.supportAdmin ? {} : { ownerId: String(res.locals.reader.id) } } },
+    select: { storageKey: true },
+  });
+  if (!attachment) { missingTicket(res); return; }
+  let buffer: Buffer;
+  try { buffer = await readSupportImage(attachment.storageKey); }
+  catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") { missingTicket(res); return; } throw error; }
+  res.set({ "Content-Type": "image/webp", "Content-Disposition": 'inline; filename="screenshot.webp"', "X-Content-Type-Options": "nosniff", "Cache-Control": "private, no-store" });
+  res.send(buffer);
 }
