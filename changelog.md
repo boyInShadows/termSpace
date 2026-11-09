@@ -2,6 +2,35 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Repair localhost dashboard database mismatch
+
+- **Scope / shared surface.** Owner reported creator-profile500 on dashboard
+  login. This changelog records a local runtime repair; no application code,
+  migration SQL, environment file or production configuration changed.
+- **Cause.** Local database lagged behind checked-in main: creator `avatarUrl`
+  and product `iconUrl` were missing (Prisma P2022). Six main migrations were
+  pending: external-link source, release-review state, platform expansion, listing
+  icon, install commands and creator avatar. This was schema drift, not a missing
+  environment variable. The API process on4001 was still running; web3000 was
+  stopped when inspected.
+- **Repair.** Took a custom-format PostgreSQL backup under ignored
+  `docs/artifacts/database-backups/before-local-main-repair-2026-11-09T17-53-42-402Z.dump`
+  and checked its archive listing. Applied the six existing migrations with
+  Prisma deploy against the verified ordinary localhost5434 database. Their
+  ledger checksums match source; no migrations remain pending; user/creator/
+  product row counts are unchanged. Restarted real web development on3000 with
+  fixtures disabled and the existing local API. API PID remained36200.
+- **Verification.** Creator profile, creator dashboard, notifications, favorites
+  and catalog each return200 directly and through the Next backend proxy.
+  Isolated Chrome renders of EN/FA dashboard against the real API/database
+  show the synthetic creator profile without browser exceptions, overview
+  errors or backend500s. Temporary account/creator/session fixtures were removed.
+  This resolves the local catalog blocker recorded in the ticketing handoff.
+  Evidence: `docs/artifacts/support-2026-11-06/local-main-database-repair.log`,
+  `local-overview-verification.log` and `local-overview-fixed-{en,fa}.png`.
+  No application tests/build were repeated because source is unchanged. Backup
+  archive readability was checked; a restore drill and production were not tested.
+
 ## 2026-11-09 — Support account privacy and release handoff
 
 - **Owner scope / shared surfaces.** Final authorized ticketing phase, including
