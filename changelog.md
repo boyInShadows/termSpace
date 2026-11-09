@@ -2,6 +2,22 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — TermBuddy mascot and optional creator avatar
+
+- **Scope / shared surfaces (announce in commit body).** New migration `202611090004_marketplace_creator_avatar`,
+  `apps/api/prisma/schema.prisma`, `lib/types.ts`, `lib/api.ts`, `lib/i18n/creator.ts`, `changelog.md`.
+- **Mascot.** `public/brand/termbuddy.svg` (+ 512/1024 PNG): a terminal-window face (prompt chevron and cursor-block
+  eyes, antenna caret) on the signal-blue tile, built from the brand's rounded blocks. Checked at 32 px and circle-cropped.
+- **Creator avatar.** `MarketplaceCreator.avatarUrl`, optional, GitHub image hosts only (same hosts as listing icons,
+  enforced by zod and a DB CHECK). `PATCH /creator/profile` accepts it (omit = unchanged, `null` = remove); public creator
+  payloads include it; account deletion clears it. `Avatar` lays the image over the initials, so a failed load
+  leaves the initials and nothing shifts. Settings form gains a URL field (EN/FA).
+- **Chat.** `deploy/chatwoot/set-avatar.rb` attaches the picture to the Termbuddy agent bot and both website inboxes.
+  Separate from `bootstrap.rb` so a re-run never resets the admin password.
+- **Verified.** typecheck, API tests (310), lint (0 errors), production build; web tests pass except
+  `creator-draft-editor-ui` "browser storage fails", which spies on `Storage.prototype` and does not exercise this
+  change (Node 26 localStorage quirk). e2e/lhci not run: no markup changes unless an avatar URL is set.
+
 ## 2026-11-09 — Second TermBuddy batch: 13 developer tools and skills
 
 - **Scope.** `scripts/seed-termbuddy/listings.json` and `preview.md` only; no app code, no shared surfaces.

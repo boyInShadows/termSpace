@@ -24,6 +24,7 @@ export function CreatorIdentity({
     <div className="flex min-w-0 items-center gap-2">
       <Avatar
         initials={creator.initials}
+        src={creator.avatarUrl}
         className={compact ? "size-7 text-xs" : ""}
       />
       {href ? <Link href={href} className="relative z-10 inline-flex min-h-7 min-w-0 items-center text-sm font-medium underline-offset-4 hover:underline"><bdi className="min-w-0 break-words">{creator.name}</bdi></Link> : <span className="min-w-0 break-words text-sm font-medium"><bdi>{creator.name}</bdi></span>}

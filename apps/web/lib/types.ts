@@ -3,7 +3,7 @@ export type MarketplaceItemTypeKey = "skill" | "agent" | "mcp_server" | "integra
 export interface MarketplaceItemType { key: MarketplaceItemTypeKey; en: string; fa: string; definition: string; }
 export type Platform = "API" | "ChatGPT" | "Claude" | "Claude Code" | "Codex" | "Cursor" | "Gemini" | "Gemini CLI" | "VS Code" | "Aider" | "Amp" | "Cline" | "GitHub Copilot" | "OpenCode" | "Windsurf" | "Zed";
 export type AIModel = "GPT-5" | "Claude 4" | "Gemini 2.5" | "Model agnostic";
-export interface Creator { id: string; name: string; handle: string; initials: string; verified: boolean; bio: string; products: number; followers: number; }
+export interface Creator { id: string; name: string; handle: string; initials: string; avatarUrl?: string | null; verified: boolean; bio: string; products: number; followers: number; }
 export interface OwnedCreatorProfile extends Creator { createdAt: string; updatedAt: string; accessActive: boolean; }
 export interface ReaderProfile {
   email: string; createdAt: string; hasPassword: boolean; connectedGoogle: boolean; emailVerified: boolean;

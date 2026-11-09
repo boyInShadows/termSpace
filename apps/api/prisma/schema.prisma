@@ -449,6 +449,7 @@ model MarketplaceCreator {
   name                String
   handle              String                          @unique
   initials            String
+  avatarUrl           String?
   verified            Boolean                         @default(false)
   bio                 String
   followers           Int                             @default(0)

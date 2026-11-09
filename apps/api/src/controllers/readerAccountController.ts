@@ -135,7 +135,7 @@ export async function deleteReaderAccount(req: Request, res: Response) {
         });
         await tx.marketplaceCreator.update({
           where: { id: creator.id },
-          data: { name: "Deleted creator", handle: `deleted-${creator.id}`, initials: "DC", bio: "", verified: false, followers: 0 },
+          data: { name: "Deleted creator", handle: `deleted-${creator.id}`, initials: "DC", avatarUrl: null, bio: "", verified: false, followers: 0 },
         });
       }
 
