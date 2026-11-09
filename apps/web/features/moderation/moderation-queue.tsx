@@ -93,7 +93,7 @@ export function ModerationQueue() {
     </dl>
 
     <form className="mt-6 grid gap-4 border border-foreground/60 p-4 md:grid-cols-[1fr_220px_auto] md:items-end" onSubmit={applySearch} role="search">
-      <label className="text-sm font-semibold">{m.search}<span className="mt-2 flex items-center border border-input bg-background px-3 focus-within:ring-2 focus-within:ring-ring/20"><Search className="size-4 text-muted-foreground" aria-hidden="true" /><Input className="border-0 bg-transparent shadow-none focus-visible:ring-0" value={search} onChange={(event) => setTyped({ forQuery: query, value: event.target.value })} placeholder={m.searchPlaceholder} /></span></label>
+      <label className="text-sm font-semibold">{m.search}<span className="mt-2 flex items-center border border-input bg-background px-3 focus-within:border-primary"><Search className="size-4 text-muted-foreground" aria-hidden="true" /><Input className="border-0 bg-transparent shadow-none focus:ring-0 focus-visible:outline-none!" value={search} onChange={(event) => setTyped({ forQuery: query, value: event.target.value })} placeholder={m.searchPlaceholder} /></span></label>
       <label className="text-sm font-semibold">{m.filter}<select className="mt-2 min-h-11 w-full border border-input bg-background px-3 text-sm" value={state} onChange={(event) => update({ state: event.target.value === "review" ? null : event.target.value, page: null })}>
         <option value="review">{m.filterReview}</option><option value="all">{m.filterAll}</option>
         {STATES.map((value) => <option key={value} value={value}>{listingStateLabel(value, t.creatorHub)}</option>)}

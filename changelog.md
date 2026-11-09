@@ -2,6 +2,18 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Search bars: one quiet focus state, no invented suggestions
+
+- **Scope / shared surfaces (announce in commit body).** `lib/i18n/home.ts` (removed `typedIntents`, `popularSearches`), `changelog.md`.
+- **Focus.** The global unlayered `:focus-visible` outline beat Tailwind's layered `focus:outline-none`, so every search
+  field drew a square outline inside its own ring and border. All search fields (home hero and band, 404/status page,
+  dashboard, explore, library, moderation, design showroom) now use `focus-visible:outline-none!` and let the field's
+  own border turn primary; the extra `ring-2` is gone. The general `Input` still has its ring (not a search bar).
+- **Suggestions.** The "Popular searches" list was invented copy. Removed; only the visitor's own recent searches
+  (stored in their browser) are offered, and nothing opens when there is no history.
+- **Verified.** typecheck, lint (0 errors), production build (utility emitted with `!important`), web tests 517 pass
+  (the one `creator-draft-editor-ui` storage failure is the known Node 26 quirk).
+
 ## 2026-11-09 — TermBuddy mascot and optional creator avatar
 
 - **Scope / shared surfaces (announce in commit body).** New migration `202611090004_marketplace_creator_avatar`,

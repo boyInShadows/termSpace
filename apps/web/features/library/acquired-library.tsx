@@ -79,7 +79,7 @@ export function AcquiredLibrary() {
         <div className="min-w-0 flex-1">
           <label htmlFor="library-search" className="block text-sm font-medium">{copy.searchLabel}</label>
           {/* Keyed by the address value, so back, forward and Clear filters reset the box. */}
-          <Input key={q} id="library-search" name="q" type="search" maxLength={80} autoComplete="off" defaultValue={q} className="mt-1" />
+          <Input key={q} id="library-search" name="q" type="search" maxLength={80} autoComplete="off" defaultValue={q} className="mt-1 focus:ring-0 focus-visible:outline-none!" />
         </div>
         <Button type="submit">{copy.searchButton}</Button>
       </form>

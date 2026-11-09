@@ -75,7 +75,7 @@ export function Showroom() {
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                   size={17}
                 />
-                <Input className="pl-10" placeholder="Search building blocks" />
+                <Input className="pl-10 focus:ring-0 focus-visible:outline-none!" placeholder="Search building blocks" />
               </div>
             </label>
             <label className="text-sm font-semibold">

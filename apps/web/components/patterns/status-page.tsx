@@ -36,7 +36,7 @@ export function NotFoundView({ locale, eyebrow, title, body }: { locale: Locale;
               name="q"
               aria-label={searchLabel}
               placeholder={fa ? "از هوش مصنوعی چه می‌خواهید؟" : "What do you want AI to do better?"}
-              className="h-14 min-w-0 flex-1 bg-transparent px-4 text-base placeholder:text-muted-foreground focus:outline-none"
+              className="h-14 min-w-0 flex-1 bg-transparent px-4 text-base placeholder:text-muted-foreground focus-visible:outline-none!"
             />
             <button type="submit" className={`${buttonVariants()} me-2`}>
               {fa ? "جست‌وجو" : "Search"}
