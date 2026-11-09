@@ -2,6 +2,19 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Second TermBuddy batch: 13 developer tools and skills
+
+- **Scope.** `scripts/seed-termbuddy/listings.json` and `preview.md` only; no app code, no shared surfaces.
+- **Listings (all third-party, link-only, submitted as TermBuddy, awaiting Approve + Publish):**
+  impeccable, mattpocock-skills, ponytail, ui-ux-pro-max, caveman, marketingskills,
+  scientific-agent-skills, planning-with-files, openspec, openai-codex, cline, claude-mem, awesome-copilot.
+- **Honesty.** Descriptions state caveats from upstream READMEs (claude-mem sign-in/analytics/cloud sync,
+  caveman installer behaviour, marketingskills optional account connections). Repos without tagged
+  releases use a `snapshot-2026-11-09` version label.
+- **Not included.** Gemini CLI (README says enterprise-only now) and Trail of Bits skills (CC-BY-SA) pending owner decision.
+- **Verified.** `validate.ts`: 47 manifests valid; every `installation.commands` entry is an exact substring of the
+  project's README; pilot submit then batch: 13 new listings in state SUBMITTED, 0 failures.
+
 ## 2026-11-09 — Per-OS install commands in the installation dialog
 
 - **Scope / shared surfaces (announce in commit body).** New migration

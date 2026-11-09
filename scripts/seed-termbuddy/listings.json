@@ -4824,5 +4824,1955 @@
         "dataHandling": "Campaign and account data the agent reads passes to your model provider through your MCP client."
       }
     }
+  },
+  {
+    "sources": [
+      "https://github.com/pbakaus/impeccable"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "skill",
+      "listing": {
+        "slug": "impeccable",
+        "name": {
+          "en": "Impeccable"
+        },
+        "outcome": {
+          "en": "A design vocabulary and review toolkit for coding agents: steer, critique, audit and polish interfaces, and catch common AI design tells."
+        },
+        "description": {
+          "en": "Impeccable gives a coding agent words for design intent. Instead of \"make it pop\", you name a move such as bolder, quieter, distill, typeset, layout, polish or harden and point it at one target, and the agent loads a playbook written for that move. It also reviews: critique scores a design against usability heuristics and ranks what to fix first, and audit reports on accessibility, performance, theming and responsive behaviour with findings ranked from blocking to polish. A separate detector applies deterministic rules, with no model call, to flag typical machine-made design tells and quality problems such as cramped padding or skipped headings. Run /impeccable init once per project and it writes a PRODUCT.md capturing who the product is for, which later commands read; document writes a DESIGN.md. The project describes itself as strongest on interfaces that already exist, and it can also build new pages.\n\nListed by TermBuddy as a third-party project. Maintained by Paul Bakaus; this listing is not endorsed by Paul Bakaus."
+        },
+        "categorySlug": "creative",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "codex",
+          "github-copilot",
+          "opencode"
+        ],
+        "tags": [
+          "design",
+          "ui",
+          "frontend",
+          "accessibility",
+          "code-review",
+          "agent-skill",
+          "polish"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://impeccable.style/docs",
+        "issueTrackerUrl": "https://github.com/pbakaus/impeccable/issues"
+      },
+      "release": {
+        "version": "4.8.1",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/pbakaus/impeccable",
+          "authorship": "third_party",
+          "originalAuthor": "Paul Bakaus"
+        },
+        "releaseNotes": "Tracks npm package impeccable 4.8.1 (latest GitHub release engine-v0.1.21, published 2026-11-09).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "gemini-cli"
+          },
+          {
+            "platform": "opencode"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "From your project root run: npx impeccable install",
+            "Reload your coding tool, then run /impeccable init in your agent ($impeccable init on Codex).",
+            "Name a command and a target, for example: /impeccable critique the pricing cards",
+            "Claude Code can also install it from its plugin marketplace; see the upstream README for other hosts."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npx",
+              "command": "npx impeccable install"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin marketplace add pbakaus/impeccable"
+            },
+            {
+              "os": "any",
+              "label": "Detector",
+              "command": "npx impeccable detect src/"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A supported coding agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill directs your agent to read the project while it works."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill directs your agent to write files in your project."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "The installer and the detector run locally through npx, and the detector can scan a rendered page using your installed Chrome or Edge."
+          },
+          {
+            "capability": "network_access",
+            "required": false,
+            "destinations": [],
+            "purpose": "Downloads the npm package and, only if you ask it to scan a URL, loads that page."
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://impeccable.style/docs",
+        "supportUrl": "https://github.com/pbakaus/impeccable/issues"
+      },
+      "typeDetails": {
+        "format": "Agent skill with commands, reference playbooks and a deterministic detector CLI",
+        "entryPath": "/impeccable",
+        "activation": "Invoked as /impeccable <command> <target> (or $impeccable on Codex) after running init once per project.",
+        "bundledExecutables": true,
+        "inputs": [
+          "A command and a target page, component or flow",
+          "PRODUCT.md written by init"
+        ],
+        "outputs": [
+          "Design changes",
+          "Scored critique",
+          "Ranked audit findings",
+          "PRODUCT.md and DESIGN.md"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/mattpocock/skills"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "skill",
+      "listing": {
+        "slug": "mattpocock-skills",
+        "name": {
+          "en": "Skills for Real Engineers"
+        },
+        "outcome": {
+          "en": "Small, composable engineering skills from Matt Pocock's own agent setup, built to be adapted rather than to own your process."
+        },
+        "description": {
+          "en": "A set of agent skills the author uses every day for real engineering rather than vibe coding. The README positions them against process-owning frameworks such as GSD, BMAD and Spec-Kit: the skills are deliberately small, easy to adapt and composable, work with any model, and are meant to be hacked on. They are grouped under skills/engineering and skills/productivity. A plugin install updates itself; the skills.sh route copies editable files into your project and you update them by hand. Choose one route per agent, because installing both duplicates every skill.\n\nListed by TermBuddy as a third-party project. Maintained by Matt Pocock; this listing is not endorsed by Matt Pocock."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "codex",
+          "github-copilot",
+          "cursor"
+        ],
+        "tags": [
+          "skills",
+          "engineering",
+          "agent-skill",
+          "workflow",
+          "typescript"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/mattpocock/skills#readme",
+        "issueTrackerUrl": "https://github.com/mattpocock/skills/issues"
+      },
+      "release": {
+        "version": "1.3.2",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/mattpocock/skills",
+          "authorship": "third_party",
+          "originalAuthor": "Matt Pocock"
+        },
+        "releaseNotes": "Tracks upstream release v1.3.2 (published 2026-10-29).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "gemini-cli"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "opencode"
+          },
+          {
+            "platform": "windsurf"
+          },
+          {
+            "platform": "amp"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Claude Code: claude plugin install mattpocock-skills@claude-plugins-official (updates itself).",
+            "Codex: codex plugin marketplace add mattpocock/skills, then codex plugin add mattpocock-skills@mattpocock.",
+            "Other agents: npx skills@latest add mattpocock/skills (copies editable files into your project; pass -a for cursor, opencode, windsurf, amp and others).",
+            "Pick one route per agent so you do not get every skill twice."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "claude plugin install mattpocock-skills@claude-plugins-official"
+            },
+            {
+              "os": "any",
+              "label": "Codex",
+              "command": "codex plugin marketplace add mattpocock/skills"
+            },
+            {
+              "os": "any",
+              "label": "Codex",
+              "command": "codex plugin add mattpocock-skills@mattpocock"
+            },
+            {
+              "os": "any",
+              "label": "Copilot CLI",
+              "command": "copilot plugin marketplace add mattpocock/skills"
+            },
+            {
+              "os": "any",
+              "label": "Copilot CLI",
+              "command": "copilot plugin install mattpocock-skills@mattpocock"
+            },
+            {
+              "os": "any",
+              "label": "Other agents",
+              "command": "npx skills@latest add mattpocock/skills"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A supported coding agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill directs your agent to read the project while it works."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill directs your agent to write files in your project."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/mattpocock/skills#readme",
+        "supportUrl": "https://github.com/mattpocock/skills/issues"
+      },
+      "typeDetails": {
+        "format": "Agent Skills (SKILL.md folders) with plugin manifests",
+        "entryPath": "skills/",
+        "activation": "Triggered by the agent when a skill's description matches the work in progress.",
+        "bundledExecutables": false,
+        "inputs": [
+          "Your task description"
+        ],
+        "outputs": [
+          "Plans",
+          "Code changes",
+          "Review notes"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/DietrichGebert/ponytail"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "skill",
+      "listing": {
+        "slug": "ponytail",
+        "name": {
+          "en": "Ponytail"
+        },
+        "outcome": {
+          "en": "One prompt that makes a coding agent take the smallest solution that works, with validation, security and a test where the logic is risky."
+        },
+        "description": {
+          "en": "Ponytail is a single skill prompt (skills/ponytail/SKILL.md, with a compact AGENTS.md for agents that read a rules file) that tells the agent to behave like the laziest senior developer in the room: question whether the task needs to exist, reuse what is already in the codebase, prefer the standard library and native platform features, and write the minimum code that works. It stays strict on trust-boundary validation, data-loss handling, security and accessibility, leaves one small test behind for non-trivial logic, and ends every reply by saying what was skipped or not checked. The project publishes benchmark figures for version 5 measured in Claude Code with and without the skill; treat them as the author's own results. The README warns to install only from the DietrichGebert/ponytail repository or the @dietrichgebert/ponytail npm package.\n\nListed by TermBuddy as a third-party project. Maintained by DietrichGebert; this listing is not endorsed by DietrichGebert."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "codex",
+          "cursor",
+          "github-copilot",
+          "opencode"
+        ],
+        "tags": [
+          "agent-skill",
+          "minimal-code",
+          "yagni",
+          "code-quality",
+          "testing",
+          "prompt"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/DietrichGebert/ponytail#readme",
+        "issueTrackerUrl": "https://github.com/DietrichGebert/ponytail/issues"
+      },
+      "release": {
+        "version": "5.3.3",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/DietrichGebert/ponytail",
+          "authorship": "third_party",
+          "originalAuthor": "DietrichGebert"
+        },
+        "releaseNotes": "Tracks upstream release v5.3.3 (published 2026-10-29).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "gemini-cli"
+          },
+          {
+            "platform": "opencode"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Claude Code: run /plugin marketplace add DietrichGebert/ponytail, then /plugin install ponytail@ponytail as two separate prompts.",
+            "Codex: codex plugin marketplace add DietrichGebert/ponytail, then codex plugin add ponytail@ponytail; open /hooks and trust its two lifecycle hooks.",
+            "Any other agent: copy AGENTS.md into your project or install skills/ponytail/SKILL.md as a skill; INSTALL.md covers Copilot, Cursor, OpenCode and Gemini."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin marketplace add DietrichGebert/ponytail"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin install ponytail@ponytail"
+            },
+            {
+              "os": "any",
+              "label": "Codex",
+              "command": "codex plugin marketplace add DietrichGebert/ponytail"
+            },
+            {
+              "os": "any",
+              "label": "Codex",
+              "command": "codex plugin add ponytail@ponytail"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A supported coding agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill shapes how your agent reads and reasons about the project."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill shapes the code your agent writes, including a small test for risky logic."
+          },
+          {
+            "capability": "background_execution",
+            "required": false,
+            "destinations": [],
+            "purpose": "On Codex it registers two lifecycle hooks that you must trust before they run."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/DietrichGebert/ponytail#readme",
+        "supportUrl": "https://github.com/DietrichGebert/ponytail/issues"
+      },
+      "typeDetails": {
+        "format": "Agent skill (SKILL.md) plus a compact AGENTS.md rules file",
+        "entryPath": "skills/ponytail/SKILL.md",
+        "activation": "Active every session after install; /ponytail switches intensity.",
+        "bundledExecutables": true,
+        "inputs": [
+          "Any coding task"
+        ],
+        "outputs": [
+          "Smaller diffs",
+          "A note of what was skipped or unchecked"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "skill",
+      "listing": {
+        "slug": "ui-ux-pro-max",
+        "name": {
+          "en": "UI UX Pro Max"
+        },
+        "outcome": {
+          "en": "A searchable design-intelligence skill that helps coding agents choose styles, palettes, type and UX rules for a product."
+        },
+        "description": {
+          "en": "UI UX Pro Max is an AI skill that supplies design intelligence for building professional interfaces across platforms and frameworks. It ships a searchable knowledge base (the project cites 80 UI styles and 192 reasoning rules) that a Python script queries, so the agent can pick a style, palette, typography and UX guidance suited to the product type instead of guessing. You install it either through the uipro CLI, which writes the files for your chosen assistant, or as a Claude Code plugin from its marketplace. The README lists many supported assistants.\n\nListed by TermBuddy as a third-party project. Maintained by nextlevelbuilder; this listing is not endorsed by nextlevelbuilder."
+        },
+        "categorySlug": "creative",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "windsurf",
+          "github-copilot",
+          "codex"
+        ],
+        "tags": [
+          "design",
+          "ui-ux",
+          "design-system",
+          "agent-skill",
+          "frontend",
+          "palettes"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://uupm.cc",
+        "issueTrackerUrl": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/issues"
+      },
+      "release": {
+        "version": "2.15.0",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+          "authorship": "third_party",
+          "originalAuthor": "nextlevelbuilder"
+        },
+        "releaseNotes": "Tracks upstream release v2.15.0 (published 2026-08-13) and npm package ui-ux-pro-max-cli 2.15.0.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "windsurf"
+          },
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "gemini-cli"
+          },
+          {
+            "platform": "opencode"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Install the CLI: npm install -g ui-ux-pro-max-cli",
+            "In your project run uipro init --ai <assistant> (for example claude, cursor, windsurf, copilot, codex, gemini or opencode).",
+            "Or on Claude Code use the plugin marketplace: /plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill, then /plugin install ui-ux-pro-max@ui-ux-pro-max-skill.",
+            "The skill uses Python 3 to run its search script."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npm",
+              "command": "npm install -g ui-ux-pro-max-cli"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "uipro init --ai claude"
+            },
+            {
+              "os": "any",
+              "label": "Cursor",
+              "command": "uipro init --ai cursor"
+            },
+            {
+              "os": "any",
+              "label": "Windsurf",
+              "command": "uipro init --ai windsurf"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code plugin",
+              "command": "/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code plugin",
+              "command": "/plugin install ui-ux-pro-max@ui-ux-pro-max-skill"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js",
+            "Python 3"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A supported coding agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill directs your agent to read the project while it works."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill directs your agent to write files in your project."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill runs a local Python script to search its design data, and the CLI installer runs through npm."
+          },
+          {
+            "capability": "network_access",
+            "required": false,
+            "destinations": [],
+            "purpose": "Downloads the npm package during installation."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://uupm.cc",
+        "supportUrl": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/issues"
+      },
+      "typeDetails": {
+        "format": "Agent skill with a bundled searchable design dataset and Python search script",
+        "entryPath": "uipro init writes the skill into your assistant's skills directory",
+        "activation": "Triggered by the agent for UI and UX design work.",
+        "bundledExecutables": true,
+        "inputs": [
+          "A product type or UI request"
+        ],
+        "outputs": [
+          "Design system recommendations",
+          "UI code following them"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/JuliusBrussee/caveman"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "skill",
+      "listing": {
+        "slug": "caveman",
+        "name": {
+          "en": "Caveman"
+        },
+        "outcome": {
+          "en": "Makes a coding agent answer in fewer tokens and read less input, while keeping code exact."
+        },
+        "description": {
+          "en": "Caveman trims what an agent says and what it reads. Its README describes six parts that are all switched on after install, each with its own switch: terse answers (the same fix expressed in a third of the tokens), shrinking logs, JSON, CSV and test output before the model reads them, and an automatic mode that picks the model and effort per request. The installer finds the agents and logins on your machine, shows what it will change and asks before applying. It runs locally with your own keys and subscription. The figures in the README (token reductions, cost comparisons) are the author's own measurements. Needs Node.js 22.13 or newer.\n\nListed by TermBuddy as a third-party project. Maintained by JuliusBrussee; this listing is not endorsed by JuliusBrussee."
+        },
+        "categorySlug": "productivity",
+        "communitySlugs": [
+          "claude-code",
+          "codex",
+          "gemini-cli",
+          "opencode"
+        ],
+        "tags": [
+          "tokens",
+          "cost",
+          "agent-skill",
+          "context",
+          "cli",
+          "prompt"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/JuliusBrussee/caveman#readme",
+        "issueTrackerUrl": "https://github.com/JuliusBrussee/caveman/issues"
+      },
+      "release": {
+        "version": "4.1.0",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/JuliusBrussee/caveman",
+          "authorship": "third_party",
+          "originalAuthor": "JuliusBrussee"
+        },
+        "releaseNotes": "Tracks npm package @caveman-ai/cli 4.1.0 and the v4.1.0 tag its installer scripts reference.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "gemini-cli"
+          },
+          {
+            "platform": "opencode"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Run npx @caveman-ai/cli@latest (Node.js 22.13 or newer). It lists the agents it found and what it will change; review that before pressing Enter.",
+            "Or add it as a skill: npx skills add JuliusBrussee/caveman -g",
+            "Claude Code plugin: claude plugin marketplace add JuliusBrussee/caveman, then claude plugin install caveman@caveman.",
+            "Read the installer scripts before piping them to a shell."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npx",
+              "command": "npx @caveman-ai/cli@latest"
+            },
+            {
+              "os": "any",
+              "label": "Skills CLI",
+              "command": "npx skills add JuliusBrussee/caveman -g"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "claude plugin marketplace add JuliusBrussee/caveman && claude plugin install caveman@caveman"
+            },
+            {
+              "os": "macos",
+              "label": "Shell installer",
+              "command": "curl -fsSL https://raw.githubusercontent.com/JuliusBrussee/caveman/v4.1.0/install.sh | bash"
+            },
+            {
+              "os": "linux",
+              "label": "Shell installer",
+              "command": "curl -fsSL https://raw.githubusercontent.com/JuliusBrussee/caveman/v4.1.0/install.sh | bash"
+            },
+            {
+              "os": "windows",
+              "label": "PowerShell",
+              "command": "irm https://raw.githubusercontent.com/JuliusBrussee/caveman/v4.1.0/install.ps1 | iex"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js 22.13+"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A supported coding agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill directs your agent to read the project while it works."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill directs your agent to write files in your project."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "The installer and its helpers run on your machine and change how your agent is launched."
+          },
+          {
+            "capability": "network_access",
+            "required": false,
+            "destinations": [],
+            "purpose": "Downloads the package; the automatic mode can choose which model your own account calls."
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://github.com/JuliusBrussee/caveman#readme",
+        "supportUrl": "https://github.com/JuliusBrussee/caveman/issues"
+      },
+      "typeDetails": {
+        "format": "Agent skills, hooks and a CLI installer",
+        "entryPath": "npx @caveman-ai/cli installs it for the agents it detects",
+        "activation": "On after install; /caveman, /ultracave and /megacave select the answer style.",
+        "bundledExecutables": true,
+        "inputs": [
+          "Your normal prompts and tool output"
+        ],
+        "outputs": [
+          "Shorter answers",
+          "Condensed tool output"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/coreyhaines31/marketingskills"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "skill",
+      "listing": {
+        "slug": "marketingskills",
+        "name": {
+          "en": "Marketing Skills for AI Agents"
+        },
+        "outcome": {
+          "en": "Agent skills for conversion optimisation, copywriting, SEO, analytics and growth engineering."
+        },
+        "description": {
+          "en": "A collection of AI agent skills for marketing work, built for technical marketers and founders who want a coding agent to help with conversion optimisation, copywriting, SEO, analytics and growth engineering. Skills are markdown files that give an agent specialised frameworks and workflows, and an agent applies the right one when it recognises a marketing task; the README shows how the skills work together. The library is free and MIT licensed. It also lists verified partner tools, disclosed as sponsors and described as never influencing what the core skills recommend, and offers an optional guided workflow for connecting marketing accounts with scoped credentials, which you should review before using.\n\nListed by TermBuddy as a third-party project. Maintained by Corey Haines; this listing is not endorsed by Corey Haines."
+        },
+        "categorySlug": "marketing",
+        "communitySlugs": [
+          "claude-code",
+          "codex",
+          "cursor",
+          "windsurf"
+        ],
+        "tags": [
+          "marketing",
+          "seo",
+          "copywriting",
+          "cro",
+          "analytics",
+          "agent-skill",
+          "growth"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/coreyhaines31/marketingskills#readme",
+        "issueTrackerUrl": "https://github.com/coreyhaines31/marketingskills/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-11-09",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/coreyhaines31/marketingskills",
+          "authorship": "third_party",
+          "originalAuthor": "Corey Haines"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "windsurf"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Install everything: npx skills add coreyhaines31/marketingskills",
+            "Or pick skills: npx skills add coreyhaines31/marketingskills --skill cro copywriting",
+            "Claude Code plugin: /plugin marketplace add coreyhaines31/marketingskills, then /plugin install marketing-skills.",
+            "Connecting your marketing accounts is optional and separate; follow the upstream tool setup guide and use read-only, scoped credentials."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Skills CLI",
+              "command": "npx skills add coreyhaines31/marketingskills"
+            },
+            {
+              "os": "any",
+              "label": "Skills CLI",
+              "command": "npx skills add coreyhaines31/marketingskills --skill cro copywriting"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin marketplace add coreyhaines31/marketingskills"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin install marketing-skills"
+            },
+            {
+              "os": "any",
+              "label": "Codex",
+              "command": "codex plugin marketplace add coreyhaines31/marketingskills"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A supported coding agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "Skills direct your agent to read your site, copy and project files."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "Skills direct your agent to write copy, pages and analysis files in your project."
+          },
+          {
+            "capability": "network_access",
+            "required": false,
+            "destinations": [],
+            "purpose": "Only if you connect marketing tools by following the optional setup guide."
+          },
+          {
+            "capability": "external_account_access",
+            "required": false,
+            "destinations": [],
+            "purpose": "Only if you connect marketing accounts through the optional guided workflow; upstream recommends scoped, read-only credentials.",
+            "scope": "Your marketing accounts"
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/coreyhaines31/marketingskills#readme",
+        "supportUrl": "https://github.com/coreyhaines31/marketingskills/issues"
+      },
+      "typeDetails": {
+        "format": "Agent Skills (SKILL.md folders)",
+        "entryPath": "skills/",
+        "activation": "Triggered by the agent when it recognises a marketing task.",
+        "bundledExecutables": false,
+        "inputs": [
+          "Your product, audience and marketing task"
+        ],
+        "outputs": [
+          "Copy",
+          "CRO and SEO recommendations",
+          "Analytics guidance"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/K-Dense-AI/scientific-agent-skills"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "skill",
+      "listing": {
+        "slug": "scientific-agent-skills",
+        "name": {
+          "en": "Scientific Agent Skills"
+        },
+        "outcome": {
+          "en": "A library of 177 research skills covering biology, chemistry, medicine, physics, engineering, Earth science and data analysis."
+        },
+        "description": {
+          "en": "Scientific Agent Skills is a collection of scientific and research skills created by K-Dense for any agent that supports the open Agent Skills standard. The skills cover bioinformatics and genomics, cheminformatics and drug discovery, proteomics, clinical research workflows, physics, engineering, Earth science, data analysis and scientific communication, each giving the agent curated guidance for specific libraries, databases and tools rather than leaving it to improvise. It is also packaged as a portable agent plugin. The authors describe the collection in a paper and ask that research use cites it. Skills drive scientific code and data sources, so check outputs yourself, particularly for clinical or safety-relevant work; the README also describes scanning skills with a third-party skill scanner.\n\nListed by TermBuddy as a third-party project. Maintained by K-Dense; this listing is not endorsed by K-Dense."
+        },
+        "categorySlug": "research",
+        "communitySlugs": [
+          "claude-code",
+          "cursor",
+          "codex"
+        ],
+        "tags": [
+          "research",
+          "science",
+          "bioinformatics",
+          "chemistry",
+          "data-analysis",
+          "agent-skill",
+          "literature"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/K-Dense-AI/scientific-agent-skills#readme",
+        "issueTrackerUrl": "https://github.com/K-Dense-AI/scientific-agent-skills/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-11-09",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/K-Dense-AI/scientific-agent-skills",
+          "authorship": "third_party",
+          "originalAuthor": "K-Dense"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "codex"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Install with the skills CLI: npx skills add K-Dense-AI/scientific-agent-skills",
+            "Or clone it into your agent's skills directory, for example git clone https://github.com/K-Dense-AI/scientific-agent-skills.git ~/.agents/skills/scientific-agent-skills (user level) or .agents/skills/ in a project.",
+            "Individual skills may need Python packages or accounts; many use uv, which the README explains how to install."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Skills CLI",
+              "command": "npx skills add K-Dense-AI/scientific-agent-skills"
+            },
+            {
+              "os": "any",
+              "label": "Clone (user level)",
+              "command": "git clone https://github.com/K-Dense-AI/scientific-agent-skills.git ~/.agents/skills/scientific-agent-skills"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Python"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A supported coding agent",
+            "uv (for many skills)"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill directs your agent to read the project while it works."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill directs your agent to write files in your project."
+          },
+          {
+            "capability": "process_execution",
+            "required": false,
+            "destinations": [],
+            "purpose": "Skills direct your agent to run analysis code and install Python packages."
+          },
+          {
+            "capability": "network_access",
+            "required": false,
+            "destinations": [],
+            "purpose": "Skills direct your agent to query public scientific databases and package indexes."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/K-Dense-AI/scientific-agent-skills#readme",
+        "supportUrl": "https://github.com/K-Dense-AI/scientific-agent-skills/issues"
+      },
+      "typeDetails": {
+        "format": "Agent Skills (SKILL.md folders), also packaged as an agent plugin",
+        "entryPath": "scientific-skills/",
+        "activation": "Triggered by the agent when a task matches a skill's scientific domain.",
+        "bundledExecutables": true,
+        "inputs": [
+          "A research question, dataset or analysis task"
+        ],
+        "outputs": [
+          "Analysis code",
+          "Results and figures",
+          "Scientific write-ups"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/OthmanAdi/planning-with-files"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "skill",
+      "listing": {
+        "slug": "planning-with-files",
+        "name": {
+          "en": "Planning with Files"
+        },
+        "outcome": {
+          "en": "Keeps a coding agent's plan, findings and progress on disk so long tasks survive /clear and context resets."
+        },
+        "description": {
+          "en": "Persistent file-based planning for coding agents and long-running tasks. The skill keeps task_plan.md, findings.md and progress.md in your project, and activated lifecycle hooks inject selected planning context into each turn, so the plan survives /clear and a fresh context window. It supports many hosts (Claude Code, Cursor, Codex, Gemini CLI, Copilot, OpenCode and others) with host-specific setup docs, and an optional gated mode can request continuation only on hosts that support the needed stop behaviour. Per the README it never executes a command declared in a plan. The project also ships translated skill variants.\n\nListed by TermBuddy as a third-party project. Maintained by OthmanAdi; this listing is not endorsed by OthmanAdi."
+        },
+        "categorySlug": "productivity",
+        "communitySlugs": [
+          "claude-code",
+          "codex",
+          "cursor",
+          "opencode"
+        ],
+        "tags": [
+          "planning",
+          "agent-skill",
+          "context",
+          "long-running",
+          "hooks",
+          "workflow"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://github.com/OthmanAdi/planning-with-files#readme",
+        "issueTrackerUrl": "https://github.com/OthmanAdi/planning-with-files/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-11-09",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/OthmanAdi/planning-with-files",
+          "authorship": "third_party",
+          "originalAuthor": "OthmanAdi"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09).",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "gemini-cli"
+          },
+          {
+            "platform": "opencode"
+          },
+          {
+            "platform": "amp"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Install the skill: npx skills add OthmanAdi/planning-with-files --skill planning-with-files -g",
+            "Each host has its own setup page in the upstream docs (Claude Code, Cursor, Codex, Gemini CLI, OpenCode and others).",
+            "Hooks inject planning context into your turns; review them for your host before trusting them."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Skills CLI",
+              "command": "npx skills add OthmanAdi/planning-with-files --skill planning-with-files -g"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A supported coding agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill directs your agent to read the project while it works."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "The skill directs your agent to write files in your project."
+          },
+          {
+            "capability": "background_execution",
+            "required": false,
+            "destinations": [],
+            "purpose": "Lifecycle hooks fire on agent events (for example each turn) to inject planning context."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://github.com/OthmanAdi/planning-with-files#readme",
+        "supportUrl": "https://github.com/OthmanAdi/planning-with-files/issues"
+      },
+      "typeDetails": {
+        "format": "Agent skill with host-specific hooks and templates",
+        "entryPath": "skills/planning-with-files",
+        "activation": "Triggered for multi-step or long-running work; lifecycle hooks re-inject the plan on each turn where the host supports hooks.",
+        "bundledExecutables": true,
+        "inputs": [
+          "A multi-step task"
+        ],
+        "outputs": [
+          "task_plan.md",
+          "findings.md",
+          "progress.md"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/Fission-AI/OpenSpec"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "workflow",
+      "listing": {
+        "slug": "openspec",
+        "name": {
+          "en": "OpenSpec"
+        },
+        "outcome": {
+          "en": "A lightweight spec-driven workflow: propose a change, review the plan, apply it and archive it, from the AI tool you already use."
+        },
+        "description": {
+          "en": "OpenSpec is a spec-driven development framework for AI coding assistants, aimed at keeping people and agents agreed on what to build before code is written. Its philosophy is fluid rather than rigid, iterative rather than waterfall, and built for existing codebases as well as new ones. The default flow is explore (a no-stakes thinking partner that reads your code), propose a named change, apply it and archive it, driven by slash commands in your assistant (spelled /opsx:propose or a host-specific variant). An expanded profile adds new, continue, fast-forward, verify, bulk-archive and onboard commands. The README says it works with more than 30 AI assistants; run openspec init to choose yours. Needs Node.js 22.12 or newer for the npm route.\n\nListed by TermBuddy as a third-party project. Maintained by Fission AI; this listing is not endorsed by Fission AI."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "claude-code",
+          "codex",
+          "cursor",
+          "github-copilot"
+        ],
+        "tags": [
+          "spec-driven-development",
+          "workflow",
+          "planning",
+          "specs",
+          "cli",
+          "agents"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://openspec.dev/docs",
+        "issueTrackerUrl": "https://github.com/Fission-AI/OpenSpec/issues"
+      },
+      "release": {
+        "version": "1.16.1",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/Fission-AI/OpenSpec",
+          "authorship": "third_party",
+          "originalAuthor": "Fission AI"
+        },
+        "releaseNotes": "Tracks npm package @fission-ai/openspec 1.16.1.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "github-copilot"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Install the CLI with the official script, npm install -g @fission-ai/openspec@latest (Node.js 22.12+), or Homebrew.",
+            "In your project run openspec init and choose your AI tool.",
+            "Start with /opsx:explore or /opsx:propose <what-you-want-to-build>; your tool may spell it /opsx-propose, @opsx-propose or $openspec-propose."
+          ],
+          "commands": [
+            {
+              "os": "macos",
+              "label": "Shell installer",
+              "command": "curl -fsSL https://openspec.dev/cli/install.sh | sh"
+            },
+            {
+              "os": "linux",
+              "label": "Shell installer",
+              "command": "curl -fsSL https://openspec.dev/cli/install.sh | sh"
+            },
+            {
+              "os": "windows",
+              "label": "PowerShell",
+              "command": "irm https://openspec.dev/cli/install.ps1 | iex"
+            },
+            {
+              "os": "any",
+              "label": "npm",
+              "command": "npm install -g @fission-ai/openspec@latest"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js 22.12+"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A supported coding agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "The CLI and agent read your project to propose changes."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "Creates and updates spec, change and archive files in your project."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "The CLI runs locally and its installer script is run through your shell."
+          },
+          {
+            "capability": "code_modification",
+            "required": true,
+            "destinations": [],
+            "purpose": "The apply step has your agent implement the proposed change."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://openspec.dev/docs",
+        "supportUrl": "https://github.com/Fission-AI/OpenSpec/issues"
+      },
+      "typeDetails": {
+        "stages": [
+          {
+            "name": "Explore",
+            "description": "Optional thinking partner that reads your code and weighs options before any code is written.",
+            "humanApproval": false
+          },
+          {
+            "name": "Propose",
+            "description": "Create a named change with its specification and plan for review.",
+            "humanApproval": true
+          },
+          {
+            "name": "Apply",
+            "description": "The agent implements the proposed change.",
+            "humanApproval": false
+          },
+          {
+            "name": "Archive",
+            "description": "Fold the completed change back into the project specs.",
+            "humanApproval": false
+          }
+        ],
+        "dependencies": [
+          "Node.js 22.12+ (npm route)",
+          "A supported coding agent"
+        ],
+        "executionMethod": "Slash commands in your coding agent after running openspec init.",
+        "initialInputs": [
+          "A description of the change you want"
+        ],
+        "intermediateState": "Spec and change documents kept in your project repository.",
+        "finalOutputs": [
+          "Implemented change",
+          "Archived change record"
+        ],
+        "retryBehavior": "Not specified upstream; re-run the command for a stage.",
+        "rollbackBehavior": "Not specified upstream; use version control.",
+        "partialFailureBehavior": "Not specified upstream; change documents remain in your repository to inspect and re-run from."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/openai/codex"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "agent",
+      "listing": {
+        "slug": "openai-codex",
+        "name": {
+          "en": "Codex CLI"
+        },
+        "outcome": {
+          "en": "OpenAI's open-source coding agent that runs in your terminal, with IDE integrations for VS Code, Cursor and Windsurf."
+        },
+        "description": {
+          "en": "Codex is a coding agent from OpenAI that runs locally in your terminal: you describe a task in a project directory and it reads the code, edits files and runs commands. The README also points to an IDE integration for VS Code, Cursor and Windsurf. It installs through a shell script on macOS and Linux, npm, or a Homebrew cask. How much it may do without asking, and which model account it uses, depend on your configuration and sign-in, so review its approval settings before running it on a repository you care about.\n\nListed by TermBuddy as a third-party project. Maintained by OpenAI; this listing is not endorsed by OpenAI."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "codex",
+          "vscode",
+          "cursor",
+          "windsurf"
+        ],
+        "tags": [
+          "coding-agent",
+          "terminal",
+          "cli",
+          "open-source",
+          "agent"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://developers.openai.com/codex",
+        "issueTrackerUrl": "https://github.com/openai/codex/issues"
+      },
+      "release": {
+        "version": "0.167.0",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/openai/codex",
+          "authorship": "third_party",
+          "originalAuthor": "OpenAI"
+        },
+        "releaseNotes": "Tracks npm package @openai/codex 0.167.0.",
+        "compatibility": [
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "vscode"
+          },
+          {
+            "platform": "cursor"
+          },
+          {
+            "platform": "windsurf"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "macOS or Linux: run the official install script, or npm install -g @openai/codex, or brew install --cask codex.",
+            "Run codex in a project directory and sign in as prompted.",
+            "Review the approval and sandbox settings before using it on important repositories."
+          ],
+          "commands": [
+            {
+              "os": "macos",
+              "label": "Shell installer",
+              "command": "curl -fsSL https://chatgpt.com/codex/install.sh | sh"
+            },
+            {
+              "os": "linux",
+              "label": "Shell installer",
+              "command": "curl -fsSL https://chatgpt.com/codex/install.sh | sh"
+            },
+            {
+              "os": "any",
+              "label": "npm",
+              "command": "npm install -g @openai/codex"
+            },
+            {
+              "os": "macos",
+              "label": "Homebrew",
+              "command": "brew install --cask codex"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [
+            "An OpenAI account or API key"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "Node.js (npm route)"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "A coding agent reads your project files."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "A coding agent creates and edits files."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "A coding agent runs shell commands, subject to its approval settings."
+          },
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Calls the model provider you configure."
+          },
+          {
+            "capability": "code_modification",
+            "required": true,
+            "destinations": [],
+            "purpose": "Implements changes in your repositories."
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://developers.openai.com/codex",
+        "supportUrl": "https://github.com/openai/codex/issues"
+      },
+      "typeDetails": {
+        "scope": "primary",
+        "entryPath": "codex command (npm @openai/codex)",
+        "invocation": "Run codex in a project directory and describe the task.",
+        "tools": [],
+        "capabilities": [
+          "Terminal coding agent",
+          "IDE integration"
+        ],
+        "modelRequirements": [
+          "OpenAI models through your account"
+        ],
+        "inputs": [
+          "Task descriptions in a project directory"
+        ],
+        "outputs": [
+          "Code changes",
+          "Command output"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/cline/cline"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "agent",
+      "listing": {
+        "slug": "cline",
+        "name": {
+          "en": "Cline"
+        },
+        "outcome": {
+          "en": "An open-source coding agent for your IDE, terminal and desktop, usable interactively or headless in CI."
+        },
+        "description": {
+          "en": "Cline is an open-source coding agent available as an IDE extension, a terminal CLI and a desktop app, plus an SDK. The CLI can run as an interactive chat or fully headless for CI/CD and scripting. Like any coding agent it reads and edits your files and can run commands, calling the model provider you configure, so check its approval settings and which provider receives your code. Install the CLI with npm.\n\nListed by TermBuddy as a third-party project. Maintained by Cline; this listing is not endorsed by Cline."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "cline",
+          "vscode"
+        ],
+        "tags": [
+          "coding-agent",
+          "ide",
+          "cli",
+          "open-source",
+          "agent",
+          "vscode"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://docs.cline.bot",
+        "issueTrackerUrl": "https://github.com/cline/cline/issues"
+      },
+      "release": {
+        "version": "3.0.74",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/cline/cline",
+          "authorship": "third_party",
+          "originalAuthor": "Cline"
+        },
+        "releaseNotes": "Tracks npm package cline 3.0.74.",
+        "compatibility": [
+          {
+            "platform": "cline"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Terminal: npm i -g cline, then run cline in a project directory.",
+            "IDE and desktop installs are described in the upstream documentation.",
+            "Configure the model provider you want to use and review its approval settings."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npm",
+              "command": "npm i -g cline"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [
+            "A model provider account or key of your choice"
+          ],
+          "operatingSystems": [],
+          "dependencies": [
+            "Node.js (CLI)"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "A coding agent reads your project files."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "A coding agent creates and edits files."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "A coding agent runs shell commands, subject to its approval settings."
+          },
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Calls the model provider you configure."
+          },
+          {
+            "capability": "code_modification",
+            "required": true,
+            "destinations": [],
+            "purpose": "Implements changes in your repositories."
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://docs.cline.bot",
+        "supportUrl": "https://github.com/cline/cline/issues"
+      },
+      "typeDetails": {
+        "scope": "primary",
+        "entryPath": "cline command (npm cline), IDE extension or desktop app",
+        "invocation": "Run cline in a project directory, or open it in your IDE, and describe the task.",
+        "tools": [],
+        "capabilities": [
+          "IDE coding agent",
+          "Terminal agent",
+          "Headless CI mode"
+        ],
+        "modelRequirements": [
+          "A model provider of your choice"
+        ],
+        "inputs": [
+          "Task descriptions in a project directory"
+        ],
+        "outputs": [
+          "Code changes",
+          "Command output"
+        ]
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/thedotmack/claude-mem"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "integration",
+      "listing": {
+        "slug": "claude-mem",
+        "name": {
+          "en": "Claude-Mem"
+        },
+        "outcome": {
+          "en": "Persistent memory for coding agents: it records what your agent does, summarises it and brings it back in later sessions."
+        },
+        "description": {
+          "en": "Claude-Mem gives coding agents memory across sessions. Hooks in your agent hand each tool call (what it reads, edits and runs) to a small local worker, an observer turns that activity into observations and summaries, and your next session in the project opens with the relevant memory. Storage is SQLite at ~/.claude-mem on your machine with semantic search added through Chroma, and a local web viewer shows what it holds. Things to know before installing, taken from the README: the installer asks you to sign in to claude-mem in a browser by email unless you pass an explicit provider flag or opt out, choosing its hosted observer starts a free trial, anonymous usage analytics are on by default (npx claude-mem telemetry disable turns them off), and cloud sync is opt-in. Wrapping text in private tags keeps it out of storage. The npm package alone installs only the SDK, not the plugin hooks.\n\nListed by TermBuddy as a third-party project. Maintained by thedotmack; this listing is not endorsed by thedotmack."
+        },
+        "categorySlug": "productivity",
+        "communitySlugs": [
+          "claude-code",
+          "codex",
+          "opencode",
+          "cursor"
+        ],
+        "tags": [
+          "memory",
+          "context",
+          "agent",
+          "plugin",
+          "hooks",
+          "sqlite"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://docs.claude-mem.ai",
+        "issueTrackerUrl": "https://github.com/thedotmack/claude-mem/issues"
+      },
+      "release": {
+        "version": "15.13.0",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/thedotmack/claude-mem",
+          "authorship": "third_party",
+          "originalAuthor": "thedotmack"
+        },
+        "releaseNotes": "Tracks npm package claude-mem 15.13.0.",
+        "compatibility": [
+          {
+            "platform": "claude-code"
+          },
+          {
+            "platform": "codex"
+          },
+          {
+            "platform": "opencode"
+          },
+          {
+            "platform": "cursor"
+          }
+        ],
+        "installation": {
+          "method": "npm",
+          "instructions": [
+            "Run npx claude-mem install; it finds the agents on your machine and asks which to set up (Node.js 20.19+ or 22.12+).",
+            "Or on Claude Code: /plugin marketplace add thedotmack/claude-mem, then /plugin install claude-mem, and restart.",
+            "npm install -g claude-mem installs the SDK only, not the plugin hooks or worker.",
+            "To avoid the browser sign-in pass an explicit --provider flag or set CLAUDE_MEM_ONLINE_OPTIN=false; npx claude-mem telemetry disable turns off analytics."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "npx",
+              "command": "npx claude-mem install"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin marketplace add thedotmack/claude-mem"
+            },
+            {
+              "os": "any",
+              "label": "Claude Code",
+              "command": "/plugin install claude-mem"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [
+            "Node.js 20.19+ or 22.12+",
+            "Bun (managed by the worker)"
+          ],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "A supported coding agent"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_read",
+            "required": true,
+            "destinations": [],
+            "purpose": "Hooks observe which files your agent reads."
+          },
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "Writes its database and configuration under ~/.claude-mem and installs hooks into your agent configuration."
+          },
+          {
+            "capability": "process_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "Starts a local worker service managed by Bun and runs hooks on agent events."
+          },
+          {
+            "capability": "background_execution",
+            "required": true,
+            "destinations": [],
+            "purpose": "The local worker keeps running to take observations and serve the viewer."
+          },
+          {
+            "capability": "network_access",
+            "required": true,
+            "destinations": [],
+            "purpose": "Calls the model provider used for the observer, and sends anonymous analytics unless disabled; cloud sync only if you opt in."
+          }
+        ],
+        "license": {
+          "identifier": "Apache-2.0"
+        },
+        "documentationUrl": "https://docs.claude-mem.ai",
+        "supportUrl": "https://github.com/thedotmack/claude-mem/issues"
+      },
+      "typeDetails": {
+        "integrationKind": "plugin",
+        "hostPlatform": "claude-code",
+        "installationIdentifier": "thedotmack/claude-mem",
+        "connectedService": "Local claude-mem worker, SQLite store and Chroma index",
+        "requestedScopes": [],
+        "authentication": "Optional browser sign-in by email for the hosted observer; none required with an explicit provider flag.",
+        "dataFlow": "Tool activity from your agent is processed by a local worker and stored in ~/.claude-mem; observation text goes to the configured model provider for summarising, and to cmem.ai only if you enable cloud sync."
+      }
+    }
+  },
+  {
+    "sources": [
+      "https://github.com/github/awesome-copilot"
+    ],
+    "manifest": {
+      "manifestVersion": 1,
+      "type": "template",
+      "listing": {
+        "slug": "awesome-copilot",
+        "name": {
+          "en": "Awesome GitHub Copilot"
+        },
+        "outcome": {
+          "en": "A community collection of custom agents, instructions, skills, hooks, workflows and plugins for GitHub Copilot."
+        },
+        "description": {
+          "en": "A community-created collection that customises GitHub Copilot: custom agents, instruction files, skills, hooks, workflows and plugins, searchable on its own website, which also hosts a Learning Hub of guides. Plugins install through Copilot's plugin marketplace, and an llms.txt lists the resources for use inside an agent. Items are contributed by the community, so read an instruction, hook or plugin before enabling it, since these change how Copilot behaves in your repositories.\n\nListed by TermBuddy as a third-party project. Maintained by GitHub; this listing is not endorsed by GitHub."
+        },
+        "categorySlug": "development",
+        "communitySlugs": [
+          "github-copilot",
+          "vscode"
+        ],
+        "tags": [
+          "github-copilot",
+          "instructions",
+          "custom-agents",
+          "skills",
+          "templates",
+          "plugins"
+        ],
+        "screenshots": [],
+        "documentationUrl": "https://awesome-copilot.github.com",
+        "issueTrackerUrl": "https://github.com/github/awesome-copilot/issues"
+      },
+      "release": {
+        "version": "snapshot-2026-11-09",
+        "source": {
+          "kind": "external_link",
+          "url": "https://github.com/github/awesome-copilot",
+          "authorship": "third_party",
+          "originalAuthor": "GitHub"
+        },
+        "releaseNotes": "Upstream publishes no tagged releases; this entry reflects the repository as last checked (2026-11-09).",
+        "compatibility": [
+          {
+            "platform": "github-copilot"
+          },
+          {
+            "platform": "vscode"
+          }
+        ],
+        "installation": {
+          "method": "manual",
+          "instructions": [
+            "Add the marketplace to Copilot CLI: copilot plugin marketplace add github/awesome-copilot",
+            "Install a plugin: copilot plugin install <plugin-name>@awesome-copilot.",
+            "Or browse awesome-copilot.github.com and copy the instruction, agent or skill files you want into your repository.",
+            "Read each item before enabling it; hooks and plugins can run commands."
+          ],
+          "commands": [
+            {
+              "os": "any",
+              "label": "Copilot CLI",
+              "command": "copilot plugin marketplace add github/awesome-copilot"
+            }
+          ]
+        },
+        "requirements": {
+          "runtimes": [],
+          "accounts": [],
+          "operatingSystems": [],
+          "dependencies": [
+            "GitHub Copilot"
+          ],
+          "environmentVariables": []
+        },
+        "permissions": [
+          {
+            "capability": "filesystem_write",
+            "required": true,
+            "destinations": [],
+            "purpose": "Installing items writes instruction, agent, skill or hook files into your repository or Copilot configuration."
+          },
+          {
+            "capability": "process_execution",
+            "required": false,
+            "destinations": [],
+            "purpose": "Hooks and plugins in the collection can run commands."
+          }
+        ],
+        "license": {
+          "identifier": "MIT"
+        },
+        "documentationUrl": "https://awesome-copilot.github.com",
+        "supportUrl": "https://github.com/github/awesome-copilot/issues"
+      },
+      "typeDetails": {
+        "templateKind": "Community collection of Copilot customisation files and a plugin marketplace",
+        "includedPaths": [
+          "agents/",
+          "instructions/",
+          "skills/",
+          "hooks/",
+          "workflows/",
+          "plugins/"
+        ],
+        "outputFormat": "Copilot custom agents, instruction files, skills, hooks, workflows and plugins",
+        "initializationMethod": "Add the marketplace with copilot plugin marketplace add github/awesome-copilot, or copy files from the repository or website.",
+        "replacementVariables": [],
+        "executesScripts": true
+      }
+    }
   }
 ]

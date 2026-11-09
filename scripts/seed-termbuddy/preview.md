@@ -1,4 +1,4 @@
-# TermBuddy seed preview (34 listings)
+# TermBuddy seed preview (47 listings)
 
 ## GitHub MCP Server  `mcp_server` · development
 *Let your coding agent read repositories, manage issues and pull requests, and inspect Actions runs on GitHub.*
@@ -607,3 +607,211 @@ Listed by TermBuddy as a third-party project. Maintained by Google (Google Ads A
 - permissions: network_access, secret_access, external_account_access
 - tags: mcp, google-ads, advertising, marketing, campaigns · communities: claude-code, cursor, vscode
 - checked: https://github.com/googleads/google-ads-mcp https://github.com/googleads/google-ads-mcp/releases/tag/v0.0.6
+
+---
+
+## Impeccable  `skill` · creative
+*A design vocabulary and review toolkit for coding agents: steer, critique, audit and polish interfaces, and catch common AI design tells.*
+
+Impeccable gives a coding agent words for design intent. Instead of "make it pop", you name a move such as bolder, quieter, distill, typeset, layout, polish or harden and point it at one target, and the agent loads a playbook written for that move. It also reviews: critique scores a design against usability heuristics and ranks what to fix first, and audit reports on accessibility, performance, theming and responsive behaviour with findings ranked from blocking to polish. A separate detector applies deterministic rules, with no model call, to flag typical machine-made design tells and quality problems such as cramped padding or skipped headings. Run /impeccable init once per project and it writes a PRODUCT.md capturing who the product is for, which later commands read; document writes a DESIGN.md. The project describes itself as strongest on interfaces that already exist, and it can also build new pages.
+
+Listed by TermBuddy as a third-party project. Maintained by Paul Bakaus; this listing is not endorsed by Paul Bakaus.
+
+- slug: `impeccable` · version 4.8.1 · licence Apache-2.0
+- author: Paul Bakaus · source: https://github.com/pbakaus/impeccable
+- platforms: claude-code, cursor, codex, github-copilot, gemini-cli, opencode
+- permissions: filesystem_read, filesystem_write, process_execution, network_access
+- tags: design, ui, frontend, accessibility, code-review, agent-skill, polish · communities: claude-code, cursor, codex, github-copilot, opencode
+- checked: https://github.com/pbakaus/impeccable
+
+---
+
+## Skills for Real Engineers  `skill` · development
+*Small, composable engineering skills from Matt Pocock's own agent setup, built to be adapted rather than to own your process.*
+
+A set of agent skills the author uses every day for real engineering rather than vibe coding. The README positions them against process-owning frameworks such as GSD, BMAD and Spec-Kit: the skills are deliberately small, easy to adapt and composable, work with any model, and are meant to be hacked on. They are grouped under skills/engineering and skills/productivity. A plugin install updates itself; the skills.sh route copies editable files into your project and you update them by hand. Choose one route per agent, because installing both duplicates every skill.
+
+Listed by TermBuddy as a third-party project. Maintained by Matt Pocock; this listing is not endorsed by Matt Pocock.
+
+- slug: `mattpocock-skills` · version 1.3.2 · licence MIT
+- author: Matt Pocock · source: https://github.com/mattpocock/skills
+- platforms: claude-code, codex, github-copilot, gemini-cli, cursor, opencode, windsurf, amp
+- permissions: filesystem_read, filesystem_write
+- tags: skills, engineering, agent-skill, workflow, typescript · communities: claude-code, codex, github-copilot, cursor
+- checked: https://github.com/mattpocock/skills
+
+---
+
+## Ponytail  `skill` · development
+*One prompt that makes a coding agent take the smallest solution that works, with validation, security and a test where the logic is risky.*
+
+Ponytail is a single skill prompt (skills/ponytail/SKILL.md, with a compact AGENTS.md for agents that read a rules file) that tells the agent to behave like the laziest senior developer in the room: question whether the task needs to exist, reuse what is already in the codebase, prefer the standard library and native platform features, and write the minimum code that works. It stays strict on trust-boundary validation, data-loss handling, security and accessibility, leaves one small test behind for non-trivial logic, and ends every reply by saying what was skipped or not checked. The project publishes benchmark figures for version 5 measured in Claude Code with and without the skill; treat them as the author's own results. The README warns to install only from the DietrichGebert/ponytail repository or the @dietrichgebert/ponytail npm package.
+
+Listed by TermBuddy as a third-party project. Maintained by DietrichGebert; this listing is not endorsed by DietrichGebert.
+
+- slug: `ponytail` · version 5.3.3 · licence MIT
+- author: DietrichGebert · source: https://github.com/DietrichGebert/ponytail
+- platforms: claude-code, codex, cursor, github-copilot, gemini-cli, opencode
+- permissions: filesystem_read, filesystem_write, background_execution
+- tags: agent-skill, minimal-code, yagni, code-quality, testing, prompt · communities: claude-code, codex, cursor, github-copilot, opencode
+- checked: https://github.com/DietrichGebert/ponytail
+
+---
+
+## UI UX Pro Max  `skill` · creative
+*A searchable design-intelligence skill that helps coding agents choose styles, palettes, type and UX rules for a product.*
+
+UI UX Pro Max is an AI skill that supplies design intelligence for building professional interfaces across platforms and frameworks. It ships a searchable knowledge base (the project cites 80 UI styles and 192 reasoning rules) that a Python script queries, so the agent can pick a style, palette, typography and UX guidance suited to the product type instead of guessing. You install it either through the uipro CLI, which writes the files for your chosen assistant, or as a Claude Code plugin from its marketplace. The README lists many supported assistants.
+
+Listed by TermBuddy as a third-party project. Maintained by nextlevelbuilder; this listing is not endorsed by nextlevelbuilder.
+
+- slug: `ui-ux-pro-max` · version 2.15.0 · licence MIT
+- author: nextlevelbuilder · source: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+- platforms: claude-code, cursor, windsurf, github-copilot, codex, gemini-cli, opencode
+- permissions: filesystem_read, filesystem_write, process_execution, network_access
+- tags: design, ui-ux, design-system, agent-skill, frontend, palettes · communities: claude-code, cursor, windsurf, github-copilot, codex
+- checked: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+
+---
+
+## Caveman  `skill` · productivity
+*Makes a coding agent answer in fewer tokens and read less input, while keeping code exact.*
+
+Caveman trims what an agent says and what it reads. Its README describes six parts that are all switched on after install, each with its own switch: terse answers (the same fix expressed in a third of the tokens), shrinking logs, JSON, CSV and test output before the model reads them, and an automatic mode that picks the model and effort per request. The installer finds the agents and logins on your machine, shows what it will change and asks before applying. It runs locally with your own keys and subscription. The figures in the README (token reductions, cost comparisons) are the author's own measurements. Needs Node.js 22.13 or newer.
+
+Listed by TermBuddy as a third-party project. Maintained by JuliusBrussee; this listing is not endorsed by JuliusBrussee.
+
+- slug: `caveman` · version 4.1.0 · licence Apache-2.0
+- author: JuliusBrussee · source: https://github.com/JuliusBrussee/caveman
+- platforms: claude-code, codex, gemini-cli, opencode
+- permissions: filesystem_read, filesystem_write, process_execution, network_access
+- tags: tokens, cost, agent-skill, context, cli, prompt · communities: claude-code, codex, gemini-cli, opencode
+- checked: https://github.com/JuliusBrussee/caveman
+
+---
+
+## Marketing Skills for AI Agents  `skill` · marketing
+*Agent skills for conversion optimisation, copywriting, SEO, analytics and growth engineering.*
+
+A collection of AI agent skills for marketing work, built for technical marketers and founders who want a coding agent to help with conversion optimisation, copywriting, SEO, analytics and growth engineering. Skills are markdown files that give an agent specialised frameworks and workflows, and an agent applies the right one when it recognises a marketing task; the README shows how the skills work together. The library is free and MIT licensed. It also lists verified partner tools, disclosed as sponsors and described as never influencing what the core skills recommend, and offers an optional guided workflow for connecting marketing accounts with scoped credentials, which you should review before using.
+
+Listed by TermBuddy as a third-party project. Maintained by Corey Haines; this listing is not endorsed by Corey Haines.
+
+- slug: `marketingskills` · version snapshot-2026-11-09 · licence MIT
+- author: Corey Haines · source: https://github.com/coreyhaines31/marketingskills
+- platforms: claude-code, codex, cursor, windsurf
+- permissions: filesystem_read, filesystem_write, network_access, external_account_access
+- tags: marketing, seo, copywriting, cro, analytics, agent-skill, growth · communities: claude-code, codex, cursor, windsurf
+- checked: https://github.com/coreyhaines31/marketingskills
+
+---
+
+## Scientific Agent Skills  `skill` · research
+*A library of 177 research skills covering biology, chemistry, medicine, physics, engineering, Earth science and data analysis.*
+
+Scientific Agent Skills is a collection of scientific and research skills created by K-Dense for any agent that supports the open Agent Skills standard. The skills cover bioinformatics and genomics, cheminformatics and drug discovery, proteomics, clinical research workflows, physics, engineering, Earth science, data analysis and scientific communication, each giving the agent curated guidance for specific libraries, databases and tools rather than leaving it to improvise. It is also packaged as a portable agent plugin. The authors describe the collection in a paper and ask that research use cites it. Skills drive scientific code and data sources, so check outputs yourself, particularly for clinical or safety-relevant work; the README also describes scanning skills with a third-party skill scanner.
+
+Listed by TermBuddy as a third-party project. Maintained by K-Dense; this listing is not endorsed by K-Dense.
+
+- slug: `scientific-agent-skills` · version snapshot-2026-11-09 · licence MIT
+- author: K-Dense · source: https://github.com/K-Dense-AI/scientific-agent-skills
+- platforms: claude-code, cursor, codex
+- permissions: filesystem_read, filesystem_write, process_execution, network_access
+- tags: research, science, bioinformatics, chemistry, data-analysis, agent-skill, literature · communities: claude-code, cursor, codex
+- checked: https://github.com/K-Dense-AI/scientific-agent-skills
+
+---
+
+## Planning with Files  `skill` · productivity
+*Keeps a coding agent's plan, findings and progress on disk so long tasks survive /clear and context resets.*
+
+Persistent file-based planning for coding agents and long-running tasks. The skill keeps task_plan.md, findings.md and progress.md in your project, and activated lifecycle hooks inject selected planning context into each turn, so the plan survives /clear and a fresh context window. It supports many hosts (Claude Code, Cursor, Codex, Gemini CLI, Copilot, OpenCode and others) with host-specific setup docs, and an optional gated mode can request continuation only on hosts that support the needed stop behaviour. Per the README it never executes a command declared in a plan. The project also ships translated skill variants.
+
+Listed by TermBuddy as a third-party project. Maintained by OthmanAdi; this listing is not endorsed by OthmanAdi.
+
+- slug: `planning-with-files` · version snapshot-2026-11-09 · licence MIT
+- author: OthmanAdi · source: https://github.com/OthmanAdi/planning-with-files
+- platforms: claude-code, codex, cursor, github-copilot, gemini-cli, opencode, amp
+- permissions: filesystem_read, filesystem_write, background_execution
+- tags: planning, agent-skill, context, long-running, hooks, workflow · communities: claude-code, codex, cursor, opencode
+- checked: https://github.com/OthmanAdi/planning-with-files
+
+---
+
+## OpenSpec  `workflow` · development
+*A lightweight spec-driven workflow: propose a change, review the plan, apply it and archive it, from the AI tool you already use.*
+
+OpenSpec is a spec-driven development framework for AI coding assistants, aimed at keeping people and agents agreed on what to build before code is written. Its philosophy is fluid rather than rigid, iterative rather than waterfall, and built for existing codebases as well as new ones. The default flow is explore (a no-stakes thinking partner that reads your code), propose a named change, apply it and archive it, driven by slash commands in your assistant (spelled /opsx:propose or a host-specific variant). An expanded profile adds new, continue, fast-forward, verify, bulk-archive and onboard commands. The README says it works with more than 30 AI assistants; run openspec init to choose yours. Needs Node.js 22.12 or newer for the npm route.
+
+Listed by TermBuddy as a third-party project. Maintained by Fission AI; this listing is not endorsed by Fission AI.
+
+- slug: `openspec` · version 1.16.1 · licence MIT
+- author: Fission AI · source: https://github.com/Fission-AI/OpenSpec
+- platforms: claude-code, codex, cursor, github-copilot
+- permissions: filesystem_read, filesystem_write, process_execution, code_modification
+- tags: spec-driven-development, workflow, planning, specs, cli, agents · communities: claude-code, codex, cursor, github-copilot
+- checked: https://github.com/Fission-AI/OpenSpec
+
+---
+
+## Codex CLI  `agent` · development
+*OpenAI's open-source coding agent that runs in your terminal, with IDE integrations for VS Code, Cursor and Windsurf.*
+
+Codex is a coding agent from OpenAI that runs locally in your terminal: you describe a task in a project directory and it reads the code, edits files and runs commands. The README also points to an IDE integration for VS Code, Cursor and Windsurf. It installs through a shell script on macOS and Linux, npm, or a Homebrew cask. How much it may do without asking, and which model account it uses, depend on your configuration and sign-in, so review its approval settings before running it on a repository you care about.
+
+Listed by TermBuddy as a third-party project. Maintained by OpenAI; this listing is not endorsed by OpenAI.
+
+- slug: `openai-codex` · version 0.167.0 · licence Apache-2.0
+- author: OpenAI · source: https://github.com/openai/codex
+- platforms: codex, vscode, cursor, windsurf
+- permissions: filesystem_read, filesystem_write, process_execution, network_access, code_modification
+- tags: coding-agent, terminal, cli, open-source, agent · communities: codex, vscode, cursor, windsurf
+- checked: https://github.com/openai/codex
+
+---
+
+## Cline  `agent` · development
+*An open-source coding agent for your IDE, terminal and desktop, usable interactively or headless in CI.*
+
+Cline is an open-source coding agent available as an IDE extension, a terminal CLI and a desktop app, plus an SDK. The CLI can run as an interactive chat or fully headless for CI/CD and scripting. Like any coding agent it reads and edits your files and can run commands, calling the model provider you configure, so check its approval settings and which provider receives your code. Install the CLI with npm.
+
+Listed by TermBuddy as a third-party project. Maintained by Cline; this listing is not endorsed by Cline.
+
+- slug: `cline` · version 3.0.74 · licence Apache-2.0
+- author: Cline · source: https://github.com/cline/cline
+- platforms: cline, vscode
+- permissions: filesystem_read, filesystem_write, process_execution, network_access, code_modification
+- tags: coding-agent, ide, cli, open-source, agent, vscode · communities: cline, vscode
+- checked: https://github.com/cline/cline
+
+---
+
+## Claude-Mem  `integration` · productivity
+*Persistent memory for coding agents: it records what your agent does, summarises it and brings it back in later sessions.*
+
+Claude-Mem gives coding agents memory across sessions. Hooks in your agent hand each tool call (what it reads, edits and runs) to a small local worker, an observer turns that activity into observations and summaries, and your next session in the project opens with the relevant memory. Storage is SQLite at ~/.claude-mem on your machine with semantic search added through Chroma, and a local web viewer shows what it holds. Things to know before installing, taken from the README: the installer asks you to sign in to claude-mem in a browser by email unless you pass an explicit provider flag or opt out, choosing its hosted observer starts a free trial, anonymous usage analytics are on by default (npx claude-mem telemetry disable turns them off), and cloud sync is opt-in. Wrapping text in private tags keeps it out of storage. The npm package alone installs only the SDK, not the plugin hooks.
+
+Listed by TermBuddy as a third-party project. Maintained by thedotmack; this listing is not endorsed by thedotmack.
+
+- slug: `claude-mem` · version 15.13.0 · licence Apache-2.0
+- author: thedotmack · source: https://github.com/thedotmack/claude-mem
+- platforms: claude-code, codex, opencode, cursor
+- permissions: filesystem_read, filesystem_write, process_execution, background_execution, network_access
+- tags: memory, context, agent, plugin, hooks, sqlite · communities: claude-code, codex, opencode, cursor
+- checked: https://github.com/thedotmack/claude-mem
+
+---
+
+## Awesome GitHub Copilot  `template` · development
+*A community collection of custom agents, instructions, skills, hooks, workflows and plugins for GitHub Copilot.*
+
+A community-created collection that customises GitHub Copilot: custom agents, instruction files, skills, hooks, workflows and plugins, searchable on its own website, which also hosts a Learning Hub of guides. Plugins install through Copilot's plugin marketplace, and an llms.txt lists the resources for use inside an agent. Items are contributed by the community, so read an instruction, hook or plugin before enabling it, since these change how Copilot behaves in your repositories.
+
+Listed by TermBuddy as a third-party project. Maintained by GitHub; this listing is not endorsed by GitHub.
+
+- slug: `awesome-copilot` · version snapshot-2026-11-09 · licence MIT
+- author: GitHub · source: https://github.com/github/awesome-copilot
+- platforms: github-copilot, vscode
+- permissions: filesystem_write, process_execution
+- tags: github-copilot, instructions, custom-agents, skills, templates, plugins · communities: github-copilot, vscode
+- checked: https://github.com/github/awesome-copilot
