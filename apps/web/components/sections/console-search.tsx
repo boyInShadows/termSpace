@@ -123,7 +123,7 @@ export function ConsoleSearch({
           className={cn(
             "relative flex items-center transition-colors",
             isHero
-              ? "rounded-full border border-border-strong bg-background pe-1.5 focus-within:border-primary"
+              ? "search-field rounded-full border border-border-strong bg-background pe-1.5"
               : "rounded-control border border-border-strong bg-surface/90 shadow-panel backdrop-blur focus-within:border-transparent",
           )}
         >

@@ -210,7 +210,7 @@ export function listMarketplaceItemTypes(_req: Request, res: Response) {
 
 export async function getMarketplaceHome(_req: Request, res: Response) {
   const [products, creators, categories, types, platforms, total] = await Promise.all([
-    prisma.marketplaceProduct.findMany({ where: { published: true, featured: true }, include: productInclude, orderBy: [{ usageCount: "desc" }], take: 3 }),
+    prisma.marketplaceProduct.findMany({ where: { published: true, featured: true }, include: productInclude, orderBy: [{ featuredAt: { sort: "desc", nulls: "last" } }, { usageCount: "desc" }, { id: "asc" }], take: 3 }),
     prisma.marketplaceCreator.findMany({ where: { products: { some: { published: true } } }, select: { id: true, name: true, handle: true, initials: true, avatarUrl: true, verified: true, bio: true, followers: true, _count: { select: { products: { where: { published: true } } } } }, orderBy: [{ verified: "desc" }, { followers: "desc" }], take: 3 }),
     prisma.marketplaceCategory.findMany({ where: { products: { some: { published: true } } }, select: { name: true, slug: true, _count: { select: { products: { where: { published: true } } } } }, orderBy: [{ position: "asc" }, { name: "asc" }] }),
     // Grouped on `itemType`, the same field the catalogue's `?type=` filter

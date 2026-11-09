@@ -89,7 +89,7 @@ export interface MarketplaceModerationAuditEvent {
 }
 export interface MarketplaceModerationPreview {
   id: string; slug: string; name: string; type: ProductType; typeKey: MarketplaceItemTypeKey | null;
-  state: string; version: number; published: boolean; updatedAt: string; selfOwned: boolean;
+  state: string; version: number; published: boolean; featured: boolean; updatedAt: string; selfOwned: boolean;
   creator: { id: string; name: string; handle: string };
   proposedSnapshot: null | {
     id: string; revision: number; schemaVersion: number; digestSha256: string; content: Record<string, unknown>; createdAt: string;

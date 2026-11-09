@@ -38,7 +38,7 @@ export function DashboardSearch() {
           name="q"
           type="search"
           placeholder={t.dashboardHome.searchPlaceholder}
-          className="h-11 w-full rounded-control border border-border bg-surface pe-16 ps-9 text-base placeholder:text-muted-foreground focus:border-primary focus-visible:outline-none!"
+          className="search-field h-11 w-full rounded-control border border-border bg-surface pe-16 ps-9 text-base placeholder:text-muted-foreground focus-visible:outline-none!"
         />
         <kbd
           aria-hidden

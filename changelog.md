@@ -2,6 +2,21 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-09 — Homepage featured shelf, controlled from moderation
+
+- **Scope / shared surfaces (announce in commit body).** New migration `202611090005_marketplace_homepage_featured`,
+  `apps/api/prisma/schema.prisma`, `lib/types.ts`, `lib/i18n/moderation.ts`, `changelog.md`, `pending.md`.
+- **What.** The homepage shelf was always empty because nothing could set `featured`. The moderation preview now has a
+  "Homepage shelf" section: *Feature on homepage* / *Remove from homepage*. `POST /moderation/products/:id/featured`
+  (moderator or administrator; not on one's own listing; stale-page guard on the listing version; only a published
+  listing can be featured, any featured one can be removed; repeating the current state is a no-op with no event).
+- **Audit and order.** `FEATURED` / `UNFEATURED` lifecycle events are written with the change. `featuredAt` orders the
+  shelf, most recently featured first, three shown. Creator dashboards do not list these events.
+- **Search focus follow-up.** The first fix did not show a focus cue: the unlayered `* { border-color }` reset in
+  `globals.css` beats every Tailwind border-colour utility (site-wide, left as is). Search bars now use one
+  `.search-field:focus-within` rule that turns the field border primary.
+- **Verified.** typecheck, lint (0 errors), API tests (318) and web tests incl. new featured tests.
+
 ## 2026-11-09 — Search bars: one quiet focus state, no invented suggestions
 
 - **Scope / shared surfaces (announce in commit body).** `lib/i18n/home.ts` (removed `typedIntents`, `popularSearches`), `changelog.md`.

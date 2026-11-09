@@ -121,7 +121,12 @@ listing-scoped PostgreSQL advisory lock. `MarketplaceListingLifecycleEvent`
 records actor type and user, previous/resulting states, action, reason code,
 public-safe reason, optional private staff note, snapshot, timestamp, and
 correlation ID. Standalone private notes use the `INTERNAL_NOTE_ADDED` action
-without changing listing state or lifecycle version. Database constraints bound
+without changing listing state or lifecycle version. Featuring a listing on the
+homepage (`POST /moderation/products/:id/featured`, moderators and administrators,
+never on one's own listing) is likewise not a transition: it sets `featured` and
+`featuredAt` and records a `FEATURED` or `UNFEATURED` event in the same
+transaction. Only a published listing can be featured; any featured listing can
+be removed. The homepage shows the three most recently featured. Database constraints bound
 private notes, while triggers make snapshots and events append-only and enforce
 same-listing snapshot, manifest, and release references.
 

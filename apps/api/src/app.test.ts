@@ -1437,7 +1437,7 @@ describe("API", () => {
     expect(response.body.meta).toEqual({ page: 1, limit: 12, total: 1, totalPages: 1 });
     expect(prismaMock.marketplaceProduct.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { creator: { ownerUserId: "reader-1" } }, skip: 0, take: 12,
-      select: expect.objectContaining({ lifecycleEvents: expect.objectContaining({ where: { action: { not: "INTERNAL_NOTE_ADDED" } } }) }),
+      select: expect.objectContaining({ lifecycleEvents: expect.objectContaining({ where: { action: { notIn: ["INTERNAL_NOTE_ADDED", "FEATURED", "UNFEATURED"] } } }) }),
     }));
     expect(prismaMock.marketplaceOrder.count).toHaveBeenCalledWith({
       where: { status: "completed", product: { creator: { ownerUserId: "reader-1" } } },
@@ -2060,6 +2060,88 @@ describe("API", () => {
         internalNote: "Compare the newly requested network destination.",
       }),
       select: { id: true, createdAt: true },
+    });
+  });
+
+  describe("homepage featured shelf", () => {
+    const featuredRequest = (body: unknown) => request(createApp())
+      .post("/api/marketplace/moderation/products/product-1/featured")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", "term_academy_reader=abcdefghijklmnopqrstuvwxyz123456")
+      .send(body as object);
+    const asStaff = (role: "MODERATOR" | "ADMINISTRATOR" = "MODERATOR") => {
+      prismaMock.readerSession.findFirst.mockResolvedValue({
+        id: "session-1",
+        user: { id: "moderator-1", email: "moderator@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role }] },
+      });
+      prismaMock.$executeRaw.mockResolvedValue(1);
+      prismaMock.$transaction.mockImplementationOnce(async (operation) => typeof operation === "function" ? operation(prismaMock) : []);
+    };
+    const listing = (over: object = {}) => ({
+      id: "product-1", published: true, lifecycleState: "PUBLISHED", lifecycleVersion: 4, featured: false,
+      approvedSnapshotId: "snapshot-1", creator: { ownerUserId: "reader-1" }, ...over,
+    });
+
+    it("features a published listing and writes the audit event with the change", async () => {
+      asStaff("ADMINISTRATOR");
+      prismaMock.marketplaceProduct.findUnique.mockResolvedValue(listing());
+      const response = await featuredRequest({ expectedVersion: 4, featured: true });
+      expect(response.status).toBe(200);
+      expect(response.body.data).toMatchObject({ featured: true, changed: true });
+      expect(prismaMock.marketplaceProduct.update).toHaveBeenCalledWith({ where: { id: "product-1" }, data: { featured: true, featuredAt: expect.any(Date) } });
+      expect(prismaMock.marketplaceListingLifecycleEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ productId: "product-1", action: "FEATURED", actorType: "ADMINISTRATOR", actorUserId: "moderator-1", resultingState: "PUBLISHED" }),
+      });
+    });
+
+    it("unfeatures and clears the timestamp", async () => {
+      asStaff();
+      prismaMock.marketplaceProduct.findUnique.mockResolvedValue(listing({ featured: true }));
+      const response = await featuredRequest({ expectedVersion: 4, featured: false });
+      expect(response.status).toBe(200);
+      expect(prismaMock.marketplaceProduct.update).toHaveBeenCalledWith({ where: { id: "product-1" }, data: { featured: false, featuredAt: null } });
+      expect(prismaMock.marketplaceListingLifecycleEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({ action: "UNFEATURED" }) });
+    });
+
+    it("is a no-op, with no event, when the listing is already in the requested state", async () => {
+      asStaff();
+      prismaMock.marketplaceProduct.findUnique.mockResolvedValue(listing({ featured: true }));
+      const response = await featuredRequest({ expectedVersion: 4, featured: true });
+      expect(response.status).toBe(200);
+      expect(response.body.data).toMatchObject({ featured: true, changed: false, correlationId: null });
+      expect(prismaMock.marketplaceProduct.update).not.toHaveBeenCalled();
+      expect(prismaMock.marketplaceListingLifecycleEvent.create).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ["an unpublished listing", listing({ published: false, lifecycleState: "APPROVED" }), { expectedVersion: 4, featured: true }, 409, "LISTING_NOT_PUBLISHED"],
+      ["a stale page", listing(), { expectedVersion: 3, featured: true }, 409, "LISTING_VERSION_CONFLICT"],
+      ["the staff member's own listing", listing({ creator: { ownerUserId: "moderator-1" } }), { expectedVersion: 4, featured: true }, 403, "SELF_MODERATION_FORBIDDEN"],
+    ])("refuses %s", async (_label, found, body, status, code) => {
+      asStaff();
+      prismaMock.marketplaceProduct.findUnique.mockResolvedValue(found);
+      const response = await featuredRequest(body);
+      expect(response.status).toBe(status);
+      expect(response.body.error.code).toBe(code);
+      expect(prismaMock.marketplaceProduct.update).not.toHaveBeenCalled();
+    });
+
+    it("lets a suspended listing be unfeatured, but never featured", async () => {
+      asStaff();
+      prismaMock.marketplaceProduct.findUnique.mockResolvedValue(listing({ published: false, lifecycleState: "SUSPENDED", featured: true }));
+      expect((await featuredRequest({ expectedVersion: 4, featured: false })).status).toBe(200);
+    });
+
+    it("rejects a non-boolean value and readers without a staff role", async () => {
+      asStaff();
+      expect((await featuredRequest({ expectedVersion: 4, featured: "yes" })).status).toBe(400);
+      prismaMock.readerSession.findFirst.mockResolvedValue({
+        id: "session-1",
+        user: { id: "reader-1", email: "reader@example.com", emailVerifiedAt: new Date(), marketplaceRoleGrants: [{ role: "CREATOR" }] },
+      });
+      const denied = await featuredRequest({ expectedVersion: 4, featured: true });
+      expect(denied.status).toBe(403);
+      expect(denied.body.error.code).toBe("MARKETPLACE_ROLE_REQUIRED");
     });
   });
 

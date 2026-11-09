@@ -204,7 +204,7 @@ export function DiscoveryExperience({ initial, initialError = false, rateLimited
           onChange={(e) => setQuery(e.target.value)}
           placeholder={d.search}
           aria-label={d.search}
-          className="h-12 ps-12 text-base focus:ring-0 focus-visible:outline-none! sm:h-14"
+          className="search-field h-12 ps-12 text-base focus:ring-0 focus-visible:outline-none! sm:h-14"
         />
       </div>
       <div

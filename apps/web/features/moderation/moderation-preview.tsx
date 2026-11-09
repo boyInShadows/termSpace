@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, RotateCcw, ShieldAlert } from "lucide-react";
 import { ApiError } from "@/lib/api";
-import { addModerationNote, getModerationPreview, moderateCommunityPlacement, moderateListing } from "./moderation-api";
+import { addModerationNote, getModerationPreview, moderateCommunityPlacement, moderateListing, setListingFeatured } from "./moderation-api";
 import type { MarketplaceModerationPreview } from "@/lib/types";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
@@ -44,6 +44,7 @@ export function ModerationPreview({ productId }: { productId: string }) {
   const [pending, setPending] = useState<Decision | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [addingNote, setAddingNote] = useState(false);
+  const [featuring, setFeaturing] = useState(false);
   const [placementSubmitting, setPlacementSubmitting] = useState<string | null>(null);
   const decisionForm = useRef<HTMLFormElement>(null);
   const confirmBox = useRef<HTMLDivElement>(null);
@@ -103,6 +104,14 @@ export function ModerationPreview({ productId }: { productId: string }) {
       await load();
     } catch (cause) { setActionError(apiMessage(cause, m)); setPending(null); }
     finally { setSubmitting(false); }
+  }
+
+  async function toggleFeatured(next: boolean) {
+    if (!preview) return;
+    setFeaturing(true); setActionError(null); setRecorded(null);
+    try { await setListingFeatured(preview.id, preview.version, next); setRecorded(fill(next ? m.featuredRecorded : m.unfeaturedRecorded, { name: preview.name })); await load(); }
+    catch (cause) { setActionError(apiMessage(cause, m)); }
+    finally { setFeaturing(false); }
   }
 
   async function submitNote(event: FormEvent<HTMLFormElement>) {
@@ -307,6 +316,13 @@ export function ModerationPreview({ productId }: { productId: string }) {
               <Button variant="secondary" disabled={submitting} onClick={() => setPending(null)}>{m.goBack}</Button>
             </div>
           </div>}
+
+          {(preview.published || preview.featured) && <section className="mt-6 border-t border-border pt-5" aria-labelledby="homepage-title">
+            <h3 id="homepage-title" className="text-sm font-semibold">{m.homepageTitle}</h3>
+            <p className="mt-2 text-xs text-muted-foreground">{m.homepageIntro}</p>
+            <p role="status" className="mt-3 text-sm font-medium">{preview.featured ? m.homepageOn : m.homepageOff}</p>
+            <Button type="button" variant={preview.featured ? "secondary" : "primary"} className="mt-3 w-full" disabled={featuring || stale || preview.selfOwned || pending !== null || submitting} onClick={() => void toggleFeatured(!preview.featured)}>{featuring ? m.submitting : preview.featured ? m.unfeatureButton : m.featureButton}</Button>
+          </section>}
 
           <form className="mt-6 border-t border-border pt-5" onSubmit={submitNote}>
             <h3 className="text-sm font-semibold">{m.standaloneNote}</h3>

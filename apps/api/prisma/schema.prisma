@@ -539,6 +539,7 @@ model MarketplaceProduct {
   purchaseCount            Int                                    @default(0)
   version                  String
   featured                 Boolean                                @default(false)
+  featuredAt               DateTime?
   trending                 Boolean                                @default(false)
   verified                 Boolean                                @default(false)
   tags                     String[]
@@ -650,6 +651,8 @@ enum MarketplaceListingLifecycleAction {
   REINSTATED
   ARCHIVED
   RESTORED
+  FEATURED
+  UNFEATURED
 }
 
 model MarketplaceListingSnapshot {
