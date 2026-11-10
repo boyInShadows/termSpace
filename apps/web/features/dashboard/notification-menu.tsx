@@ -3,32 +3,30 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Bell, CheckCircle2, CircleAlert, MessageSquare, XCircle } from "lucide-react";
+import { Bell, CheckCircle2, CircleAlert, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { getMarketplaceNotifications, markMarketplaceNotificationsRead, type MarketplaceNotification } from "@/lib/notification-api";
+import { getMarketplaceNotifications, markMarketplaceNotificationsRead, type ModerationNotification } from "@/lib/notification-api";
 import { intlLocale } from "@/lib/format";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
 import { notificationsCopy } from "./notifications-copy";
 
 type State =
-  | { status: "loading"; unread: number; items: MarketplaceNotification[] }
-  | { status: "error"; unread: number; items: MarketplaceNotification[] }
-  | { status: "ready"; unread: number; items: MarketplaceNotification[] };
+  | { status: "loading"; unread: number; items: ModerationNotification[] }
+  | { status: "error"; unread: number; items: ModerationNotification[] }
+  | { status: "ready"; unread: number; items: ModerationNotification[] };
 
 const iconByType = {
   approved: CheckCircle2,
   changes_requested: CircleAlert,
   rejected: XCircle,
-  support_created: MessageSquare, support_message: MessageSquare, support_reply: MessageSquare, support_resolved: CheckCircle2,
 } as const;
 
 const toneByType = {
   approved: "text-verified",
   changes_requested: "text-warning",
   rejected: "text-destructive",
-  support_created: "text-primary", support_message: "text-primary", support_reply: "text-primary", support_resolved: "text-verified",
 } as const;
 
 /**
@@ -179,11 +177,10 @@ export function NotificationMenu() {
               <ul className="divide-y divide-border">
                 {state.items.map((item) => {
                   const Icon = iconByType[item.type];
-                  const support = "ticketId" in item;
                   return (
                     <li key={item.id}>
                       <Link
-                        href={localePath(support ? `/support/${item.staff ? "admin/" : ""}${encodeURIComponent(item.ticketId)}` : "/dashboard/studio", locale)}
+                        href={localePath("/dashboard/studio", locale)}
                         onClick={() => rememberRead(item.id)}
                         className={cn(
                           "flex min-h-11 gap-3 px-3 py-3 transition-colors hover:bg-muted focus-visible:bg-muted",
@@ -193,13 +190,13 @@ export function NotificationMenu() {
                         <Icon aria-hidden className={cn("mt-0.5 size-4 shrink-0", toneByType[item.type])} />
                         <span className="min-w-0 flex-1">
                           <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                            <span className="ts-bidi min-w-0 break-words text-sm font-semibold">{support ? copy.supportTitle : item.productName}</span>
+                            <span className="ts-bidi min-w-0 break-words text-sm font-semibold">{item.productName}</span>
                             <time dateTime={item.createdAt} className="text-[11px] text-muted-foreground">
                               {new Intl.DateTimeFormat(intlLocale(locale), { month: "short", day: "numeric" }).format(new Date(item.createdAt))}
                             </time>
                           </span>
                           <span className="mt-0.5 block text-xs font-medium text-foreground">{copy[item.type]}</span>
-                          {"publicReason" in item && item.publicReason && (
+                          {item.publicReason && (
                             <span className="ts-bidi mt-1 line-clamp-2 block text-xs leading-5 text-muted-foreground">
                               {copy.reviewerNote}: {item.publicReason}
                             </span>

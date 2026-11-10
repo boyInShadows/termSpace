@@ -103,8 +103,7 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
     const next = validate();
     setErrors(next);
     if (Object.keys(next).length > 0) {
-      const field = Object.keys(next)[0];
-      document.getElementById(field === "content" ? "article-content" : field)?.focus();
+      document.getElementById(Object.keys(next)[0])?.focus();
       return;
     }
 
@@ -210,15 +209,15 @@ export function ArticleForm({ authors, categories, tags, series, media, article 
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div>
-          <label htmlFor="article-content" className="mb-1 block text-sm font-medium text-ink-soft">
+          <label htmlFor="content" className="mb-1 block text-sm font-medium text-ink-soft">
             Content (markdown)
           </label>
           <textarea
-            id="article-content"
+            id="content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={16}
-            className={`${inputClass("content")} font-mono`}
+            className={`${inputClass("content")} font-mono text-sm`}
             aria-invalid={Boolean(errors.content)}
             aria-describedby={errors.content ? "content-error" : undefined}
           />

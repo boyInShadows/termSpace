@@ -14,7 +14,7 @@ import { copy, localePath, type Locale } from "@/lib/i18n";
 import { Fact } from "@/features/product/release-facts";
 import { ReleaseProvenance, provenanceTitle } from "@/features/product/release-provenance";
 import { reviewCopy } from "@/features/product/review-copy";
-import { DeferredReview } from "@/features/product/deferred-review";
+import { ReviewComposer } from "@/features/product/review-composer";
 import { pageAlternates } from "@/lib/alternates";
 import { productPageLabels, type ProductPageLabels } from "@/lib/i18n/product-page";
 import { getLocale } from "@/lib/serverLocale";
@@ -215,7 +215,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 )}
 
                 <Section title={`${l.reviews} (${formatNumber(product.reviewCount, locale)})`} id="reviews">
-                  <DeferredReview slug={product.slug} messages={reviewCopy[locale]} />
+                  <ReviewComposer slug={product.slug} messages={reviewCopy[locale]} />
                   {product.reviews.length === 0 ? (
                     <p>{l.noReviews}</p>
                   ) : (

@@ -8,7 +8,7 @@ import { SkipLink } from "@/components/layout/skip-link";
 import { getLocale } from "@/lib/serverLocale";
 import { sharedMessages } from "@/lib/i18n";
 import { getServerSession } from "@/lib/server-session";
-import { ChatLoader } from "@/components/support/chat-loader";
+import { ChatWidget } from "@/components/support/chat-widget";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const fa = locale === "fa";
@@ -32,7 +32,7 @@ export default async function RootLayout({
           <SkipLink locale={locale} />
           <Header />
           {children}
-          <ChatLoader
+          <ChatWidget
             locale={locale}
             baseUrl={process.env.CHATWOOT_BASE_URL}
             tokenEn={process.env.CHATWOOT_TOKEN_EN}

@@ -1,15 +1,14 @@
 "use client";
 import Link from "next/link";
-import { lazy, Suspense, useEffect, useState, type ComponentType } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
+import { EmailVerification } from "@/features/account/email-verification";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
 import { DashboardSidebar, DashboardTabBar } from "./dashboard-nav";
 import { DashboardSearch } from "./dashboard-search";
 import { DashboardOverviewSkeleton } from "./overview";
-
-const EmailVerification = lazy(() => import("@/features/account/email-verification").then(module => ({ default: module.EmailVerification })));
 
 /**
  * Workspace search, sidebar, bottom tabs and the reader session gate below
@@ -19,7 +18,7 @@ const EmailVerification = lazy(() => import("@/features/account/email-verificati
  * accidentally ship ungated. It is a convenience, not a security boundary — the
  * API authenticates every creator request independently.
  */
-export function DashboardShell({ children, allowUnverified = false }: { children: React.ReactNode; allowUnverified?: boolean }) {
+export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { locale, t } = useLocale();
   const session = useMarketplaceSession();
   const router = useRouter();
@@ -75,8 +74,7 @@ export function DashboardShell({ children, allowUnverified = false }: { children
               {Menu ? <Menu /> : <span aria-hidden className="size-11 shrink-0" />}
             </div>
             <div key={session.email}>
-                {session.identityLoading ? <DashboardOverviewSkeleton /> : !session.emailVerified && !allowUnverified
-                  ? <Suspense fallback={<DashboardOverviewSkeleton />}><EmailVerification /></Suspense> : children}
+                {session.identityLoading ? <DashboardOverviewSkeleton /> : !session.emailVerified ? <EmailVerification /> : children}
             </div>
           </div>
         </main>

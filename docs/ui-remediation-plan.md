@@ -59,15 +59,15 @@ was manually viewed. Tests, source review and rendered evidence are separate.
 | B01 | Preformatted code resets inline-code background/padding/font inheritance. |
 | B02 | Amber hover darkened; white contrast 7.09:1 (normal amber 5.02:1). |
 | B03 | Faint text darkened; warm-paper contrast 4.73:1. |
-| B04 | Native modal, Cancel focus, busy Escape guard and inline failure; component tests and native Chrome keyboard/pending/failure/retry lifecycle verified at 320/768/1280px (2026-11-06). |
-| B05 | Visible/associated admin field labels and named media selector; unique Markdown field ID preserves the skip target and validation focus; component/browser regressions. |
-| B06 | Media/taxonomy fields shrink/wrap; admin presentation verified at 320/768/1280px using a disposable identity; physical-device/authentication checks remain separate. |
-| B07 | Article/edition actions wrap; admin presentation verified at 320/768/1280px using a disposable identity; physical-device/authentication checks remain separate. |
+| B04 | Native modal, Cancel focus, busy Escape guard and inline failure; component tests pass, native browser lifecycle pending. |
+| B05 | Visible/associated admin field labels and named media selector; accessibility component tests. |
+| B06 | Media/taxonomy fields shrink/wrap; authenticated phone rendering pending. |
+| B07 | Article/edition actions wrap; authenticated phone rendering pending. |
 | B08 | Root skip link and one focusable main; nested main wrappers removed. |
 | B09 | Header/filter/admin current state, including edit/new article distinction; navigation tests. |
 | B10 | Language navigation preserves query context; navigation regression. |
 | B11 | Persian tracking/caps neutralized, logical cover border and mirrored navigation; reduced motion preserves arrow rotation. |
-| B12 | Persian prose/headings use Estedad, retaining explicit LTR code-block direction/alignment, including Persian resources. |
+| B12 | Persian prose/headings use Estedad, retaining explicit LTR exceptions. |
 | B13 | Shared admin pending lock/feedback, comment duplicate guard and recoverable logout; failure/retry tests. |
 | B14 | Bookmark rollback/pressed state, share/copy feedback and cancellation handling; component regressions. |
 | B15 | Login omits authenticated workspace chrome; navigation regression. |
@@ -160,23 +160,10 @@ Verification: long content, focus, phone/tablet/desktop and scroll hit tests.
 - [x] Root typecheck, all tests, web lint and all production builds pass.
 - [x] Full web E2E and Lighthouse pass with unchanged budgets; repair stale
   selectors/assertions without suppressing genuine behavior or visual failures.
-- [x] Render non-auth editorial/admin presentation at 320/768/1280px: 93
-  EN/FA public and English-admin variants plus modal/recovery/empty states.
-  Web light/dark and RTL regressions pass; blog keeps its light/editorial system.
-  Authentication, physical devices and owner wording approval remain separate.
+- [ ] Render relevant screens/states in EN/FA, web light/dark and 320/768/1280px.
+  Blog retains its established light/editorial system.
 - [x] Run Impeccable detector and independent review; assess findings in context.
 - [x] Update DESIGN implementation-gap summary and changelog to match evidence;
   do not claim physical-device, real-provider or real-screen-reader testing.
-- [x] Commit explicit owned paths only, retaining pre-existing brand edits;
+- [ ] Commit explicit owned paths only, retaining pre-existing brand edits;
   push completed reviewable phases on `ramtin`, never merge into `main`.
-
-### 2026-11-06 rendered acceptance follow-up
-
-The non-auth fixture pass and cleanup are complete. Corrected locale hydration,
-reverse-Tab modal wrapping, four remaining 14px fields, the Markdown/skip-target
-ID collision and Persian code-block direction. Root gates, 122 editorial checks,
-12 final code-direction cases, EN/FA reading recovery, full web E2E and unchanged
-Lighthouse budgets pass. No real identity, provider, database or migration was used.
-Physical phones were deferred by the owner; final owner Persian-copy approval
-remains open. Evidence is local in
-`docs/artifacts/ramtin-acceptance-2026-11-06/acceptance-report.md`.

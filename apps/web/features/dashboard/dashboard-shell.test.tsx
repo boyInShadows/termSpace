@@ -123,39 +123,11 @@ describe("DashboardShell", () => {
     }
   });
 
-  it("asks an unverified reader to verify instead of showing creator onboarding", async () => {
+  it("asks an unverified reader to verify instead of showing creator onboarding", () => {
     session.current = { identityLoading: false, loading: false, email: "reader@example.com", emailVerified: false, marketplaceRoles: [] };
     render(<DashboardShell><p>creator onboarding</p></DashboardShell>);
-    expect(await screen.findByRole("heading", { name: copy.en.verifyEmail })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: copy.en.verifyEmail })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: copy.en.resendVerification })).toBeInTheDocument();
     expect(screen.queryByText("creator onboarding")).not.toBeInTheDocument();
-  });
-
-  it.each([
-    [[], "/support"],
-    [["creator"], "/support"],
-    [["moderator"], "/support/admin"],
-    [["administrator"], "/support/admin"],
-  ] as const)("puts Tickets in workspace navigation for %j", (roles, href) => {
-    session.current = { identityLoading: false, loading: false, email: "reader@example.com", emailVerified: true, marketplaceRoles: [...roles] };
-    nav.pathname = `${href}/ticket-1`;
-    render(<DashboardShell><p>A private conversation</p></DashboardShell>);
-    for (const name of [copy.en.dashboard, copy.en.dashboardHome.tabsLabel]) {
-      const navigation = screen.getByRole("navigation", { name });
-      const tickets = within(navigation).getByRole("link", { name: "Tickets" });
-      expect(tickets).toHaveAttribute("href", href);
-      expect(tickets).toHaveAttribute("aria-current", "page");
-      expect(tickets.querySelector(".lucide-ticket")).toBeInTheDocument();
-    }
-    expect(screen.queryByRole("link", { name: "Support" })).not.toBeInTheDocument();
-  });
-
-  it("keeps private support available to signed-in members awaiting email verification", () => {
-    session.current = { identityLoading: false, loading: false, email: "reader@example.com", emailVerified: false, marketplaceRoles: [] };
-    nav.pathname = "/support";
-    render(<DashboardShell allowUnverified><p>Private member tickets</p></DashboardShell>);
-    expect(screen.getByText("Private member tickets")).toBeVisible();
-    expect(screen.queryByRole("heading", { name: copy.en.verifyEmail })).not.toBeInTheDocument();
-    expect(screen.getAllByRole("main")).toHaveLength(1);
   });
 });

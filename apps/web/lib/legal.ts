@@ -6,7 +6,7 @@ import type { Locale } from "@/lib/i18n";
  * Legal entity and contact address come from LEGAL_ENTITY_NAME / LEGAL_CONTACT_EMAIL
  * (runtime env, required by docker-compose.yml) so no placeholder ships.
  */
-export const LEGAL_UPDATED = "2026-11-09";
+export const LEGAL_UPDATED = "2026-11-01";
 
 export const legalEntity = () => process.env.LEGAL_ENTITY_NAME?.trim() || "TermSpace";
 export const legalContact = () => process.env.LEGAL_CONTACT_EMAIL?.trim() || undefined;
@@ -44,10 +44,6 @@ export const legalDocs: Record<Locale, Record<LegalSlug, LegalDoc>> = {
         { heading: "What is public", body: ["Reviews, creator profiles and published listings are visible to everyone. Your email address and library are not."] },
         { heading: "Listing views", body: ["Each published listing keeps a daily count of views so its creator can see whether the page is being found. A view is counted once when the page opens; we store only the listing, the date and the total, never an IP address, cookie, session or other identifier for it. Browsers that send Do Not Track or Global Privacy Control are not counted."] },
         { heading: "Your choices", body: ["Sign in and open Settings to download your data or delete your account. Deleting is permanent: it removes your sign-in, favourites, bookmarks, reading progress, reviews and stored credentials, and anonymizes your creator profile. We keep a record that an acquisition, report or moderation action happened, linked only to an anonymized account that cannot sign in. Creators must first withdraw or archive submitted and published listings. You can change your newsletter subscription in Settings. To correct other data or remove a journal comment, write to us. We keep logs and account data only as long as we need them to run and secure the service."] },
-        { heading: "Private support", body: [
-          "Private tickets contain your category, subject, messages and optional screenshots. Only you, current marketplace administrators and moderators can access your tickets. Screenshots are re-encoded without their original metadata and stored outside public media. Ticket alerts show an event, not message or screenshot content.",
-          "Your export includes ticket messages, screenshot references and visible support alerts. Download screenshots separately while you still have ticket access. Account deletion removes your tickets, screenshots and alerts, and erases your past staff replies without deleting other members' tickets. Deleted screenshots become unavailable immediately; background cleanup retries failed file removal.",
-        ] },
         { heading: "Changes", body: ["We will update the date above when this policy changes."] },
       ],
     },
@@ -115,10 +111,6 @@ export const legalDocs: Record<Locale, Record<LegalSlug, LegalDoc>> = {
         { heading: "آنچه عمومی است", body: ["نقدها، نمایهٔ سازندگان و فهرست‌های منتشرشده برای همه دیدنی است. نشانی ایمیل و کتابخانهٔ شما دیدنی نیست."] },
         { heading: "بازدیدهای فهرست", body: ["برای هر فهرست منتشرشده، شمار بازدید به‌صورت روزانه نگه داشته می‌شود تا سازنده ببیند صفحه دیده می‌شود یا نه. هر بار که صفحه باز شود یک بازدید شمرده می‌شود؛ فقط فهرست، تاریخ و جمع کل ذخیره می‌شود و نشانی IP، کوکی، نشست یا شناسهٔ دیگری برای آن نگه داشته نمی‌شود. مرورگرهایی که Do Not Track یا Global Privacy Control می‌فرستند شمرده نمی‌شوند."] },
         { heading: "حق انتخاب شما", body: ["وارد شوید و تنظیمات را باز کنید تا داده‌هایتان را دریافت یا حساب خود را حذف کنید. حذف دائمی است: ورود، علاقه‌مندی‌ها، نشانک‌ها، پیشرفت مطالعه، نقدها و اطلاعات دسترسی ذخیره‌شده‌تان حذف و نمایهٔ سازنده‌تان ناشناس می‌شود. سابقهٔ اینکه یک دریافت، گزارش یا اقدام نظارتی انجام شده را فقط به یک حساب ناشناس‌شده که امکان ورود ندارد متصل نگه می‌داریم. سازندگان باید ابتدا فهرست‌های ارسال‌شده و منتشرشده را پس بگیرند یا بایگانی کنند. عضویت شما در خبرنامه از بخش تنظیمات قابل تغییر است. برای اصلاح دیگر داده‌ها یا حذف یک دیدگاه مجله به ما نامه بنویسید. گزارش‌ها و داده‌های حساب را فقط تا هر زمان که برای اجرا و ایمن‌سازی سرویس لازم باشد نگه می‌داریم."] },
-        { heading: "پشتیبانی خصوصی", body: [
-          "تیکت خصوصی شامل دسته‌بندی، موضوع، پیام‌ها و تصویرهای اختیاری شماست. فقط شما و مدیران و ناظران فعلی بازارچه به تیکت شما دسترسی دارند. تصویرها بدون فرادادهٔ اصلی دوباره ذخیره می‌شوند و در رسانهٔ عمومی قرار نمی‌گیرند. اعلان تیکت فقط رویداد را نشان می‌دهد، نه محتوای پیام یا تصویر را.",
-          "فایل داده‌ها شامل پیام‌های تیکت، مشخصات تصویرها و اعلان‌های پشتیبانی در دسترس شماست. تصویرها را تا زمانی که به تیکت دسترسی دارید جداگانه دریافت کنید. با حذف حساب، تیکت‌ها، تصویرها و اعلان‌های شما حذف و پاسخ‌های قبلی شما به‌عنوان پشتیبان پاک می‌شوند؛ تیکت دیگر کاربران باقی می‌ماند. دسترسی به تصویر حذف‌شده بلافاصله قطع می‌شود و اگر پاک‌کردن فایل شکست بخورد، پاک‌سازی پس‌زمینه دوباره تلاش می‌کند.",
-        ] },
         { heading: "تغییرات", body: ["هرگاه این سیاست تغییر کند، تاریخ بالای صفحه به‌روز می‌شود."] },
       ],
     },

@@ -241,11 +241,6 @@ session gate, workspace search, sidebar and phone tabs; it reuses the global
 account, language and theme controls. Pages/loading boundaries must not add a
 second header. Keep the header in the root hydration tree to avoid session races.
 
-Tickets belongs in the workspace sidebar and phone tabs with the shared ticket
-icon, rather than beside search. Support routes reuse the dashboard shell and
-keep that entry selected. Staff open the inbox; other members open owned tickets.
-Phone moderation uses the compact Review label with its full accessible name.
-
 Use the measured `--site-header-height` for content that sticks beneath the
 header, including discovery controls; account for announcement dismissal,
 condensation and mobile disclosure. Fixed dashboard actions and native focus
@@ -395,7 +390,7 @@ additional blog field-boundary finding (B23) have source repairs.
 | Controls / colors    | Blue primary actions, 12px fields, 16px panels and field text, semantic states, larger phone controls.                                                                                                                                                                                                         |
 | Contrast             | Web input boundaries measure 3.04–3.23:1 in light and 3.08:1 on dark surface. Blog fields use `line.input` (#8a847b), 3.29–3.71:1; invalid article fields use red-600. Blog faint text on warm paper is 4.73:1; amber/hover on white is 5.02/7.09:1. Nested code and arbitrary edition accents are corrected. |
 | Motion / state       | Decorative reveals/lifts/carets/typing removed; stable theme hydration, retries and write/empty feedback added.                                                                                                                                                                                               |
-| Blog                 | Native modal, labeled fields, connected validation, wrapping actions, one main, current navigation and preserved locale query context. English admin scope is explicit. Non-auth editorial/native-modal rendering is verified with disposable fixtures at 320/768/1280px; physical-device/authentication acceptance remains separate.                                                                 |
+| Blog                 | Native modal, labeled fields, connected validation, wrapping actions, one main, current navigation and preserved locale query context. English admin scope is explicit. Native modal/phone editorial rendering awaits local fixture approval.                                                                 |
 
 Regression assertions now require stable search prompts and 600-weight headings.
 Browser-dependent editorial acceptance, physical devices, real providers and

@@ -9,11 +9,6 @@ coverage
 .git
 .env
 **/.env
-**/.env.*
-apps/api/private
-docs/artifacts
-**/.lighthouseci
-**/test-results
 uploads
 **/uploads
 *.tsbuildinfo

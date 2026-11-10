@@ -344,19 +344,3 @@ export const commentSchema = z.object({
   body: z.string().trim().min(3).max(2000),
   website: z.string().max(200).optional(),
 });
-
-export const supportCreateSchema = z.object({
-  category: z.enum(["TECHNICAL", "LISTING", "GENERAL"]),
-  subject: z.string().trim().min(5).max(160),
-  body: z.string().trim().min(20).max(10000),
-}).strict();
-
-export const supportPageSchema = z.object({
-  page: z.coerce.number().int().min(1).max(10000).default(1),
-}).strict();
-
-export const supportInboxSchema = supportPageSchema.extend({
-  status: z.enum(["WAITING_FOR_SUPPORT", "WAITING_FOR_MEMBER", "RESOLVED"]).optional(),
-});
-export const supportVersionSchema = z.object({ expectedVersion: z.number().int().min(0) }).strict();
-export const supportReplySchema = supportVersionSchema.extend({ body: z.string().trim().min(1).max(10000) });

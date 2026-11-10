@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiClientError } from "@/lib/api";
 import { BOOKMARKS_KEY, HISTORY_KEY, readLocalLibrary } from "@/lib/readerLibrary";
-import { useLocale } from "next-intl";
+import { usePathname } from "next/navigation";
 import { localePath } from "@/lib/i18n";
 
 export function ArticleEngagement({ slug, title }: { slug: string; title: string }) {
-  const isFa = useLocale() === "fa";
+  const pathname = usePathname() ?? "/"; const isFa = pathname === "/fa" || pathname.startsWith("/fa/");
   const [bookmarked, setBookmarked] = useState(false);
   const [progress, setProgress] = useState(0);
   const [signedIn, setSignedIn] = useState(false);

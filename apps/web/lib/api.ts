@@ -39,7 +39,7 @@ export async function request<T>(path: string, init?: RequestInit & { revalidate
     const timeoutSignal = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
     const signal = init?.signal ? AbortSignal.any([init.signal, timeoutSignal]) : timeoutSignal;
     try {
-      const response = await fetch(`${apiBase()}${path}`, { ...fetchInit, signal, credentials: "include", headers: { ...(init?.body instanceof FormData ? {} : { "Content-Type": "application/json" }), ...init?.headers }, ...(cacheable ? { next: { revalidate } } : { cache: init?.cache ?? "no-store" }) });
+      const response = await fetch(`${apiBase()}${path}`, { ...fetchInit, signal, credentials: "include", headers: { "Content-Type": "application/json", ...init?.headers }, ...(cacheable ? { next: { revalidate } } : { cache: init?.cache ?? "no-store" }) });
       if (RETRYABLE_STATUSES.has(response.status) && attempt < attempts) {
         await response.body?.cancel();
         continue;
