@@ -2,6 +2,36 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-10 — Match production search focus locally
+
+- **Scope / shared surface.** Owner requested repairing the blue rectangle on
+  clicked search after resolving Chrome's localhost110% zoom. This shared
+  changelog records only the search-focus repair; no layout, fixture, backend or
+  ticketing change. Ported the existing production treatment from `origin/v.3`
+  (`9db04db` / `44d542e`), which is absent from the selected main baseline.
+- **Cause / repair.** The unlayered global focus rule beat the input's Tailwind
+  outline reset, while its wrapper added another ring. Reuse the production
+  input override and scoped `.search-field:focus-within` border rule. The pill
+  now has one thin primary border; the submit button retains its own keyboard
+  outline. Universal border and global focus defaults remain unchanged.
+- **Verification.** The browser regression fails before repair and passes after.
+  Eight desktop/phone × EN/FA × light/dark cases cover pointer/keyboard focus,
+  typing and localized submission. Paired production/before/after screenshots
+  and computed styles confirm the focus treatment; eight local captures cover
+  both themes/locales/widths. Root typecheck/build and873 tests pass (44 gated
+  skips); lint has zero errors/two existing warnings. Initial typecheck found
+  stale generated support-route types from the rollback; build regenerated them.
+  Manual code/Impeccable review passes for this diff; detector findings are
+  incumbent typography/easing. Evidence: `docs/artifacts/search-focus-2026-11-10/`.
+- **Push gate / follow-up.** Full E2E:531 pass,46 skips,4 JavaScript-budget
+  failures: EN/FA dashboard172.2KB/170KB and product168.3KB/165KB. Lighthouse
+  stops on Windows temporary-profile cleanup `EPERM`; no Lighthouse pass claimed.
+  Keep this repair local; budgets and unrelated code are unchanged. Browser
+  connector still fails; isolated repository Playwright/Chrome verification works.
+  Separately observed: main still shows synthetic example intents as Popular
+  searches for empty history; production removes that fallback. It remains a
+  separate follow-up, with real recent searches preserved.
+
 ## 2026-11-09 — TermBuddy mascot and optional creator avatar
 
 - **Scope / shared surfaces (announce in commit body).** New migration `202611090004_marketplace_creator_avatar`,

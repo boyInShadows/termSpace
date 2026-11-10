@@ -124,7 +124,7 @@ export function ConsoleSearch({
           className={cn(
             "relative flex items-center transition-colors",
             isHero
-              ? "rounded-full border border-border-strong bg-background pe-1.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/25"
+              ? "search-field rounded-full border border-border-strong bg-background pe-1.5"
               : "rounded-control border border-border-strong bg-surface/90 shadow-panel backdrop-blur focus-within:border-transparent",
           )}
         >
@@ -165,7 +165,7 @@ export function ConsoleSearch({
             // list unmounts.
             onBlur={() => window.setTimeout(() => setIsFocused(false), 120)}
             className={cn(
-              "min-w-0 flex-1 bg-transparent px-4 text-base placeholder:text-muted-foreground focus:outline-none",
+              "min-w-0 flex-1 bg-transparent px-4 text-base placeholder:text-muted-foreground focus-visible:outline-none!",
               isHero ? "h-12" : "h-16",
             )}
           />
