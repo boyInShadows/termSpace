@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, getOwnedCreatorProfile, logout } from "@/lib/api";
 import type { OwnedCreatorProfile } from "@/lib/types";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
@@ -15,16 +16,9 @@ import { accountSecurityCopy } from "./account-security-copy";
 import { AccountPreferences } from "./account-preferences";
 import { AccountData } from "./account-data";
 import { AccountEmail } from "./account-email";
+import { accountSettingsCopy } from "./account-settings-copy";
+import { SectionIndex, SettingsGroup, SettingsPanel } from "./settings-panel";
 import { AccountOnboarding } from "@/features/account/account-onboarding";
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid gap-1 border-b border-border py-4 last:border-0 sm:grid-cols-[12rem_1fr]">
-      <p className="text-sm font-medium">{label}</p>
-      <div className="min-w-0 break-words text-sm text-muted-foreground">{children}</div>
-    </div>
-  );
-}
 
 export function AccountSettings() {
   const { locale, t } = useLocale();
@@ -77,57 +71,80 @@ export function AccountSettings() {
     router.refresh();
   }
 
+  const text = accountSettingsCopy[locale];
+  const showConnections = Boolean(profile) && session.marketplaceRoles.includes("creator");
+  const groups = [
+    { id: "profile", title: text.profile },
+    { id: "account", title: text.account },
+    { id: "preferences", title: text.preferences },
+    ...(showConnections ? [{ id: "connections", title: text.connections }] : []),
+    { id: "data", title: text.data },
+  ];
+
   return (
-    <div className="space-y-8">
+    <div>
       <header>
         <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
           {t.profile}
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">{t.settingsIntro}</p>
+        {profile && <div className="mt-5 flex items-center gap-3">
+          <Avatar initials={profile.initials} src={profile.avatarUrl} className="size-12 font-sans text-base" />
+          <p className="min-w-0 text-sm">
+            <bdi className="block truncate font-medium">{profile.name}</bdi>
+            <bdi dir="ltr" className="block truncate text-muted-foreground">@{profile.handle}</bdi>
+          </p>
+        </div>}
       </header>
 
-      <section className="rounded-card border border-border bg-surface px-5">
-        <Row label={t.email}><bdi dir="ltr">{session.email}</bdi></Row>
-        <Row label={t.settingsCreator}>
-          {status === "loading" ? <p role="status">{t.creatorHub.loading}</p> : status === "error" ? <div>
-            <p role="alert">{t.creatorHub.loadError}</p>
-            <Button variant="secondary" className="mt-2" onClick={() => void load()}>{t.creatorHub.retry}</Button>
-          </div> : profile ? (
-            <>
-              <bdi dir="ltr" className="text-foreground">@{profile.handle}</bdi>
-              <span className="mt-1 block text-xs">{t.settingsHandleFixed}</span>
-            </>
-          ) : (
-            <>
-              <span>{t.settingsNoCreator}</span>
-              <Link className="mt-1 inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={localePath("/dashboard/studio", locale)}>{t.creatorHub.title}</Link>
-            </>
-          )}
-        </Row>
-      </section>
+      <div className="mt-6 lg:mt-8 lg:grid lg:grid-cols-[11rem_minmax(0,44rem)] lg:gap-10">
+        <SectionIndex label={text.onThisPage} items={groups} />
 
-        <AccountOnboarding />
+        <div className="mt-6 space-y-8 lg:mt-0">
+          <SettingsGroup id="profile" title={text.profile}>
+            {status === "ready" && profile ? (
+              <SettingsPanel id="creator-profile" titleId="creator-profile-title" title={profile.accessActive ? undefined : t.creatorHub.editTitle}>
+                {profile.accessActive
+                  ? <CreatorProfileForm profile={profile} onSaved={setProfile} headingLevel="h3" />
+                  : <p className="mt-3 text-sm text-muted-foreground" role="status">{t.creatorHub.accessRevoked}</p>}
+              </SettingsPanel>
+            ) : (
+              <SettingsPanel titleId="creator-identity-title" title={t.settingsCreator}>
+                {status === "loading" ? <p role="status" className="mt-3 text-sm text-muted-foreground">{t.creatorHub.loading}</p>
+                  : status === "error" ? <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <p role="alert" className="text-sm text-destructive">{t.creatorHub.loadError}</p>
+                    <Button variant="secondary" onClick={() => void load()}>{t.creatorHub.retry}</Button>
+                  </div>
+                  : <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-sm text-muted-foreground">{t.settingsNoCreator}</p>
+                    <Link className={buttonVariants({ variant: "secondary" })} href={localePath("/dashboard/studio", locale)}>{t.creatorHub.title}</Link>
+                  </div>}
+              </SettingsPanel>
+            )}
+            <AccountOnboarding />
+          </SettingsGroup>
 
-        <AccountPreferences />
+          <SettingsGroup id="account" title={text.account}>
+            <AccountEmail profile={readerProfile} />
+            <AccountSecurity onProfileState={setReaderProfile}>
+              <Button variant="secondary" onClick={() => void signOut()}>{t.signOut}</Button>
+              {signOutError && <p role="alert" className="text-sm text-destructive">{signOutError}</p>}
+            </AccountSecurity>
+          </SettingsGroup>
 
-      {status === "ready" && profile && <section id="creator-profile" className="scroll-mt-40 rounded-card border border-border bg-surface p-5 [&_input]:scroll-mt-32 [&_button]:scroll-mt-32" aria-labelledby="creator-profile-title">
-        {profile.accessActive
-          ? <CreatorProfileForm profile={profile} onSaved={setProfile} />
-          : <><h2 id="creator-profile-title" className="text-xl font-semibold">{t.creatorHub.editTitle}</h2><p className="mt-3 text-sm text-muted-foreground" role="status">{t.creatorHub.accessRevoked}</p></>}
-      </section>}
+          <SettingsGroup id="preferences" title={text.preferences}>
+            <AccountPreferences />
+          </SettingsGroup>
 
-      <AccountSecurity onProfileState={setReaderProfile} />
+          {showConnections && <SettingsGroup id="connections" title={text.connections}>
+            <ProviderConnections />
+          </SettingsGroup>}
 
-      <AccountEmail profile={readerProfile} />
-
-      {profile && session.marketplaceRoles.includes("creator") && <ProviderConnections />}
-
-      <AccountData profile={readerProfile} />
-
-      <Button variant="secondary" onClick={() => void signOut()}>
-        {t.signOut}
-      </Button>
-      {signOutError && <p role="alert" className="text-sm text-destructive">{signOutError}</p>}
+          <SettingsGroup id="data" title={text.data}>
+            <AccountData profile={readerProfile} />
+          </SettingsGroup>
+        </div>
+      </div>
     </div>
   );
 }

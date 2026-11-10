@@ -1,0 +1,31 @@
+// Settings-only copy stays out of the dictionary shipped on every public page.
+export const accountSettingsCopy = {
+  en: {
+    onThisPage: "On this page",
+    profile: "Profile",
+    account: "Account",
+    preferences: "Preferences",
+    connections: "Connections",
+    data: "Data and privacy",
+    sessions: "Sessions",
+    sessionsIntro: "Sign out here, or end the sessions on your other devices.",
+    currentEmail: "Current address",
+    changeEmail: "Change email address",
+    startDelete: "Delete this account…",
+    cancel: "Cancel",
+  },
+  fa: {
+    onThisPage: "در این صفحه",
+    profile: "پروفایل",
+    account: "حساب",
+    preferences: "تنظیمات",
+    connections: "اتصال‌ها",
+    data: "داده‌ها و حریم خصوصی",
+    sessions: "نشست‌ها",
+    sessionsIntro: "از این دستگاه خارج شوید یا نشست‌های دستگاه‌های دیگر را پایان دهید.",
+    currentEmail: "نشانی فعلی",
+    changeEmail: "تغییر نشانی ایمیل",
+    startDelete: "حذف این حساب…",
+    cancel: "انصراف",
+  },
+};

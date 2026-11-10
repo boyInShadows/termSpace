@@ -12,6 +12,7 @@ const { ApiError } = await import("@/lib/api");
 const { AccountSettings } = await import("./account-settings");
 const creator = { handle: "ellisnorth", name: "Ellis North", bio: "Builds careful agentic coding tools.", accessActive: true };
 const { accountSecurityCopy } = await import("./account-security-copy");
+const { accountSettingsCopy } = await import("./account-settings-copy");
 beforeEach(() => mocks.onboarding.mockResolvedValue({ required: false, role: null, goal: null, tools: [], intent: null }));
 
 describe("account profile state", () => {
@@ -44,6 +45,14 @@ describe("account profile state", () => {
     await waitFor(() => expect(mocks.update).toHaveBeenCalledWith({ name: "Ellis N", bio: "A new biography that is long enough.", avatarUrl: "https://avatars.githubusercontent.com/u/1?v=4" }));
     expect(await screen.findByText(copy.fa.creatorHub.saved)).toBeVisible();
     expect(mocks.sessionRefresh).not.toHaveBeenCalled();
+  });
+  it("indexes every group and leaves out Connections for an account without the creator role", async () => {
+    mocks.get.mockResolvedValue(creator);
+    render(<AccountSettings />);
+    await screen.findByText("@ellisnorth");
+    const index = within(screen.getByRole("navigation", { name: accountSettingsCopy.fa.onThisPage }));
+    expect(index.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["#profile", "#account", "#preferences", "#data"]);
+    expect(screen.getByRole("heading", { level: 2, name: accountSettingsCopy.fa.account })).toBeVisible();
   });
   it("shows revoked creator access instead of an editable form", async () => {
     mocks.get.mockResolvedValue({ ...creator, accessActive: false });

@@ -11,6 +11,8 @@ import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { GoogleSignIn } from "@/features/account/google-sign-in";
 import { accountDataCopy } from "./account-data-copy";
 import { accountSecurityCopy } from "./account-security-copy";
+import { accountSettingsCopy } from "./account-settings-copy";
+import { SettingsPanel } from "./settings-panel";
 import type { ProfileState } from "./account-security";
 
 function download(data: unknown) {
@@ -32,6 +34,8 @@ export function AccountData({ profile: state }: { profile: ProfileState }) {
   const session = useMarketplaceSession();
   const [exporting, setExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState<{ text: string; failed: boolean } | null>(null);
+  const text = accountSettingsCopy[locale];
+  const [open, setOpen] = useState(false);
   const [confirmation, setConfirmation] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -81,32 +85,28 @@ export function AccountData({ profile: state }: { profile: ProfileState }) {
   }
 
   return <>
-    <section className="border border-border bg-surface p-5" aria-labelledby="account-data-title">
-      <h2 id="account-data-title" className="text-xl font-semibold">{copy.dataTitle}</h2>
-      <p className="mt-3 max-w-prose text-sm text-muted-foreground">{copy.dataIntro}</p>
-      <Button className="mt-4" variant="secondary" disabled={exporting} onClick={() => void exportData()}>{exporting ? copy.exporting : copy.exportButton}</Button>
-      {exportMessage && <p role={exportMessage.failed ? "alert" : "status"} className={`mt-3 text-sm ${exportMessage.failed ? "text-destructive" : "text-foreground"}`}>{exportMessage.text}</p>}
-    </section>
+    <SettingsPanel titleId="account-data-title" title={copy.dataTitle} description={copy.dataIntro}>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <Button variant="secondary" disabled={exporting} onClick={() => void exportData()}>{exporting ? copy.exporting : copy.exportButton}</Button>
+        {exportMessage && <p role={exportMessage.failed ? "alert" : "status"} className={`text-sm ${exportMessage.failed ? "text-destructive" : "text-foreground"}`}>{exportMessage.text}</p>}
+      </div>
+    </SettingsPanel>
 
-    <section className="border border-destructive/40 bg-surface p-5 [&_input]:scroll-mt-32 [&_button]:scroll-mt-32" aria-labelledby="account-delete-title">
-      <h2 id="account-delete-title" className="text-xl font-semibold">{copy.deleteTitle}</h2>
-      <p className="mt-3 max-w-prose text-sm text-muted-foreground">{copy.deleteIntro}</p>
+    <SettingsPanel titleId="account-delete-title" title={copy.deleteTitle} description={copy.deleteIntro} tone="danger">
       <p className="mt-2 max-w-prose text-sm text-muted-foreground">{copy.deleteKeeps}</p>
       {session.marketplaceRoles.includes("creator") && <p className="mt-2 max-w-prose text-sm font-medium">{copy.creatorNote}</p>}
       {state.status === "loading" ? <p role="status" className="mt-4 text-sm text-muted-foreground">{copy.loading}</p>
         : state.status === "error" ? <p className="mt-4 text-sm text-muted-foreground">{copy.loadError}</p>
+        : !open ? <Button className="mt-4" variant="secondary" aria-expanded={false} onClick={() => setOpen(true)}>{text.startDelete}</Button>
         : <form className="mt-5 max-w-xl space-y-4" onSubmit={submit} aria-label={copy.deleteTitle}>
           <fieldset disabled={deleting} className="space-y-4">
             <label className="block text-sm font-medium">{copy.confirmLabel}
-              <Input name="confirmEmail" type="email" dir="ltr" autoComplete="off" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} className="mt-2" />
+              <Input name="confirmEmail" type="email" dir="ltr" autoComplete="off" autoFocus value={confirmation} onChange={(event) => setConfirmation(event.target.value)} className="mt-2" />
             </label>
             {state.profile.hasPassword
-              ? <>
-                <label className="block text-sm font-medium">{copy.passwordLabel}
-                  <Input name="currentPassword" type="password" required maxLength={128} autoComplete="current-password" className="mt-2" />
-                </label>
-                <Button type="submit" disabled={!confirmed}>{deleting ? copy.deleting : copy.deleteButton}</Button>
-              </>
+              ? <label className="block text-sm font-medium">{copy.passwordLabel}
+                <Input name="currentPassword" type="password" required maxLength={128} autoComplete="current-password" className="mt-2" />
+              </label>
               : <>
                 <p className="text-sm text-muted-foreground">{copy.googleConfirm}</p>
                 {confirmed && (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
@@ -114,12 +114,16 @@ export function AccountData({ profile: state }: { profile: ProfileState }) {
                   : <p role="alert" className="text-sm text-destructive">{copy.googleUnavailable}</p>)}
               </>}
           </fieldset>
+          <div className="flex flex-wrap items-center gap-3">
+            {state.profile.hasPassword && <Button type="submit" disabled={!confirmed || deleting}>{deleting ? copy.deleting : copy.deleteButton}</Button>}
+            <Button type="button" variant="ghost" disabled={deleting} onClick={() => { setOpen(false); setConfirmation(""); setDeleteError(null); setCreatorBlocked(false); }}>{text.cancel}</Button>
+          </div>
           {creatorBlocked && <div role="alert" className="text-sm text-destructive">
             <p>{copy.creatorBlocked}</p>
             <Link className={`${buttonVariants({ variant: "secondary" })} mt-3`} href={localePath("/dashboard/studio", locale)}>{copy.studioLink}</Link>
           </div>}
           {deleteError && <p role="alert" className="text-sm text-destructive">{deleteError}</p>}
         </form>}
-    </section>
+    </SettingsPanel>
   </>;
 }

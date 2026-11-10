@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { emailChangeCopy } from "../features/account/email-change-copy";
+import { accountSettingsCopy } from "../features/dashboard/account-settings-copy";
 
 for (const locale of ["en", "fa"] as const) {
   const prefix = locale === "fa" ? "/fa" : "";
@@ -9,6 +10,7 @@ for (const locale of ["en", "fa"] as const) {
     test("asks for the password, then says a confirmation link was sent", async ({ page, context, baseURL }) => {
       await context.addCookies([{ name: "e2e_persona", value: "reader", url: baseURL! }]);
       await page.goto(`${prefix}/dashboard/settings`);
+      await page.getByRole("button", { name: accountSettingsCopy[locale].changeEmail }).click();
       await page.getByLabel(text.newEmailLabel).fill("new-address@e2e.test");
       await page.getByLabel(text.passwordLabel).fill("wrong-password");
       await page.getByRole("button", { name: text.submit }).click();
@@ -16,7 +18,7 @@ for (const locale of ["en", "fa"] as const) {
       await page.getByLabel(text.passwordLabel).fill("correct-password");
       await page.getByRole("button", { name: text.submit }).click();
       await expect(page.getByText(text.sent)).toBeVisible();
-      await expect(page.getByLabel(text.newEmailLabel)).toHaveValue("");
+      await expect(page.getByLabel(text.newEmailLabel)).toHaveCount(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     });
 

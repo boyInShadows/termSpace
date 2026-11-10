@@ -2,6 +2,37 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-10 — Profile (`/dashboard/settings`) regrouped, with a section index and one panel frame
+
+- **Scope / shared surfaces (announce in commit body).** `changelog.md` only. No API, route, schema or `lib/i18n/`
+  change; new settings strings live in `features/dashboard/account-settings-copy.ts` like the other `account-*-copy.ts`.
+- **Structure.** The ten unordered panels are now five groups (`h2`, anchors `#profile`, `#account`, `#preferences`,
+  `#connections`, `#data`): Profile (creator profile, profile details), Account (email, account security, sessions),
+  Preferences, Connections (creator role only) and Data and privacy (export, then delete). A section index
+  (`settings-panel.tsx`) is a sticky column from `lg` and a wrapping row on phones; it marks the current group with
+  `aria-current="location"` and uses the global `scroll-padding-top`. The header shows the creator avatar/name/handle.
+  `#creator-profile` and `#account-preferences` deep links are unchanged.
+- **Panels.** One frame (`rounded-card`, `p-5 sm:p-6`, `h3` + description) replaces the mix of square and rounded
+  boxes. Save/error status sits beside its button. Email shows the current address; its change form opens from
+  *Change email address* and closes after the link is sent. Delete account keeps its explanation visible and opens the
+  confirmation from *Delete this account…*; confirmation and re-auth logic are untouched. Sign out moved into a Sessions
+  panel next to *Sign out other devices*. Creator profile: name and handle side by side from `sm`, live avatar preview
+  (same GitHub-host pattern as the server). Password fields stay open. Preference switches no longer wrap below their
+  label. Provider connections use the shared `Input`.
+- **Removed.** The Explore / Open Studio link row under Profile details in Settings: the dashboard sidebar and tab bar
+  already carry both. The `/onboarding` setup flow is unchanged.
+- **Verified.** Root typecheck (after `prisma:generate`), lint (0 errors), production build. Web tests: all settings,
+  account, dashboard and onboarding suites pass. Failing files are outside this change: `header`, `console-search` and
+  `creator-draft-editor-ui` (the known Node 26 `localStorage` quirk). Playwright (desktop + mobile, mock build, local
+  Chrome): 503 passed. Every settings, account, email-change, security, preferences, browser-zoom and studio deep-link
+  spec passes. Failures outside this change: the hero-search suggestion test; `reporting` case ordering; and the
+  `/dashboard` 170 kB first-load budget at 172.2 kB. Settings code is in none of `/dashboard`'s seven first-load
+  scripts, so that overage comes from the `main` merge. Rendered by hand: EN/FA, light/dark, 375/768/1280. No
+  horizontal overflow; every index link lands under the header and is marked current; opening *Change email* focuses
+  the new-address field.
+- **Not done.** `lhci`; native Persian review of the new group labels (پروفایل، حساب، تنظیمات، اتصال‌ها، داده‌ها و حریم
+  خصوصی، نشست‌ها); `/code-review` before push.
+
 ## 2026-11-09 — Homepage featured shelf, controlled from moderation
 
 - **Scope / shared surfaces (announce in commit body).** New migration `202611090005_marketplace_homepage_featured`,

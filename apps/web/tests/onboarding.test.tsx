@@ -61,7 +61,8 @@ describe("account onboarding and profile editing", () => {
     await screen.findByText("Your profile details have been saved.");
     expect(mocks.save).toHaveBeenCalledWith({ role: "developer", goal: "discover", tools: ["codex", "cursor"], intent: "create" });
     expect(mocks.replace).not.toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: "Open Studio" })).toHaveAttribute("href", "/dashboard/studio");
+    // The dashboard sidebar already links to Explore and the studio.
+    expect(screen.queryByRole("link", { name: "Open Studio" })).not.toBeInTheDocument();
   });
 
   it("keeps Just getting started exclusive from actual tools", async () => {

@@ -19,7 +19,9 @@ const { ApiError } = await import("@/lib/api");
 const { AccountData } = await import("./account-data");
 const { accountDataCopy } = await import("./account-data-copy");
 const { accountSecurityCopy } = await import("./account-security-copy");
+const { accountSettingsCopy } = await import("./account-settings-copy");
 const text = accountDataCopy.en;
+const open = () => fireEvent.click(screen.getByRole("button", { name: accountSettingsCopy.en.startDelete }));
 const account = { email: "member@example.test", createdAt: "2026-01-01T00:00:00Z", emailVerified: true };
 const withPassword = { status: "ready", profile: { ...account, hasPassword: true, connectedGoogle: false } } as const;
 const googleOnly = { status: "ready", profile: { ...account, hasPassword: false, connectedGoogle: true } } as const;
@@ -64,6 +66,8 @@ describe("account data and deletion", () => {
   describe("password account", () => {
     async function ready() {
       render(<AccountData profile={withPassword} />);
+      expect(screen.queryByLabelText(text.passwordLabel)).not.toBeInTheDocument();
+      open();
       await screen.findByLabelText(text.passwordLabel);
     }
     const confirmEmail = () => fireEvent.change(screen.getByLabelText(text.confirmLabel), { target: { value: "member@example.test" } });
@@ -134,6 +138,7 @@ describe("account data and deletion", () => {
     it("asks for a fresh Google credential only after the email is confirmed", async () => {
       mocks.remove.mockResolvedValue(undefined);
       render(<AccountData profile={googleOnly} />);
+      open();
       await screen.findByText(text.googleConfirm);
       expect(screen.queryByLabelText(text.passwordLabel)).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Continue with Google" })).not.toBeInTheDocument();
@@ -146,6 +151,7 @@ describe("account data and deletion", () => {
     it("explains a credential from the wrong Google account", async () => {
       mocks.remove.mockRejectedValue(new ApiError(401, "INVALID_GOOGLE_CREDENTIAL", "no"));
       render(<AccountData profile={googleOnly} />);
+      open();
       await screen.findByText(text.googleConfirm);
       fireEvent.change(screen.getByLabelText(text.confirmLabel), { target: { value: "member@example.test" } });
       fireEvent.click(await screen.findByRole("button", { name: "Continue with Google" }));
