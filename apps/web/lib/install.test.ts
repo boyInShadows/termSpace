@@ -7,7 +7,7 @@ const base: ProductRelease = {
   reviewedAt: null,
   current: true,
   source: { kind: "npm", url: "https://registry.npmjs.org/@acme/tool", ref: "1.2.3", path: null, integrityDigest: "sha512-x", artifactSizeBytes: null, status: "verified", checkedAt: null },
-  installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz" },
+  installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz", instructions: [] },
   permissions: [],
   environment: [],
   license: "MIT",
@@ -29,7 +29,7 @@ describe("fetchCommand", () => {
   it("downloads a release asset and verifies a sha256 digest when one is declared", () => {
     const release = withSource(
       { kind: "github_release", url: "https://github.com/acme/tool", ref: `v1@${sha}`, path: "tool.zip", integrityDigest: `sha256:${"b".repeat(64)}` },
-      { installation: { method: "download", url: "https://github.com/acme/tool/releases/download/v1/tool.zip" } },
+      { installation: { method: "download", url: "https://github.com/acme/tool/releases/download/v1/tool.zip", instructions: [] } },
     );
     expect(fetchCommand(release)).toBe(
       `curl -fL -o tool.zip https://github.com/acme/tool/releases/download/v1/tool.zip\necho "${"b".repeat(64)}  tool.zip" | sha256sum -c -`,
@@ -39,7 +39,7 @@ describe("fetchCommand", () => {
   it("skips verification rather than invent a digest", () => {
     const release = withSource(
       { kind: "github_release", url: "https://github.com/acme/tool", ref: `v1@${sha}`, path: "tool.zip", integrityDigest: null },
-      { installation: { method: "download", url: "https://github.com/acme/tool/releases/download/v1/tool.zip" } },
+      { installation: { method: "download", url: "https://github.com/acme/tool/releases/download/v1/tool.zip", instructions: [] } },
     );
     expect(fetchCommand(release)).toBe("curl -fL -o tool.zip https://github.com/acme/tool/releases/download/v1/tool.zip");
   });

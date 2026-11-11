@@ -72,6 +72,24 @@ test.describe("product detail", () => {
     await expect(provenance.getByText("not a guarantee of safety", { exact: false })).toBeVisible();
   });
 
+  test("a signed-out visitor installs the release they are inspecting, without an account", async ({ page }) => {
+    await page.goto("/products/conversion-copywriter");
+    await page.getByRole("button", { name: "Install v2.4.0" }).click();
+    const dialog = page.getByRole("dialog", { name: "Install this release" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("0123456789abcdef0123456789abcdef01234567", { exact: true })).toBeVisible();
+    await expect(dialog.getByText("Copy the skill folder into your agent's skills directory.")).toBeVisible();
+    await expect(dialog.getByRole("link", { name: "Open verified package" })).toHaveAttribute("href", /archive\/0123456789abcdef0123456789abcdef01234567\.tar\.gz$/);
+    await expect(page).toHaveURL(/\/products\/conversion-copywriter$/);
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("button", { name: "Install v2.4.0" })).toBeFocused();
+
+    // An older version installs its own pinned release.
+    await page.getByLabel("Version").selectOption({ label: "v2.3.0" });
+    await page.getByRole("button", { name: "Install v2.3.0" }).click();
+    await expect(page.getByRole("dialog", { name: "Install this release" }).getByText("89abcdef0123456789abcdef0123456789abcdef", { exact: true })).toBeVisible();
+  });
+
   test("invites a signed-out visitor to sign in to review, and keeps them on the page afterwards", async ({ page }) => {
     await page.goto("/products/conversion-copywriter");
 

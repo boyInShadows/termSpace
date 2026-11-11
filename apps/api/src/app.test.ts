@@ -403,7 +403,13 @@ describe("API", () => {
       sourceKind: "NPM", sourceUrl: "https://registry.npmjs.org/@acme/tool", sourceRef: "1.2.3", sourcePath: null,
       providerIntegrityDigest: "sha512-abc", artifactSizeBytes: 2048, sourceCheckStatus: "VERIFIED", sourceCheckedAt: new Date("2026-10-01T00:00:00Z"),
       resolvedInstallationUrl: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz", installationMethod: "NPM",
-      licenseIdentifier: "MIT", customLicenseUrl: null, installationInstructions: ["private installation step"],
+      licenseIdentifier: "MIT", customLicenseUrl: null, installationInstructions: ["Run the installer"],
+      installationCommands: [
+        { os: "any", command: "npm install -g @acme/tool@1.2.3" },
+        { os: "beos", command: "dropped: unknown system" },
+        { command: "dropped: no system" },
+        "dropped: not an object",
+      ],
       reviewedAt: new Date("2026-11-01T10:00:00Z"),
       productVersion: { version: "1.2.3" },
       permissions: [{ capability: "NETWORK_ACCESS", required: true, scope: null, destinations: ["api.acme.test"], purpose: "Calls the Acme API" }],
@@ -411,7 +417,7 @@ describe("API", () => {
       mcpServerDetails: { transport: "stdio" },
     };
 
-    it("shows the pinned source, declarations and fetch target, but not the creator's steps", async () => {
+    it("shows a visitor with no session the pinned source, declarations and full installation", async () => {
       prismaMock.marketplaceProduct.findFirst.mockResolvedValue(productRow);
       prismaMock.marketplaceProduct.findMany.mockResolvedValue([]);
       prismaMock.marketplaceReleaseManifest.findFirst.mockResolvedValue(releaseRow);
@@ -426,13 +432,17 @@ describe("API", () => {
         version: "1.2.3",
         reviewedAt: "2026-11-01T10:00:00.000Z",
         source: { kind: "npm", url: "https://registry.npmjs.org/@acme/tool", ref: "1.2.3", status: "verified", integrityDigest: "sha512-abc" },
-        installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz" },
+        installation: {
+          method: "npm",
+          url: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz",
+          instructions: ["Run the installer"],
+          commands: [{ os: "any", command: "npm install -g @acme/tool@1.2.3" }],
+        },
         permissions: [{ capability: "network_access", destinations: ["api.acme.test"] }],
         environment: [{ name: "ACME_TOKEN", sensitive: true }],
         license: "MIT",
         mcp: { transport: "stdio" },
       });
-      expect(JSON.stringify(response.body)).not.toContain("private installation step");
     });
 
     it("withholds a release whose installation URL is not on a trusted host", async () => {
@@ -444,6 +454,9 @@ describe("API", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.data.release).toBeNull();
+      // Fail closed: none of the release's installation reaches a visitor.
+      expect(JSON.stringify(response.body)).not.toContain("Run the installer");
+      expect(JSON.stringify(response.body)).not.toContain("npm install -g");
     });
   });
 
@@ -1773,7 +1786,7 @@ describe("API", () => {
       sourceKind: "NPM", sourceUrl: "https://registry.npmjs.org/@acme/tool", sourceRef: "1.0.0", sourcePath: null,
       providerIntegrityDigest: null, artifactSizeBytes: null, sourceCheckStatus: "VERIFIED", sourceCheckedAt: new Date("2026-10-01T00:00:00Z"),
       resolvedInstallationUrl: "https://registry.npmjs.org/@acme/tool/-/tool-1.0.0.tgz", installationMethod: "NPM",
-      licenseIdentifier: "MIT", customLicenseUrl: null, installationInstructions: ["private installation step"],
+      licenseIdentifier: "MIT", customLicenseUrl: null, installationInstructions: ["Run the installer"],
       productVersion: { version: "1.0.0" }, permissions: [], environmentVariables: [], mcpServerDetails: null,
     };
 
@@ -1786,11 +1799,11 @@ describe("API", () => {
       const response = await request(createApp()).get("/api/marketplace/products/published-skill/releases/1.0.0");
 
       expect(response.status).toBe(200);
-      expect(response.body.data).toMatchObject({ version: "1.0.0", current: false, source: { ref: "1.0.0", integrityDigest: null }, license: "MIT" });
+      // The older release's own installation, so a visitor installs exactly the version they inspected.
+      expect(response.body.data).toMatchObject({ version: "1.0.0", current: false, source: { ref: "1.0.0", integrityDigest: null }, license: "MIT", installation: { instructions: ["Run the installer"] } });
       expect(prismaMock.marketplaceReleaseManifest.findFirst).toHaveBeenCalledWith(expect.objectContaining({
         where: expect.objectContaining({ productVersion: { productId: "product-1", version: "1.0.0" } }),
       }));
-      expect(JSON.stringify(response.body)).not.toContain("private installation step");
     });
 
     it("is a 404 for an unpublished listing or a version that was never published", async () => {

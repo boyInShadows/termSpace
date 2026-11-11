@@ -2,6 +2,49 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-11 — Installation is public: anyone can install a release without an account
+
+- **Owner decision.** Installing no longer requires an account or a library entry. This reverses "Public catalog
+  responses omit actionable installation instructions" in `docs/marketplace-listing-lifecycle.md`; that doc and
+  `docs/product-direction.md` are updated.
+- **Shared surfaces (announce in commit body):** `apps/web/lib/types.ts` (`ProductRelease.installation` now carries
+  `instructions` and optional `commands`), `apps/web/lib/i18n/product-page.ts` (`installNote`), `changelog.md`. No
+  schema or migration change.
+- **API.** `findPublicRelease`, used by `GET /products/:slug` and `GET /products/:slug/releases/:version`, now
+  returns the moderated installation steps and commands with the method and resolved URL. The fail-closed gates are
+  unchanged: published listing, published release, available source status, trusted GitHub/npm URL; otherwise the
+  release is `null` or 404. `GET /products/:slug/installation` (pinned acquisition, private/no-store) is unchanged.
+  Stored commands are re-checked against the manifest's `installCommand` schema on the way out of both endpoints,
+  and malformed entries are dropped.
+- **Product page.**
+  - A primary *Install vX* button works for everyone and opens the install dialog for the release being inspected,
+    including an older version chosen in the picker.
+  - *Add vX to library* is now a separate secondary button. Signed-out visitors are sent to log in, as before. For a
+    reader who already has it, the button becomes a link to the library: *In your library · vX*.
+  - Library entries stay pinned. A reader opening a listing they hold sees the picker switch to their library
+    version, so the page's facts and *Install* agree, and installs it as *Install acquired release*. Picking another
+    version installs that version's public release. When the listing has no public release left, the pinned one
+    still installs.
+  - Library state is keyed by account, so a sign-out or account switch never shows another reader's entry. After
+    *Add* or `ALREADY_IN_LIBRARY`, the pinned entry is refetched. Lookup failures other than not-held or restricted
+    are logged.
+  - Adding to the library no longer opens the dialog automatically.
+  - The dialog takes a release, so the public and pinned views share one component. It hides the steps heading when
+    a release declares no steps.
+- **Verified.** Root typecheck. Lint: 0 errors. Unit tests: API 318, web 531, blog 45. Playwright (mock build,
+  desktop + mobile): catalog (including a new signed-out install test covering an older version),
+  dashboard-library (pinned install), persian, dashboard-capabilities and reporting. The only failure was the
+  existing reporting case-ordering test. Rendered EN light at 1280 and FA dark at 375: no page overflow, and Latin
+  commands and steps stay left-to-right.
+- **Review.** `/code-review` (medium): 9 findings fixed (pinning vs picker, cross-account state, pinned release
+  hidden when the newest release is withheld, pinned release not refetched after add/already-held, silenced lookup
+  errors, unchecked public JSON commands, the lost fail-closed leak assertion, loose library state). 1 dismissed:
+  the extra signed-in `/installation` request per view existed before this change.
+- **Existing budget overage, not from this change.** `/products/conversion-copywriter` first-load JS is 168.3 kB gz
+  at `a8e25cb` and 168.4 kB with this change, against a 165 kB gate. An earlier pass at `a8e25cb` measured the page
+  before it was ready. The gate stays at 165 (ratchet); the overage needs its own fix.
+- **Not done.** Anonymous installs are not counted (acquisitions still are). Native Persian review of the new strings.
+
 ## 2026-11-11 — Profile settings: one section at a time, settings as summary rows
 
 - **Scope / shared surfaces (announce in commit body).** `changelog.md` only. No API, schema or `lib/i18n/` change. The

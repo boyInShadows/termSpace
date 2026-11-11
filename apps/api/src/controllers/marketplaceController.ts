@@ -3,6 +3,7 @@ import { Prisma, type MarketplacePermissionCapability } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import {
   AVAILABLE_SOURCE_STATUSES,
+  installCommand,
   isAvailableSourceStatus,
   MARKETPLACE_DATABASE_ITEM_TYPES,
   MARKETPLACE_ITEM_TYPES,
@@ -153,6 +154,18 @@ function trustedInstallationUrl(sourceKind: string, value: string | null): boole
   }
 }
 
+/**
+ * Stored commands are JSON, so re-check each against the manifest schema on the way out. A malformed
+ * entry (legacy or hand-edited) is dropped rather than shown to a visitor as a copy-ready command.
+ */
+function storedInstallCommands(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    const parsed = installCommand.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
 function serializeReleaseSource(release: {
   sourceKind: string; sourceUrl: string; sourceRef: string; sourcePath: string | null; sourceOriginalAuthor: string | null;
   providerIntegrityDigest: string | null; artifactSizeBytes: number | null;
@@ -172,9 +185,10 @@ function serializeReleaseSource(release: {
 }
 
 /**
- * What anyone may see about the newest published release: where it comes from,
- * what it declares, how to fetch the exact pinned artifact. Creator-written
- * installation steps stay behind the library entitlement.
+ * What anyone, signed in or not, may see about a published release: where it comes
+ * from, what it declares, and how to install the exact pinned artifact, including the
+ * creator's moderated steps and commands. Adding to the library is separate: it records
+ * the acquisition that makes a reader eligible to review.
  */
 async function findPublicRelease(productId: string, version?: string) {
   const release = await prisma.marketplaceReleaseManifest.findFirst({
@@ -183,7 +197,8 @@ async function findPublicRelease(productId: string, version?: string) {
     select: {
       sourceKind: true, sourceUrl: true, sourceRef: true, sourcePath: true, sourceOriginalAuthor: true,
       providerIntegrityDigest: true, artifactSizeBytes: true, sourceCheckStatus: true, sourceCheckedAt: true,
-      resolvedInstallationUrl: true, installationMethod: true, licenseIdentifier: true, customLicenseUrl: true,
+      resolvedInstallationUrl: true, installationMethod: true, installationInstructions: true, installationCommands: true,
+      licenseIdentifier: true, customLicenseUrl: true,
       reviewedAt: true,
       productVersion: { select: { version: true } },
       permissions: { select: { capability: true, required: true, scope: true, destinations: true, purpose: true } },
@@ -196,7 +211,12 @@ async function findPublicRelease(productId: string, version?: string) {
     version: release.productVersion.version,
     reviewedAt: release.reviewedAt,
     source: serializeReleaseSource(release),
-    installation: { method: release.installationMethod.toLowerCase(), url: release.resolvedInstallationUrl },
+    installation: {
+      method: release.installationMethod.toLowerCase(),
+      url: release.resolvedInstallationUrl,
+      instructions: release.installationInstructions,
+      commands: storedInstallCommands(release.installationCommands),
+    },
     permissions: release.permissions.map((item) => ({ ...item, capability: item.capability.toLowerCase() })),
     environment: release.environmentVariables,
     license: release.licenseIdentifier ?? release.customLicenseUrl,
@@ -584,7 +604,7 @@ export async function getMarketplaceInstallation(req: Request, res: Response) {
         method: release.installationMethod.toLowerCase(),
         url: release.resolvedInstallationUrl,
         instructions: release.installationInstructions,
-        commands: release.installationCommands,
+        commands: storedInstallCommands(release.installationCommands),
       },
       requirements: {
         runtimes: release.runtimeRequirements,

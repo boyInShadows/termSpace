@@ -105,7 +105,7 @@ const listingSchema = z.object({
   issueTrackerUrl: httpsUrl.optional(),
 }).strict();
 
-const installCommand = z.object({
+export const installCommand = z.object({
   os: z.enum(["any", "macos", "linux", "windows"]),
   label: boundedText(1, 40).optional(),
   command: boundedText(1, 600).refine((value) => !/[\r\n]/.test(value), "One command per entry, without line breaks"),
@@ -126,7 +126,7 @@ const releaseSchema = z.object({
   installation: z.object({
     method: z.enum(["manual", "npm", "git", "download", "container", "hosted"]),
     instructions: stringList(30, 1_000).min(1),
-    // Optional copy-ready commands per operating system. Shown only to readers who added the release.
+    // Optional copy-ready commands per operating system. Public once the release is published.
     commands: z.array(installCommand).max(12).optional(),
   }).strict(),
   requirements: z.object({

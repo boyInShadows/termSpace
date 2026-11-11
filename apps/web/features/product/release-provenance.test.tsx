@@ -8,7 +8,7 @@ const release: ProductRelease = {
   reviewedAt: null,
   current: true,
   source: { kind: "npm", url: "https://registry.npmjs.org/@acme/tool", ref: "1.2.3", path: null, integrityDigest: "sha512-abc", artifactSizeBytes: null, status: "verified", checkedAt: "2026-10-01T00:00:00Z" },
-  installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz" },
+  installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-1.2.3.tgz", instructions: [] },
   permissions: [{ capability: "network_access", required: true, scope: null, destinations: ["api.acme.test"], purpose: "Calls the Acme API" }],
   environment: [{ name: "ACME_TOKEN", purpose: "Auth", required: true, sensitive: true }],
   license: "MIT",
