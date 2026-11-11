@@ -56,7 +56,7 @@ describe("email change confirmation page", () => {
     open("#token=abc.def");
     render(<EmailChangeConfirmation />);
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(message));
-    expect(screen.getByRole("link", { name: emailChangeCopy.en.openSettings })).toHaveAttribute("href", "/dashboard/settings");
+    expect(screen.getByRole("link", { name: emailChangeCopy.en.openSettings })).toHaveAttribute("href", "/dashboard/settings?section=account");
     expect(mocks.refresh).not.toHaveBeenCalled();
   });
 });

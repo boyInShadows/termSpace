@@ -9,7 +9,7 @@ test.afterEach(async ({ page }) => { await page.unrouteAll({ behavior: "wait" })
 
 for (const locale of ["en", "fa"] as const) {
   const text = accountPreferencesCopy[locale];
-  const path = `${locale === "fa" ? "/fa" : ""}/dashboard/settings`;
+  const path = `${locale === "fa" ? "/fa" : ""}/dashboard/settings?section=notifications`;
 
   test(`newsletter preference loads, toggles from the keyboard and persists (${locale})`, async ({ page }) => {
     let subscribed = true;

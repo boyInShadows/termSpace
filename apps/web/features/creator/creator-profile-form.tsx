@@ -14,9 +14,11 @@ import { useMarketplaceSession } from "@/features/account/marketplace-session";
  * Creates the creator profile (the studio's first step) or edits it (in Settings).
  * The heading and intro change with the mode; the caller supplies the container.
  */
-export function CreatorProfileForm({ profile, onSaved, headingLevel = "h2", notice }: {
+export function CreatorProfileForm({ profile, onSaved, cancel, headingLevel = "h2", notice }: {
   profile: OwnedCreatorProfile | null;
   onSaved: (profile: OwnedCreatorProfile) => void;
+  /** Settings opens this form from a summary and supplies the Cancel control that returns to it. */
+  cancel?: React.ReactNode;
   headingLevel?: "h1" | "h2" | "h3";
   /** A problem the caller already knows about, such as a failed profile load. */
   notice?: string | null;
@@ -79,6 +81,7 @@ export function CreatorProfileForm({ profile, onSaved, headingLevel = "h2", noti
       <label className="block text-sm font-medium">{t.creatorHub.bio}<textarea name="bio" required minLength={20} maxLength={500} defaultValue={profile?.bio} className="mt-2 min-h-36 w-full rounded-control border border-input bg-surface px-3 py-3 text-base placeholder:text-muted-foreground/75 hover:border-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20" /></label>
       <div className="flex flex-wrap items-center gap-3">
         <Button disabled={submitting}>{submitting ? t.wait : profile ? t.creatorHub.save : t.creatorHub.create}</Button>
+        {cancel}
         {shownError && <p role="alert" className="text-sm text-destructive">{shownError}</p>}
         {saved && <p role="status" className="text-sm text-success">{t.creatorHub.saved}</p>}
       </div>

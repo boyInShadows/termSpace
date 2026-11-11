@@ -12,7 +12,7 @@ for (const locale of ["en", "fa"] as const) {
       for (const title of [hub.onboardingTitle1, hub.onboardingTitle2, hub.onboardingTitle3, hub.onboardingTitle4]) {
         await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
       }
-      await expect(page.getByRole("main").getByRole("link", { name: hub.connectSource })).toHaveAttribute("href", `${prefix}/dashboard/settings`);
+      await expect(page.getByRole("main").getByRole("link", { name: hub.connectSource })).toHaveAttribute("href", `${prefix}/dashboard/settings?section=connections`);
       await expect(page.getByText(/next part of the workspace/i)).toHaveCount(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     });

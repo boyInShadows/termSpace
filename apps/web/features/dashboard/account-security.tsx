@@ -10,12 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { accountSecurityCopy } from "./account-security-copy";
 import { accountSettingsCopy } from "./account-settings-copy";
-import { SettingsPanel } from "./settings-panel";
+import { SettingRow, SettingRows, SettingsPanel, useReturnFocus } from "./settings-panel";
+import { AccountEmail } from "./account-email";
 
 export type ProfileState = { status: "loading" } | { status: "error" } | { status: "ready"; profile: ReaderProfile };
 
-/** `children` are extra session actions (this device's sign-out). `onProfileState` lets the settings page reuse this one profile request instead of repeating it. */
-export function AccountSecurity({ onProfileState, children }: { onProfileState?: (state: ProfileState) => void; children?: React.ReactNode } = {}) {
+/**
+ * Sign-in details (email, password, method) and sessions. `signOut` is this device's sign-out
+ * control. `onProfileState` lets the settings page reuse this one profile request instead of repeating it.
+ */
+export function AccountSecurity({ onProfileState, signOut, signOutError }: {
+  onProfileState?: (state: ProfileState) => void;
+  signOut?: React.ReactNode;
+  signOutError?: string | null;
+} = {}) {
   const { locale, t } = useLocale();
   const copy = accountSecurityCopy[locale];
   const [state, setState] = useState<ProfileState>({ status: "loading" });
@@ -23,10 +31,16 @@ export function AccountSecurity({ onProfileState, children }: { onProfileState?:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [changing, setChanging] = useState(false);
+  const changeButton = useReturnFocus(changing);
   const [signingOutOthers, setSigningOutOthers] = useState(false);
   const [othersResult, setOthersResult] = useState<{ text: string; failed: boolean } | null>(null);
 
   useEffect(() => { onProfileState?.(state); }, [state, onProfileState]);
+  function closePassword() {
+    setError(null);
+    setChanging(false);
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -54,6 +68,7 @@ export function AccountSecurity({ onProfileState, children }: { onProfileState?:
       await changeReaderPassword(currentPassword, newPassword);
       form.reset();
       setSaved(true);
+      closePassword();
     } catch (cause) {
       const messages: Record<string, string> = {
         INVALID_CURRENT_PASSWORD: copy.invalidCurrent,
@@ -80,44 +95,59 @@ export function AccountSecurity({ onProfileState, children }: { onProfileState?:
   }
 
   const text = accountSettingsCopy[locale];
-  const row = "grid gap-1 py-3 sm:grid-cols-[12rem_1fr]";
+  const ready = state.status === "ready" ? state.profile : null;
   return <>
-    <SettingsPanel titleId="account-security-title" title={copy.title}>
-      {state.status === "loading" ? <p role="status" className="mt-3 text-sm text-muted-foreground">{copy.loading}</p>
-        : state.status === "error" ? <div className="mt-3 flex flex-wrap items-center gap-3">
-          <p role="alert" className="text-sm text-destructive">{copy.loadError}</p>
-          <Button variant="secondary" onClick={() => { setState({ status: "loading" }); setAttempt((value) => value + 1); }}>{t.dashboardHome.retry}</Button>
-        </div> : <>
-          <dl className="mt-3 divide-y divide-border border-y border-border text-sm">
-            <div className={row}><dt className="font-medium">{copy.memberSince}</dt><dd className="text-muted-foreground"><time dateTime={state.profile.createdAt}>{new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" }).format(new Date(state.profile.createdAt))}</time></dd></div>
-            <div className={row}><dt className="font-medium">{copy.signInMethod}</dt><dd className="text-muted-foreground">{state.profile.hasPassword ? state.profile.connectedGoogle ? copy.bothSignIn : copy.passwordSignIn : state.profile.connectedGoogle ? copy.googleSignIn : copy.noPassword}</dd></div>
-          </dl>
-          {state.profile.hasPassword ? <form className="mt-5 max-w-xl space-y-4" onSubmit={submit} aria-label={copy.savePassword}>
-            <p id="password-change-help" className="max-w-prose text-sm text-muted-foreground">{copy.intro}</p>
-            <fieldset disabled={busy} className="space-y-4" aria-describedby="password-change-help">
-              <label className="block text-sm font-medium">{copy.currentPassword}<Input name="currentPassword" type="password" required maxLength={128} autoComplete="current-password" className="mt-2" /></label>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm font-medium">{t.newPassword}<Input name="newPassword" type="password" required minLength={8} maxLength={128} autoComplete="new-password" className="mt-2" /></label>
-                <label className="block text-sm font-medium">{t.confirmPassword}<Input name="confirmPassword" type="password" required minLength={8} maxLength={128} autoComplete="new-password" className="mt-2" /></label>
-              </div>
-            </fieldset>
-            <div className="flex flex-wrap items-center gap-3">
-              <Button type="submit" disabled={busy}>{busy ? t.wait : copy.savePassword}</Button>
-              {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-              {saved && <p role="status" className="text-sm text-foreground">{copy.saved}</p>}
-            </div>
-          </form> : <p className="mt-5 max-w-prose text-sm text-muted-foreground">{copy.noPasswordIntro}</p>}
-        </>}
+    <SettingsPanel titleId="account-security-title" title={text.signIn}>
+      <SettingRows>
+        <AccountEmail profile={state} />
+        {state.status === "loading" ? <p role="status" className="py-4 text-sm text-muted-foreground last:pb-0">{copy.loading}</p>
+          : state.status === "error" ? <div className="flex flex-wrap items-center gap-3 py-4 last:pb-0">
+            <p role="alert" className="text-sm text-destructive">{copy.loadError}</p>
+            <Button variant="secondary" onClick={() => { setState({ status: "loading" }); setAttempt((value) => value + 1); }}>{t.dashboardHome.retry}</Button>
+          </div> : ready && <>
+            <SettingRow
+              label={text.password}
+              value={ready.hasPassword ? <span className="text-foreground">{text.passwordSet}</span> : copy.noPassword}
+              action={ready.hasPassword && !changing && <Button ref={changeButton} size="sm" variant="secondary" aria-label={copy.savePassword} aria-expanded={false} onClick={() => { setSaved(false); setChanging(true); }}>{text.change}</Button>}
+            >
+              {saved && !changing && <p role="status" className="mt-3 text-sm text-success">{copy.saved}</p>}
+              {!ready.hasPassword && <p className="mt-2 max-w-prose text-sm text-muted-foreground">{copy.noPasswordIntro}</p>}
+              {changing && <form className="mt-4 max-w-xl space-y-4" onSubmit={submit} aria-label={copy.savePassword}>
+                <p id="password-change-help" className="max-w-prose text-sm text-muted-foreground">{copy.intro}</p>
+                <fieldset disabled={busy} className="space-y-4" aria-describedby="password-change-help">
+                  <label className="block text-sm font-medium">{copy.currentPassword}<Input name="currentPassword" type="password" required maxLength={128} autoComplete="current-password" autoFocus className="mt-2" /></label>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block text-sm font-medium">{t.newPassword}<Input name="newPassword" type="password" required minLength={8} maxLength={128} autoComplete="new-password" className="mt-2" /></label>
+                    <label className="block text-sm font-medium">{t.confirmPassword}<Input name="confirmPassword" type="password" required minLength={8} maxLength={128} autoComplete="new-password" className="mt-2" /></label>
+                  </div>
+                </fieldset>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button type="submit" disabled={busy}>{busy ? t.wait : copy.savePassword}</Button>
+                  <Button type="button" variant="ghost" disabled={busy} onClick={closePassword}>{text.cancel}</Button>
+                  {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+                </div>
+              </form>}
+            </SettingRow>
+            <SettingRow label={copy.signInMethod} value={ready.hasPassword ? ready.connectedGoogle ? copy.bothSignIn : copy.passwordSignIn : ready.connectedGoogle ? copy.googleSignIn : copy.noPassword} />
+            <SettingRow label={copy.memberSince} value={<time dateTime={ready.createdAt}>{new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: "medium" }).format(new Date(ready.createdAt))}</time>} />
+          </>}
+      </SettingRows>
     </SettingsPanel>
 
     {/* Signing out needs no profile, so this panel never waits on that request. */}
-    <SettingsPanel titleId="account-sessions-title" title={text.sessions} description={text.sessionsIntro}>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        {children}
-        <Button variant="secondary" disabled={signingOutOthers} aria-describedby="sign-out-others-help" onClick={() => void signOutOthers()}>{signingOutOthers ? copy.signingOutOthers : copy.signOutOthers}</Button>
-      </div>
-      <p id="sign-out-others-help" className="mt-3 max-w-prose text-sm text-muted-foreground">{copy.signOutOthersHelp}</p>
-      {othersResult && <p role={othersResult.failed ? "alert" : "status"} className={`mt-3 text-sm ${othersResult.failed ? "text-destructive" : "text-foreground"}`}>{othersResult.text}</p>}
+    <SettingsPanel titleId="account-sessions-title" title={text.sessions}>
+      <SettingRows>
+        {signOut && <SettingRow label={text.thisDevice} description={text.thisDeviceHelp} action={signOut}>
+          {signOutError && <p role="alert" className="mt-3 text-sm text-destructive">{signOutError}</p>}
+        </SettingRow>}
+        <SettingRow
+          label={text.otherDevices}
+          description={<span id="sign-out-others-help">{copy.signOutOthersHelp}</span>}
+          action={<Button size="sm" variant="secondary" disabled={signingOutOthers} aria-describedby="sign-out-others-help" onClick={() => void signOutOthers()}>{signingOutOthers ? copy.signingOutOthers : copy.signOutOthers}</Button>}
+        >
+          {othersResult && <p role={othersResult.failed ? "alert" : "status"} className={`mt-3 text-sm ${othersResult.failed ? "text-destructive" : "text-foreground"}`}>{othersResult.text}</p>}
+        </SettingRow>
+      </SettingRows>
     </SettingsPanel>
   </>;
 }

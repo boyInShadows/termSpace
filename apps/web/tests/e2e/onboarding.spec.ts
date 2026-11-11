@@ -33,35 +33,14 @@ for (const locale of ["en", "fa"] as const) {
       expect(read()).toEqual({ required: false, role: "developer", goal: "workflow", tools: ["codex", "cursor"], intent });
       await page.goto(`${prefix}/onboarding`);
       await expect(page).toHaveURL(`${prefix}${intent === "create" ? "/dashboard/studio" : "/explore"}`);
+      // The answers are collected once; Profile does not show or edit them.
       await page.goto(`${prefix}/dashboard/settings`);
-      await expect(page.getByLabel(copy.roles.developer, { exact: true })).toBeChecked();
-      await page.getByLabel(copy.roles.designer, { exact: true }).check();
-      await page.getByRole("button", { name: copy.save, exact: true }).click();
-      await expect(page.getByText(copy.saved, { exact: true })).toBeVisible();
-      await expect(page).toHaveURL(`${prefix}/dashboard/settings`);
-      await page.reload();
-      await expect(page.getByLabel(copy.roles.designer, { exact: true })).toBeChecked();
+      await expect(page.getByRole("heading", { level: 2 }).first()).toBeVisible();
+      await expect(page.getByLabel(copy.roles.developer, { exact: true })).toHaveCount(0);
+      await expect(page.getByText(copy.roles.developer, { exact: true })).toHaveCount(0);
     });
   }
 }
-
-test("profile questions keep keyboard focus above the phone tabs", async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 700 });
-  await accountFixture(page, false);
-  await page.goto("/dashboard/settings");
-  const form = page.getByRole("form", { name: onboardingCopy.en.profileTitle, exact: true });
-  await form.getByRole("radio").first().waitFor();
-  for (const control of await form.locator("input, button").all()) {
-    await control.focus();
-    const visible = await control.evaluate((element) => {
-      const rect = element.getBoundingClientRect();
-      const centerX = rect.x + rect.width / 2;
-      const centerY = rect.y + rect.height / 2;
-      return centerY > 0 && centerY < innerHeight && document.elementFromPoint(centerX, centerY) === element;
-    });
-    expect(visible).toBe(true);
-  }
-});
 
 test("a new password sign-in opens onboarding before its previous destination", async ({ page }) => {
   await accountFixture(page);

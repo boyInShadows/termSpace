@@ -26,13 +26,15 @@ describe("change email", () => {
   afterEach(cleanup);
   beforeEach(() => vi.clearAllMocks());
 
-  it("waits for the profile and explains a failed load without a second retry", () => {
+  // The sign-in panel reports the profile's loading and failure once; the row only withholds Change.
+  it("offers no change until the profile says the account has a password", () => {
     const { rerender } = render(<AccountEmail profile={{ status: "loading" }} />);
-    expect(screen.getByText(text.loading)).toBeVisible();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
     rerender(<AccountEmail profile={{ status: "error" }} />);
-    expect(screen.getByText(text.loadError)).toBeVisible();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    rerender(<AccountEmail profile={withPassword} />);
+    expect(screen.getByRole("button", change)).toHaveAttribute("aria-expanded", "false");
   });
 
   it("explains that a Google-only account takes its address from Google", () => {

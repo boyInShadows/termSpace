@@ -327,7 +327,7 @@ describe("CreatorDashboard", () => {
       expect(screen.getByText(hub.noListingsIntro)).toBeInTheDocument();
       expect(screen.queryByText(/next part of the workspace/i)).not.toBeInTheDocument();
       expect(screen.getAllByRole("link", { name: /New listing/ }).at(-1)).toHaveAttribute("href", `${prefix}/dashboard/studio/listings/new`);
-      expect(screen.getByRole("link", { name: hub.connectSource })).toHaveAttribute("href", `${prefix}/dashboard/settings`);
+      expect(screen.getByRole("link", { name: hub.connectSource })).toHaveAttribute("href", `${prefix}/dashboard/settings?section=connections`);
     });
   });
 

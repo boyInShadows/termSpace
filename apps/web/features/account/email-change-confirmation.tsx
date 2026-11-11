@@ -39,6 +39,6 @@ export function EmailChangeConfirmation() {
   return <section className="mx-auto max-w-lg border bg-surface p-7" aria-labelledby="email-change-title">
     <h1 id="email-change-title" className="text-2xl font-semibold">{copy.confirmTitle}</h1>
     <p className="mt-3 text-muted-foreground" role={failed ? "alert" : "status"} aria-live="polite">{message}</p>
-    {state !== "checking" && <div className="mt-7"><Link className={buttonVariants()} href={localePath(signIn ? "/account" : "/dashboard/settings", locale)}>{signIn ? copy.signIn : copy.openSettings}</Link></div>}
+    {state !== "checking" && <div className="mt-7"><Link className={buttonVariants()} href={signIn ? localePath("/account", locale) : `${localePath("/dashboard/settings", locale)}?section=account`}>{signIn ? copy.signIn : copy.openSettings}</Link></div>}
   </section>;
 }

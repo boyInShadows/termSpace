@@ -37,6 +37,16 @@ describe("account data and deletion", () => {
     URL.revokeObjectURL = vi.fn();
   });
 
+  it("states what deletion removes and keeps before the form opens, and returns focus on Cancel", () => {
+    mocks.roles = ["creator"];
+    render(<AccountData profile={withPassword} />);
+    expect(screen.getByText(text.deleteKeeps)).toBeVisible();
+    expect(screen.getByText(text.creatorNote)).toBeVisible();
+    open();
+    fireEvent.click(screen.getByRole("button", { name: accountSettingsCopy.en.cancel }));
+    expect(screen.getByRole("button", { name: accountSettingsCopy.en.startDelete })).toHaveFocus();
+  });
+
   describe("export", () => {
     it("downloads the account data as a JSON file", async () => {
       mocks.exportData.mockResolvedValue({ account: { email: "member@example.test" } });

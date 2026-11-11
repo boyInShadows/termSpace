@@ -2,6 +2,59 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-11 — Profile settings: one section at a time, settings as summary rows
+
+- **Scope / shared surfaces (announce in commit body).** `changelog.md` only. No API, schema or `lib/i18n/` change. The
+  route stays `/dashboard/settings`; it is now wrapped in `Suspense` because it reads `?section=`.
+- **Sections.** The 4,589 px scroll (desktop, creator persona) becomes five sections shown one at a time: Profile,
+  Account & security, Notifications, Connections (creator role only) and Data & privacy. The section is URL state
+  (`?section=account|notifications|connections|privacy`; Profile has no parameter, and unknown values fall back to it).
+  `SettingsNav` is a sticky icon rail from `lg` and a sideways-scrolling chip row on phones. Links carry
+  `aria-current="page"`, and the active chip is scrolled into the row without moving the page. Inactive sections stay
+  mounted but `hidden`, so typed input and the single reader-profile request survive switching. Each section now fits
+  in roughly one viewport (900–990 px at 1280×900).
+- **Summary rows.** New `SettingRow`/`SettingRows` in `settings-panel.tsx`, in two forms: label + current value, or
+  label + description for action rows. Forms open on demand under their row, start with focus in the first field,
+  have Cancel, and return focus to their trigger on close or save.
+  - Creator profile: a summary, opened with *Edit*. `#creator-profile` (the studio link) opens it straight into edit.
+  - Email, password, sign-in method and member date share one *Sign-in* panel; *Change* opens each form.
+  - Sessions: *This device* and *Other devices* rows.
+  - GitHub and npm: rows showing status, with *Connect* opening the token form (help text inside the form).
+  - Data & privacy: *Download your data* row, and a *Danger zone* panel with the delete row. The retention and creator
+    notes moved into the opened delete form.
+- **Onboarding answers removed from Profile (owner decision).** The *About you* panel is gone, and Settings no
+  longer requests `/api/readers/onboarding`. The answers are collected once, by first-run `/onboarding`, and can no
+  longer be edited anywhere. API and stored data are unchanged.
+  - `AccountOnboarding` is now first-run only: its unused Profile edit mode, the `setup` prop and the unused copy
+    keys (`profileTitle`, `save`, `saved`) are deleted.
+  - The first-run privacy line no longer promises "update them anytime in Dashboard → Profile". It now says the
+    answers are private and only used to suggest a starting point, in both languages.
+- **Deep links updated** to land on their section: the release-manager and studio "connect source" links go to
+  `?section=connections`; the email-change confirmation link and the post-reset redirect go to `?section=account`.
+- **Implementation note.** The unlayered `* { border-color }` reset in `globals.css` outranks Tailwind border-colour
+  utilities. The nav therefore drops border *width* at `lg` instead of recolouring it.
+- **Verified.** Root typecheck. Lint: 0 errors (2 existing warnings). Production build. Unit tests: 889/889 with
+  `NODE_OPTIONS=--no-experimental-webstorage`; without it, the same three untouched files fail on the known Node 26
+  `localStorage` quirk. Playwright (mock build, local Chrome, desktop + mobile): all account-security, -data,
+  -preferences, email-change, dashboard-capabilities, dashboard-repairs, context-help, browser-zoom (incl. FA 200%),
+  shared-navigation and transport onboarding specs pass (178 + 10). In a wider run, the only failure was the existing
+  hero-search suggestion test (homepage, untouched). Rendered by hand in EN/FA, light/dark, at 375/640/1280.
+  Keyboard: every chip and opened form keeps its focused control in view, with no horizontal page overflow.
+- **Not done.** `lhci` (`/`, `/dashboard` and product pages are unchanged). Native Persian review of the new strings
+  (حساب و امنیت، اعلان‌ها، منطقهٔ خطر، …).
+- **Review and deploy.** `/code-review` (medium) ran before push; its findings and their dispositions are listed in the
+  commit body. Fixed:
+  - `#creator-profile` reopened the form after every save; it now opens once per page load.
+  - Focus now returns to the row's action after Cancel, Connect or Disconnect (provider connections) and after Cancel
+    on delete account.
+  - The deletion keeps/creator notes are visible again before the form opens.
+  - A sign-out error no longer sits in the non-shrinking action box.
+  - The duplicated focus-return code is now one `useReturnFocus` hook.
+  - Provider connections uses `SettingsPanel` instead of a hand-built header.
+  - Persian "رمز عبور" is used consistently.
+  Regression tests cover the first three. Deployed to the termspace box with `/root/DEPLOY-NOTES.md`'s procedure. No API or migration change
+  since the server's `44d542e`.
+
 ## 2026-11-10 — Profile (`/dashboard/settings`) regrouped, with a section index and one panel frame
 
 - **Scope / shared surfaces (announce in commit body).** `changelog.md` only. No API, route, schema or `lib/i18n/`

@@ -1,7 +1,8 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Bell, KeyRound, ShieldCheck, UserRound, Vault } from "lucide-react";
 import { ApiError, getOwnedCreatorProfile, logout } from "@/lib/api";
 import type { OwnedCreatorProfile } from "@/lib/types";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -15,19 +16,19 @@ import { AccountSecurity, type ProfileState } from "./account-security";
 import { accountSecurityCopy } from "./account-security-copy";
 import { AccountPreferences } from "./account-preferences";
 import { AccountData } from "./account-data";
-import { AccountEmail } from "./account-email";
 import { accountSettingsCopy } from "./account-settings-copy";
-import { SectionIndex, SettingsGroup, SettingsPanel } from "./settings-panel";
-import { AccountOnboarding } from "@/features/account/account-onboarding";
+import { SettingRow, SettingRows, SettingsGroup, SettingsNav, SettingsPanel, useReturnFocus, type SettingsSection } from "./settings-panel";
 
 export function AccountSettings() {
   const { locale, t } = useLocale();
   const router = useRouter();
   const session = useMarketplaceSession();
+  const requested = useSearchParams().get("section");
   const [profile, setProfile] = useState<OwnedCreatorProfile | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [signOutError, setSignOutError] = useState<string | null>(null);
   const [readerProfile, setReaderProfile] = useState<ProfileState>({ status: "loading" });
+  const content = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
     setStatus("loading");
@@ -46,13 +47,6 @@ export function AccountSettings() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
-
-  // The studio's "Edit your profile" link lands here; the form only exists once the profile has loaded.
-  useEffect(() => {
-    if (status === "ready" && profile && window.location.hash === "#creator-profile") {
-      document.getElementById("creator-profile")?.scrollIntoView({ block: "start" });
-    }
-  }, [status, profile]);
 
   async function signOut() {
     setSignOutError(null);
@@ -73,78 +67,145 @@ export function AccountSettings() {
 
   const text = accountSettingsCopy[locale];
   const showConnections = Boolean(profile) && session.marketplaceRoles.includes("creator");
-  const groups = [
-    { id: "profile", title: text.profile },
-    { id: "account", title: text.account },
-    { id: "preferences", title: text.preferences },
-    ...(showConnections ? [{ id: "connections", title: text.connections }] : []),
-    { id: "data", title: text.data },
+  // Connections has no section intro: its one panel already explains itself.
+  const sections: (SettingsSection & { intro?: string })[] = [
+    { id: "profile", title: text.profile, intro: text.profileIntro, icon: UserRound },
+    { id: "account", title: text.account, intro: text.accountIntro, icon: ShieldCheck },
+    { id: "notifications", title: text.preferences, intro: text.preferencesIntro, icon: Bell },
+    ...(showConnections ? [{ id: "connections", title: text.connections, icon: KeyRound }] : []),
+    { id: "privacy", title: text.data, intro: text.dataIntro, icon: Vault },
   ];
+  // An unknown or unavailable section (Connections before the profile loads) shows Profile.
+  const current = sections.some((section) => section.id === requested) ? requested! : "profile";
+  const base = localePath("/dashboard/settings", locale);
+  const group = (id: string) => sections.find((section) => section.id === id)!;
 
+  // Switching sections keeps the scroll position, so bring a section that starts above the viewport back into view.
+  const previous = useRef(current);
+  useEffect(() => {
+    if (previous.current === current) return;
+    previous.current = current;
+    if (content.current && content.current.getBoundingClientRect().top < 0) content.current.scrollIntoView({ block: "start" });
+  }, [current]);
+
+  const name = profile?.name ?? session.email ?? "";
   return (
     <div>
-      <header>
-        <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
-          {t.profile}
-        </h1>
-        <p className="mt-3 text-sm text-muted-foreground">{t.settingsIntro}</p>
-        {profile && <div className="mt-5 flex items-center gap-3">
-          <Avatar initials={profile.initials} src={profile.avatarUrl} className="size-12 font-sans text-base" />
-          <p className="min-w-0 text-sm">
-            <bdi className="block truncate font-medium">{profile.name}</bdi>
-            <bdi dir="ltr" className="block truncate text-muted-foreground">@{profile.handle}</bdi>
+      <header className="flex flex-wrap items-center gap-4">
+        <Avatar
+          initials={profile?.initials ?? (session.email?.[0] ?? "").toUpperCase()}
+          src={profile?.avatarUrl}
+          className="size-14 font-sans text-lg"
+        />
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">{t.profile}</h1>
+          <p className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+            {profile && <><bdi className="font-medium text-foreground">{name}</bdi><bdi dir="ltr">@{profile.handle}</bdi><span aria-hidden="true" className="hidden sm:inline">·</span></>}
+            <bdi dir="ltr" className="break-all">{session.email}</bdi>
           </p>
-        </div>}
+        </div>
       </header>
 
-      <div className="mt-6 lg:mt-8 lg:grid lg:grid-cols-[11rem_minmax(0,44rem)] lg:gap-10">
-        <SectionIndex label={text.onThisPage} items={groups} />
+      <div className="mt-6 lg:mt-8 lg:grid lg:grid-cols-[12rem_minmax(0,44rem)] lg:gap-10">
+        <SettingsNav label={text.sectionsLabel} items={sections} current={current} hrefFor={(id) => id === "profile" ? base : `${base}?section=${id}`} />
 
-        <div className="mt-6 space-y-8 lg:mt-0">
-          <SettingsGroup id="profile" title={text.profile}>
-            {status === "ready" && profile ? (
-              <SettingsPanel id="creator-profile" titleId="creator-profile-title" title={profile.accessActive ? undefined : t.creatorHub.editTitle}>
-                {profile.accessActive
-                  ? <CreatorProfileForm profile={profile} onSaved={setProfile} headingLevel="h3" />
-                  : <p className="mt-3 text-sm text-muted-foreground" role="status">{t.creatorHub.accessRevoked}</p>}
-              </SettingsPanel>
-            ) : (
-              <SettingsPanel titleId="creator-identity-title" title={t.settingsCreator}>
-                {status === "loading" ? <p role="status" className="mt-3 text-sm text-muted-foreground">{t.creatorHub.loading}</p>
-                  : status === "error" ? <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <p role="alert" className="text-sm text-destructive">{t.creatorHub.loadError}</p>
-                    <Button variant="secondary" onClick={() => void load()}>{t.creatorHub.retry}</Button>
-                  </div>
-                  : <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-sm text-muted-foreground">{t.settingsNoCreator}</p>
-                    <Link className={buttonVariants({ variant: "secondary" })} href={localePath("/dashboard/studio", locale)}>{t.creatorHub.title}</Link>
-                  </div>}
-              </SettingsPanel>
-            )}
-            <AccountOnboarding />
+        <div ref={content} className="mt-6 scroll-mt-[calc(var(--site-header-height)+1.5rem)] lg:mt-0">
+          <SettingsGroup {...group("profile")} active={current === "profile"}>
+            <CreatorProfilePanel profile={profile} status={status} onSaved={setProfile} onRetry={() => void load()} />
           </SettingsGroup>
 
-          <SettingsGroup id="account" title={text.account}>
-            <AccountEmail profile={readerProfile} />
-            <AccountSecurity onProfileState={setReaderProfile}>
-              <Button variant="secondary" onClick={() => void signOut()}>{t.signOut}</Button>
-              {signOutError && <p role="alert" className="text-sm text-destructive">{signOutError}</p>}
-            </AccountSecurity>
+          <SettingsGroup {...group("account")} active={current === "account"}>
+            <AccountSecurity
+              onProfileState={setReaderProfile}
+              signOut={<Button size="sm" variant="secondary" onClick={() => void signOut()}>{t.signOut}</Button>}
+              signOutError={signOutError}
+            />
           </SettingsGroup>
 
-          <SettingsGroup id="preferences" title={text.preferences}>
+          <SettingsGroup {...group("notifications")} active={current === "notifications"}>
             <AccountPreferences />
           </SettingsGroup>
 
-          {showConnections && <SettingsGroup id="connections" title={text.connections}>
+          {showConnections && <SettingsGroup {...group("connections")} active={current === "connections"}>
             <ProviderConnections />
           </SettingsGroup>}
 
-          <SettingsGroup id="data" title={text.data}>
+          <SettingsGroup {...group("privacy")} active={current === "privacy"}>
             <AccountData profile={readerProfile} />
           </SettingsGroup>
         </div>
       </div>
     </div>
   );
+}
+
+/** The public creator identity: a read-only summary until Edit opens the form in its place. */
+function CreatorProfilePanel({ profile, status, onSaved, onRetry }: {
+  profile: OwnedCreatorProfile | null;
+  status: "loading" | "ready" | "error";
+  onSaved: (profile: OwnedCreatorProfile) => void;
+  onRetry: () => void;
+}) {
+  const { locale, t } = useLocale();
+  const text = accountSettingsCopy[locale];
+  const [editing, setEditing] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const editButton = useReturnFocus(editing);
+  const deepLinked = useRef(false);
+
+  // The studio's "Edit your profile" link lands here with the form open. Only once: the hash stays
+  // in the URL, and a save changes `profile`, which must not reopen the form.
+  useEffect(() => {
+    if (deepLinked.current || status !== "ready" || !profile?.accessActive || window.location.hash !== "#creator-profile") return;
+    deepLinked.current = true;
+    setEditing(true);
+    document.getElementById("creator-profile")?.scrollIntoView({ block: "start" });
+  }, [status, profile]);
+
+  function close(wasSaved: boolean) {
+    setSaved(wasSaved);
+    setEditing(false);
+  }
+
+  if (status !== "ready" || !profile) {
+    return <SettingsPanel titleId="creator-identity-title" title={t.settingsCreator}>
+      {status === "loading" ? <p role="status" className="mt-3 text-sm text-muted-foreground">{t.creatorHub.loading}</p>
+        : status === "error" ? <div className="mt-3 flex flex-wrap items-center gap-3">
+          <p role="alert" className="text-sm text-destructive">{t.creatorHub.loadError}</p>
+          <Button variant="secondary" onClick={onRetry}>{t.creatorHub.retry}</Button>
+        </div>
+        : <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">{t.settingsNoCreator}</p>
+          <Link className={buttonVariants({ variant: "secondary" })} href={localePath("/dashboard/studio", locale)}>{t.creatorHub.title}</Link>
+        </div>}
+    </SettingsPanel>;
+  }
+
+  if (!profile.accessActive) {
+    return <SettingsPanel id="creator-profile" titleId="creator-profile-title" title={t.creatorHub.editTitle}>
+      <p className="mt-3 text-sm text-muted-foreground" role="status">{t.creatorHub.accessRevoked}</p>
+    </SettingsPanel>;
+  }
+
+  if (editing) {
+    return <SettingsPanel id="creator-profile" titleId="creator-profile-title">
+      <CreatorProfileForm profile={profile} onSaved={(next) => { onSaved(next); close(true); }} headingLevel="h3"
+        cancel={<Button type="button" variant="ghost" onClick={() => close(false)}>{text.cancel}</Button>} />
+    </SettingsPanel>;
+  }
+
+  return <SettingsPanel
+    id="creator-profile"
+    titleId="creator-profile-title"
+    title={t.creatorHub.editTitle}
+    description={t.creatorHub.editIntro}
+    action={<Button ref={editButton} size="sm" variant="secondary" aria-expanded={false} aria-label={`${text.edit} — ${t.creatorHub.editTitle}`} onClick={() => { setSaved(false); setEditing(true); }}>{text.edit}</Button>}
+  >
+    <SettingRows>
+      <SettingRow label={t.creatorHub.name} value={<bdi dir="ltr" lang="en" className="text-foreground">{profile.name}</bdi>} />
+      <SettingRow label={t.creatorHub.handle} value={<bdi dir="ltr" className="font-mono text-[13px]">{profile.handle}</bdi>} />
+      <SettingRow label={t.creatorHub.bio} value={<p className="ts-bidi line-clamp-3 whitespace-pre-line">{profile.bio}</p>} />
+    </SettingRows>
+    {saved && <p role="status" className="mt-4 text-sm text-success">{t.creatorHub.saved}</p>}
+  </SettingsPanel>;
 }

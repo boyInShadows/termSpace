@@ -87,7 +87,8 @@ for (const locale of ["en", "fa"] as const) {
 
   test(`dashboard and studio expose contextual help: ${locale}`, async ({ page }) => {
     const prefix = locale === "fa" ? "/fa" : "";
-    for (const route of ["/dashboard", "/dashboard/studio", "/dashboard/settings"]) {
+    // Settings help sits on provider connections; the profile summary has no help to give until edited.
+    for (const route of ["/dashboard", "/dashboard/studio", "/dashboard/settings?section=connections"]) {
       await page.goto(`${prefix}${route}`);
       const help = page.locator("main").getByRole("button", { name: locale === "fa" ? /^راهنما:/ : /^Help:/ }).first();
       await help.click();
