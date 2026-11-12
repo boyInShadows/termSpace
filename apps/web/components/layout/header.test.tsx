@@ -24,7 +24,11 @@ vi.mock("@/features/account/marketplace-session", () => ({
   useMarketplaceSession: () => session,
 }));
 
-vi.mock("@/lib/api", () => ({ logout: () => logout() }));
+vi.mock("@/lib/api", async importOriginal => ({
+  ...await importOriginal<typeof import("@/lib/api")>(),
+  logout: () => logout(),
+  getOwnedCreatorProfile: async () => null,
+}));
 
 vi.mock("next-themes", () => ({ useTheme: () => ({ setTheme: () => {} }) }));
 

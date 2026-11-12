@@ -214,6 +214,14 @@ preserving explicitly English article content.
 
 ### Spacing and density
 
+Author new or changed fixed UI dimensions, spacing, font sizes, radii and strokes
+in rem, or the existing rem-based Tailwind scale (owner preference, 2026-11-12).
+Keep %, fr and viewport units for responsive relationships. Pixel equivalents in
+the tables below describe the default-root visual sizes, not a requirement to
+author pixel CSS. Browser geometry and unitless SVG coordinates are measurement
+data; convert measured geometry to rem when positioning interface elements.
+Do not rewrite unrelated existing styles solely to change their units.
+
 Use the existing Tailwind spacing scale. Public `container-page` is 76rem
 maximum with 1rem gutters on each phone edge; use `.section-y` for marketing
 section padding (`--section-y` in `tokens.css`). Common existing steps are

@@ -352,3 +352,23 @@ export const commentSchema = z.object({
   body: z.string().trim().min(3).max(2000),
   website: z.string().max(200).optional(),
 });
+
+export const supportCategorySchema = z.enum(["TECHNICAL", "LISTING", "GENERAL"]);
+export const supportStatusSchema = z.enum(["WAITING_FOR_SUPPORT", "WAITING_FOR_MEMBER", "RESOLVED"]);
+export const supportCreateSchema = z.object({
+  category: supportCategorySchema,
+  subject: z.string().trim().min(1).max(120),
+  message: z.string().trim().min(1).max(5000),
+}).strict();
+export const supportReplySchema = z.object({
+  message: z.string().trim().min(1).max(5000),
+  version: z.number().int().min(0),
+}).strict();
+export const supportResolveSchema = z.object({ version: z.number().int().min(0) }).strict();
+export const supportListSchema = z.object({
+  q: z.string().trim().max(120).optional(),
+  category: supportCategorySchema.optional(),
+  status: supportStatusSchema.optional(),
+  page: z.coerce.number().int().min(1).max(10000).default(1),
+}).strict();
+export const supportMessagesSchema = z.object({ before: routeIdSchema.optional() }).strict();

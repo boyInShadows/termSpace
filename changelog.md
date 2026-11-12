@@ -2,6 +2,178 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-12 — Add owner-requested desktop support navigation
+
+- Added localized Support tickets with Lucide Ticket to the existing desktop
+  sidebar. Links to My tickets, marks nested ticket routes active, and retains
+  the in-page staff inbox switch. Sidebar styling and mobile tabs are unchanged.
+  Updated the plan/brief to record the owner's explicit scope change.
+- New navigation regression covers EN/FA, member/staff, nested routes and
+  unchanged mobile items. Scoped the verification-screen assertion to main now
+  that its support link also exists in the sidebar.
+- Root typecheck/build pass; 925 tests pass/54 skip; lint has two existing
+  warnings. Focused browser30 pass/two native-zoom duplicates skip. Nine
+  Lighthouse runs pass unchanged assertions; Impeccable has no findings. Four
+  locale/theme/member/staff captures inspected. Prior full-suite reset/search/
+  budget failures remain unresolved; the full suite was not repeated here.
+- All changes local. Did not restart the owner's dev servers; independently
+  started web/API processes were left untouched. [Evidence and files](docs/artifacts/ticketing-sidebar-2026-11-12/report.md).
+
+## 2026-11-12 — Local text support release; original v.3 sidebar retained
+
+- Implemented `docs/support-tickets-plan.md` Tasks 2–3: member list/create/thread,
+  verified marketplace staff inbox, replies, resolve/reopen, bounded history,
+  scoped filters/counts, atomic version conflicts and draft recovery in EN/FA.
+  Ticket discovery uses Quick actions/verification; original v.3 sidebar and
+  mobile tabs stay intact. Shared/backend surfaces were announced below before
+  editing; the owner explicitly authorized this ticketing phase.
+- Included account export/erasure, staff-content redaction, retained private-file
+  cleanup/retry and the deletion/write lock. Strict validation, CSRF, rate limits,
+  current staff grants and no-store responses remain enforced. Private API errors
+  do not log Prisma query arguments/message text. No new uploads or notifications.
+- Verified a new additive migration on a disposable DB; backed up normal local
+  data before applying the existing featured-field prerequisite and support
+  migration. Prior ledger checksums/counts unchanged; real home API now 200.
+  The first archived support migration checksum mismatch still needs provenance
+  reconciliation before rollout. No normal reset or production work.
+- Root typecheck/build pass; 921 tests pass/54 skip. Separately: 18 real PostgreSQL
+  support/account checks pass. Lint: zero errors/two existing warnings. Focused
+  browser: 22 pass/two mobile zoom duplicates skip. Full browser: 550 pass/48 skip/
+  eight existing reset/search/budget failures. Final JS: dashboard172.7/170 kB,
+  product169/165 kB, both locales; no weakened gates. Nine final Lighthouse runs
+  pass unchanged assertions via externally managed Chrome (Windows cleanup workaround).
+- Task 4 review/evidence captured: 48 localhost fixture screenshots, both themes/
+  locales at 320/390/768/1440, keyboard/conflicts and native200% zoom. Impeccable
+  scan has no findings; independent review's two typography fixes are resolved.
+  Manual second-pass code review covered API scoping/state/privacy and UI drafts.
+  Physical keyboards/safe areas, owner acceptance and red release gates remain
+  open. [Files, screenshots, commands and limits](docs/artifacts/ticketing-release-2026-11-12/report.md).
+- No staging, commit, push, deploy or additional checkout. Preserved independent
+  header/avatar/rem work, unrelated lockfile changes and the UI-polish intake.
+
+## 2026-11-12 — Restore v.3 sidebar; start the ticketing plan
+
+- Owner aborted the icon rail. Restored the exact v.3 navigation source and
+  original nominal desktop width as 15rem; removed rail-only tests/styles and
+  reversed its navigation changes. Separate header avatar work, rem preference,
+  unrelated lockfile edits and the ticketing plan are preserved. Four local
+  locale/theme captures match the original sidebar.
+- Completed Task 1's contract/retained-state audit in `docs/support-tickets-plan.md`.
+  All four old support tables and migration records remain locally, with zero
+  rows. Three SQL checksums match the archive; the first legacy migration needs
+  explicit reconciliation before later rollout. No ledger/data changes in Task 1.
+  Root typecheck/build and 900 tests pass (44 skips); lint has two existing
+  warnings. Browser baseline: 527 passed/46 skipped/nine known-area failures;
+  Lighthouse again hits Windows EPERM. Evidence: `docs/artifacts/ticketing-task1-2026-11-12/`.
+- **Owner-authorized next phase / shared surfaces announced before editing:**
+  build the plan's text-only support loop in web/API. Backend work is outside
+  Ramtin's presentation lane because the owner explicitly requests ticketing:
+  `apps/api/src/app.ts`, `validation/schemas.ts`, `middleware/security.ts`, new
+  support route/controller/access modules, readerAccountController privacy,
+  Prisma schema and a new additive migration. Web touches only ticket pages,
+  support modules and narrow shell/verification/Quick actions access. No sidebar
+  redesign, attachment/alert feature, avatar uploading, production work or push.
+
+## 2026-11-12 — Read-only local/production service comparison
+
+- Live public HTTP/source checks confirm Google and Chatwoot exist in local code
+  but are disabled by missing local configuration; production serves both.
+  Published catalogs differ: production 47, local 13. Local homepage API returns
+  500 (unknown `featuredAt`), while production returns 200. Read-only DB metadata
+  confirms the local featured migration is unapplied and its column absent;
+  the API process predates the merge and still has a stale Prisma runtime.
+- Extension discovers both signed-in tabs but inspection fails; private Network
+  panels/identities, exact production SHA and end-to-end OAuth/email/chat were not
+  verified. No app/config/data/service changes, migrations, restarts, seeds or
+  deployments. Existing work and paused feature queues remain intact.
+- Evidence and possible next steps, not executed:
+  `docs/artifacts/environment-parity-2026-11-12/report.md`. Research only; no
+  application verification suite needed or claimed for this documentation capture.
+
+## 2026-11-12 — Center the desktop rail and use owner-selected navy
+
+- **Owner correction.** Center the complete curved rail vertically in the viewport
+  below the measured global header; use scoped `#0B1C3F` in both themes. Flex auto
+  margins center it when it fits; non-shrinking content stays scrollable in short
+  windows. Existing rem sizing, routes, account control and mobile tabs are kept.
+- **Verified.** Root typecheck/build and lint pass (two existing warnings).
+  Twenty focused browser cases pass, including all twelve real 200% zoom cases;
+  twenty project-specific skips. EN/FA × light/dark localhost captures measure
+  zero centering offset and exact RGB(11,28,63). Short-window keyboard access,
+  reduced motion, tooltips, rem scaling and contrast pass (inactive icons at least
+  3.05:1, focus at least 3.24:1). Impeccable CSS scan has only its static-scan
+  limitation; rendered checks are separate. Lighthouse again stops on Windows
+  profile-cleanup EPERM. The full unit/browser suites were not repeated for this
+  CSS-only correction; prior results and unresolved failures remain in earlier entries.
+- **Handoff.** Local evidence: `docs/artifacts/dashboard-sidebar-centered-2026-11-12/`.
+  Only scoped CSS, geometry regression and surface brief changed beyond this
+  shared log. No staging, commit, push, deployment, account/upload implementation
+  or change to unrelated work. The member identity/upload queue stays for next session.
+
+## 2026-11-12 — Sidebar correction, rem preference and header identity
+
+- **Owner correction / local only.** The first rail was not visually accepted.
+  Fit the S-shouldered silhouette to the menu, using existing blue selection and
+  surface tokens without changing their values. Remove both desktop Profile icon
+  and bottom avatar; Profile remains reachable in the shared header dropdown and
+  unchanged phone tabs. No commit, push, deployment, checkout or migration.
+- **Header identity.** `account-menu.tsx` reuses Avatar and the existing owned
+  public-profile endpoint: existing image URL, otherwise first/last public-name
+  initials, with Persian and single-word support and stale-account protection.
+  ReaderUser has no public-name/image fields: missing public profiles show `?`,
+  not email initials. Actual uploads, ordinary-member names and update refresh
+  are queued in ignored `ramtin-pending.md` for the next session, not implemented.
+- **Units / documented agreement.** After explaining the existing mixed
+  documentation, saved the owner's rem preference in Codex's global instructions
+  and `apps/web/DESIGN.md`. Rail width is `5.25rem`, icons `1.375rem`; tooltip
+  geometry is converted to rem. Relative layout units and unitless SVG coordinates
+  remain appropriate. The dashboard surface brief records the moved Profile
+  access. Shared changelog records the handoff; Claude configuration is untouched.
+- **Checks.** Root typecheck/build, 906 unit tests (44 skips), lint (two existing
+  warnings), all 12 real 200% zoom scenarios pass. Full browser run: 534 passed,
+  54 skipped, ten failures. Two were test selectors matching both header/content
+  Profile links; scoped to the header and rerun successfully with all 14 focused
+  browser cases. Eight other failures remain in password reset, hero suggestions
+  and JS budgets: dashboard 173.2/170 kB, product 169/165 kB (previous rail baseline
+  172.9 and 168.6). Lighthouse again stops on Windows profile-cleanup EPERM.
+  No tests/budgets/ignores weakened. Impeccable: no changed-source flags; 20
+  unchanged header/content cramped-padding flags in rendered snapshots.
+- **Evidence / next session.** EN/FA, both themes, desktop/short/phone, focus,
+  tooltip, existing-image rendering, rem scaling and account-switch evidence:
+  `docs/artifacts/dashboard-sidebar-followup-2026-11-12/review.md`. Manual diff
+  review; unrelated lockfile edits and the ticketing draft are preserved. Owner
+  visual and real-account/device acceptance remain open. Next: member identity
+  and image uploads from the local queue; Tickets remain deferred.
+
+## 2026-11-12 — Local dashboard icon rail
+
+- **Scope / shared surface.** Owner requested a focused desktop sidebar redesign
+  on `ramtin`, with no commit/push/deployment. Application changes stay in
+  `dashboard-nav.tsx`, new `dashboard-rail.module.css` and the shell's 84px desktop
+  grid column. This shared changelog records verification only; the navigation
+  data, permissions, mobile tabs, Publish helper, global header, search,
+  notifications, authentication, public pages and token values remain unchanged.
+  Existing local lockfile edits and the untracked ticketing plan are preserved.
+- **Result.** Existing surface colors form a mirrored S-shouldered SVG rail, with
+  22px Lucide icons, 44px targets, 12px active tiles, distinct Publish and compact
+  profile shortcut. One hoverable portal tooltip supplies localized labels,
+  keyboard focus and Escape dismissal without scroll clipping. Header-relative
+  stickiness, short-window scrolling and immediate reduced-motion feedback remain
+  usable. No dependencies or Tickets work added.
+- **Verified.** Root typecheck/build, 900 unit tests (44 skips), lint (two existing
+  warnings), six focused browser checks and all 12 real 200% zoom scenarios pass.
+  Full Playwright: 534 passed, 52 skipped, eight pre-existing failures (password
+  reset, hero suggestions, four JS budgets). Dashboard JS is 172.9/170 kB versus
+  172.2 baseline; product stays 168.6/165 kB. Lighthouse again stops on Windows
+  profile cleanup `EPERM`; budgets/tests are unchanged. Impeccable finds no changed
+  source anti-patterns; two captured pages retain 20 unchanged header/content
+  cramped-padding findings. Local fixture captures cover EN/FA, both themes,
+  desktop/400px-height/phone, focus and tooltips; icon/focus/text contrast passes.
+- **Evidence / acceptance.** Local report and screenshots:
+  `docs/artifacts/dashboard-sidebar-2026-11-12/review.md`. Real accounts/devices,
+  assistive technology and owner visual acceptance remain open. Manual diff
+  review; no additional checkout, staging, commit, push or deployment in this task.
+
 ## 2026-11-12 — Merge v.3 into ramtin
 
 - **Owner request.** Complete the existing pull from `v.3` (`ab28807`) into

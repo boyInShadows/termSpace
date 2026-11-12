@@ -6,6 +6,7 @@ import { DashboardCard } from "./dashboard-card";
 import { savedCopy } from "@/features/library/saved-copy";
 import { libraryCopy } from "@/features/library/library-copy";
 import { ContextHelp } from "@/components/ui/context-help";
+import { supportTitle } from "@/features/support/support-entry";
 
 /** Ghost rows only — the sidebar's Publish is the page's one primary button. */
 export function QuickActions() {
@@ -17,6 +18,7 @@ export function QuickActions() {
     { label: libraryCopy[locale].quickAction, href: "/dashboard/library" },
     { label: savedCopy[locale].title, href: "/dashboard/library/saved" },
     { label: t.profile, href: "/dashboard/settings" },
+    { label: supportTitle[locale], href: "/dashboard/tickets" },
   ];
 
   return (

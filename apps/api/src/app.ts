@@ -16,6 +16,7 @@ import readerRoutes from "./routes/readerRoutes.js";
 import resourceRoutes from "./routes/resourceRoutes.js";
 import editionRoutes from "./routes/editionRoutes.js";
 import marketplaceRoutes from "./routes/marketplaceRoutes.js";
+import supportRoutes from "./routes/supportRoutes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { apiRateLimit, csrfProtection } from "./middleware/security.js";
 import { prisma } from "./lib/prisma.js";
@@ -83,6 +84,7 @@ export function createApp() {
   app.use("/api/resources", resourceRoutes);
   app.use("/api/editions", editionRoutes);
   app.use("/api/marketplace", marketplaceRoutes);
+  app.use("/api/support", supportRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

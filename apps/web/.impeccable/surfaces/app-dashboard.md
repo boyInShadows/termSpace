@@ -58,3 +58,15 @@ Verification: both locales and themes at phone, tablet and desktop widths,
 keyboard focus/search, sticky-action hit tests, retry and dirty navigation tests,
 and local before/after captures. Real device keyboards and safe areas, provider
 credentials and maintainer review of Persian wording remain separate acceptance.
+
+## Private support extension
+
+Ticketing follows `docs/support-tickets-plan.md`: separated surface rows with
+the subject first, bounded previews and explicit status/activity. The existing
+Paper & Signal controls and rem scales carry through a narrow new-ticket form
+and a readable chronological conversation. Private text stays plain text; failed
+sends and conflicts keep the draft. Staff switch between their own requests and
+the shared inbox locally within ticket pages. Discovery uses Quick actions,
+the verification screen and the owner-requested desktop Support tickets entry.
+The original v.3 sidebar styling, phone tabs and global header remain unchanged.
+No attachments, alerts, assignment or avatar-upload controls.

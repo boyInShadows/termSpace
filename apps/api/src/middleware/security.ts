@@ -105,6 +105,7 @@ const accepted = (_req: unknown, res: { status(code: number): { json(body: unkno
 
 export const reportWriteRateLimit = limiter("report-write", { windowMs: HOUR, limit: 20 });
 export const reviewWriteRateLimit = limiter("review-write", { windowMs: HOUR, limit: 20 });
+export const supportWriteRateLimit = limiter("support-write", { windowMs: HOUR, limit: 60 });
 /** One beacon per listing-page visit; generous enough for real browsing, tight enough to cap scripted inflation. */
 export const listingViewRateLimit = limiter("listing-view", { windowMs: HOUR, limit: 120 });
 export const emailVerificationRequestRateLimit = limiter("email-verification-request", { windowMs: HOUR, limit: 12, handler: accepted });
