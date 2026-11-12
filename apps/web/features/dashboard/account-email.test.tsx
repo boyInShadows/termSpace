@@ -9,12 +9,15 @@ const { ApiError } = await import("@/lib/api");
 const { AccountEmail } = await import("./account-email");
 const { emailChangeCopy } = await import("@/features/account/email-change-copy");
 const { accountSecurityCopy } = await import("./account-security-copy");
+const { accountSettingsCopy } = await import("./account-settings-copy");
 const text = emailChangeCopy.en;
 const account = { email: "member@example.test", createdAt: "2026-01-01T00:00:00Z", emailVerified: true };
 const withPassword = { status: "ready", profile: { ...account, hasPassword: true, connectedGoogle: false } } as const;
 const googleOnly = { status: "ready", profile: { ...account, hasPassword: false, connectedGoogle: true } } as const;
 
+const change = { name: accountSettingsCopy.en.changeEmail };
 function fill(email = "new@example.test", password = "correct-password") {
+  fireEvent.click(screen.getByRole("button", change));
   fireEvent.change(screen.getByLabelText(text.newEmailLabel), { target: { value: email } });
   fireEvent.change(screen.getByLabelText(text.passwordLabel), { target: { value: password } });
 }
@@ -23,13 +26,15 @@ describe("change email", () => {
   afterEach(cleanup);
   beforeEach(() => vi.clearAllMocks());
 
-  it("waits for the profile and explains a failed load without a second retry", () => {
+  // The sign-in panel reports the profile's loading and failure once; the row only withholds Change.
+  it("offers no change until the profile says the account has a password", () => {
     const { rerender } = render(<AccountEmail profile={{ status: "loading" }} />);
-    expect(screen.getByText(text.loading)).toBeVisible();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
     rerender(<AccountEmail profile={{ status: "error" }} />);
-    expect(screen.getByText(text.loadError)).toBeVisible();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    rerender(<AccountEmail profile={withPassword} />);
+    expect(screen.getByRole("button", change)).toHaveAttribute("aria-expanded", "false");
   });
 
   it("explains that a Google-only account takes its address from Google", () => {
@@ -38,16 +43,17 @@ describe("change email", () => {
     expect(screen.queryByLabelText(text.newEmailLabel)).not.toBeInTheDocument();
   });
 
-  it("asks for the new address and password, then says a link was sent and clears the form", async () => {
+  it("asks for the new address and password, then says a link was sent and closes the form", async () => {
     mocks.request.mockResolvedValue({ data: { accepted: true } });
     render(<AccountEmail profile={withPassword} />);
-    expect(screen.getByLabelText(text.newEmailLabel)).toHaveAttribute("dir", "ltr");
+    expect(screen.queryByLabelText(text.newEmailLabel)).not.toBeInTheDocument();
     fill();
+    expect(screen.getByLabelText(text.newEmailLabel)).toHaveAttribute("dir", "ltr");
     fireEvent.click(screen.getByRole("button", { name: text.submit }));
     expect(await screen.findByRole("status")).toHaveTextContent(text.sent);
     expect(mocks.request).toHaveBeenCalledWith("new@example.test", "correct-password");
-    expect(screen.getByLabelText(text.newEmailLabel)).toHaveValue("");
-    expect(screen.getByLabelText(text.passwordLabel)).toHaveValue("");
+    expect(screen.queryByLabelText(text.newEmailLabel)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", change)).toBeEnabled();
   });
 
   it("ignores a second submit while the first is pending", async () => {
@@ -59,7 +65,7 @@ describe("change email", () => {
     expect(await screen.findByRole("button", { name: text.sending })).toBeDisabled();
     expect(mocks.request).toHaveBeenCalledOnce();
     finish({ data: { accepted: true } });
-    await waitFor(() => expect(screen.getByRole("button", { name: text.submit })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole("button", change)).toBeEnabled());
   });
 
   it.each([

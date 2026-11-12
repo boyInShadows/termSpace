@@ -3,7 +3,7 @@ import { getMarketplaceCreator, acquireMarketplaceProduct, addMarketplaceFavorit
 import { createOwnedCreatorProfile, getCreatorDashboard, getOwnedCreatorProfile, listOwnedMarketplaceReleases, updateOwnedCreatorProfile } from "../controllers/marketplaceCreatorController.js";
 import { transitionModeratedMarketplaceListing, transitionOwnedMarketplaceListing } from "../controllers/marketplaceLifecycleController.js";
 import { createOwnedMarketplaceDraft, getOwnedMarketplaceDraft, listMarketplaceDraftOptions, updateOwnedMarketplaceDraft } from "../controllers/marketplaceDraftController.js";
-import { addMarketplaceModerationNote, getMarketplaceModerationPreview, listMarketplaceModerationQueue, moderateMarketplaceCommunityPlacement } from "../controllers/marketplaceModerationController.js";
+import { addMarketplaceModerationNote, getMarketplaceModerationPreview, listMarketplaceModerationQueue, moderateMarketplaceCommunityPlacement, setMarketplaceListingFeatured } from "../controllers/marketplaceModerationController.js";
 import { listMarketplaceNotifications, markMarketplaceNotificationsRead } from "../controllers/marketplaceNotificationController.js";
 import { connectOwnedProvider, enqueueOwnedSourceCheck, listOwnedProviderConnections, revokeOwnedProvider } from "../controllers/marketplaceSourceController.js";
 import { deleteReview, getMyReview, listProductReviewsForModeration, saveReview, setReviewVisibility } from "../controllers/marketplaceReviewController.js";
@@ -12,7 +12,7 @@ import { marketplaceReportSchema, moderationCaseQuerySchema, moderationCaseTriag
 import { requireMarketplaceRole, requireReader, requireVerifiedReader } from "../middleware/auth.js";
 import { reportWriteRateLimit, reviewWriteRateLimit, searchRateLimit, listingViewRateLimit } from "../middleware/security.js";
 import { validate, validateRouteParam } from "../middleware/validate.js";
-import { marketplaceCreatorQuerySchema, communityPlacementDecisionSchema, marketplaceAcquireSchema, releaseVersionSchema, reviewVisibilitySchema, reviewWriteSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, notificationReadSchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
+import { marketplaceCreatorQuerySchema, communityPlacementDecisionSchema, marketplaceAcquireSchema, releaseVersionSchema, reviewVisibilitySchema, reviewWriteSchema, creatorDashboardQuerySchema, creatorDraftCreateSchema, creatorDraftUpdateSchema, creatorListingLifecycleSchema, creatorOnboardingSchema, creatorProfileUpdateSchema, marketplaceLibraryQuerySchema, marketplaceProductQuerySchema, marketplaceProviderSchema, moderatedFeaturedSchema, moderatedListingLifecycleSchema, moderationNoteSchema, moderationQueueQuerySchema, notificationReadSchema, providerConnectionSchema, routeIdSchema, routeSlugSchema, sourceCheckRequestSchema } from "../validation/schemas.js";
 
 const router = Router();
 router.param("id", validateRouteParam("id", routeIdSchema));
@@ -54,6 +54,7 @@ router.post("/moderation/cases/:id/triage", requireMarketplaceRole("moderator", 
 router.get("/moderation/products/:id", requireMarketplaceRole("moderator", "administrator"), getMarketplaceModerationPreview);
 router.post("/moderation/products/:id/notes", requireMarketplaceRole("moderator", "administrator"), validate(moderationNoteSchema), addMarketplaceModerationNote);
 router.post("/moderation/products/:id/community-placements/:communitySlug", requireMarketplaceRole("moderator", "administrator"), validate(communityPlacementDecisionSchema), moderateMarketplaceCommunityPlacement);
+router.post("/moderation/products/:id/featured", requireMarketplaceRole("moderator", "administrator"), validate(moderatedFeaturedSchema), setMarketplaceListingFeatured);
 router.post("/moderation/products/:id/lifecycle", requireMarketplaceRole("moderator", "administrator"), validate(moderatedListingLifecycleSchema), transitionModeratedMarketplaceListing);
 router.get("/favorites", requireReader, listMarketplaceFavorites);
 router.get("/notifications", requireReader, listMarketplaceNotifications);

@@ -2,35 +2,184 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
-## 2026-11-10 — Match production search focus locally
+## 2026-11-12 — Merge v.3 into ramtin
 
-- **Scope / shared surface.** Owner requested repairing the blue rectangle on
-  clicked search after resolving Chrome's localhost110% zoom. This shared
-  changelog records only the search-focus repair; no layout, fixture, backend or
-  ticketing change. Ported the existing production treatment from `origin/v.3`
-  (`9db04db` / `44d542e`), which is absent from the selected main baseline.
-- **Cause / repair.** The unlayered global focus rule beat the input's Tailwind
-  outline reset, while its wrapper added another ring. Reuse the production
-  input override and scoped `.search-field:focus-within` border rule. The pill
-  now has one thin primary border; the submit button retains its own keyboard
-  outline. Universal border and global focus defaults remain unchanged.
-- **Verification.** The browser regression fails before repair and passes after.
-  Eight desktop/phone × EN/FA × light/dark cases cover pointer/keyboard focus,
-  typing and localized submission. Paired production/before/after screenshots
-  and computed styles confirm the focus treatment; eight local captures cover
-  both themes/locales/widths. Root typecheck/build and873 tests pass (44 gated
-  skips); lint has zero errors/two existing warnings. Initial typecheck found
-  stale generated support-route types from the rollback; build regenerated them.
-  Manual code/Impeccable review passes for this diff; detector findings are
-  incumbent typography/easing. Evidence: `docs/artifacts/search-focus-2026-11-10/`.
-- **Push gate / follow-up.** Full E2E:531 pass,46 skips,4 JavaScript-budget
-  failures: EN/FA dashboard172.2KB/170KB and product168.3KB/165KB. Lighthouse
-  stops on Windows temporary-profile cleanup `EPERM`; no Lighthouse pass claimed.
-  Keep this repair local; budgets and unrelated code are unchanged. Browser
-  connector still fails; isolated repository Playwright/Chrome verification works.
-  Separately observed: main still shows synthetic example intents as Popular
-  searches for empty history; production removes that fallback. It remains a
-  separate follow-up, with real recent searches preserved.
+- **Owner request.** Complete the existing pull from `v.3` (`ab28807`) into
+  `ramtin`. Accept the incoming versions of `apps/web/styles/globals.css` and
+  this changelog for both conflicts, then add this verification record. Preserve
+  the automatically merged local search-focus regression. No application edits
+  beyond the requested merge; local `package-lock.json` edits and the untracked
+  `docs/support-tickets-plan.md` are excluded from the commit.
+- **Shared surfaces.** The incoming merge includes Prisma schema/migration,
+  web types/translations, `pending.md` and this changelog. These are named in
+  the merge commit body. No pending-queue item was implemented in this task.
+- **Verification.** Root typecheck, root production build and all 894 unit tests
+  pass (44 skipped); web lint passes with two existing warnings. Prisma client
+  types refreshed; generation reported a Windows engine-DLL replacement lock
+  from the running API. No database migration was applied. Manual merge review
+  confirms zero unmerged paths, incoming CSS unchanged, and only the local
+  search-focus test plus this record differ from the incoming tree.
+- **Open push gates.** Playwright: 527 passed, 46 skipped, 9 failed. Failures:
+  password-reset navigation (desktop/mobile), empty catalog filter recovery,
+  search-suggestion expectations (desktop/mobile), and four JS budgets:
+  dashboard 172.2/170 kB and product 168.6/165 kB in EN/FA. Lighthouse stops on
+  Windows temporary-profile cleanup `EPERM`. Budgets and tests remain unchanged.
+  Evidence: local `docs/artifacts/merge-v3-*.log` (not committed). Push requires
+  passing gates or an explicit owner exception; no exception assumed.
+
+## 2026-11-11 — Installation is public: anyone can install a release without an account
+
+- **Owner decision.** Installing no longer requires an account or a library entry. This reverses "Public catalog
+  responses omit actionable installation instructions" in `docs/marketplace-listing-lifecycle.md`; that doc and
+  `docs/product-direction.md` are updated.
+- **Shared surfaces (announce in commit body):** `apps/web/lib/types.ts` (`ProductRelease.installation` now carries
+  `instructions` and optional `commands`), `apps/web/lib/i18n/product-page.ts` (`installNote`), `changelog.md`. No
+  schema or migration change.
+- **API.** `findPublicRelease`, used by `GET /products/:slug` and `GET /products/:slug/releases/:version`, now
+  returns the moderated installation steps and commands with the method and resolved URL. The fail-closed gates are
+  unchanged: published listing, published release, available source status, trusted GitHub/npm URL; otherwise the
+  release is `null` or 404. `GET /products/:slug/installation` (pinned acquisition, private/no-store) is unchanged.
+  Stored commands are re-checked against the manifest's `installCommand` schema on the way out of both endpoints,
+  and malformed entries are dropped.
+- **Product page.**
+  - A primary *Install vX* button works for everyone and opens the install dialog for the release being inspected,
+    including an older version chosen in the picker.
+  - *Add vX to library* is now a separate secondary button. Signed-out visitors are sent to log in, as before. For a
+    reader who already has it, the button becomes a link to the library: *In your library · vX*.
+  - Library entries stay pinned. A reader opening a listing they hold sees the picker switch to their library
+    version, so the page's facts and *Install* agree, and installs it as *Install acquired release*. Picking another
+    version installs that version's public release. When the listing has no public release left, the pinned one
+    still installs.
+  - Library state is keyed by account, so a sign-out or account switch never shows another reader's entry. After
+    *Add* or `ALREADY_IN_LIBRARY`, the pinned entry is refetched. Lookup failures other than not-held or restricted
+    are logged.
+  - Adding to the library no longer opens the dialog automatically.
+  - The dialog takes a release, so the public and pinned views share one component. It hides the steps heading when
+    a release declares no steps.
+- **Verified.** Root typecheck. Lint: 0 errors. Unit tests: API 318, web 531, blog 45. Playwright (mock build,
+  desktop + mobile): catalog (including a new signed-out install test covering an older version),
+  dashboard-library (pinned install), persian, dashboard-capabilities and reporting. The only failure was the
+  existing reporting case-ordering test. Rendered EN light at 1280 and FA dark at 375: no page overflow, and Latin
+  commands and steps stay left-to-right.
+- **Review.** `/code-review` (medium): 9 findings fixed (pinning vs picker, cross-account state, pinned release
+  hidden when the newest release is withheld, pinned release not refetched after add/already-held, silenced lookup
+  errors, unchecked public JSON commands, the lost fail-closed leak assertion, loose library state). 1 dismissed:
+  the extra signed-in `/installation` request per view existed before this change.
+- **Existing budget overage, not from this change.** `/products/conversion-copywriter` first-load JS is 168.3 kB gz
+  at `a8e25cb` and 168.4 kB with this change, against a 165 kB gate. An earlier pass at `a8e25cb` measured the page
+  before it was ready. The gate stays at 165 (ratchet); the overage needs its own fix.
+- **Not done.** Anonymous installs are not counted (acquisitions still are). Native Persian review of the new strings.
+
+## 2026-11-11 — Profile settings: one section at a time, settings as summary rows
+
+- **Scope / shared surfaces (announce in commit body).** `changelog.md` only. No API, schema or `lib/i18n/` change. The
+  route stays `/dashboard/settings`; it is now wrapped in `Suspense` because it reads `?section=`.
+- **Sections.** The 4,589 px scroll (desktop, creator persona) becomes five sections shown one at a time: Profile,
+  Account & security, Notifications, Connections (creator role only) and Data & privacy. The section is URL state
+  (`?section=account|notifications|connections|privacy`; Profile has no parameter, and unknown values fall back to it).
+  `SettingsNav` is a sticky icon rail from `lg` and a sideways-scrolling chip row on phones. Links carry
+  `aria-current="page"`, and the active chip is scrolled into the row without moving the page. Inactive sections stay
+  mounted but `hidden`, so typed input and the single reader-profile request survive switching. Each section now fits
+  in roughly one viewport (900–990 px at 1280×900).
+- **Summary rows.** New `SettingRow`/`SettingRows` in `settings-panel.tsx`, in two forms: label + current value, or
+  label + description for action rows. Forms open on demand under their row, start with focus in the first field,
+  have Cancel, and return focus to their trigger on close or save.
+  - Creator profile: a summary, opened with *Edit*. `#creator-profile` (the studio link) opens it straight into edit.
+  - Email, password, sign-in method and member date share one *Sign-in* panel; *Change* opens each form.
+  - Sessions: *This device* and *Other devices* rows.
+  - GitHub and npm: rows showing status, with *Connect* opening the token form (help text inside the form).
+  - Data & privacy: *Download your data* row, and a *Danger zone* panel with the delete row. The retention and creator
+    notes moved into the opened delete form.
+- **Onboarding answers removed from Profile (owner decision).** The *About you* panel is gone, and Settings no
+  longer requests `/api/readers/onboarding`. The answers are collected once, by first-run `/onboarding`, and can no
+  longer be edited anywhere. API and stored data are unchanged.
+  - `AccountOnboarding` is now first-run only: its unused Profile edit mode, the `setup` prop and the unused copy
+    keys (`profileTitle`, `save`, `saved`) are deleted.
+  - The first-run privacy line no longer promises "update them anytime in Dashboard → Profile". It now says the
+    answers are private and only used to suggest a starting point, in both languages.
+- **Deep links updated** to land on their section: the release-manager and studio "connect source" links go to
+  `?section=connections`; the email-change confirmation link and the post-reset redirect go to `?section=account`.
+- **Implementation note.** The unlayered `* { border-color }` reset in `globals.css` outranks Tailwind border-colour
+  utilities. The nav therefore drops border *width* at `lg` instead of recolouring it.
+- **Verified.** Root typecheck. Lint: 0 errors (2 existing warnings). Production build. Unit tests: 889/889 with
+  `NODE_OPTIONS=--no-experimental-webstorage`; without it, the same three untouched files fail on the known Node 26
+  `localStorage` quirk. Playwright (mock build, local Chrome, desktop + mobile): all account-security, -data,
+  -preferences, email-change, dashboard-capabilities, dashboard-repairs, context-help, browser-zoom (incl. FA 200%),
+  shared-navigation and transport onboarding specs pass (178 + 10). In a wider run, the only failure was the existing
+  hero-search suggestion test (homepage, untouched). Rendered by hand in EN/FA, light/dark, at 375/640/1280.
+  Keyboard: every chip and opened form keeps its focused control in view, with no horizontal page overflow.
+- **Not done.** `lhci` (`/`, `/dashboard` and product pages are unchanged). Native Persian review of the new strings
+  (حساب و امنیت، اعلان‌ها، منطقهٔ خطر، …).
+- **Review and deploy.** `/code-review` (medium) ran before push; its findings and their dispositions are listed in the
+  commit body. Fixed:
+  - `#creator-profile` reopened the form after every save; it now opens once per page load.
+  - Focus now returns to the row's action after Cancel, Connect or Disconnect (provider connections) and after Cancel
+    on delete account.
+  - The deletion keeps/creator notes are visible again before the form opens.
+  - A sign-out error no longer sits in the non-shrinking action box.
+  - The duplicated focus-return code is now one `useReturnFocus` hook.
+  - Provider connections uses `SettingsPanel` instead of a hand-built header.
+  - Persian "رمز عبور" is used consistently.
+  Regression tests cover the first three. Deployed to the termspace box with `/root/DEPLOY-NOTES.md`'s procedure. No API or migration change
+  since the server's `44d542e`.
+
+## 2026-11-10 — Profile (`/dashboard/settings`) regrouped, with a section index and one panel frame
+
+- **Scope / shared surfaces (announce in commit body).** `changelog.md` only. No API, route, schema or `lib/i18n/`
+  change; new settings strings live in `features/dashboard/account-settings-copy.ts` like the other `account-*-copy.ts`.
+- **Structure.** The ten unordered panels are now five groups (`h2`, anchors `#profile`, `#account`, `#preferences`,
+  `#connections`, `#data`): Profile (creator profile, profile details), Account (email, account security, sessions),
+  Preferences, Connections (creator role only) and Data and privacy (export, then delete). A section index
+  (`settings-panel.tsx`) is a sticky column from `lg` and a wrapping row on phones; it marks the current group with
+  `aria-current="location"` and uses the global `scroll-padding-top`. The header shows the creator avatar/name/handle.
+  `#creator-profile` and `#account-preferences` deep links are unchanged.
+- **Panels.** One frame (`rounded-card`, `p-5 sm:p-6`, `h3` + description) replaces the mix of square and rounded
+  boxes. Save/error status sits beside its button. Email shows the current address; its change form opens from
+  *Change email address* and closes after the link is sent. Delete account keeps its explanation visible and opens the
+  confirmation from *Delete this account…*; confirmation and re-auth logic are untouched. Sign out moved into a Sessions
+  panel next to *Sign out other devices*. Creator profile: name and handle side by side from `sm`, live avatar preview
+  (same GitHub-host pattern as the server). Password fields stay open. Preference switches no longer wrap below their
+  label. Provider connections use the shared `Input`.
+- **Removed.** The Explore / Open Studio link row under Profile details in Settings: the dashboard sidebar and tab bar
+  already carry both. The `/onboarding` setup flow is unchanged.
+- **Verified.** Root typecheck (after `prisma:generate`), lint (0 errors), production build. Web tests: all settings,
+  account, dashboard and onboarding suites pass. Failing files are outside this change: `header`, `console-search` and
+  `creator-draft-editor-ui` (the known Node 26 `localStorage` quirk). Playwright (desktop + mobile, mock build, local
+  Chrome): 503 passed. Every settings, account, email-change, security, preferences, browser-zoom and studio deep-link
+  spec passes. Failures outside this change: the hero-search suggestion test; `reporting` case ordering; and the
+  `/dashboard` 170 kB first-load budget at 172.2 kB. Settings code is in none of `/dashboard`'s seven first-load
+  scripts, so that overage comes from the `main` merge. Rendered by hand: EN/FA, light/dark, 375/768/1280. No
+  horizontal overflow; every index link lands under the header and is marked current; opening *Change email* focuses
+  the new-address field.
+- **Not done.** `lhci`; native Persian review of the new group labels (پروفایل، حساب، تنظیمات، اتصال‌ها، داده‌ها و حریم
+  خصوصی، نشست‌ها); `/code-review` before push.
+
+## 2026-11-09 — Homepage featured shelf, controlled from moderation
+
+- **Scope / shared surfaces (announce in commit body).** New migration `202611090005_marketplace_homepage_featured`,
+  `apps/api/prisma/schema.prisma`, `lib/types.ts`, `lib/i18n/moderation.ts`, `changelog.md`, `pending.md`.
+- **What.** The homepage shelf was always empty because nothing could set `featured`. The moderation preview now has a
+  "Homepage shelf" section: *Feature on homepage* / *Remove from homepage*. `POST /moderation/products/:id/featured`
+  (moderator or administrator; not on one's own listing; stale-page guard on the listing version; only a published
+  listing can be featured, any featured one can be removed; repeating the current state is a no-op with no event).
+- **Audit and order.** `FEATURED` / `UNFEATURED` lifecycle events are written with the change. `featuredAt` orders the
+  shelf, most recently featured first, three shown. Creator dashboards do not list these events.
+- **Search focus follow-up.** The first fix did not show a focus cue: the unlayered `* { border-color }` reset in
+  `globals.css` beats every Tailwind border-colour utility (site-wide, left as is). Search bars now use one
+  `.search-field:focus-within` rule that turns the field border primary.
+- **Verified.** typecheck, lint (0 errors), API tests (318) and web tests incl. new featured tests.
+
+## 2026-11-09 — Search bars: one quiet focus state, no invented suggestions
+
+- **Scope / shared surfaces (announce in commit body).** `lib/i18n/home.ts` (removed `typedIntents`, `popularSearches`), `changelog.md`.
+- **Focus.** The global unlayered `:focus-visible` outline beat Tailwind's layered `focus:outline-none`, so every search
+  field drew a square outline inside its own ring and border. All search fields (home hero and band, 404/status page,
+  dashboard, explore, library, moderation, design showroom) now use `focus-visible:outline-none!` and let the field's
+  own border turn primary; the extra `ring-2` is gone. The general `Input` still has its ring (not a search bar).
+- **Suggestions.** The "Popular searches" list was invented copy. Removed; only the visitor's own recent searches
+  (stored in their browser) are offered, and nothing opens when there is no history.
+- **Verified.** typecheck, lint (0 errors), production build (utility emitted with `!important`), web tests 517 pass
+  (the one `creator-draft-editor-ui` storage failure is the known Node 26 quirk).
 
 ## 2026-11-09 — TermBuddy mascot and optional creator avatar
 

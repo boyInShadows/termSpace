@@ -258,6 +258,14 @@ export const reviewVisibilitySchema = z.object({
   reason: z.string().trim().min(5).max(500).optional(),
 }).strict().refine((value) => value.action === "restore" || Boolean(value.reason), { message: "A reason is required to hide a review", path: ["reason"] });
 
+// Homepage shelf: staff feature or unfeature a published listing. Not a lifecycle transition, so it carries the
+// listing's current version only as a stale-page guard.
+export const moderatedFeaturedSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+  featured: z.boolean(),
+  internalNote: z.string().trim().min(2).max(4000).optional(),
+}).strict();
+
 export const moderationNoteSchema = z.object({
   expectedVersion: z.number().int().min(0),
   note: z.string().trim().min(2).max(4000),

@@ -84,7 +84,7 @@ they touch and need a written plan first.
 
 ## Follow-ups from the 2026-11-09 seed phase
 
-- No creator path to `featured`/`verified`; seeded listings are only badged by staff review.
+- No creator path to `verified`; seeded listings are only badged by staff review. (`featured` is now a staff action in the moderation preview.)
 - Only platform communities exist; the seeded catalog has no topical communities.
 - The report-only CSP `img-src` is still `https:`; tighten it to the two icon hosts
   once the report-only period shows no other image sources.

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { accountSettingsCopy } from "../features/dashboard/account-settings-copy";
 import { copy } from "../lib/i18n";
 import { savedCopy } from "../features/library/saved-copy";
 import { libraryCopy } from "../features/library/library-copy";
@@ -67,13 +68,19 @@ for (const locale of ["en", "fa"] as const) {
       writes++;
       return route.fulfill({ json: { data: { id: "connection", provider: "github", accountLogin: "fixture-owner", revokedAt: null } } });
     });
-    await page.goto(`${prefix}/dashboard/settings`);
+    await page.goto(`${prefix}/dashboard/settings?section=connections`);
     const region = page.getByRole("region", { name: providers.connectionsTitle });
+    // The token form opens from the GitHub row and closes again once connected.
+    const openGitHub = () => region.getByRole("button", { name: `${accountSettingsCopy[locale].connect} GitHub` }).click();
+    await openGitHub();
     const input = region.locator("#github-token");
+    await expect(input).toBeFocused();
     await input.fill("fixture-credential-only");
     await input.locator("..").getByRole("button", { name: providers.connect }).click();
     await expect(region.getByText("fixture-owner")).toBeVisible();
+    await expect(input).toHaveCount(0);
     await region.getByRole("button", { name: providers.disconnect }).click();
+    await openGitHub();
     await expect(input).toHaveValue("");
     expect(writes).toBe(1);
   });

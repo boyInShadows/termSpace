@@ -58,7 +58,7 @@ describe("CreatorReleaseManager", () => {
     render(<CreatorReleaseManager productId="product-1" />);
     await screen.findByRole("heading", { name: "Owned Skill" });
     expect(screen.getByText(creatorWorkspace.en.creatorReleases.connectionsIntro)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: creatorWorkspace.en.creatorReleases.connectionsTitle })).toHaveAttribute("href", "/dashboard/settings");
+    expect(screen.getByRole("link", { name: creatorWorkspace.en.creatorReleases.connectionsTitle })).toHaveAttribute("href", "/dashboard/settings?section=connections");
     expect(screen.queryByLabelText("Access token")).not.toBeInTheDocument();
   });
 
@@ -76,6 +76,6 @@ describe("CreatorReleaseManager", () => {
     getReleases.mockRejectedValue(new Error("history offline"));
     render(<CreatorReleaseManager productId="product-1" />);
     expect(await screen.findByRole("alert")).toHaveTextContent(creatorWorkspace.en.creatorReleases.loadError);
-    expect(screen.getByRole("link", { name: creatorWorkspace.en.creatorReleases.connectionsTitle })).toHaveAttribute("href", "/dashboard/settings");
+    expect(screen.getByRole("link", { name: creatorWorkspace.en.creatorReleases.connectionsTitle })).toHaveAttribute("href", "/dashboard/settings?section=connections");
   });
 });

@@ -183,7 +183,9 @@ select {
   outline-offset: 3px;
 }
 
-/* Match the unlayered border reset while keeping focus on the search wrapper. */
+/* Search fields show focus as one change: the field's own border turns primary. No outline, no ring.
+   Unlayered on purpose: the `* { border-color }` reset above is unlayered too, so a Tailwind
+   border-colour utility cannot beat it. Works on the field itself or on a wrapper around it. */
 .search-field:focus-within {
   border-color: var(--primary);
 }

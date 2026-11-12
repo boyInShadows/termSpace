@@ -39,7 +39,7 @@ const creatorDashboardListingSelect = {
     select: { version: true, releasedAt: true },
   },
   lifecycleEvents: {
-    where: { action: { not: "INTERNAL_NOTE_ADDED" as const } },
+    where: { action: { notIn: ["INTERNAL_NOTE_ADDED", "FEATURED", "UNFEATURED"] as ("INTERNAL_NOTE_ADDED" | "FEATURED" | "UNFEATURED")[] } },
     orderBy: { createdAt: "desc" as const },
     take: 3,
     select: { id: true, action: true, resultingState: true, publicReason: true, createdAt: true },

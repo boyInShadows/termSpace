@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, use, useId, useMemo, useState } from "react";
-import { Search, CornerDownLeft, Clock3, Sparkles, X } from "lucide-react";
+import { Search, CornerDownLeft, Clock3, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
 import { buttonVariants } from "@/components/ui/button";
@@ -41,7 +41,7 @@ function parseRecent(raw: string | null): string[] {
  * The search bar, treated as the product's command line rather than as a
  * form field.
  *
- * A stable prompt stays readable; example intents appear as suggestions.
+ * Only the visitor's own recent searches are suggested; nothing is invented.
  *
  * Two placements. `hero` sits in the hero's copy column as the page's primary
  * action — this is a library, so search is the thing most people came to do,
@@ -68,7 +68,6 @@ export function ConsoleSearch({
   types?: MarketplaceTypeCount[] | Promise<MarketplaceTypeCount[]>;
 }) {
   const { t, locale } = useLocale();
-  const intents = t.homePage.typedIntents;
   const [isFocused, setIsFocused] = useState(false);
   const [scope, setScope] = useState<string | null>(null);
   const [storedRecent, setStoredRecent] = useStoredString(RECENT_KEY);
@@ -93,8 +92,8 @@ export function ConsoleSearch({
     );
   }
 
-  const suggestions = recent.length > 0 ? recent : [...intents].slice(0, 4);
-  const isSuggesting = isFocused && !dismissed && query.trim().length === 0;
+  const suggestions = recent;
+  const isSuggesting = isFocused && !dismissed && query.trim().length === 0 && suggestions.length > 0;
 
   return (
     <div className={isHero ? undefined : "container-page"}>
@@ -201,17 +200,11 @@ export function ConsoleSearch({
           <ul
             id={suggestionsId}
             role="listbox"
-            aria-label={
-              recent.length > 0
-                ? t.homePage.recentSearches
-                : t.homePage.popularSearches
-            }
+            aria-label={t.homePage.recentSearches}
             className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-card border border-border bg-surface shadow-panel"
           >
             <li role="presentation" className="eyebrow px-4 pb-1 pt-3">
-              {recent.length > 0
-                ? t.homePage.recentSearches
-                : t.homePage.popularSearches}
+              {t.homePage.recentSearches}
             </li>
             {suggestions.map((suggestion, index) => (
               <li key={suggestion} id={`${suggestionsId}-${index}`} role="option" aria-selected={activeIndex === index}>
@@ -222,11 +215,7 @@ export function ConsoleSearch({
                   onClick={() => setQuery(suggestion)}
                   className={cn("flex w-full items-center gap-2.5 px-4 py-2.5 text-start text-sm transition-colors hover:bg-muted", activeIndex === index && "bg-muted")}
                 >
-                  {recent.length > 0 ? (
-                    <Clock3 size={14} className="shrink-0 text-muted-foreground" aria-hidden />
-                  ) : (
-                    <Sparkles size={14} className="shrink-0 text-accent" aria-hidden />
-                  )}
+                  <Clock3 size={14} className="shrink-0 text-muted-foreground" aria-hidden />
                   <span className="min-w-0 truncate">{suggestion}</span>
                 </button>
               </li>

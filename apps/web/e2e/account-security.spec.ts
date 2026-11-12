@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { accountSecurityCopy } from "../features/dashboard/account-security-copy";
+import { accountSettingsCopy } from "../features/dashboard/account-settings-copy";
 import { copy } from "../lib/i18n";
 
 test.beforeEach(async ({ context, baseURL }) => {
@@ -9,13 +10,17 @@ test.afterEach(async ({ page }) => { await page.unrouteAll({ behavior: "wait" })
 
 for (const locale of ["en", "fa"] as const) {
   const text = accountSecurityCopy[locale];
-  const path = `${locale === "fa" ? "/fa" : ""}/dashboard/settings`;
+  const path = `${locale === "fa" ? "/fa" : ""}/dashboard/settings?section=account`;
+  const signIn = accountSettingsCopy[locale].signIn;
+  // The password form opens from the Password row's Change button, which shares the submit's accessible name.
+  const openPasswordForm = (page: import("@playwright/test").Page) => page.getByRole("region", { name: signIn, exact: true }).getByRole("button", { name: text.savePassword, exact: true }).click();
 
   test(`keyboard focus keeps the password action above the tablet tab bar (${locale})`, async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 900 });
     await page.goto(path);
-    const panel = page.getByRole("region", { name: text.title, exact: true });
-    await panel.getByLabel(text.currentPassword).focus();
+    const panel = page.getByRole("region", { name: signIn, exact: true });
+    await openPasswordForm(page);
+    await expect(panel.getByLabel(text.currentPassword)).toBeFocused();
     await page.keyboard.press("Tab");
     await page.keyboard.press("Tab");
     await page.keyboard.press("Tab");
@@ -28,7 +33,7 @@ for (const locale of ["en", "fa"] as const) {
   });
 
   test(`password confirmation, invalid-current recovery and successful clearing (${locale})`, async ({ page }) => {
-    const panel = page.getByRole("region", { name: text.title, exact: true });
+    const panel = page.getByRole("region", { name: signIn, exact: true });
     let calls = 0;
     await page.route("**/api/readers/profile/password", async (route) => {
       calls++;
@@ -40,6 +45,7 @@ for (const locale of ["en", "fa"] as const) {
         : { json: { data: { updated: true } } });
     });
     await page.goto(path);
+    await openPasswordForm(page);
     await page.getByLabel(text.currentPassword).fill("fixture-wrong");
     await page.getByLabel(copy[locale].newPassword).fill("fixture-next-password");
     await page.getByLabel(copy[locale].confirmPassword).fill("different-password");
@@ -52,6 +58,9 @@ for (const locale of ["en", "fa"] as const) {
     await page.getByLabel(text.currentPassword).fill("fixture-current");
     await page.getByRole("button", { name: text.savePassword, exact: true }).click();
     await expect(panel.getByRole("status")).toHaveText(text.saved);
+    // Success closes the form; reopening it starts empty.
+    await expect(page.getByLabel(text.currentPassword)).toHaveCount(0);
+    await openPasswordForm(page);
     for (const label of [text.currentPassword, copy[locale].newPassword, copy[locale].confirmPassword]) await expect(page.getByLabel(label)).toHaveValue("");
     expect(calls).toBe(2);
   });
@@ -61,11 +70,11 @@ for (const locale of ["en", "fa"] as const) {
     await page.goto(path);
     await expect(page.getByText(text.googleSignIn, { exact: true })).toBeVisible();
     await expect(page.getByText(text.noPasswordIntro)).toBeVisible();
-    await expect(page.getByRole("region", { name: text.title, exact: true }).locator('input[type="password"]')).toHaveCount(0);
+    await expect(page.getByRole("region", { name: signIn, exact: true }).locator('input[type="password"]')).toHaveCount(0);
   });
 
   test(`security profile failure has a working Retry (${locale})`, async ({ page }) => {
-    const panel = page.getByRole("region", { name: text.title, exact: true });
+    const panel = page.getByRole("region", { name: signIn, exact: true });
     let calls = 0;
     await page.route("**/api/readers/profile", (route) => {
       calls++;
@@ -76,6 +85,7 @@ for (const locale of ["en", "fa"] as const) {
     await page.goto(path);
     await expect(panel.getByRole("alert")).toHaveText(text.loadError);
     await page.getByRole("button", { name: copy[locale].dashboardHome.retry, exact: true }).click();
+    await openPasswordForm(page);
     await expect(page.getByLabel(text.currentPassword)).toBeVisible();
     expect(calls).toBe(3);
   });

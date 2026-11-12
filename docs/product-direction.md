@@ -19,10 +19,11 @@ The product should help people answer three questions:
 
 The main TermSpace application is the public catalog and creator platform.
 
-- Visitors can browse, search, and filter published items.
+- Visitors can browse, search, and filter published items, and install any
+  published release without an account (decided 2026-11-11).
 - Filtering treats platform and community as distinct first-class facets, in
   addition to item type, category, compatibility, and rating.
-- Signed-in users can favorite, add or install, rate, and review items.
+- Signed-in users can also favorite, add to their library, rate, and review items.
 - Creators can submit items and manage their listings, releases, documentation,
   compatibility, and publication state from a dashboard.
 - TermSpace staff moderate submissions, revisions, reports, and reviews before

@@ -57,16 +57,17 @@ for (const locale of ["en", "fa"] as const) {
     await page.route("**/api/marketplace/products/conversion-copywriter/installation", (route) => route.fulfill({ json: { data: {
       acquisition: { id: "order-1", status: "completed", acquiredAt: entry.acquiredAt }, product: { slug: entry.product.slug, name: entry.product.name },
       release: {
-        id: "release-1", version: "1.0.0", source: { kind: "github_repository", url: "https://github.com/example/tool", ref: "a".repeat(40), path: null, integrityDigest: null, artifactSizeBytes: null, status: "stale", checkedAt: entry.acquiredAt },
+        id: "release-1", version: "2.3.0", source: { kind: "github_repository", url: "https://github.com/example/tool", ref: "a".repeat(40), path: null, integrityDigest: null, artifactSizeBytes: null, status: "stale", checkedAt: entry.acquiredAt },
         installation: { method: "manual", url: `https://github.com/example/tool/archive/${"a".repeat(40)}.tar.gz`, instructions: ["Install the acquired version"] },
         requirements: { runtimes: [], accounts: [], operatingSystems: [], dependencies: [] }, license: "MIT", documentationUrl: null, supportUrl: null,
       },
     } } }));
     await page.goto(`${prefix}/dashboard/library`);
     await page.getByRole("link", { name: text.install }).click();
-    await page.getByRole("button", { name: text.install, exact: true }).click();
+    // The listing's current release is 2.4.0; the page opens on the reader's pinned 2.3.0 and installs it.
+    await page.getByRole("button", { name: locale === "fa" ? "نصب نسخهٔ 2.3.0" : "Install v2.3.0", exact: true }).click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog.getByText("v1.0.0", { exact: true })).toBeVisible();
+    await expect(dialog.getByText("v2.3.0", { exact: true })).toBeVisible();
     await expect(dialog.getByText("Install the acquired version", { exact: true })).toBeVisible();
     expect(acquisitions).toBe(0);
   });

@@ -46,7 +46,7 @@ export function PasswordReset() {
     try {
       await confirmPasswordReset(token.current, password);
       await session.refresh();
-      router.replace(localePath("/dashboard/settings", locale));
+      router.replace(`${localePath("/dashboard/settings", locale)}?section=account`);
       router.refresh();
     } catch (cause) {
       if (cause instanceof ApiError && cause.code === "SIGNED_IN_AS_OTHER_ACCOUNT") { setState("mismatch"); return; }

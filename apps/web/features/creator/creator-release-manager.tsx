@@ -39,7 +39,7 @@ export function CreatorReleaseManager({ productId }: { productId: string }) {
   const connectionsLink = <section className="mt-6 border-y py-4" aria-labelledby="release-connections-title">
     <h2 id="release-connections-title" className="text-base font-semibold">{copy.connectionsTitle}</h2>
     <p className="mt-1 text-sm text-muted-foreground">{copy.connectionsIntro}</p>
-    <Link className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4" href={localePath("/dashboard/settings", locale)}>{copy.connectionsTitle}</Link>
+    <Link className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4" href={`${localePath("/dashboard/settings", locale)}?section=connections`}>{copy.connectionsTitle}</Link>
   </section>;
 
   if (!history && !error) return <><p role="status" className="text-sm text-muted-foreground">{copy.loading}</p>{connectionsLink}</>;

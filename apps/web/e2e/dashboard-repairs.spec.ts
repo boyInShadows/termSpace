@@ -93,10 +93,13 @@ test("the studio's edit link opens the creator profile form in Settings", async 
 
 test("a creator edits the public profile in Settings", async ({ page }) => {
   await page.goto("/dashboard/settings");
+  // The profile reads as a summary until Edit opens the form.
+  await page.getByRole("button", { name: `Edit — ${copy.en.creatorHub.editTitle}` }).click();
   await page.getByLabel(copy.en.creatorHub.name).fill("Ellis N North");
   await page.getByLabel(copy.en.creatorHub.bio).fill("Builds careful agentic coding tools for teams.");
   await page.getByRole("button", { name: copy.en.creatorHub.save, exact: true }).click();
   await expect(page.getByText(copy.en.creatorHub.saved)).toBeVisible();
+  await expect(page.getByText("Builds careful agentic coding tools for teams.")).toBeVisible();
 });
 
 test("every listing type exposes its required detail fields", async ({ page }) => {

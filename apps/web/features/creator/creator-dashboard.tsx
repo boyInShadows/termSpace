@@ -152,7 +152,7 @@ export function CreatorDashboard() {
       </ol>
       <div className="mt-6 flex flex-wrap gap-3">
         <Link className={buttonVariants()} href={localePath("/dashboard/studio/listings/new", locale)}><Plus aria-hidden="true" className="size-4" />{hub.newListing}</Link>
-        <Link className={buttonVariants({ variant: "secondary" })} href={localePath("/dashboard/settings", locale)}>{hub.connectSource}</Link>
+        <Link className={buttonVariants({ variant: "secondary" })} href={`${localePath("/dashboard/settings", locale)}?section=connections`}>{hub.connectSource}</Link>
       </div>
     </div> : <div className="mt-5 space-y-4">
       {listings.map((listing) => <ListingCard
