@@ -65,11 +65,11 @@ function OverviewLayout({
   const datedPanels: OverviewState = now === 0 ? { status: "loading" } : state;
   const loading = state.status === "loading" || (state.status === "ready" && now === 0);
   return (
-    <div className="space-y-8" aria-busy={loading}>
+    <div className="space-y-6" aria-busy={loading}>
       {loading && <LoadingStatus />}
       <OverviewHeader state={state} now={now} name={name} />
       <OverviewStats state={state} />
-      {state.status === "error" ? <div className="space-y-6"><CardError onRetry={onRetry} /><QuickActions /></div> : <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+      {state.status === "error" ? <div className="space-y-6"><CardError onRetry={onRetry} /><QuickActions /></div> : <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22.5rem]">
         <ListingsTable state={datedPanels} now={now} onRetry={onRetry} />
         <div className="space-y-6">
           <ActivityFeed state={datedPanels} now={now} onRetry={onRetry} />

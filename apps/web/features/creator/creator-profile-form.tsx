@@ -59,9 +59,9 @@ export function CreatorProfileForm({ profile, onSaved, cancel, headingLevel = "h
   const shownError = error ?? notice ?? null;
   const hint = "mt-1 block text-xs text-muted-foreground";
   return <>
-    <Heading id="creator-profile-title" className={headingLevel === "h3" ? "text-base font-semibold" : "font-semibold mt-2 text-xl"}>{profile ? t.creatorHub.editTitle : t.creatorHub.title}</Heading>
+    <Heading id="creator-profile-title" className={headingLevel === "h1" ? "text-2xl font-semibold tracking-tight sm:text-3xl" : headingLevel === "h3" ? "text-base font-semibold" : "font-semibold mt-2 text-xl"}>{profile ? t.creatorHub.editTitle : t.creatorHub.title}</Heading>
     <p className={headingLevel === "h3" ? "mt-1 max-w-prose text-sm text-muted-foreground" : "mt-3 text-muted-foreground"}>{profile ? t.creatorHub.editIntro : t.creatorHub.intro}</p>
-    <form className={headingLevel === "h3" ? "mt-5 space-y-5" : "mt-7 space-y-5"} onSubmit={submit} aria-labelledby="creator-profile-title">
+    <form className={headingLevel === "h1" ? "mt-5 space-y-5 rounded-card border-[length:0.0625rem] border-border bg-surface p-5 sm:p-6" : headingLevel === "h3" ? "mt-5 space-y-5" : "mt-7 space-y-5"} onSubmit={submit} aria-labelledby="creator-profile-title">
       <div className="grid gap-5 sm:grid-cols-2">
         <div><label htmlFor="creator-name" className="flex min-h-11 items-center text-sm font-medium">{t.creatorHub.name}</label><Input id="creator-name" name="name" required minLength={2} maxLength={80} pattern="(?=.*[A-Za-z])[\x20-\x7E]+" defaultValue={profile?.name} autoComplete="name" lang="en" dir="ltr" aria-describedby="creator-name-help" /><span id="creator-name-help" className={hint}>{t.creatorHub.nameHelp}</span></div>
         <div>

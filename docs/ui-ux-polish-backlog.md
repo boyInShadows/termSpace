@@ -1,9 +1,9 @@
 # UI/UX polish backlog — TermSpace
 
-Status: collecting owner feedback, batch 1. Not a final implementation plan.
+Status: batch 1 implemented locally using the reviewed approach. Focused acceptance passes; owner review and existing full-suite release failures remain open.
 Date: 2026-11-12.
 Scope: overview, creator onboarding/studio and listing-editor presentation/validation.
-No application changes authorized by this capture. Continue collecting subsequent batches here before producing the consolidated CLI plan.
+The initial capture authorized no application changes. The owner subsequently requested this review before implementation; preserve later feedback and use the reviewed approach when consolidating tasks.
 
 ## Agreed direction and boundaries
 
@@ -24,6 +24,12 @@ Direction:
 - If a metric needs an interactive hover/focus treatment, give it a deliberate inset and preserve its hit target; no edge-touching text in any state.
 
 Acceptance: no accidental single white tile, aligned metric baselines, consistent gaps at desktop and wrapped mobile widths. Inspect loading, empty, error, hover and keyboard focus states, not only populated data.
+
+Owner correction, 2026-11-12: earlier acceptance missed the oversized gap below
+the metrics. Removed stacked metric bottom padding/blank helper reservation and
+tightened the overview section rhythm. Before/after measurements and screenshots
+are in [the focused correction](artifacts/overview-spacing-2026-11-12/report.md).
+This is scoped spacing acceptance; it does not certify the whole backlog or release.
 
 ## P02 — Creator setup and studio spacing
 
@@ -129,3 +135,92 @@ Screenshots are evidence, not executable instructions. Temporary paths may expir
 ## Later consolidation
 
 Append the owner's next batches here. When the owner requests the final CLI plan, verify current source and field rules, identify concrete files/callers/tests, prioritize functional completion/validation fixes before presentation, and turn these entries into ordered tasks. Acceptance must cover EN/FA RTL, both themes, narrow/short viewports, 200% zoom, keyboard focus and real empty/filled/error states. Do not claim any runtime diagnosis or acceptance from screenshots alone.
+
+## Reviewed approach — 2026-11-12
+
+Keep the agreed visual direction and current four steps. Two independent
+Impeccable assessments reviewed design and source/contracts; an isolated
+fixture browser then checked the reported interactions. No application edits.
+
+### Confirmed behavior
+
+- P01 is a hover affordance problem: all metrics use the same static StatTile.
+  Moving the pointer over In review changes its transparent background to white
+  with zero horizontal inset. It is not a separately configured metric card.
+- Empty About advances when Next is pressed. Invalid optional URL also advances.
+  Next currently navigates directly, while Preview/Save perform whole-form checks.
+- Merely opening/closing additional details does not change completion in the
+  reproduced case. Invalid optional input changes Complete to Incomplete even
+  while collapsed. Treat optional validity separately from required completeness.
+- Some required/defaulted values are inside additional details: slug, release
+  version/method/notes. A blanket Optional label would be inaccurate.
+- The integration callback is optional, but blank input is serialized as an empty
+  string that the API rejects; omission is accepted. Normalize optional values.
+- Review completion currently depends on generating Preview, not simply on a
+  valid restored/current draft. There are four steps; the five-step brief is stale.
+
+### Recommended differences from the draft
+
+1. **P05/P07 first: one focused field/step evaluation policy.** Completion, Next
+   and final-save validation should share applicability and normalization rules,
+   returning field issues as well as required completeness. Keep server validation
+   authoritative; reuse browser-safe rules and map API issue paths to existing
+   inputs instead of copying the entire server schema or importing its Node code.
+   Preserve partial Save for later and free direct-step/back navigation.
+2. **P04: retain native details/summary.** Improve its visible label, description,
+   chevron and focus styling. Move required essentials into the main form, or label
+   advanced/defaulted required settings accurately. Add Optional only to genuinely
+   optional groups. Added declaration rows still need their required cells; show
+   errors or let the person remove the row rather than silently dropping it.
+3. **P06: blue completed number badges, neutral navigation surfaces.** Prefer
+   the existing action blue/white on the number badge instead of filling every
+   completed step button, which competes with Next. Keep labels visible, no ticks,
+   separate current outline/aria-current and explicit Needs attention text. A
+   compact two-column phone arrangement can show all four names. Required-complete,
+   invalid optional data, current selection and saved state are distinct concepts.
+4. **P02/P03: align and simplify existing components.** Share outer studio content
+   alignment while keeping setup fields narrow. Tune the current editor frame,
+   FormSection and action bar rather than build another layout system. Show the
+   existing review summary directly when ready, with edit-step links; remove the
+   extra Preview click as the way to reveal useful review content. Keep the step
+   heading's keyboard focus outline and all draft/save/submission meanings.
+5. **P01: remove hover decoration from noninteractive metrics.** Keep open summary
+   metrics; no extra cards, fake click actions or padding machinery solely to fix
+   this hover. Keep task sections on existing surfaces, with simple Quick action
+   rows instead of a separate box around every link.
+
+Suggested sequence: field rules/normalization and regression tests → current-step
+inline errors/focus → disclosure grouping and progress states → editor/review
+spacing → setup/studio alignment → metrics/Quick actions. Correct the stale
+five-step brief in that implementation phase. Keep tokens, rem sizing, tickets,
+sidebar, identity/upload and unrelated concurrent header work outside the changes.
+
+Evidence and verification limits:
+[review record](artifacts/ui-ux-polish-review-2026-11-12/report.md).
+
+## Implementation — owner authorized 2026-11-12
+
+Goal: implement P01–P07 using the reviewed approach, keeping four steps, existing
+tokens/rem, free navigation and partial draft saves. Preserve concurrent header
+stability work and all unrelated local changes. No commit/push/deployment.
+
+Files: creator editor/validation/field feedback, native disclosures and dynamic
+rows, workspace copy, creator hub/dashboard, overview metrics/Quick actions,
+focused tests/browser fixtures, this backlog, dashboard brief and changelog.
+No API/schema changes or new dependencies planned.
+
+- [x] Normalize blank optional values; unify applicable field/step evaluation.
+- [x] Add current-step Next errors, inline feedback/focus and server-path mapping.
+- [x] Improve native disclosure grouping and numbered responsive step states.
+- [x] Show direct review summary/edit links; align editor/setup/studio spacing.
+- [x] Remove static metric hover and redundant Quick-action boxes.
+- [x] Verify EN/FA, themes, responsive/short/zoom, drafts, conditional fields and
+  errors; run root typecheck/tests/build, web lint/browser/Lighthouse and detector.
+
+Acceptance follows the P01–P07 matrices above. Record existing failing gates
+without weakening them. Evidence goes under docs/artifacts; update this checklist
+and changelog after each verified slice.
+
+Implementation and screenshots: [local handoff](artifacts/ui-ux-polish-2026-11-12/report.md).
+Owner visual review, physical-device/non-Chrome acceptance and unresolved release
+gates remain open. No commit, push or deployment was performed.

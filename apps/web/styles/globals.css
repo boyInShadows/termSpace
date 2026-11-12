@@ -107,7 +107,7 @@
 }
 
 html {
-  --site-header-height: 6.25rem;
+  --site-header-height: var(--header-chrome);
   scroll-behavior: smooth;
   scroll-padding-top: calc(var(--site-header-height) + 1rem);
   color-scheme: dark;

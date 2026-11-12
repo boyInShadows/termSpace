@@ -22,6 +22,8 @@ import { permissionLabels } from "./permission-labels";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { parseDraftCheckpoint, type DraftCheckpoint } from "./draft-checkpoint";
 import { formatNumber } from "@/lib/format";
+import { draftValidationCopy, evaluateDraft, serverDraftIssues, type DraftControl, type DraftIssue, type DraftStepState } from "./draft-validation";
+import { DraftFieldErrors } from "./draft-field-errors";
 
 type SourceKind = "external_link" | "github_repository" | "github_release" | "npm";
 type FieldKind = "text" | "textarea" | "list" | "boolean" | "select" | "stages";
@@ -138,8 +140,12 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
   const { email } = useMarketplaceSession();
   const storageKey = email ? `termspace:draft:${encodeURIComponent(email)}:${productId ?? "new"}` : null;
   const formRef = useRef<HTMLFormElement>(null);
+  const pendingErrorFocus = useRef<DraftControl | null>(null);
   const [step, setStep] = useState(0);
-  const [completed, setCompleted] = useState<boolean[]>([false, false, false]);
+  const [evaluation, setEvaluation] = useState<DraftStepState[]>([]);
+  const [attempted, setAttempted] = useState<number[]>([]);
+  const [remoteIssues, setRemoteIssues] = useState<DraftIssue[]>([]);
+  const validation = draftValidationCopy[locale];
   const lastAutoSlug = useRef("");
   const [formRevision, setFormRevision] = useState(0);
   const [checkpoint, setCheckpoint] = useState<ReturnType<typeof buildManifest> | null>(null);
@@ -158,7 +164,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
   const [saved, setSaved] = useState(false);
   const [reload, setReload] = useState(0);
   const [preview, setPreview] = useState<ReturnType<typeof buildManifest> | null>(null);
-  function markDirty() { setDirty(true); setSaved(false); setPreview(null); setLocalStatus(null); setFormRevision((value) => value + 1); }
+  function markDirty() { setDirty(true); setSaved(false); setPreview(null); setRemoteIssues([]); setLocalStatus(null); setFormRevision((value) => value + 1); }
 
   useEffect(() => {
     let active = true;
@@ -207,13 +213,11 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
   useEffect(() => {
     const form = formRef.current;
     if (!form) return;
-    const data = new FormData(form);
-    setCompleted([0, 1, 2].map((index) => {
-      const fields = form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[data-draft-step="${index}"] input, [data-draft-step="${index}"] select, [data-draft-step="${index}"] textarea`);
-      return Array.from(fields).every((field) => !field.willValidate || field.validity.valid)
-        && (index !== 0 || Boolean(text(data, "descriptionEn") || text(data, "descriptionFa")));
-    }));
-  }, [loading, formRevision, type, sourceKind, customLicense]);
+    const next = evaluateDraft(form, locale);
+    setEvaluation(next);
+    setPreview(next.every(item => item.requiredComplete && item.issues.length === 0) ? buildManifest(new FormData(form), type, sourceKind, customLicense) : null);
+    if (!next.some((item, index) => attempted.includes(index) && item.issues.length)) setError(current => current === validation.errors ? null : current);
+  }, [loading, formRevision, type, sourceKind, customLicense, locale, attempted, validation.errors]);
 
   useEffect(() => {
     const onBack = () => {
@@ -224,12 +228,20 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
     return () => window.removeEventListener("popstate", onBack);
   }, []);
 
-  function goToStep(next: number) {
+  useEffect(() => {
+    const control = pendingErrorFocus.current;
+    if (!control) return;
+    pendingErrorFocus.current = null;
+    control.scrollIntoView({ block: "center" });
+    control.focus({ preventScroll: true });
+  });
+
+  function goToStep(next: number, focusHeading = true) {
     setStep(next);
     const url = new URL(window.location.href);
     url.searchParams.set("step", String(next + 1));
     window.history.replaceState(window.history.state, "", url);
-    requestAnimationFrame(() => {
+    if (focusHeading) requestAnimationFrame(() => {
       const heading = document.getElementById("draft-step-heading");
       heading?.focus({ preventScroll: true });
       heading?.scrollIntoView({ block: "start" });
@@ -286,20 +298,22 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
     if (error === copy.descriptionRequired) setError(null);
   }
 
-  function validateDraft(form: HTMLFormElement) {
+  function focusIssue(issue: DraftIssue) {
+    for (let node = issue.control.parentElement; node; node = node.parentElement) if (node instanceof HTMLDetailsElement) node.open = true;
+    pendingErrorFocus.current = issue.control;
+    goToStep(issue.step, false);
+  }
+
+  function validateDraft(form: HTMLFormElement, currentStep?: number) {
     clearDescriptionValidity(form);
-    const data = new FormData(form);
-    if (!text(data, "descriptionEn") && !text(data, "descriptionFa")) {
-      const field = form.elements.namedItem(locale === "fa" ? "descriptionFa" : "descriptionEn");
-      if (field instanceof HTMLTextAreaElement) field.setCustomValidity(copy.descriptionRequired);
-      setError(copy.descriptionRequired);
-    }
-    const invalid = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input, select, textarea")).find((field) => field.willValidate && !field.validity.valid);
-    if (!invalid) return true;
-    // An invalid optional-looking field may sit in a closed "more" section; open it so it can take focus.
-    for (let node = invalid.parentElement; node; node = node.parentElement) if (node instanceof HTMLDetailsElement) node.open = true;
-    goToStep(Number(invalid.closest<HTMLElement>("[data-draft-step]")?.dataset.draftStep ?? 0));
-    requestAnimationFrame(() => { invalid.focus(); invalid.reportValidity(); });
+    const next = evaluateDraft(form, locale);
+    setEvaluation(next);
+    const checked = currentStep === undefined ? [0, 1, 2] : [currentStep];
+    setAttempted(previous => [...new Set([...previous, ...checked])]);
+    const invalid = [...next.flatMap(item => item.issues), ...remoteIssues].find(issue => checked.includes(issue.step));
+    if (!invalid) { setError(null); return true; }
+    setError(validation.errors);
+    focusIssue(invalid);
     return false;
   }
 
@@ -326,10 +340,16 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
       catch { setLocalStatus(copy.localCleanupError); }
       if (!productId) router.replace(localePath(`/dashboard/studio/listings/${next.id}/edit`, locale));
     } catch (cause) {
+      let fieldFocused = false;
+      if (cause instanceof ApiError && cause.details?.length && formRef.current) {
+        const issues = serverDraftIssues(formRef.current, cause.details);
+        setRemoteIssues(issues);
+        if (issues[0]) { focusIssue(issues[0]); fieldFocused = true; }
+      }
       if (cause instanceof ApiError && cause.code === "LISTING_VERSION_CONFLICT") setError(copy.versionConflict);
       else if (cause instanceof ApiError && cause.code === "VERSION_ALREADY_PUBLISHED") setError(copy.publishedVersionConflict);
       else setError(cause instanceof ApiError ? cause.message : copy.saveError);
-      document.getElementById("draft-errors")?.focus();
+      if (!fieldFocused) requestAnimationFrame(() => document.getElementById("draft-errors")?.focus());
     } finally {
       setSaving(false);
     }
@@ -349,7 +369,9 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
   const environmentVariables = Array.isArray(requirements.environmentVariables) ? requirements.environmentVariables as Array<{ name: string; purpose: string; required: boolean; sensitive: boolean }> : [];
   const permissions = Array.isArray(release.permissions) ? release.permissions as Array<{ capability: string; required: boolean; scope?: string; destinations: string[]; purpose: string }> : [];
   const steps = [copy.stepBasics, copy.stepRelease, copy.stepAccess, copy.stepReview];
-  const stepCompletion = [...completed, Boolean(preview)];
+  const completed = evaluation.map((item, index) => item.requiredComplete && item.issues.length === 0 && !remoteIssues.some(issue => issue.step === index));
+  const stepCompletion = [...completed, evaluation.length === 3 && completed.every(Boolean)];
+  const visibleIssues = [...evaluation.flatMap((item, index) => attempted.includes(index) ? item.issues : []), ...remoteIssues];
   const primaryLang = locale === "fa" ? "Fa" : "En";
   const otherLang = locale === "fa" ? "En" : "Fa";
   const descriptionOf = localized(listing.description);
@@ -359,7 +381,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
   const moreRequirementsFilled = Boolean(["runtimes", "accounts", "operatingSystems", "dependencies"].some((key) => Array.isArray(requirements[key as keyof typeof requirements]) && (requirements[key as keyof typeof requirements] as unknown[]).length) || environmentVariables.length);
   const optionalDetailFilled = detailFields[type].some((field) => !isPrimaryDetail(field) && (Array.isArray(details[field.key]) ? (details[field.key] as unknown[]).length > 0 : Boolean(details[field.key])));
   const moreDetailsFilled = optionalDetailFilled || moreRequirementsFilled;
-  const renderDetail = (field: DetailField) => field.kind === "stages" ? <DeclarationRows messages={copy} key={`${type}-${field.key}`} name={`detail_${field.key}`} label={locale === "fa" ? field.fa : field.en} help="stages" required={field.required} onChange={markDirty} initialRows={Array.isArray(details[field.key]) ? (details[field.key] as Array<{ name: string; description: string; humanApproval: boolean }>).map((stage) => [stage.name, stage.description, String(stage.humanApproval)]) : []} columns={[{ label: copy.stageName }, { label: copy.stageDescription }, { label: copy.humanApproval, type: "checkbox" }]} /> : <DetailInput key={`${type}-${field.key}`} field={field} locale={locale} value={details[field.key]} />;
+  const renderDetail = (field: DetailField) => field.kind === "stages" ? <DeclarationRows messages={copy} key={`${type}-${field.key}`} name={`detail_${field.key}`} label={locale === "fa" ? field.fa : field.en} help="stages" required={field.required} onChange={markDirty} initialRows={Array.isArray(details[field.key]) ? (details[field.key] as Array<{ name: string; description: string; humanApproval: boolean }>).map((stage) => [stage.name, stage.description, String(stage.humanApproval)]) : []} columns={[{ label: copy.stageName }, { label: copy.stageDescription }, { label: copy.humanApproval, type: "checkbox" }]} /> : <DetailInput key={`${type}-${field.key}`} field={field} locale={locale} value={details[field.key]} platforms={options.platforms.map(item => item.key)} />;
   const platformChoices = options.platforms.map((item) => ({ value: item.key, label: (locale === "fa" && item.nameFa) || item.nameEn || item.key }));
   const permissionChoices = permissionCapabilities.map((key) => ({ value: key, label: permissionLabels[locale][key] ?? key.replaceAll("_", " ") }));
   const installMethod = methodOverride ?? defaultMethod;
@@ -376,7 +398,7 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
     }
   }
 
-    return <div className="mx-auto max-w-5xl pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-4">
+    return <div className="mx-auto max-w-6xl pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-4">
     <Link className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground" href={localePath("/dashboard/studio", locale)}>
       {locale === "fa" ? <ArrowRight className="size-4" aria-hidden="true" /> : <ArrowLeft className="size-4" aria-hidden="true" />}{copy.back}
     </Link>
@@ -386,15 +408,19 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
       {record && <p className="mt-3 text-sm text-muted-foreground">{copy.revision.replace("{revision}", String(record.draft?.revision ?? 0)).replace("{version}", String(record.version))}</p>}
     </header>
 
-      <nav className="mt-6" aria-label={copy.sections}>
-        <ol className="grid grid-cols-4 gap-2">{steps.map((title, index) => <li key={title}><button type="button" onClick={() => goToStep(index)} aria-current={step === index ? "step" : undefined} className={`flex min-h-11 w-full items-center justify-center gap-2 border px-3 py-2 text-start text-sm sm:justify-start ${step === index ? "border-primary font-semibold text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
-          {stepCompletion[index] ? <Check className="size-4 shrink-0" aria-hidden="true" /> : <span className="font-mono tabular-nums" aria-hidden="true">{formatNumber(index + 1, locale)}</span>}<span className="sr-only sm:not-sr-only">{title}<span className="sr-only"> — {stepCompletion[index] ? copy.complete : copy.incomplete}</span></span>
-        </button></li>)}</ol>
+      <nav className="mt-6 max-w-5xl" aria-label={copy.sections}>
+        <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4">{steps.map((title, index) => {
+          const attention = index < 3 && (evaluation[index]?.issues.some(issue => !issue.missing || attempted.includes(index)) || remoteIssues.some(issue => issue.step === index));
+          const state = attention ? validation.attention : stepCompletion[index] ? index === 3 ? validation.ready : copy.complete : copy.incomplete;
+          return <li key={title}><button type="button" onClick={() => goToStep(index)} aria-current={step === index ? "step" : undefined} aria-label={`${title} — ${state}${step === index ? ` — ${validation.current}` : ""}`} className={`flex min-h-14 w-full items-center gap-3 rounded-control border-[length:0.0625rem] px-3 py-2 text-start text-sm transition-colors duration-(--duration-hover) motion-reduce:transition-none ${step === index ? "border-primary bg-primary-soft text-foreground" : "border-border text-muted-foreground hover:bg-surface hover:text-foreground"}`}>
+            <span className={`grid size-7 shrink-0 place-items-center rounded-nav font-mono tabular-nums ${stepCompletion[index] ? "bg-action text-action-foreground" : "bg-muted text-foreground"}`} aria-hidden="true">{formatNumber(index + 1, locale)}</span><span className="min-w-0"><span className="block font-medium">{title}</span><span className={`mt-0.5 block text-xs ${attention ? "text-destructive" : "text-muted-foreground"}`}>{state}</span></span>
+          </button></li>;
+        })}</ol>
       </nav>
-      <p className="mt-3 text-sm text-muted-foreground" role="status">{saving ? copy.saving : dirty ? copy.unsaved : localStatus ?? (saved ? copy.saved : "")}</p>
+      <p className="mt-3 min-h-6 max-w-5xl text-sm text-muted-foreground" role="status">{saving ? copy.saving : dirty ? copy.unsaved : localStatus ?? (saved ? copy.saved : "")}</p>
       {dirty && localStatus && <p role="alert" className="mt-2 text-sm text-destructive">{localStatus}</p>}
-      <h2 id="draft-step-heading" tabIndex={-1} className="mt-6 scroll-mt-40 text-lg font-semibold">{copy.stepCounter.replace("{step}", formatNumber(step + 1, locale)).replace("{total}", formatNumber(steps.length, locale))} · {steps[step]}</h2>
-      <form ref={formRef} className="mt-4 space-y-6" noValidate onSubmit={submit} onChange={markDirty}>
+      <h2 id="draft-step-heading" tabIndex={-1} className="mt-4 scroll-mt-40 text-lg font-semibold">{copy.stepCounter.replace("{step}", formatNumber(step + 1, locale)).replace("{total}", formatNumber(steps.length, locale))} · {steps[step]}</h2>
+      <form ref={formRef} className="mt-4 max-w-5xl space-y-5" noValidate onSubmit={submit} onChange={markDirty}>
       <div data-draft-step="0" hidden={step !== 0} className="space-y-6">
       <FormSection title={copy.identityTitle} intro={copy.identityIntro}>
         <div className="grid gap-5 sm:grid-cols-2">
@@ -405,23 +431,21 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
           <Field label={copy.category}><select name="categorySlug" required defaultValue={stringValue(listing.categorySlug)} className={selectClass}><option value="">{copy.choose}</option>{options.categories.map((category) => <option key={category.slug} value={category.slug}>{category.name}</option>)}</select></Field>
         </div>
         <div className="mt-5"><Field label={copy.outcomeEn}><Input name="outcomeEn" required defaultValue={localized(listing.outcome).en} /></Field></div>
+        <div className="mt-5"><Field label={copy.slug} help="slug" hint={hints.slug}><Input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={stringValue(listing.slug)} dir="ltr" /></Field></div>
         <div className="mt-5">{descriptionField(primaryLang, copy.descriptionRequired)}</div>
       </FormSection>
 
       <FormDisclosure summary={copy.moreAbout} defaultOpen={moreAboutFilled}>
-        <Field label={copy.slug} help="slug" hint={hints.slug}><Input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={stringValue(listing.slug)} dir="ltr" /></Field>
         {descriptionField(otherLang)}
         <Field label={copy.outcomeFa}><Input name="outcomeFa" defaultValue={localized(listing.outcome).fa} dir="rtl" /></Field>
         <Field label={copy.tags} hint={copy.listHint}><Input name="tags" defaultValue={Array.isArray(listing.tags) ? listing.tags.join(", ") : ""} /></Field>
         <fieldset><legend className="w-full text-sm font-semibold"><span className="flex items-center justify-between gap-2">{copy.communities}<ContextHelp label={copy.communities} topic="communities" /></span></legend><p className="mt-1 text-xs text-muted-foreground">{copy.communitiesHint}</p><div className="mt-3 grid gap-3 sm:grid-cols-2">
           {options.communities.map((community) => <label key={community.slug} className="flex min-h-11 items-start gap-3 rounded-control border p-3 text-sm"><input className="mt-1" type="checkbox" name="communitySlugs" value={community.slug} defaultChecked={(listing.communitySlugs as string[] | undefined)?.includes(community.slug)} /><span><strong className="block">{locale === "fa" ? community.nameFa ?? community.nameEn : community.nameEn}</strong><span className="text-xs text-muted-foreground">{locale === "fa" ? community.descriptionFa ?? community.descriptionEn : community.descriptionEn}</span></span></label>)}
         </div></fieldset>
-        <Field label={copy.icon} hint={copy.iconHint}>
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
             <ProductIcon name={stringValue(localized(listing.name).en) || stringValue(listing.slug) || "?"} iconUrl={stringValue(listing.icon) || null} />
-            <Input name="icon" type="url" inputMode="url" defaultValue={stringValue(listing.icon)} dir="ltr" placeholder="https://avatars.githubusercontent.com/…" className="min-w-0 flex-1" />
-          </div>
-        </Field>
+            <div className="min-w-0 flex-1"><Field label={copy.icon} hint={copy.iconHint}><Input name="icon" type="url" inputMode="url" defaultValue={stringValue(listing.icon)} dir="ltr" placeholder="https://avatars.githubusercontent.com/…" /></Field></div>
+        </div>
         <DeclarationRows messages={copy} name="screenshots" label={copy.screenshots} onChange={markDirty} initialRows={screenshots.map((item) => [item.url, item.alt.en, item.alt.fa ?? ""])} columns={[{ label: copy.imageUrl, type: "url" }, { label: copy.altEn }, { label: copy.altFa, optional: true }]} />
         <div className="grid gap-5 sm:grid-cols-3"><Field label={copy.documentationUrl}><Input name="documentationUrl" type="url" defaultValue={stringValue(listing.documentationUrl)} dir="ltr" /></Field><Field label={copy.supportUrl}><Input name="supportUrl" type="url" defaultValue={stringValue(listing.supportUrl)} dir="ltr" /></Field><Field label={copy.issueTrackerUrl}><Input name="issueTrackerUrl" type="url" defaultValue={stringValue(listing.issueTrackerUrl)} dir="ltr" /></Field></div>
       </FormDisclosure>
@@ -435,14 +459,12 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
         <div className="mt-5"><Field label={copy.installationInstructions} help="installation" hint={copy.lineHint}><Textarea name="installationInstructions" required defaultValue={listValue(installation.instructions)} /></Field></div>
         <div className="mt-5"><Field label={copy.installCommands} help="installation" hint={copy.installCommandsHint}><Textarea name="installCommands" spellCheck={false} dir="ltr" className="font-mono" defaultValue={formatCommands(installation.commands)} /></Field></div>
         <div className="mt-5"><Field label={copy.licenseField} help="license" hint={copy.licenseHint}><Input name="license" required defaultValue={customLicense ? stringValue(license.customUrl) : stringValue(license.identifier)} dir="ltr" onInput={(event) => setCustomLicense(event.currentTarget.value.trim().startsWith("https://"))} /></Field></div>
-        <div className="mt-5"><FormDisclosure summary={copy.moreRelease} defaultOpen={Boolean(productId)}>
-          <div className="grid gap-5 sm:grid-cols-2">
+        <div className="mt-5 grid gap-5 sm:grid-cols-2">
             <Field label={copy.version} help="version" hint={hints.version}><Input name="releaseVersion" required defaultValue={stringValue(release.version) || (productId ? "" : "1.0.0")} dir="ltr" /></Field>
             <Field label={copy.installationMethod} help="installation"><select name="installationMethod" required value={installMethod} onChange={(event) => setMethodOverride(event.target.value)} className={selectClass}>{["manual", "npm", "git", "download", "container", "hosted"].map((item) => <option key={item}>{item}</option>)}</select></Field>
-            <SourceOptionalFields key={sourceKind} kind={sourceKind} source={source} copy={copy} />
           </div>
-          <Field label={copy.releaseNotes}><Textarea name="releaseNotes" required defaultValue={stringValue(release.releaseNotes) || (productId ? "" : copy.defaultReleaseNotes)} /></Field>
-        </FormDisclosure></div>
+        <div className="mt-5"><Field label={copy.releaseNotes}><Textarea name="releaseNotes" required defaultValue={stringValue(release.releaseNotes) || (productId ? "" : copy.defaultReleaseNotes)} /></Field></div>
+        {["github_repository", "github_release"].includes(sourceKind) && <div className="mt-5"><FormDisclosure summary={copy.moreRelease} defaultOpen={Boolean(productId)}><SourceOptionalFields key={sourceKind} kind={sourceKind} source={source} copy={copy} /></FormDisclosure></div>}
         <input type="hidden" name="releaseDocumentationUrl" defaultValue={stringValue(release.documentationUrl)} />
         <input type="hidden" name="releaseSupportUrl" defaultValue={stringValue(release.supportUrl)} />
       </FormSection>
@@ -468,13 +490,8 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
 
       <div data-draft-step="3" hidden={step !== 3}>
         <FormSection title={copy.reviewTitle} help="review" intro={copy.reviewIntro}>
-          <Button type="button" variant="secondary" onClick={(event) => {
-            const form = event.currentTarget.form;
-            if (!form || !validateDraft(form)) return;
-            const data = new FormData(form);
-            if (!text(data, "descriptionEn") && !text(data, "descriptionFa")) { setError(copy.descriptionRequired); return; }
-            setPreview(buildManifest(data, type, sourceKind, customLicense));
-          }}>{copy.preview}</Button>
+          {preview && <nav aria-label={validation.edit} className="flex flex-wrap gap-2">{steps.slice(0, 3).map((title, index) => <Button key={title} type="button" variant="ghost" onClick={() => goToStep(index)}>{validation.edit} {title}</Button>)}</nav>}
+          {!preview && <div className="space-y-3"><p className="text-sm text-muted-foreground">{validation.reviewIncomplete}</p><div className="flex flex-wrap gap-2">{steps.slice(0, 3).map((title, index) => <Button key={title} type="button" variant="secondary" onClick={() => goToStep(index)}>{validation.edit} {title}</Button>)}</div></div>}
           {preview && <div className="mt-5 space-y-4" role="region" aria-label={copy.preview}>
             <h3 className="break-words text-xl font-semibold"><bdi>{preview.listing.name.en}</bdi></h3>
             <p>{locale === "fa" ? preview.listing.outcome.fa ?? preview.listing.outcome.en : preview.listing.outcome.en}</p>
@@ -493,10 +510,11 @@ export function CreatorDraftEditor({ productId, messages }: { productId?: string
         </FormSection>
       </div>
 
+        <DraftFieldErrors issues={visibleIssues} />
         {error && <p id="draft-errors" tabIndex={-1} className="flex scroll-mt-40 items-start gap-2 text-sm text-destructive" role="alert"><AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />{error}</p>}
         {saved && <p className="text-sm text-success" role="status">{copy.saved}</p>}
         <div data-draft-actions data-help-anchor className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center justify-between gap-3 rounded-card border bg-surface p-3 shadow-panel lg:bottom-4">
-          <div className="flex gap-2"><Button type="button" variant="secondary" disabled={step === 0 || saving} onClick={() => goToStep(step - 1)}>{copy.previousStep}</Button>{step < lastStep && <Button type="button" disabled={saving} onClick={() => goToStep(step + 1)}>{copy.nextStep}</Button>}</div>
+          <div className="flex gap-2"><Button type="button" variant="secondary" disabled={step === 0 || saving} onClick={() => goToStep(step - 1)}>{copy.previousStep}</Button>{step < lastStep && <Button type="button" disabled={saving} onClick={() => { if (formRef.current && validateDraft(formRef.current, step)) goToStep(step + 1); }}>{copy.nextStep}</Button>}</div>
           <div className="flex flex-wrap gap-1"><ContextHelp label={`${copy.saveLater} / ${copy.save}`} topic="saves" /><Link className={buttonVariants({ variant: "ghost" })} href={localePath("/dashboard/studio", locale)}>{copy.cancel}</Link><Button type="button" variant="secondary" disabled={saving || !storageKey} onClick={saveForLater}>{localStatus === copy.localSaved ? <><Check className="size-4" aria-hidden="true" />{copy.savedLater}</> : copy.saveLater}</Button>{step === lastStep && <Button disabled={saving}><Save className="size-4" aria-hidden="true" />{saving ? copy.saving : copy.save}</Button>}</div>
       </div>
     </form>
@@ -529,13 +547,14 @@ function SourceOptionalFields({ kind, source, copy }: { kind: SourceKind; source
   return null;
 }
 
-function DetailInput({ field, locale, value }: { field: DetailField; locale: "en" | "fa"; value: unknown }) {
+function DetailInput({ field, locale, value, platforms }: { field: DetailField; locale: "en" | "fa"; value: unknown; platforms: string[] }) {
   const label = locale === "fa" ? field.fa : field.en;
   const help: HelpTopic | undefined = field.key === "entryPath" || field.key === "entryPaths" ? "entryPath" : field.key === "transport" ? "transport" : field.key === "authentication" || field.key === "authenticationMethod" ? "authentication" : undefined;
   if (field.kind === "boolean") return <label className="flex min-h-11 items-center gap-3 self-end rounded-control border px-3 text-sm font-medium"><input name={`detail_${field.key}`} type="checkbox" defaultChecked={Boolean(value)} />{label}</label>;
+  if (field.key === "hostPlatform") return <Field label={label}><select name={`detail_${field.key}`} required={field.required} defaultValue={stringValue(value)} data-draft-allowed={platforms.join(",")} className={selectClass}><option value="">{locale === "fa" ? "انتخاب سکو" : "Choose a platform"}</option>{stringValue(value) && !platforms.includes(stringValue(value)) && <option value={stringValue(value)}>{stringValue(value)}</option>}{platforms.map(platform => <option key={platform} value={platform}>{platform.replaceAll("_", " ")}</option>)}</select></Field>;
   if (field.kind === "select") return <Field label={label} help={help}><select name={`detail_${field.key}`} required={field.required} defaultValue={stringValue(value)} className={selectClass}>{field.options?.map((option) => <option key={option}>{option}</option>)}</select></Field>;
   const defaultValue = field.kind === "list" ? (Array.isArray(value) ? value.join("\n") : "") : field.kind === "stages" && Array.isArray(value) ? (value as Array<{ name: string; description: string; humanApproval: boolean }>).map((stage) => `${stage.name} | ${stage.description} | ${stage.humanApproval}`).join("\n") : stringValue(value);
-  if (field.kind === "textarea" || field.kind === "list" || field.kind === "stages") return <Field label={label} help={help}><Textarea name={`detail_${field.key}`} required={field.required} defaultValue={defaultValue} /></Field>;
+  if (field.kind === "textarea" || field.kind === "list" || field.kind === "stages") return <Field label={label} help={help}><Textarea name={`detail_${field.key}`} data-draft-list={field.kind === "list" || undefined} data-draft-allowed={field.key === "effects" ? permissionCapabilities.join(",") : undefined} required={field.required} defaultValue={defaultValue} /></Field>;
   return <Field label={label} help={help}><Input name={`detail_${field.key}`} required={field.required} defaultValue={defaultValue} dir="ltr" /></Field>;
 }
 
@@ -548,12 +567,12 @@ function Field({ label, hint, help, children }: { label: string; hint?: string; 
   return <div className="text-sm" data-help-anchor>
     <div className="flex min-h-11 items-center justify-between gap-2"><label htmlFor={id} className="block font-medium">{label}{field?.props.required && <span aria-hidden="true"> *</span>}</label>{help && <ContextHelp label={label} topic={help} />}</div>
     {hint && <p id={`${id}-hint`} className="mt-1 text-xs text-muted-foreground">{hint}</p>}
-    <div className="mt-2">{field ? cloneElement(field, { id, "aria-describedby": hint ? `${id}-hint` : undefined }) : children}</div>
+    <div className="mt-2" data-draft-feedback>{field ? cloneElement(field, { id, "aria-describedby": hint ? `${id}-hint` : undefined }) : children}</div>
   </div>;
 }
-function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) { return <textarea {...props} className="min-h-28 w-full rounded-control border border-input bg-surface px-3 py-3 text-sm placeholder:text-muted-foreground/75 hover:border-border-strong focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20" />; }
+function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) { return <textarea {...props} className="min-h-28 w-full rounded-control border-[length:0.0625rem] border-input bg-surface px-3 py-3 text-base placeholder:text-muted-foreground/75 hover:border-border-strong focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20" />; }
 function EditorStatus({ message, error = false }: { message: string; error?: boolean }) { return <div className="mx-auto max-w-xl rounded-card border bg-surface p-8"><p className={error ? "text-destructive" : "text-muted-foreground"} role={error ? "alert" : "status"}>{message}</p></div>; }
-const selectClass = "min-h-11 w-full rounded-control border border-input bg-surface px-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20";
+const selectClass = "min-h-11 w-full rounded-control border-[length:0.0625rem] border-input bg-surface px-3 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20";
 const stringValue = (value: unknown) => typeof value === "string" ? value : "";
 const text = (data: FormData, key: string) => String(data.get(key) ?? "").trim();
 const optionalText = (data: FormData, key: string) => text(data, key) || undefined;
@@ -581,12 +600,13 @@ export function buildManifest(data: FormData, type: MarketplaceItemTypeKey, sour
   } : sourceKind === "github_release" ? {
     kind: sourceKind, repositoryUrl: text(data, "repositoryUrl"), tag: text(data, "releaseTag"), releaseCommitSha: text(data, "releaseCommitSha"), assetName: text(data, "assetName"), ...(optionalText(data, "assetDigest") ? { assetDigest: optionalText(data, "assetDigest") } : {}),
   } : { kind: sourceKind, packageName: text(data, "packageName"), version: text(data, "npmVersion"), integrity: text(data, "integrity") };
-  const typeDetails = Object.fromEntries(detailFields[type].map((field) => {
+  const typeDetails = Object.fromEntries(detailFields[type].flatMap<[string, unknown]>((field) => {
     const key = `detail_${field.key}`;
-    if (field.kind === "boolean") return [field.key, data.has(key)];
-    if (field.kind === "list") return [field.key, lines(text(data, key))];
-    if (field.kind === "stages") return [field.key, rows(text(data, key)).map(([name, description, humanApproval]) => ({ name, description, humanApproval: bool(humanApproval) }))];
-    return [field.key, text(data, key)];
+    if (field.kind === "boolean") return [[field.key, data.has(key)]];
+    if (field.kind === "list") return [[field.key, lines(text(data, key))]];
+    if (field.kind === "stages") return [[field.key, rows(text(data, key)).map(([name, description, humanApproval]) => ({ name, description, humanApproval: bool(humanApproval) }))]];
+    const value = text(data, key);
+    return !field.required && !value ? [] : [[field.key, value]];
   }));
   return {
     manifestVersion: 1,

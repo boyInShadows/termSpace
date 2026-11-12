@@ -53,12 +53,12 @@ describe("Header", () => {
   it("keeps sticky workspace offsets in sync with the actual header height", () => {
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect");
     const { unmount } = render(<Header />);
-    expect(bounds).not.toHaveBeenCalled();
+    expect(bounds).toHaveBeenCalledTimes(1);
     act(() => resizeHeader(100));
     expect(document.documentElement.style.getPropertyValue("--site-header-height")).toBe("100px");
     act(() => resizeHeader(64));
     expect(document.documentElement.style.getPropertyValue("--site-header-height")).toBe("64px");
-    expect(bounds).not.toHaveBeenCalled();
+    expect(bounds).toHaveBeenCalledTimes(1);
     unmount();
     expect(document.documentElement.style.getPropertyValue("--site-header-height")).toBe("");
   });
@@ -70,6 +70,32 @@ describe("Header", () => {
     expect(explore.some((link) => link.getAttribute("aria-current") === "page")).toBe(
       true,
     );
+  });
+
+  it("does not reverse condensation when scroll anchoring follows the changing header height", () => {
+    vi.useFakeTimers();
+    try {
+      let height = 101;
+      vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(() => ({ height }) as DOMRect);
+      vi.stubGlobal("scrollY", 0);
+      const { container } = render(<Header />);
+      const strip = container.querySelector("[data-announcement]")!;
+      const scroll = (y: number, nextHeight: number) => {
+        height = nextHeight;
+        vi.stubGlobal("scrollY", y);
+        act(() => { window.dispatchEvent(new Event("scroll")); vi.advanceTimersByTime(20); });
+      };
+      scroll(81, 101);
+      expect(strip).toHaveClass("h-0");
+      scroll(79, 99);
+      expect(strip).toHaveClass("h-0");
+      scroll(38, 58);
+      expect(strip).toHaveClass("h-0");
+      scroll(0, 58);
+      expect(strip).toHaveClass("h-9");
+      scroll(43, 101);
+      expect(strip).toHaveClass("h-9");
+    } finally { vi.useRealTimers(); }
   });
 
   it("falls back to measured bounds when the browser supplies no border box", () => {

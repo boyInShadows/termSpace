@@ -140,14 +140,13 @@ export function CreatorDashboard() {
       <Button size="sm" variant="secondary" onClick={retry}>{hub.retry}</Button>
     </div>}
 
-    {listings.length === 0 ? <div className="mt-5 rounded-card border border-dashed bg-muted/25 p-6 sm:p-10">
-      <h3 className="font-semibold text-2xl">{hub.noListings}</h3>
+    {listings.length === 0 ? <div className="mt-5 rounded-card border-[length:0.0625rem] border-border bg-surface p-5 sm:p-6">
+      <h3 className="text-xl font-semibold">{hub.noListings}</h3>
       <p className="mt-2 max-w-xl text-sm text-muted-foreground">{hub.noListingsIntro}</p>
-      <ol className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label={hub.noListings}>
-        {[{ title: hub.onboardingTitle1, body: hub.onboardingBody1 }, { title: hub.onboardingTitle2, body: hub.onboardingBody2 }, { title: hub.onboardingTitle3, body: hub.onboardingBody3 }, { title: hub.onboardingTitle4, body: hub.onboardingBody4 }].map((step, index) => <li key={step.title} className="border bg-surface p-4">
-          <span className="text-xs font-semibold text-muted-foreground tabular-nums">{number.format(index + 1)}</span>
-          <h4 className="mt-1 font-semibold">{step.title}</h4>
-          <p className="mt-1 text-sm text-muted-foreground">{step.body}</p>
+      <ol className="mt-5 grid gap-x-8 gap-y-4 sm:grid-cols-2" aria-label={hub.noListings}>
+        {[{ title: hub.onboardingTitle1, body: hub.onboardingBody1 }, { title: hub.onboardingTitle2, body: hub.onboardingBody2 }, { title: hub.onboardingTitle3, body: hub.onboardingBody3 }, { title: hub.onboardingTitle4, body: hub.onboardingBody4 }].map((step, index) => <li key={step.title} className="flex items-start gap-3">
+          <span className="pt-0.5 text-xs font-semibold text-muted-foreground tabular-nums">{number.format(index + 1)}</span>
+          <div><h4 className="text-sm font-semibold">{step.title}</h4><p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.body}</p></div>
         </li>)}
       </ol>
       <div className="mt-6 flex flex-wrap gap-3">

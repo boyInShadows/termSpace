@@ -29,6 +29,8 @@ remain open as recorded in DESIGN.md; this brief does not declare them fixed.
 Overview, studio, listing editor, releases, library collections and Profile share
 this vocabulary. Saved listings and acquisitions stay distinct; public
 availability and per-item recovery remain explicit.
+Keep overview metrics close to the following task panels; render helper spacing
+only when helper content exists.
 The root layout supplies the main site's global header on every dashboard route.
 Workspace search is a content control, without a second toolbar or repeated
 breadcrumb. Profile lives in the dashboard, not the shared account dropdown.
@@ -41,9 +43,10 @@ header height, and mobile disclosures fit landscape and close on navigation.
 Phone navigation stays fixed; editor actions clear its height and safe area.
 Search is available at every width. Long identifiers yield to readable route
 labels, and Latin identifiers are isolated in Persian. The listing editor has
-five freely navigable steps, a completion percentage, labelled declaration rows
-and a review checkpoint. Inactive steps retain their fields and validation opens
-the first invalid step. Save for later keeps account-scoped partial work on this
+four freely navigable, labelled numbered steps and a direct review summary.
+Completed number badges use action blue; the current step and errors have separate
+states. Next validates the current step, showing inline feedback and focusing its
+first invalid field. Inactive steps retain their fields. Save for later keeps account-scoped partial work on this
 browser; Save draft stores a complete, validated account draft without publishing.
 Loading, storage failure, empty and ready states remain explicit.
 

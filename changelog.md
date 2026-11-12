@@ -2,6 +2,102 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-12 — Correct owner-rejected overview spacing
+
+- Earlier spacing acceptance/completion claim was too broad. Removed stacked
+  metric bottom padding/blank helper reservations, tightened label/value and
+  section gaps, and matched skeleton spacing. Existing column width now22.5rem.
+  No new tokens or unrelated panel redesign.
+- Owner screenshot matched before captures: visible metric-to-panel gap4rem;
+  after1.625rem across24 EN/FA/theme/viewport/empty/populated cases, no overflow
+  or page exceptions. Eight error/Retry/loading contexts also inspected.
+- Added rendered gap/baseline regression (failed before;16 full-suite passes,
+  plus48 repeated passes). Full run exposed an error-focus race from earlier
+  polish: focus could run before its hidden step committed. Reproduced in a
+  repeated run; moved error focus after commit and avoided heading-focus conflict.
+- Root typecheck/build/943 tests pass/54 existing skips. Final affected web checks
+  pass/573 tests; lint retains two warnings. Final production focused browser96
+  pass/14 duplicate skips. Full suite before focus correction603 pass/52 skip/
+  11 fail: reset2/search2/budgets4/reporting2/focus1. Reporting failures recur in
+  repeats; no test/budget weakening. Nine Lighthouse runs pass; detector[].
+  The error-focus case also passes20 concurrent repetitions after correction.
+- Fresh independent review accepts only the overview spacing correction for
+  local owner review, not all polish/release. Surface brief/backlog preserve the
+  correction; old release failures, physical-device/other-engine and owner visual
+  acceptance remain open. All work local; concurrent changes and normal dev
+  services preserved. [Before/after screenshots, changed files and exact limits](docs/artifacts/overview-spacing-2026-11-12/report.md).
+
+## 2026-11-12 — Implement reviewed UI polish P01–P07 locally
+
+- Unified applicable field/step completion and Next/final-save checks, normalized
+  optional blank scalars, and added adjacent localized feedback/first-error focus
+  with native disclosure opening and server-path mapping. Server field errors
+  also mark the step Needs attention and block unchecked Next until correction.
+- Kept four freely navigable steps and partial Save for later. Required essentials
+  are visible; optional groups retain native details/summary. Completed number
+  badges use existing blue, current/error states stay separate, and phone labels
+  remain visible. Review shows its summary/edit links directly. Saving still
+  creates an account draft; submission remains a separate action.
+- Aligned narrow creator setup/editor framing, simplified empty-studio guidance,
+  removed static metric hover and redundant Quick-action boxes. Existing tokens,
+  rem sizing, sidebar/mobile tabs, auth, ticketing and concurrent header/global
+  edits are preserved. No API/schema/dependency change.
+- Root typecheck/build and943 unit tests pass/54 existing API skips. Final affected
+  web checks pass/573 tests; lint has two existing warnings. Final production
+  browser run:54 functional checks pass/14 duplicate cases skip; with budgets,
+  58 pass/20 skip/two dashboard budget failures at172.9/170kB. Four focused server
+  error cases pass after reproducing/fixing the stale completed-step state.
+- Full suite before that final editor-state fix:584 pass/52 skip/10 fail (reset2,
+  hero search2, budgets4, staff queue2). Staff cases pass isolated; product budgets
+  pass the final fixture rebuild. Full suite remains red; no weakened assertions,
+  skips or budgets. All nine Lighthouse runs pass; scoped detector returns[].
+- Independent visual review accepts the scoped refinement; system comparison
+  needs no new tokens. EN/FA, both themes, phone/tablet/desktop/short/200% zoom,
+  drafts and errors checked using isolated established fixtures. Physical devices,
+  other engines and owner visual acceptance remain open. PRODUCT.md baseline
+  drift is reported without unrequested repair.
+- Shared changelog/brief changes were planned before edits. Temporary fixture
+  stopped; owner's web/API services untouched. No stage/commit/push/deploy or
+  extra checkout. [Changed files, screenshots and precise checks/limits](docs/artifacts/ui-ux-polish-2026-11-12/report.md).
+
+## 2026-11-12 — Stop header/sidebar scroll-anchoring feedback
+
+- Reproduced raw scrollY crossing80 during the header's own height animation:
+  one scroll to81 produced33 reversals in2.5 seconds, with sidebar offsets following.
+  Header scroll state now excludes measured header-height deltas from scroll
+  distance. Condensation, expansion, animation and native sticky behavior remain.
+  Initial height fallback reuses existing header-chrome dimensions, avoiding the
+  initial100/101 mismatch. No dashboard content/layout redesign or scroll reset.
+- Changed header.tsx/globals.css plus focused header unit/browser regression.
+  Dev rAF/CDP traces:33 transitions before, one intentional transition after;
+  final header/sidebar58 and no remaining height oscillation. Public production
+  header also exhibited the original loop. Initial exact recording state unknown.
+- Root typecheck/build and926 tests pass/54 skip; header16 pass. Production-browser
+  regression10 pass/two duplicate cases skip: five routes, hard refresh, client
+  navigation, delayed hydration, EN/FA, both themes, phone/tablet/desktop. All nine
+  Lighthouse runs pass unchanged assertions. Lint retains two existing warnings;
+  detector reports existing global typography/pattern flags, no new ignores.
+- Physical devices/other engines and existing full-suite failures remain open;
+  full suite was not rerun. No commit/push/deployment or unrelated edits.
+  [Evidence and precise limits](docs/artifacts/navigation-stability-2026-11-12/report.md).
+
+## 2026-11-12 — Review UI/UX polish backlog before implementation
+
+- Owner requested reviewing `docs/ui-ux-polish-backlog.md` and recommending a
+  better approach first. Updated that existing document with verified findings
+  and the suggested order; no application changes in this review.
+- Two isolated design/contract assessments plus a fixture browser confirmed
+  metric hover at zero inset, unchecked Next, required fields inside additional
+  details, optional serialization and completion-policy differences. Disclosure
+  toggling alone did not change completion. Current editor has four steps.
+- Recommend validation/normalization and inline errors first, native disclosures,
+  blue completed-number badges with visible labels, then existing-container and
+  review-summary refinements. Preserve draft semantics, tokens/rem, navigation,
+  ticketing and unrelated concurrent header edits.
+- Scoped detector clean; controlled English/light desktop pass had no browser
+  exceptions. Other locale/theme/device states and full gates await implementation.
+  Temporary fixture stopped; owner dev servers untouched. [Review evidence](docs/artifacts/ui-ux-polish-review-2026-11-12/report.md).
+
 ## 2026-11-12 — Add owner-requested desktop support navigation
 
 - Added localized Support tickets with Lucide Ticket to the existing desktop

@@ -11,6 +11,37 @@ vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/l
 const { CreatorDraftEditor } = await import("./creator-draft-editor");
 
 describe("draft editor navigation and recovery", { timeout: 15_000 }, () => {
+  it("keeps Next on an invalid current step and exposes adjacent field feedback", async () => {
+    render(<CreatorDraftEditor messages={copy.en.creatorDraft} />);
+    const name = await screen.findByRole("textbox", { name: copy.en.creatorDraft.nameEn });
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await waitFor(() => expect(name).toHaveFocus());
+    expect(name).toBeVisible();
+    expect(name).toHaveAttribute("aria-invalid", "true");
+    const descriptionId = name.getAttribute("aria-describedby")!.split(" ").at(-1)!;
+    expect(document.getElementById(descriptionId)).toHaveTextContent("required");
+    expect(window.location.search).not.toBe("?step=2");
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+  it("blocks an invalid optional field, then clears it without showing future-step errors", async () => {
+    mocks.options.mockResolvedValue({ categories: [{ slug: "development", name: "Development" }], communities: [], platforms: [{ key: "codex" }] });
+    render(<CreatorDraftEditor messages={copy.en.creatorDraft} />);
+    fireEvent.input(await screen.findByRole("textbox", { name: copy.en.creatorDraft.nameEn }), { target: { value: "Review Tool" } });
+    fireEvent.change(screen.getByRole("combobox", { name: copy.en.creatorDraft.category }), { target: { value: "development" } });
+    fireEvent.change(screen.getByRole("textbox", { name: copy.en.creatorDraft.outcomeEn }), { target: { value: "Reviews changes" } });
+    fireEvent.change(screen.getByRole("textbox", { name: copy.en.creatorDraft.descriptionEn }), { target: { value: "Explains changes carefully" } });
+    fireEvent.click(screen.getByText(creatorWorkspace.en.creatorDraft.moreAbout));
+    const icon = screen.getByRole("textbox", { name: copy.en.creatorDraft.icon });
+    fireEvent.change(icon, { target: { value: "not-a-url" } });
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await waitFor(() => expect(icon).toHaveFocus());
+    expect(icon).toHaveAttribute("aria-invalid", "true");
+    fireEvent.change(icon, { target: { value: "" } });
+    await waitFor(() => expect(icon).not.toHaveAttribute("aria-invalid"));
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByRole("textbox", { name: copy.en.creatorDraft.projectUrl })).not.toHaveAttribute("aria-invalid");
+    expect(window.location.search).toBe("?step=2");
+  });
   afterEach(() => { cleanup(); vi.restoreAllMocks(); });
   beforeEach(() => {
     vi.clearAllMocks();
