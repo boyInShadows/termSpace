@@ -2,6 +2,32 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-15 — Capture dashboard follow-ups and reconcile Ramtin queue
+
+- Recorded the owner's four requests in `docs/dashboard-follow-ups.md`: private
+  ticket bell with #0755B2 unread dot; staff-initiated member messaging, email and
+  attachments; investigate-first profile upload/shared studio image/editable name;
+  creator-scoped published-listing search/filters replacing the visible count.
+- Notification content suggestions are proposals. Added privacy, lifecycle and
+  verification acceptance without claiming implementation or a backend/database
+  investigation. Application work and deployment remain deferred.
+- Refreshed ignored `ramtin-pending.md`: consolidated identity/upload and release
+  tasks; removed stale local/uncommitted/no-push completion narratives. Ticketing/
+  sidebar implementation is already in 399edb0 and dashboard polish in 6dd1035,
+  both on origin/ramtin. Retained owner/device acceptance, release failures,
+  migration provenance and unverified production-parity work.
+- Shared surface announced before edit: `changelog.md`, for this planning handoff.
+  Other maintainer queue, application and schema files unchanged. ShadowBrain
+  project/daily/task/log pointers updated separately; local queue/vault excluded
+  from this repository commit. No extra checkout or history rewrite.
+- Verification: root typecheck/build pass; 943 tests pass/54 existing skips;
+  web lint passes with two existing warnings. Manual second-pass documentation
+  review covered all four requests, retained acceptance, links and commit scope;
+  git diff --check passes. Logs are local under
+  docs/artifacts/dashboard-follow-ups-2026-11-15/. No harness cost data available.
+  Web E2E/Lighthouse are not repeated for this documentation-only phase; recorded
+  release failures stay open. No new runtime or visual acceptance is claimed.
+
 ## 2026-11-12 — Correct owner-rejected overview spacing
 
 - Earlier spacing acceptance/completion claim was too broad. Removed stacked
