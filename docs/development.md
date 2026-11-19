@@ -238,8 +238,9 @@ A merge to `main` deploys itself. `termspace-deploy.timer` on the VPS runs
 `deploy/vps/deploy.sh` every 2 minutes (units are copied to `/etc/systemd/system/`).
 For a new `origin/main` commit it:
 
-1. waits until the **CI** and **Web e2e and performance** workflows for that commit
-   have both passed (pending: retries on the next tick; failed: does nothing);
+1. waits until the **CI** workflow for that commit has passed (pending: retries on the
+   next tick; failed: does nothing). **Web e2e and performance** is deliberately not
+   required while its known failures stand; see `REQUIRED_WORKFLOWS` in the script;
 2. dumps the database to `/opt/backups/termspace-auto-*.sql.gz` (last 10 kept);
 3. tags the running images `rollback-<oldsha>`, builds `api` then `web`, runs the
    `migrate` service and restarts the stack;

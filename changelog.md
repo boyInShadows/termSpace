@@ -9,8 +9,10 @@ Project changes completed from `pending.md` should be recorded here with the dat
   `202611120001_support_text_release` (additive: new types/tables/indexes only; no
   DROP, TRUNCATE or UPDATE) and `schema.prisma` / `package-lock.json` changes.
 - **CD.** `deploy/vps/deploy.sh` + `termspace-deploy.{service,timer}`: the VPS polls
-  `origin/main` every 2 minutes and deploys a commit only once its CI and Web e2e
-  workflows are green. It dumps the DB, builds, migrates, health-checks, rolls the
+  `origin/main` every 2 minutes and deploys a commit only once its CI workflow is green.
+  Web e2e is **not** required: it carries the 8 known failures (four JS budgets,
+  password-reset link, hero suggestions x2, and one more) and would block every deploy;
+  owner-approved 2026-11-19. Restore it in `REQUIRED_WORKFLOWS` when e2e is clean. It dumps the DB, builds, migrates, health-checks, rolls the
   images back on failure and prunes the Docker build cache (12.8 GB on a 38 GB disk).
   Pull-based because the agent account cannot add Actions secrets. See
   `docs/development.md#automatic-deployment`.
