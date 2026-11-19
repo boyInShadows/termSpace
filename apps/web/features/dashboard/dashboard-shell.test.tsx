@@ -30,6 +30,21 @@ describe("DashboardShell", () => {
     nav.pathname = "/dashboard";
   });
 
+  it.each(["/dashboard/tickets", "/dashboard/tickets/new", "/dashboard/tickets/ticket-1", "/fa/dashboard/tickets", "/fa/dashboard/tickets/ticket-1"])("lets unverified members reach support at %s", pathname => {
+    nav.pathname = pathname;
+    session.current = { identityLoading: false, loading: false, email: "member@example.com", emailVerified: false, marketplaceRoles: [] };
+    render(<DashboardShell><p>support content</p></DashboardShell>);
+    expect(screen.getByText("support content")).toBeVisible();
+  });
+
+  it.each(["/dashboard/tickets-other", "/dashboard/studio", "/fa/dashboard/moderation"])("keeps the verification gate at %s", pathname => {
+    nav.pathname = pathname;
+    session.current = { identityLoading: false, loading: false, email: "member@example.com", emailVerified: false, marketplaceRoles: [] };
+    render(<DashboardShell><p>protected content</p></DashboardShell>);
+    expect(screen.queryByText("protected content")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("main")).getByRole("link", { name: "Support tickets" })).toHaveAttribute("href", "/dashboard/tickets");
+  });
+
   it("discards mounted account content when identity changes", () => {
     session.current = { identityLoading: false, loading: true, email: "old@example.com", emailVerified: true, marketplaceRoles: [] };
     const { rerender } = render(<DashboardShell><AccountContent /></DashboardShell>);

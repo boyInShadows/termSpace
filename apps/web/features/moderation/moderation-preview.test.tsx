@@ -4,10 +4,11 @@ import { copy } from "@/lib/i18n";
 
 const getPreview = vi.hoisted(() => vi.fn());
 const moderate = vi.hoisted(() => vi.fn());
+const setFeatured = vi.hoisted(() => vi.fn());
 const session = vi.hoisted(() => ({ loading: false, marketplaceRoles: ["moderator"] as string[] }));
 const navigation = vi.hoisted(() => ({ params: new URLSearchParams() }));
 
-vi.mock("./moderation-api", async (importOriginal) => ({ ...await importOriginal<typeof import("./moderation-api")>(), getModerationPreview: getPreview, moderateListing: moderate }));
+vi.mock("./moderation-api", async (importOriginal) => ({ ...await importOriginal<typeof import("./moderation-api")>(), getModerationPreview: getPreview, moderateListing: moderate, setListingFeatured: setFeatured }));
 vi.mock("@/features/account/marketplace-session", () => ({ useMarketplaceSession: () => session }));
 vi.mock("@/features/moderation/moderation-reviews", () => ({ ModerationReviews: () => null }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => navigation.params }));
@@ -30,7 +31,7 @@ const content = (extra: Record<string, unknown> = {}) => ({
   typeDetails: {},
 });
 const submitted = {
-  id: "product-1", slug: "repo-janitor", name: "Repo Janitor", type: "Skill", typeKey: "skill", state: "submitted", version: 2, published: false,
+  id: "product-1", slug: "repo-janitor", name: "Repo Janitor", type: "Skill", typeKey: "skill", state: "submitted", version: 2, published: false, featured: false,
   updatedAt: "2026-10-19T08:00:00.000Z", selfOwned: false, creator: { id: "c1", name: "Creator", handle: "creator" },
   proposedSnapshot: {
     id: "s1", revision: 1, schemaVersion: 1, digestSha256: "a".repeat(64), content: content(), createdAt: "2026-10-19T08:00:00.000Z", communityRequests: [],
@@ -187,5 +188,48 @@ describe("ModerationPreview", () => {
     renderPreview();
     expect(screen.getByRole("alert")).toHaveTextContent("An active community moderator or administrator role is required.");
     expect(getPreview).not.toHaveBeenCalled();
+  });
+
+  describe("homepage shelf", () => {
+    const published = { ...submitted, state: "published", published: true, version: 5 };
+
+    it("is hidden until the listing is published", async () => {
+      renderPreview();
+      await screen.findByRole("complementary", { name: "Decision" });
+      expect(screen.queryByRole("button", { name: "Feature on homepage" })).not.toBeInTheDocument();
+    });
+
+    it("features a published listing against the listing's current version, then reloads", async () => {
+      getPreview.mockResolvedValueOnce(published).mockResolvedValue({ ...published, featured: true });
+      setFeatured.mockResolvedValue({ featured: true, changed: true, correlationId: "c1" });
+      renderPreview();
+      expect(await within(await screen.findByRole("region", { name: "Homepage shelf" })).findByText("Not featured.")).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Feature on homepage" }));
+      await waitFor(() => expect(setFeatured).toHaveBeenCalledWith("product-1", 5, true));
+      expect(await screen.findByText("Featured on the homepage.")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Remove from homepage" })).toBeEnabled();
+    });
+
+    it("offers removal for a featured listing even when it is no longer published", async () => {
+      getPreview.mockResolvedValue({ ...published, state: "suspended", published: false, featured: true });
+      setFeatured.mockResolvedValue({ featured: false, changed: true, correlationId: "c2" });
+      renderPreview();
+      fireEvent.click(await screen.findByRole("button", { name: "Remove from homepage" }));
+      await waitFor(() => expect(setFeatured).toHaveBeenCalledWith("product-1", 5, false));
+    });
+
+    it("cannot be used on the staff member's own listing", async () => {
+      getPreview.mockResolvedValue({ ...published, selfOwned: true });
+      renderPreview();
+      expect(await screen.findByRole("button", { name: "Feature on homepage" })).toBeDisabled();
+    });
+
+    it("shows a stale-page conflict instead of failing silently", async () => {
+      getPreview.mockResolvedValue(published);
+      setFeatured.mockRejectedValue(new ApiError(409, "LISTING_VERSION_CONFLICT", "changed"));
+      renderPreview();
+      fireEvent.click(await screen.findByRole("button", { name: "Feature on homepage" }));
+      expect(await screen.findByText("The listing changed. Reload before recording a decision.")).toBeInTheDocument();
+    });
   });
 });

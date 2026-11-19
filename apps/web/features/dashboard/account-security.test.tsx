@@ -18,12 +18,24 @@ function fill(current = "fixture-current", next = "fixture-next-password", confi
   fireEvent.change(screen.getByLabelText(copy.en.confirmPassword), { target: { value: confirm } });
 }
 
+/** The password form stays closed behind the row's Change button until asked for. */
+async function openForm(locale: "en" | "fa" = "en") {
+  const change = await screen.findByRole("button", { name: accountSecurityCopy[locale].savePassword });
+  expect(change).toHaveAttribute("aria-expanded", "false");
+  fireEvent.click(change);
+  return screen.getByRole("form");
+}
+
 describe("account security", () => {
   beforeEach(() => { vi.clearAllMocks(); mocks.profile.mockResolvedValue(profile); mocks.change.mockResolvedValue({ data: { updated: true } }); });
 
   it.each(["en", "fa"] as const)("loads sign-in details and a bounded password form (%s)", async (locale) => {
     render(<LocaleProvider locale={locale} messages={copy[locale]}><AccountSecurity /></LocaleProvider>);
-    const field = await screen.findByLabelText(accountSecurityCopy[locale].currentPassword);
+    expect(await screen.findByText(accountSecurityCopy[locale].passwordSignIn)).toBeVisible();
+    expect(screen.queryByRole("form")).not.toBeInTheDocument();
+    await openForm(locale);
+    const field = screen.getByLabelText(accountSecurityCopy[locale].currentPassword);
+    expect(field).toHaveFocus();
     expect(field).toHaveAttribute("autocomplete", "current-password");
     expect(field).toHaveAttribute("maxlength", "128");
     expect(screen.getByLabelText(copy[locale].newPassword)).toHaveAttribute("minlength", "8");
@@ -38,7 +50,8 @@ describe("account security", () => {
     expect(screen.queryByRole("form")).not.toBeInTheDocument();
     expect(await screen.findByRole("alert")).toHaveTextContent(accountSecurityCopy.en.loadError);
     fireEvent.click(screen.getByRole("button", { name: copy.en.dashboardHome.retry }));
-    expect(await screen.findByLabelText(accountSecurityCopy.en.currentPassword)).toBeVisible();
+    await openForm();
+    expect(screen.getByLabelText(accountSecurityCopy.en.currentPassword)).toBeVisible();
   });
 
   it("does not offer password setup for a Google-only account", async () => {
@@ -47,6 +60,7 @@ describe("account security", () => {
     expect(await screen.findByText(accountSecurityCopy.en.googleSignIn)).toBeVisible();
     expect(screen.getByText(accountSecurityCopy.en.noPasswordIntro)).toBeVisible();
     expect(screen.queryByRole("form")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: accountSecurityCopy.en.savePassword })).not.toBeInTheDocument();
     expect(mocks.change).not.toHaveBeenCalled();
   });
 
@@ -54,11 +68,11 @@ describe("account security", () => {
     mocks.profile.mockResolvedValue({ ...profile, connectedGoogle: true });
     render(<AccountSecurity />);
     expect(await screen.findByText(accountSecurityCopy.en.bothSignIn)).toBeVisible();
-    expect(screen.getByRole("form")).toBeVisible();
+    expect(await openForm()).toBeVisible();
   });
 
   it("rejects mismatched confirmation before calling the API", async () => {
-    render(<AccountSecurity />); await screen.findByRole("form");
+    render(<AccountSecurity />); await openForm();
     fill("fixture-current", "fixture-next-password", "different-password");
     fireEvent.submit(screen.getByRole("form"));
     expect(screen.getByRole("alert")).toHaveTextContent(copy.en.passwordMismatch);
@@ -73,7 +87,7 @@ describe("account security", () => {
     [new Error("offline"), copy.en.serviceError],
   ])("preserves input and enables retry after %s", async (cause, message) => {
     mocks.change.mockRejectedValueOnce(cause);
-    render(<AccountSecurity />); await screen.findByRole("form"); fill();
+    render(<AccountSecurity />); await openForm(); fill();
     fireEvent.submit(screen.getByRole("form"));
     expect(await screen.findByRole("alert")).toHaveTextContent(message);
     expect(screen.getByLabelText(copy.en.newPassword)).toHaveValue("fixture-next-password");
@@ -85,16 +99,20 @@ describe("account security", () => {
   it("submits only current/new passwords once while pending, then clears all fields", async () => {
     let resolve!: (value: unknown) => void;
     mocks.change.mockReturnValueOnce(new Promise((done) => { resolve = done; }));
-    render(<AccountSecurity />); await screen.findByRole("form"); fill();
+    render(<AccountSecurity />); await openForm(); fill();
     fireEvent.submit(screen.getByRole("form"));
     expect(screen.getByLabelText(copy.en.newPassword)).toBeDisabled();
     fireEvent.submit(screen.getByRole("form"));
     expect(mocks.change).toHaveBeenCalledExactlyOnceWith("fixture-current", "fixture-next-password");
     await act(async () => resolve({ data: { updated: true } }));
-    await waitFor(() => expect(screen.getByLabelText(copy.en.newPassword)).toHaveValue(""));
+    // Success closes the form, reports it and returns focus to Change; reopening starts empty.
+    await waitFor(() => expect(screen.queryByRole("form")).not.toBeInTheDocument());
+    expect(screen.getByRole("status")).toHaveTextContent(accountSecurityCopy.en.saved);
+    expect(screen.getByRole("button", { name: accountSecurityCopy.en.savePassword })).toHaveFocus();
+    await openForm();
+    expect(screen.getByLabelText(copy.en.newPassword)).toHaveValue("");
     expect(screen.getByLabelText(accountSecurityCopy.en.currentPassword)).toHaveValue("");
     expect(screen.getByLabelText(copy.en.confirmPassword)).toHaveValue("");
-    expect(screen.getByRole("status")).toHaveTextContent(accountSecurityCopy.en.saved);
   });
 });
 

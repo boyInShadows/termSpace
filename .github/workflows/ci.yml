@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
 
+# A newer push to the same PR supersedes the older run. Never cancel runs on main:
+# the VPS deployer reads their result for each commit.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   termbuddy:
     runs-on: ubuntu-latest
@@ -15,6 +21,17 @@ jobs:
           node-version: 22
       - run: node --test deploy/chatwoot/bot/*.test.mjs
       - run: bash -n deploy/chatwoot/backup.sh deploy/chatwoot/verify-backup.sh
+      - run: bash -n deploy/vps/deploy.sh
+
+  # The VPS builds these same Dockerfiles; catch a broken image before main deploys it.
+  docker-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [api, web]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f docker/Dockerfile.${{ matrix.app }} -t termspace-${{ matrix.app }}:ci .
 
   verify:
     runs-on: ubuntu-latest

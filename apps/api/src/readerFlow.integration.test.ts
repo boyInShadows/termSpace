@@ -143,15 +143,15 @@ describe.skipIf(!databaseUrl)("reader authentication on a real database", () => 
 
   it("stores the newsletter preference on the shared subscriber list and revives it after unsubscribe", async () => {
     const reader = await register("preferences");
-    expect((await reader.agent.get("/api/readers/preferences")).body).toEqual({ data: { newsletter: false } });
+    expect((await reader.agent.get("/api/readers/preferences")).body).toEqual({ data: { newsletter: false, moderation: true } });
 
     const subscribed = await reader.agent.patch("/api/readers/preferences").set("Origin", origin).send({ newsletter: true });
     expect(subscribed.status).toBe(200);
-    expect(subscribed.body).toEqual({ data: { newsletter: true } });
+    expect(subscribed.body).toEqual({ data: { newsletter: true, moderation: true } });
     expect((await prisma.newsletterSubscriber.findUniqueOrThrow({ where: { email: reader.email } })).active).toBe(true);
 
     const unsubscribed = await reader.agent.patch("/api/readers/preferences").set("Origin", origin).send({ newsletter: false });
-    expect(unsubscribed.body).toEqual({ data: { newsletter: false } });
+    expect(unsubscribed.body).toEqual({ data: { newsletter: false, moderation: true } });
     expect((await prisma.newsletterSubscriber.findUniqueOrThrow({ where: { email: reader.email } })).active).toBe(false);
     expect((await reader.agent.get("/api/readers/preferences")).body.data.newsletter).toBe(false);
 

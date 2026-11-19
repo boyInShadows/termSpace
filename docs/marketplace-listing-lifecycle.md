@@ -55,14 +55,19 @@ changes.
 Completed acquisitions store the exact approved release-manifest identifier
 selected at acquisition time. Publishing a newer version updates the listing's
 public approved snapshot but never advances existing acquisition records.
-Public catalog responses omit actionable installation instructions. Authenticated
-readers add a free resource through `POST /api/marketplace/products/:slug/acquire`,
-review their paginated acquisitions through `GET /api/marketplace/library`, and
-retrieve instructions only for their pinned acquisition through
-`GET /api/marketplace/products/:slug/installation`. Installation responses are
-private/no-store, contain only the acquired release, and fail closed when the
-listing is unavailable, its source is restricted, its release is legacy, or its
-resolved URL is outside the supported GitHub/npm provider hosts.
+Installation is public (owner decision, 2026-11-11). The public release on
+`GET /api/marketplace/products/:slug` and
+`GET /api/marketplace/products/:slug/releases/:version` includes the moderated
+installation method, resolved URL, ordered steps and commands, so anyone can
+install the exact release they inspect without an account. It is withheld
+entirely (the release is `null`/404) when the listing is unpublished, the release
+is unpublished or source-restricted, or its resolved URL is outside the supported
+GitHub/npm provider hosts. Adding to the library stays authenticated: readers add
+a free resource through `POST /api/marketplace/products/:slug/acquire`, which
+records the acquisition that makes them eligible to review. They review their
+paginated acquisitions through `GET /api/marketplace/library`. The pinned
+acquisition is available through `GET /api/marketplace/products/:slug/installation`,
+which is private/no-store and fails closed under the same conditions.
 Database triggers require acquisition releases to be published releases of the
 same listing and prevent mutation of published version identity, release source,
 installation data, compatibility, permissions, requirements, and type-specific
@@ -121,7 +126,12 @@ listing-scoped PostgreSQL advisory lock. `MarketplaceListingLifecycleEvent`
 records actor type and user, previous/resulting states, action, reason code,
 public-safe reason, optional private staff note, snapshot, timestamp, and
 correlation ID. Standalone private notes use the `INTERNAL_NOTE_ADDED` action
-without changing listing state or lifecycle version. Database constraints bound
+without changing listing state or lifecycle version. Featuring a listing on the
+homepage (`POST /moderation/products/:id/featured`, moderators and administrators,
+never on one's own listing) is likewise not a transition: it sets `featured` and
+`featuredAt` and records a `FEATURED` or `UNFEATURED` event in the same
+transaction. Only a published listing can be featured; any featured listing can
+be removed. The homepage shows the three most recently featured. Database constraints bound
 private notes, while triggers make snapshots and events append-only and enforce
 same-listing snapshot, manifest, and release references.
 

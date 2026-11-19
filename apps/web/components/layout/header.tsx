@@ -95,10 +95,19 @@ export function Header() {
   useEffect(() => {
     let queued = false;
     let frame = 0;
+    let previousY = window.scrollY;
+    let previousHeight = headerRef.current!.getBoundingClientRect().height;
+    let scrollDistance = previousY;
 
     const measure = () => {
       queued = false;
-      setIsCondensed(window.scrollY > 80);
+      const y = window.scrollY;
+      const height = headerRef.current!.getBoundingClientRect().height;
+      // Scroll anchoring follows our height transition; exclude that movement from the trigger.
+      scrollDistance = y === 0 ? 0 : Math.max(0, scrollDistance + y - previousY - (height - previousHeight));
+      previousY = y;
+      previousHeight = height;
+      setIsCondensed(Math.round(scrollDistance) > 80);
     };
 
     const onScroll = () => {

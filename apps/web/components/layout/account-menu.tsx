@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { UserRound } from "lucide-react";
+import { Avatar } from "../ui/avatar";
 import { buttonVariants } from "../ui/button";
 import { cn } from "@/lib/utils";
-import { logout } from "@/lib/api";
+import { ApiError, getOwnedCreatorProfile, logout } from "@/lib/api";
+import type { OwnedCreatorProfile } from "@/lib/types";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
@@ -39,6 +40,26 @@ export function AccountMenu({ email }: { email: string }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelId = useId();
+  const [identity, setIdentity] = useState<{ email: string; profile: OwnedCreatorProfile | null } | null>(null);
+  const profile = identity?.email === email ? identity.profile : null;
+  const words = profile?.name.trim().split(/\s+/).filter(Boolean) ?? [];
+  const initials = (words.length > 1
+    ? `${Array.from(words[0])[0]}${Array.from(words[words.length - 1])[0]}`
+    : Array.from(words[0] ?? "").slice(0, 2).join("")).toUpperCase() || "?";
+
+  useEffect(() => {
+    let active = true;
+    void getOwnedCreatorProfile().then(profile => {
+      if (active) setIdentity({ email, profile });
+    }).catch(cause => {
+      if (!active) return;
+      if (!(cause instanceof ApiError && cause.code === "CREATOR_PROFILE_NOT_FOUND")) {
+        console.error("Account public profile could not load", cause);
+      }
+      setIdentity({ email, profile: null });
+    });
+    return () => { active = false; };
+  }, [email]);
 
   useEffect(() => {
     if (!open) return;
@@ -80,7 +101,7 @@ export function AccountMenu({ email }: { email: string }) {
         onClick={() => setOpen((current) => !current)}
         className={buttonVariants({ variant: "ghost", size: "icon" })}
       >
-        <UserRound size={18} aria-hidden />
+        <Avatar initials={initials} src={profile?.avatarUrl} className="size-8 font-sans text-xs" />
       </button>
       {open && (
         <div

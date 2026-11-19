@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { copy } from "../lib/i18n";
 import { creatorWorkspace } from "../features/creator/workspace-copy";
+import { draftValidationCopy } from "../features/creator/draft-validation";
 
 const content = {
   manifestVersion: 1, type: "skill",
@@ -93,10 +94,13 @@ test("the studio's edit link opens the creator profile form in Settings", async 
 
 test("a creator edits the public profile in Settings", async ({ page }) => {
   await page.goto("/dashboard/settings");
+  // The profile reads as a summary until Edit opens the form.
+  await page.getByRole("button", { name: `Edit — ${copy.en.creatorHub.editTitle}` }).click();
   await page.getByLabel(copy.en.creatorHub.name).fill("Ellis N North");
   await page.getByLabel(copy.en.creatorHub.bio).fill("Builds careful agentic coding tools for teams.");
   await page.getByRole("button", { name: copy.en.creatorHub.save, exact: true }).click();
   await expect(page.getByText(copy.en.creatorHub.saved)).toBeVisible();
+  await expect(page.getByText("Builds careful agentic coding tools for teams.")).toBeVisible();
 });
 
 test("every listing type exposes its required detail fields", async ({ page }) => {
@@ -139,7 +143,7 @@ test("structured declarations preview and save as the existing manifest", async 
   await page.goto("/dashboard/studio/listings/listing-3/edit");
   await expect(page.locator('[name="nameEn"]')).toHaveValue("Review Skill");
   for (const step of [/^About — Complete/, /^Source & install — Complete/, /^Access & details — Complete/]) await expect(page.getByRole("button", { name: step })).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Review — Incomplete/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Review — Ready to review/ })).toBeVisible();
   await page.getByRole("button", { name: /^Access & details —/ }).click();
   await page.getByText(creatorWorkspace.en.creatorDraft.moreDetails).click();
   await page.getByRole("button", { name: "Add: Environment variables" }).click();
@@ -152,8 +156,7 @@ test("structured declarations preview and save as the existing manifest", async 
   await page.getByRole("button", { name: /^Source & install —/ }).click();
   await page.locator('[name="license"]').fill("https://example.com/terms");
   await page.getByRole("button", { name: /^Review —/ }).click();
-  await page.getByRole("button", { name: "Preview listing declarations" }).click();
-  await expect(page.getByRole("button", { name: /^Review — Complete/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Review — Ready to review/ })).toBeVisible();
   await expect(page.getByRole("region", { name: "Preview listing declarations" })).toContainText("Read | write, carefully");
   const saved = page.waitForRequest((request) => request.method() === "PUT" && request.url().endsWith("/listing-3/draft"));
   await page.locator("[data-draft-actions]").getByRole("button", { name: "Save draft", exact: true }).click();
@@ -191,7 +194,7 @@ for (const locale of ["en", "fa"] as const) {
     await page.getByRole("button", { name: copy[locale].creatorDraft.save, exact: true }).click();
     await expect(page.locator('[name="categorySlug"]')).toBeFocused();
     await expect(page.locator('[name="categorySlug"]')).toBeVisible();
-    await expect(steps.getByRole("button").first()).toContainText(text.incomplete);
+    await expect(steps.getByRole("button").first()).toContainText(draftValidationCopy[locale].attention);
   });
 }
 

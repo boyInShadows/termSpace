@@ -7,5 +7,5 @@ export async function generateMetadata() {
 }
 
 export default function OnboardingPage() {
-  return <main id="content" tabIndex={-1} className="container-page py-8 sm:py-12"><div className="mx-auto max-w-2xl"><AccountOnboarding setup /></div></main>;
+  return <main id="content" tabIndex={-1} className="container-page py-8 sm:py-12"><div className="mx-auto max-w-2xl"><AccountOnboarding /></div></main>;
 }

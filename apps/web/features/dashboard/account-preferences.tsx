@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api";
 import { getEmailPreferences, setEmailPreferences, type EmailPreferences } from "@/lib/account-api";
 import { useLocale } from "@/lib/locale-context";
 import { Button } from "@/components/ui/button";
+import { SettingsPanel } from "./settings-panel";
 import { accountPreferencesCopy } from "./account-preferences-copy";
 
 type PreferenceKey = keyof EmailPreferences;
@@ -66,9 +67,7 @@ export function AccountPreferences() {
     setAttempt((value) => value + 1);
   }
 
-  return <section id="account-preferences" className="rounded-card border border-border bg-surface p-5" aria-labelledby="account-preferences-title">
-    <h2 id="account-preferences-title" className="text-xl font-semibold">{copy.title}</h2>
-    <p className="mt-2 max-w-prose text-sm text-muted-foreground">{copy.intro}</p>
+  return <SettingsPanel id="account-preferences" titleId="account-preferences-title" title={copy.title} description={copy.intro}>
 
     {state.status === "loading" ? <p role="status" className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground">{copy.loading}</p>
       : state.status === "error" ? <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-4">
@@ -102,7 +101,7 @@ export function AccountPreferences() {
 
     {busy && <p role="status" className="mt-3 text-sm text-muted-foreground">{copy.saving}</p>}
     {result && <p role={result.failed ? "alert" : "status"} className={`mt-3 text-sm ${result.failed ? "text-destructive" : "text-foreground"}`}>{result.text}</p>}
-  </section>;
+  </SettingsPanel>;
 }
 
 function PreferenceRow({
@@ -128,12 +127,12 @@ function PreferenceRow({
 }) {
   const labelId = `${id}-preference-label`;
   const helpId = `${id}-preference-help`;
-  return <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-4">
-    <div className="min-w-0 max-w-prose">
+  return <div className="flex items-center justify-between gap-4 py-4">
+    <div className="min-w-0 flex-1">
       <p id={labelId} className="text-sm font-medium">{label}</p>
       <p id={helpId} className="mt-1 text-sm text-muted-foreground">{help}</p>
     </div>
-    <div className="flex items-center gap-3">
+    <div className="flex shrink-0 items-center gap-2">
       <span className="text-sm font-medium">{checked ? onLabel : offLabel}</span>
       <button
         type="button"

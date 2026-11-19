@@ -64,7 +64,7 @@ describe("PasswordReset", () => {
     fill();
     fireEvent.click(screen.getByRole("button", { name: "Save new password" }));
     await waitFor(() => expect(confirmPasswordReset).toHaveBeenCalledWith("reset.signature", "new-password"));
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard/settings"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard/settings?section=account"));
     expect(refresh).toHaveBeenCalled();
     expect(window.location.hash).toBe("");
   });

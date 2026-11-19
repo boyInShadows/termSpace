@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, LibraryBig, Plus, UserRound, ShieldCheck, Store } from "lucide-react";
+import { LayoutGrid, LibraryBig, Plus, UserRound, ShieldCheck, Store, Ticket } from "lucide-react";
 import { libraryCopy } from "@/features/library/library-copy";
+import { supportTitle } from "@/features/support/support-entry";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { localePath } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale-context";
@@ -16,7 +17,7 @@ import { cn } from "@/lib/utils";
  * dead end `pending.md` already tracks for the footer. Add a route before you
  * add its link.
  */
-function useDashboardNav() {
+function useDashboardNav(includeSupport = false) {
   const { locale, t } = useLocale();
   const session = useMarketplaceSession();
   const canModerate = session.marketplaceRoles.includes("moderator") || session.marketplaceRoles.includes("administrator");
@@ -30,6 +31,7 @@ function useDashboardNav() {
     { href: "/dashboard/studio", label: t.navStudio, icon: Store },
     { href: "/dashboard/library", label: libraryCopy[locale].label, icon: LibraryBig },
     ...(canModerate ? [{ href: "/dashboard/moderation", label: t.moderationNav, icon: ShieldCheck }] : []),
+    ...(includeSupport ? [{ href: "/dashboard/tickets", label: supportTitle[locale], icon: Ticket }] : []),
     { href: "/dashboard/settings", label: t.profile, icon: UserRound },
   ].map((item) => ({
     ...item,
@@ -42,7 +44,7 @@ function useDashboardNav() {
 export function DashboardSidebar() {
   const { locale, t } = useLocale();
   const session = useMarketplaceSession();
-  const items = useDashboardNav();
+  const items = useDashboardNav(true);
   const initial = session.email?.charAt(0).toUpperCase() ?? "";
 
   return (

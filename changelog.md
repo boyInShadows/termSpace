@@ -2,6 +2,505 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-19 — Auto-deploy main to the VPS; merge ramtin into v.3
+
+- **Merged** `origin/ramtin` into `v.3` (fast-forward, 22 commits, 69 files): private
+  support tickets, notifications, profile and editorial UI work. Brings migration
+  `202611120001_support_text_release` (additive: new types/tables/indexes only; no
+  DROP, TRUNCATE or UPDATE) and `schema.prisma` / `package-lock.json` changes.
+- **CD.** `deploy/vps/deploy.sh` + `termspace-deploy.{service,timer}`: the VPS polls
+  `origin/main` every 2 minutes and deploys a commit only once its CI workflow is green.
+  Web e2e is **not** required: it carries the 8 known failures (four JS budgets,
+  password-reset link, hero suggestions x2, and one more) and would block every deploy;
+  owner-approved 2026-11-19. Restore it in `REQUIRED_WORKFLOWS` when e2e is clean. It dumps the DB, builds, migrates, health-checks, rolls the
+  images back on failure and prunes the Docker build cache (12.8 GB on a 38 GB disk).
+  Pull-based because the agent account cannot add Actions secrets. See
+  `docs/development.md#automatic-deployment`.
+- **CI.** `ci.yml` gained concurrency (cancels superseded PR runs, never main), a
+  `bash -n` of the deployer, and a `docker-build` job for the api and web images.
+- **CDN.** Checked, unchanged: hashed assets are `immutable` and Cloudflare-cached,
+  HTML is `no-store`. No purge step needed.
+- **Verified locally.** Typecheck, API tests (325), blog tests (45), web tests (573,
+  35 only pass with `NODE_OPTIONS=--no-experimental-webstorage` on this machine's
+  Node 26 because Node's own `localStorage` shadows jsdom's; CI uses Node 22),
+  web lint, production build. Not run locally: e2e, lhci, api-integration (PR CI).
+- **Not done.** Branch protection / required checks on `main` (needs repo admin);
+  Cloudflare purge (no token, not needed); blog deployment; deploy notifications
+  beyond `journalctl -u termspace-deploy`.
+
+## 2026-11-15 — Capture dashboard follow-ups and reconcile Ramtin queue
+
+- Recorded the owner's four requests in `docs/dashboard-follow-ups.md`: private
+  ticket bell with #0755B2 unread dot; staff-initiated member messaging, email and
+  attachments; investigate-first profile upload/shared studio image/editable name;
+  creator-scoped published-listing search/filters replacing the visible count.
+- Notification content suggestions are proposals. Added privacy, lifecycle and
+  verification acceptance without claiming implementation or a backend/database
+  investigation. Application work and deployment remain deferred.
+- Refreshed ignored `ramtin-pending.md`: consolidated identity/upload and release
+  tasks; removed stale local/uncommitted/no-push completion narratives. Ticketing/
+  sidebar implementation is already in 399edb0 and dashboard polish in 6dd1035,
+  both on origin/ramtin. Retained owner/device acceptance, release failures,
+  migration provenance and unverified production-parity work.
+- Shared surface announced before edit: `changelog.md`, for this planning handoff.
+  Other maintainer queue, application and schema files unchanged. ShadowBrain
+  project/daily/task/log pointers updated separately; local queue/vault excluded
+  from this repository commit. No extra checkout or history rewrite.
+- Verification: root typecheck/build pass; 943 tests pass/54 existing skips;
+  web lint passes with two existing warnings. Manual second-pass documentation
+  review covered all four requests, retained acceptance, links and commit scope;
+  git diff --check passes. Logs are local under
+  docs/artifacts/dashboard-follow-ups-2026-11-15/. No harness cost data available.
+  Web E2E/Lighthouse are not repeated for this documentation-only phase; recorded
+  release failures stay open. No new runtime or visual acceptance is claimed.
+
+## 2026-11-12 — Correct owner-rejected overview spacing
+
+- Earlier spacing acceptance/completion claim was too broad. Removed stacked
+  metric bottom padding/blank helper reservations, tightened label/value and
+  section gaps, and matched skeleton spacing. Existing column width now22.5rem.
+  No new tokens or unrelated panel redesign.
+- Owner screenshot matched before captures: visible metric-to-panel gap4rem;
+  after1.625rem across24 EN/FA/theme/viewport/empty/populated cases, no overflow
+  or page exceptions. Eight error/Retry/loading contexts also inspected.
+- Added rendered gap/baseline regression (failed before;16 full-suite passes,
+  plus48 repeated passes). Full run exposed an error-focus race from earlier
+  polish: focus could run before its hidden step committed. Reproduced in a
+  repeated run; moved error focus after commit and avoided heading-focus conflict.
+- Root typecheck/build/943 tests pass/54 existing skips. Final affected web checks
+  pass/573 tests; lint retains two warnings. Final production focused browser96
+  pass/14 duplicate skips. Full suite before focus correction603 pass/52 skip/
+  11 fail: reset2/search2/budgets4/reporting2/focus1. Reporting failures recur in
+  repeats; no test/budget weakening. Nine Lighthouse runs pass; detector[].
+  The error-focus case also passes20 concurrent repetitions after correction.
+- Fresh independent review accepts only the overview spacing correction for
+  local owner review, not all polish/release. Surface brief/backlog preserve the
+  correction; old release failures, physical-device/other-engine and owner visual
+  acceptance remain open. All work local; concurrent changes and normal dev
+  services preserved. [Before/after screenshots, changed files and exact limits](docs/artifacts/overview-spacing-2026-11-12/report.md).
+
+## 2026-11-12 — Implement reviewed UI polish P01–P07 locally
+
+- Unified applicable field/step completion and Next/final-save checks, normalized
+  optional blank scalars, and added adjacent localized feedback/first-error focus
+  with native disclosure opening and server-path mapping. Server field errors
+  also mark the step Needs attention and block unchecked Next until correction.
+- Kept four freely navigable steps and partial Save for later. Required essentials
+  are visible; optional groups retain native details/summary. Completed number
+  badges use existing blue, current/error states stay separate, and phone labels
+  remain visible. Review shows its summary/edit links directly. Saving still
+  creates an account draft; submission remains a separate action.
+- Aligned narrow creator setup/editor framing, simplified empty-studio guidance,
+  removed static metric hover and redundant Quick-action boxes. Existing tokens,
+  rem sizing, sidebar/mobile tabs, auth, ticketing and concurrent header/global
+  edits are preserved. No API/schema/dependency change.
+- Root typecheck/build and943 unit tests pass/54 existing API skips. Final affected
+  web checks pass/573 tests; lint has two existing warnings. Final production
+  browser run:54 functional checks pass/14 duplicate cases skip; with budgets,
+  58 pass/20 skip/two dashboard budget failures at172.9/170kB. Four focused server
+  error cases pass after reproducing/fixing the stale completed-step state.
+- Full suite before that final editor-state fix:584 pass/52 skip/10 fail (reset2,
+  hero search2, budgets4, staff queue2). Staff cases pass isolated; product budgets
+  pass the final fixture rebuild. Full suite remains red; no weakened assertions,
+  skips or budgets. All nine Lighthouse runs pass; scoped detector returns[].
+- Independent visual review accepts the scoped refinement; system comparison
+  needs no new tokens. EN/FA, both themes, phone/tablet/desktop/short/200% zoom,
+  drafts and errors checked using isolated established fixtures. Physical devices,
+  other engines and owner visual acceptance remain open. PRODUCT.md baseline
+  drift is reported without unrequested repair.
+- Shared changelog/brief changes were planned before edits. Temporary fixture
+  stopped; owner's web/API services untouched. No stage/commit/push/deploy or
+  extra checkout. [Changed files, screenshots and precise checks/limits](docs/artifacts/ui-ux-polish-2026-11-12/report.md).
+
+## 2026-11-12 — Stop header/sidebar scroll-anchoring feedback
+
+- Reproduced raw scrollY crossing80 during the header's own height animation:
+  one scroll to81 produced33 reversals in2.5 seconds, with sidebar offsets following.
+  Header scroll state now excludes measured header-height deltas from scroll
+  distance. Condensation, expansion, animation and native sticky behavior remain.
+  Initial height fallback reuses existing header-chrome dimensions, avoiding the
+  initial100/101 mismatch. No dashboard content/layout redesign or scroll reset.
+- Changed header.tsx/globals.css plus focused header unit/browser regression.
+  Dev rAF/CDP traces:33 transitions before, one intentional transition after;
+  final header/sidebar58 and no remaining height oscillation. Public production
+  header also exhibited the original loop. Initial exact recording state unknown.
+- Root typecheck/build and926 tests pass/54 skip; header16 pass. Production-browser
+  regression10 pass/two duplicate cases skip: five routes, hard refresh, client
+  navigation, delayed hydration, EN/FA, both themes, phone/tablet/desktop. All nine
+  Lighthouse runs pass unchanged assertions. Lint retains two existing warnings;
+  detector reports existing global typography/pattern flags, no new ignores.
+- Physical devices/other engines and existing full-suite failures remain open;
+  full suite was not rerun. No commit/push/deployment or unrelated edits.
+  [Evidence and precise limits](docs/artifacts/navigation-stability-2026-11-12/report.md).
+
+## 2026-11-12 — Review UI/UX polish backlog before implementation
+
+- Owner requested reviewing `docs/ui-ux-polish-backlog.md` and recommending a
+  better approach first. Updated that existing document with verified findings
+  and the suggested order; no application changes in this review.
+- Two isolated design/contract assessments plus a fixture browser confirmed
+  metric hover at zero inset, unchecked Next, required fields inside additional
+  details, optional serialization and completion-policy differences. Disclosure
+  toggling alone did not change completion. Current editor has four steps.
+- Recommend validation/normalization and inline errors first, native disclosures,
+  blue completed-number badges with visible labels, then existing-container and
+  review-summary refinements. Preserve draft semantics, tokens/rem, navigation,
+  ticketing and unrelated concurrent header edits.
+- Scoped detector clean; controlled English/light desktop pass had no browser
+  exceptions. Other locale/theme/device states and full gates await implementation.
+  Temporary fixture stopped; owner dev servers untouched. [Review evidence](docs/artifacts/ui-ux-polish-review-2026-11-12/report.md).
+
+## 2026-11-12 — Add owner-requested desktop support navigation
+
+- Added localized Support tickets with Lucide Ticket to the existing desktop
+  sidebar. Links to My tickets, marks nested ticket routes active, and retains
+  the in-page staff inbox switch. Sidebar styling and mobile tabs are unchanged.
+  Updated the plan/brief to record the owner's explicit scope change.
+- New navigation regression covers EN/FA, member/staff, nested routes and
+  unchanged mobile items. Scoped the verification-screen assertion to main now
+  that its support link also exists in the sidebar.
+- Root typecheck/build pass; 925 tests pass/54 skip; lint has two existing
+  warnings. Focused browser30 pass/two native-zoom duplicates skip. Nine
+  Lighthouse runs pass unchanged assertions; Impeccable has no findings. Four
+  locale/theme/member/staff captures inspected. Prior full-suite reset/search/
+  budget failures remain unresolved; the full suite was not repeated here.
+- All changes local. Did not restart the owner's dev servers; independently
+  started web/API processes were left untouched. [Evidence and files](docs/artifacts/ticketing-sidebar-2026-11-12/report.md).
+
+## 2026-11-12 — Local text support release; original v.3 sidebar retained
+
+- Implemented `docs/support-tickets-plan.md` Tasks 2–3: member list/create/thread,
+  verified marketplace staff inbox, replies, resolve/reopen, bounded history,
+  scoped filters/counts, atomic version conflicts and draft recovery in EN/FA.
+  Ticket discovery uses Quick actions/verification; original v.3 sidebar and
+  mobile tabs stay intact. Shared/backend surfaces were announced below before
+  editing; the owner explicitly authorized this ticketing phase.
+- Included account export/erasure, staff-content redaction, retained private-file
+  cleanup/retry and the deletion/write lock. Strict validation, CSRF, rate limits,
+  current staff grants and no-store responses remain enforced. Private API errors
+  do not log Prisma query arguments/message text. No new uploads or notifications.
+- Verified a new additive migration on a disposable DB; backed up normal local
+  data before applying the existing featured-field prerequisite and support
+  migration. Prior ledger checksums/counts unchanged; real home API now 200.
+  The first archived support migration checksum mismatch still needs provenance
+  reconciliation before rollout. No normal reset or production work.
+- Root typecheck/build pass; 921 tests pass/54 skip. Separately: 18 real PostgreSQL
+  support/account checks pass. Lint: zero errors/two existing warnings. Focused
+  browser: 22 pass/two mobile zoom duplicates skip. Full browser: 550 pass/48 skip/
+  eight existing reset/search/budget failures. Final JS: dashboard172.7/170 kB,
+  product169/165 kB, both locales; no weakened gates. Nine final Lighthouse runs
+  pass unchanged assertions via externally managed Chrome (Windows cleanup workaround).
+- Task 4 review/evidence captured: 48 localhost fixture screenshots, both themes/
+  locales at 320/390/768/1440, keyboard/conflicts and native200% zoom. Impeccable
+  scan has no findings; independent review's two typography fixes are resolved.
+  Manual second-pass code review covered API scoping/state/privacy and UI drafts.
+  Physical keyboards/safe areas, owner acceptance and red release gates remain
+  open. [Files, screenshots, commands and limits](docs/artifacts/ticketing-release-2026-11-12/report.md).
+- No staging, commit, push, deploy or additional checkout. Preserved independent
+  header/avatar/rem work, unrelated lockfile changes and the UI-polish intake.
+
+## 2026-11-12 — Restore v.3 sidebar; start the ticketing plan
+
+- Owner aborted the icon rail. Restored the exact v.3 navigation source and
+  original nominal desktop width as 15rem; removed rail-only tests/styles and
+  reversed its navigation changes. Separate header avatar work, rem preference,
+  unrelated lockfile edits and the ticketing plan are preserved. Four local
+  locale/theme captures match the original sidebar.
+- Completed Task 1's contract/retained-state audit in `docs/support-tickets-plan.md`.
+  All four old support tables and migration records remain locally, with zero
+  rows. Three SQL checksums match the archive; the first legacy migration needs
+  explicit reconciliation before later rollout. No ledger/data changes in Task 1.
+  Root typecheck/build and 900 tests pass (44 skips); lint has two existing
+  warnings. Browser baseline: 527 passed/46 skipped/nine known-area failures;
+  Lighthouse again hits Windows EPERM. Evidence: `docs/artifacts/ticketing-task1-2026-11-12/`.
+- **Owner-authorized next phase / shared surfaces announced before editing:**
+  build the plan's text-only support loop in web/API. Backend work is outside
+  Ramtin's presentation lane because the owner explicitly requests ticketing:
+  `apps/api/src/app.ts`, `validation/schemas.ts`, `middleware/security.ts`, new
+  support route/controller/access modules, readerAccountController privacy,
+  Prisma schema and a new additive migration. Web touches only ticket pages,
+  support modules and narrow shell/verification/Quick actions access. No sidebar
+  redesign, attachment/alert feature, avatar uploading, production work or push.
+
+## 2026-11-12 — Read-only local/production service comparison
+
+- Live public HTTP/source checks confirm Google and Chatwoot exist in local code
+  but are disabled by missing local configuration; production serves both.
+  Published catalogs differ: production 47, local 13. Local homepage API returns
+  500 (unknown `featuredAt`), while production returns 200. Read-only DB metadata
+  confirms the local featured migration is unapplied and its column absent;
+  the API process predates the merge and still has a stale Prisma runtime.
+- Extension discovers both signed-in tabs but inspection fails; private Network
+  panels/identities, exact production SHA and end-to-end OAuth/email/chat were not
+  verified. No app/config/data/service changes, migrations, restarts, seeds or
+  deployments. Existing work and paused feature queues remain intact.
+- Evidence and possible next steps, not executed:
+  `docs/artifacts/environment-parity-2026-11-12/report.md`. Research only; no
+  application verification suite needed or claimed for this documentation capture.
+
+## 2026-11-12 — Center the desktop rail and use owner-selected navy
+
+- **Owner correction.** Center the complete curved rail vertically in the viewport
+  below the measured global header; use scoped `#0B1C3F` in both themes. Flex auto
+  margins center it when it fits; non-shrinking content stays scrollable in short
+  windows. Existing rem sizing, routes, account control and mobile tabs are kept.
+- **Verified.** Root typecheck/build and lint pass (two existing warnings).
+  Twenty focused browser cases pass, including all twelve real 200% zoom cases;
+  twenty project-specific skips. EN/FA × light/dark localhost captures measure
+  zero centering offset and exact RGB(11,28,63). Short-window keyboard access,
+  reduced motion, tooltips, rem scaling and contrast pass (inactive icons at least
+  3.05:1, focus at least 3.24:1). Impeccable CSS scan has only its static-scan
+  limitation; rendered checks are separate. Lighthouse again stops on Windows
+  profile-cleanup EPERM. The full unit/browser suites were not repeated for this
+  CSS-only correction; prior results and unresolved failures remain in earlier entries.
+- **Handoff.** Local evidence: `docs/artifacts/dashboard-sidebar-centered-2026-11-12/`.
+  Only scoped CSS, geometry regression and surface brief changed beyond this
+  shared log. No staging, commit, push, deployment, account/upload implementation
+  or change to unrelated work. The member identity/upload queue stays for next session.
+
+## 2026-11-12 — Sidebar correction, rem preference and header identity
+
+- **Owner correction / local only.** The first rail was not visually accepted.
+  Fit the S-shouldered silhouette to the menu, using existing blue selection and
+  surface tokens without changing their values. Remove both desktop Profile icon
+  and bottom avatar; Profile remains reachable in the shared header dropdown and
+  unchanged phone tabs. No commit, push, deployment, checkout or migration.
+- **Header identity.** `account-menu.tsx` reuses Avatar and the existing owned
+  public-profile endpoint: existing image URL, otherwise first/last public-name
+  initials, with Persian and single-word support and stale-account protection.
+  ReaderUser has no public-name/image fields: missing public profiles show `?`,
+  not email initials. Actual uploads, ordinary-member names and update refresh
+  are queued in ignored `ramtin-pending.md` for the next session, not implemented.
+- **Units / documented agreement.** After explaining the existing mixed
+  documentation, saved the owner's rem preference in Codex's global instructions
+  and `apps/web/DESIGN.md`. Rail width is `5.25rem`, icons `1.375rem`; tooltip
+  geometry is converted to rem. Relative layout units and unitless SVG coordinates
+  remain appropriate. The dashboard surface brief records the moved Profile
+  access. Shared changelog records the handoff; Claude configuration is untouched.
+- **Checks.** Root typecheck/build, 906 unit tests (44 skips), lint (two existing
+  warnings), all 12 real 200% zoom scenarios pass. Full browser run: 534 passed,
+  54 skipped, ten failures. Two were test selectors matching both header/content
+  Profile links; scoped to the header and rerun successfully with all 14 focused
+  browser cases. Eight other failures remain in password reset, hero suggestions
+  and JS budgets: dashboard 173.2/170 kB, product 169/165 kB (previous rail baseline
+  172.9 and 168.6). Lighthouse again stops on Windows profile-cleanup EPERM.
+  No tests/budgets/ignores weakened. Impeccable: no changed-source flags; 20
+  unchanged header/content cramped-padding flags in rendered snapshots.
+- **Evidence / next session.** EN/FA, both themes, desktop/short/phone, focus,
+  tooltip, existing-image rendering, rem scaling and account-switch evidence:
+  `docs/artifacts/dashboard-sidebar-followup-2026-11-12/review.md`. Manual diff
+  review; unrelated lockfile edits and the ticketing draft are preserved. Owner
+  visual and real-account/device acceptance remain open. Next: member identity
+  and image uploads from the local queue; Tickets remain deferred.
+
+## 2026-11-12 — Local dashboard icon rail
+
+- **Scope / shared surface.** Owner requested a focused desktop sidebar redesign
+  on `ramtin`, with no commit/push/deployment. Application changes stay in
+  `dashboard-nav.tsx`, new `dashboard-rail.module.css` and the shell's 84px desktop
+  grid column. This shared changelog records verification only; the navigation
+  data, permissions, mobile tabs, Publish helper, global header, search,
+  notifications, authentication, public pages and token values remain unchanged.
+  Existing local lockfile edits and the untracked ticketing plan are preserved.
+- **Result.** Existing surface colors form a mirrored S-shouldered SVG rail, with
+  22px Lucide icons, 44px targets, 12px active tiles, distinct Publish and compact
+  profile shortcut. One hoverable portal tooltip supplies localized labels,
+  keyboard focus and Escape dismissal without scroll clipping. Header-relative
+  stickiness, short-window scrolling and immediate reduced-motion feedback remain
+  usable. No dependencies or Tickets work added.
+- **Verified.** Root typecheck/build, 900 unit tests (44 skips), lint (two existing
+  warnings), six focused browser checks and all 12 real 200% zoom scenarios pass.
+  Full Playwright: 534 passed, 52 skipped, eight pre-existing failures (password
+  reset, hero suggestions, four JS budgets). Dashboard JS is 172.9/170 kB versus
+  172.2 baseline; product stays 168.6/165 kB. Lighthouse again stops on Windows
+  profile cleanup `EPERM`; budgets/tests are unchanged. Impeccable finds no changed
+  source anti-patterns; two captured pages retain 20 unchanged header/content
+  cramped-padding findings. Local fixture captures cover EN/FA, both themes,
+  desktop/400px-height/phone, focus and tooltips; icon/focus/text contrast passes.
+- **Evidence / acceptance.** Local report and screenshots:
+  `docs/artifacts/dashboard-sidebar-2026-11-12/review.md`. Real accounts/devices,
+  assistive technology and owner visual acceptance remain open. Manual diff
+  review; no additional checkout, staging, commit, push or deployment in this task.
+
+## 2026-11-12 — Merge v.3 into ramtin
+
+- **Owner request.** Complete the existing pull from `v.3` (`ab28807`) into
+  `ramtin`. Accept the incoming versions of `apps/web/styles/globals.css` and
+  this changelog for both conflicts, then add this verification record. Preserve
+  the automatically merged local search-focus regression. No application edits
+  beyond the requested merge; local `package-lock.json` edits and the untracked
+  `docs/support-tickets-plan.md` are excluded from the commit.
+- **Shared surfaces.** The incoming merge includes Prisma schema/migration,
+  web types/translations, `pending.md` and this changelog. These are named in
+  the merge commit body. No pending-queue item was implemented in this task.
+- **Verification.** Root typecheck, root production build and all 894 unit tests
+  pass (44 skipped); web lint passes with two existing warnings. Prisma client
+  types refreshed; generation reported a Windows engine-DLL replacement lock
+  from the running API. No database migration was applied. Manual merge review
+  confirms zero unmerged paths, incoming CSS unchanged, and only the local
+  search-focus test plus this record differ from the incoming tree.
+- **Open push gates.** Playwright: 527 passed, 46 skipped, 9 failed. Failures:
+  password-reset navigation (desktop/mobile), empty catalog filter recovery,
+  search-suggestion expectations (desktop/mobile), and four JS budgets:
+  dashboard 172.2/170 kB and product 168.6/165 kB in EN/FA. Lighthouse stops on
+  Windows temporary-profile cleanup `EPERM`. Budgets and tests remain unchanged.
+  Evidence: local `docs/artifacts/merge-v3-*.log` (not committed). Push requires
+  passing gates or an explicit owner exception; no exception assumed.
+
+## 2026-11-11 — Installation is public: anyone can install a release without an account
+
+- **Owner decision.** Installing no longer requires an account or a library entry. This reverses "Public catalog
+  responses omit actionable installation instructions" in `docs/marketplace-listing-lifecycle.md`; that doc and
+  `docs/product-direction.md` are updated.
+- **Shared surfaces (announce in commit body):** `apps/web/lib/types.ts` (`ProductRelease.installation` now carries
+  `instructions` and optional `commands`), `apps/web/lib/i18n/product-page.ts` (`installNote`), `changelog.md`. No
+  schema or migration change.
+- **API.** `findPublicRelease`, used by `GET /products/:slug` and `GET /products/:slug/releases/:version`, now
+  returns the moderated installation steps and commands with the method and resolved URL. The fail-closed gates are
+  unchanged: published listing, published release, available source status, trusted GitHub/npm URL; otherwise the
+  release is `null` or 404. `GET /products/:slug/installation` (pinned acquisition, private/no-store) is unchanged.
+  Stored commands are re-checked against the manifest's `installCommand` schema on the way out of both endpoints,
+  and malformed entries are dropped.
+- **Product page.**
+  - A primary *Install vX* button works for everyone and opens the install dialog for the release being inspected,
+    including an older version chosen in the picker.
+  - *Add vX to library* is now a separate secondary button. Signed-out visitors are sent to log in, as before. For a
+    reader who already has it, the button becomes a link to the library: *In your library · vX*.
+  - Library entries stay pinned. A reader opening a listing they hold sees the picker switch to their library
+    version, so the page's facts and *Install* agree, and installs it as *Install acquired release*. Picking another
+    version installs that version's public release. When the listing has no public release left, the pinned one
+    still installs.
+  - Library state is keyed by account, so a sign-out or account switch never shows another reader's entry. After
+    *Add* or `ALREADY_IN_LIBRARY`, the pinned entry is refetched. Lookup failures other than not-held or restricted
+    are logged.
+  - Adding to the library no longer opens the dialog automatically.
+  - The dialog takes a release, so the public and pinned views share one component. It hides the steps heading when
+    a release declares no steps.
+- **Verified.** Root typecheck. Lint: 0 errors. Unit tests: API 318, web 531, blog 45. Playwright (mock build,
+  desktop + mobile): catalog (including a new signed-out install test covering an older version),
+  dashboard-library (pinned install), persian, dashboard-capabilities and reporting. The only failure was the
+  existing reporting case-ordering test. Rendered EN light at 1280 and FA dark at 375: no page overflow, and Latin
+  commands and steps stay left-to-right.
+- **Review.** `/code-review` (medium): 9 findings fixed (pinning vs picker, cross-account state, pinned release
+  hidden when the newest release is withheld, pinned release not refetched after add/already-held, silenced lookup
+  errors, unchecked public JSON commands, the lost fail-closed leak assertion, loose library state). 1 dismissed:
+  the extra signed-in `/installation` request per view existed before this change.
+- **Existing budget overage, not from this change.** `/products/conversion-copywriter` first-load JS is 168.3 kB gz
+  at `a8e25cb` and 168.4 kB with this change, against a 165 kB gate. An earlier pass at `a8e25cb` measured the page
+  before it was ready. The gate stays at 165 (ratchet); the overage needs its own fix.
+- **Not done.** Anonymous installs are not counted (acquisitions still are). Native Persian review of the new strings.
+
+## 2026-11-11 — Profile settings: one section at a time, settings as summary rows
+
+- **Scope / shared surfaces (announce in commit body).** `changelog.md` only. No API, schema or `lib/i18n/` change. The
+  route stays `/dashboard/settings`; it is now wrapped in `Suspense` because it reads `?section=`.
+- **Sections.** The 4,589 px scroll (desktop, creator persona) becomes five sections shown one at a time: Profile,
+  Account & security, Notifications, Connections (creator role only) and Data & privacy. The section is URL state
+  (`?section=account|notifications|connections|privacy`; Profile has no parameter, and unknown values fall back to it).
+  `SettingsNav` is a sticky icon rail from `lg` and a sideways-scrolling chip row on phones. Links carry
+  `aria-current="page"`, and the active chip is scrolled into the row without moving the page. Inactive sections stay
+  mounted but `hidden`, so typed input and the single reader-profile request survive switching. Each section now fits
+  in roughly one viewport (900–990 px at 1280×900).
+- **Summary rows.** New `SettingRow`/`SettingRows` in `settings-panel.tsx`, in two forms: label + current value, or
+  label + description for action rows. Forms open on demand under their row, start with focus in the first field,
+  have Cancel, and return focus to their trigger on close or save.
+  - Creator profile: a summary, opened with *Edit*. `#creator-profile` (the studio link) opens it straight into edit.
+  - Email, password, sign-in method and member date share one *Sign-in* panel; *Change* opens each form.
+  - Sessions: *This device* and *Other devices* rows.
+  - GitHub and npm: rows showing status, with *Connect* opening the token form (help text inside the form).
+  - Data & privacy: *Download your data* row, and a *Danger zone* panel with the delete row. The retention and creator
+    notes moved into the opened delete form.
+- **Onboarding answers removed from Profile (owner decision).** The *About you* panel is gone, and Settings no
+  longer requests `/api/readers/onboarding`. The answers are collected once, by first-run `/onboarding`, and can no
+  longer be edited anywhere. API and stored data are unchanged.
+  - `AccountOnboarding` is now first-run only: its unused Profile edit mode, the `setup` prop and the unused copy
+    keys (`profileTitle`, `save`, `saved`) are deleted.
+  - The first-run privacy line no longer promises "update them anytime in Dashboard → Profile". It now says the
+    answers are private and only used to suggest a starting point, in both languages.
+- **Deep links updated** to land on their section: the release-manager and studio "connect source" links go to
+  `?section=connections`; the email-change confirmation link and the post-reset redirect go to `?section=account`.
+- **Implementation note.** The unlayered `* { border-color }` reset in `globals.css` outranks Tailwind border-colour
+  utilities. The nav therefore drops border *width* at `lg` instead of recolouring it.
+- **Verified.** Root typecheck. Lint: 0 errors (2 existing warnings). Production build. Unit tests: 889/889 with
+  `NODE_OPTIONS=--no-experimental-webstorage`; without it, the same three untouched files fail on the known Node 26
+  `localStorage` quirk. Playwright (mock build, local Chrome, desktop + mobile): all account-security, -data,
+  -preferences, email-change, dashboard-capabilities, dashboard-repairs, context-help, browser-zoom (incl. FA 200%),
+  shared-navigation and transport onboarding specs pass (178 + 10). In a wider run, the only failure was the existing
+  hero-search suggestion test (homepage, untouched). Rendered by hand in EN/FA, light/dark, at 375/640/1280.
+  Keyboard: every chip and opened form keeps its focused control in view, with no horizontal page overflow.
+- **Not done.** `lhci` (`/`, `/dashboard` and product pages are unchanged). Native Persian review of the new strings
+  (حساب و امنیت، اعلان‌ها، منطقهٔ خطر، …).
+- **Review and deploy.** `/code-review` (medium) ran before push; its findings and their dispositions are listed in the
+  commit body. Fixed:
+  - `#creator-profile` reopened the form after every save; it now opens once per page load.
+  - Focus now returns to the row's action after Cancel, Connect or Disconnect (provider connections) and after Cancel
+    on delete account.
+  - The deletion keeps/creator notes are visible again before the form opens.
+  - A sign-out error no longer sits in the non-shrinking action box.
+  - The duplicated focus-return code is now one `useReturnFocus` hook.
+  - Provider connections uses `SettingsPanel` instead of a hand-built header.
+  - Persian "رمز عبور" is used consistently.
+  Regression tests cover the first three. Deployed to the termspace box with `/root/DEPLOY-NOTES.md`'s procedure. No API or migration change
+  since the server's `44d542e`.
+
+## 2026-11-10 — Profile (`/dashboard/settings`) regrouped, with a section index and one panel frame
+
+- **Scope / shared surfaces (announce in commit body).** `changelog.md` only. No API, route, schema or `lib/i18n/`
+  change; new settings strings live in `features/dashboard/account-settings-copy.ts` like the other `account-*-copy.ts`.
+- **Structure.** The ten unordered panels are now five groups (`h2`, anchors `#profile`, `#account`, `#preferences`,
+  `#connections`, `#data`): Profile (creator profile, profile details), Account (email, account security, sessions),
+  Preferences, Connections (creator role only) and Data and privacy (export, then delete). A section index
+  (`settings-panel.tsx`) is a sticky column from `lg` and a wrapping row on phones; it marks the current group with
+  `aria-current="location"` and uses the global `scroll-padding-top`. The header shows the creator avatar/name/handle.
+  `#creator-profile` and `#account-preferences` deep links are unchanged.
+- **Panels.** One frame (`rounded-card`, `p-5 sm:p-6`, `h3` + description) replaces the mix of square and rounded
+  boxes. Save/error status sits beside its button. Email shows the current address; its change form opens from
+  *Change email address* and closes after the link is sent. Delete account keeps its explanation visible and opens the
+  confirmation from *Delete this account…*; confirmation and re-auth logic are untouched. Sign out moved into a Sessions
+  panel next to *Sign out other devices*. Creator profile: name and handle side by side from `sm`, live avatar preview
+  (same GitHub-host pattern as the server). Password fields stay open. Preference switches no longer wrap below their
+  label. Provider connections use the shared `Input`.
+- **Removed.** The Explore / Open Studio link row under Profile details in Settings: the dashboard sidebar and tab bar
+  already carry both. The `/onboarding` setup flow is unchanged.
+- **Verified.** Root typecheck (after `prisma:generate`), lint (0 errors), production build. Web tests: all settings,
+  account, dashboard and onboarding suites pass. Failing files are outside this change: `header`, `console-search` and
+  `creator-draft-editor-ui` (the known Node 26 `localStorage` quirk). Playwright (desktop + mobile, mock build, local
+  Chrome): 503 passed. Every settings, account, email-change, security, preferences, browser-zoom and studio deep-link
+  spec passes. Failures outside this change: the hero-search suggestion test; `reporting` case ordering; and the
+  `/dashboard` 170 kB first-load budget at 172.2 kB. Settings code is in none of `/dashboard`'s seven first-load
+  scripts, so that overage comes from the `main` merge. Rendered by hand: EN/FA, light/dark, 375/768/1280. No
+  horizontal overflow; every index link lands under the header and is marked current; opening *Change email* focuses
+  the new-address field.
+- **Not done.** `lhci`; native Persian review of the new group labels (پروفایل، حساب، تنظیمات، اتصال‌ها، داده‌ها و حریم
+  خصوصی، نشست‌ها); `/code-review` before push.
+
+## 2026-11-09 — Homepage featured shelf, controlled from moderation
+
+- **Scope / shared surfaces (announce in commit body).** New migration `202611090005_marketplace_homepage_featured`,
+  `apps/api/prisma/schema.prisma`, `lib/types.ts`, `lib/i18n/moderation.ts`, `changelog.md`, `pending.md`.
+- **What.** The homepage shelf was always empty because nothing could set `featured`. The moderation preview now has a
+  "Homepage shelf" section: *Feature on homepage* / *Remove from homepage*. `POST /moderation/products/:id/featured`
+  (moderator or administrator; not on one's own listing; stale-page guard on the listing version; only a published
+  listing can be featured, any featured one can be removed; repeating the current state is a no-op with no event).
+- **Audit and order.** `FEATURED` / `UNFEATURED` lifecycle events are written with the change. `featuredAt` orders the
+  shelf, most recently featured first, three shown. Creator dashboards do not list these events.
+- **Search focus follow-up.** The first fix did not show a focus cue: the unlayered `* { border-color }` reset in
+  `globals.css` beats every Tailwind border-colour utility (site-wide, left as is). Search bars now use one
+  `.search-field:focus-within` rule that turns the field border primary.
+- **Verified.** typecheck, lint (0 errors), API tests (318) and web tests incl. new featured tests.
+
+## 2026-11-09 — Search bars: one quiet focus state, no invented suggestions
+
+- **Scope / shared surfaces (announce in commit body).** `lib/i18n/home.ts` (removed `typedIntents`, `popularSearches`), `changelog.md`.
+- **Focus.** The global unlayered `:focus-visible` outline beat Tailwind's layered `focus:outline-none`, so every search
+  field drew a square outline inside its own ring and border. All search fields (home hero and band, 404/status page,
+  dashboard, explore, library, moderation, design showroom) now use `focus-visible:outline-none!` and let the field's
+  own border turn primary; the extra `ring-2` is gone. The general `Input` still has its ring (not a search bar).
+- **Suggestions.** The "Popular searches" list was invented copy. Removed; only the visitor's own recent searches
+  (stored in their browser) are offered, and nothing opens when there is no history.
+- **Verified.** typecheck, lint (0 errors), production build (utility emitted with `!important`), web tests 517 pass
+  (the one `creator-draft-editor-ui` storage failure is the known Node 26 quirk).
+
 ## 2026-11-09 — TermBuddy mascot and optional creator avatar
 
 - **Scope / shared surfaces (announce in commit body).** New migration `202611090004_marketplace_creator_avatar`,

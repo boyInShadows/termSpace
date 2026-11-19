@@ -6,7 +6,7 @@ import { ReleaseFacts } from "./release-facts";
 const release: ProductRelease = {
   version: "2.3.0", reviewedAt: "2026-10-02T00:00:00.000Z", current: false,
   source: { kind: "npm", url: "https://registry.npmjs.org/@acme/tool", ref: "2.3.0", path: null, integrityDigest: "sha512-abc", artifactSizeBytes: null, status: "verified", checkedAt: null },
-  installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-2.3.0.tgz" },
+  installation: { method: "npm", url: "https://registry.npmjs.org/@acme/tool/-/tool-2.3.0.tgz", instructions: [] },
   permissions: [
     { capability: "filesystem_read", required: true, scope: null, destinations: [], purpose: "Reads files" },
     { capability: "network_access", required: false, scope: null, destinations: ["api.acme.test"], purpose: "Fetches data" },

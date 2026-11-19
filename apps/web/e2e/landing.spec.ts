@@ -7,6 +7,33 @@ function featuredSection(page: Page) {
 }
 
 test.describe("landing", () => {
+  for (const locale of ["en", "fa"]) for (const theme of ["light", "dark"]) {
+    test(`search uses one pill-shaped focus indicator (${locale}/${theme})`, async ({ page, context }) => {
+      await context.addInitScript((theme) => localStorage.setItem("theme", theme), theme);
+      await page.goto(locale === "fa" ? "/fa" : "/");
+      await expect(page.locator("html")).toHaveClass(new RegExp(`\\b${theme}\\b`));
+      const search = page.getByRole("combobox");
+      const wrapper = search.locator("..");
+      const idleBorder = await wrapper.evaluate((node) => getComputedStyle(node).borderColor);
+      await search.click();
+      await expect(search).toHaveCSS("outline-style", "none");
+      await expect(wrapper).toHaveCSS("box-shadow", "none");
+      await expect.poll(() => wrapper.evaluate((node) => getComputedStyle(node).borderColor)).not.toBe(idleBorder);
+      await page.keyboard.press("Shift+Tab");
+      await page.keyboard.press("Tab");
+      await expect(search).toBeFocused();
+      await expect(search).toHaveCSS("outline-style", "none");
+      await expect(wrapper).toHaveCSS("box-shadow", "none");
+      await search.fill("agent");
+      await expect(search).toHaveValue("agent");
+      await page.keyboard.press("Tab");
+      await expect(page.locator(":focus")).toHaveAttribute("type", "submit");
+      await expect(page.locator(":focus")).toHaveCSS("outline-style", "solid");
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL(new RegExp(`${locale === "fa" ? "/fa" : ""}/explore\\?q=agent$`));
+    });
+  }
+
   test("featured listings share the first screen with the search", async ({ page }, testInfo) => {
     test.skip(isMobile(testInfo.project.name), "Phones stack the shelf below the fold by design.");
     await page.setViewportSize({ width: 1440, height: 800 });

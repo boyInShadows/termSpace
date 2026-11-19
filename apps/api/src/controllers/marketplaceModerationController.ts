@@ -115,7 +115,7 @@ export async function getMarketplaceModerationPreview(req: Request, res: Respons
     where: { id: String(req.params.id) },
     select: {
       id: true, slug: true, name: true, type: true, itemType: true, lifecycleState: true,
-      lifecycleVersion: true, published: true, updatedAt: true,
+      lifecycleVersion: true, published: true, featured: true, updatedAt: true,
       creator: { select: { id: true, name: true, handle: true, ownerUserId: true } },
       proposedSnapshot: { select: {
         id: true, revision: true, schemaVersion: true, digestSha256: true, content: true, createdAt: true,
@@ -159,6 +159,7 @@ export async function getMarketplaceModerationPreview(req: Request, res: Respons
     state: product.lifecycleState.toLowerCase(),
     version: product.lifecycleVersion,
     published: product.published,
+    featured: product.featured,
     updatedAt: product.updatedAt,
     selfOwned: product.creator.ownerUserId === res.locals.reader.id,
     creator: { id: product.creator.id, name: product.creator.name, handle: product.creator.handle },
@@ -286,6 +287,55 @@ export async function moderateMarketplaceCommunityPlacement(req: Request, res: R
       return next;
     });
     res.json({ data: { ...updated, state: updated.state.toLowerCase(), correlationId } });
+  } catch (error) {
+    if (error instanceof ModerationRequestError) {
+      res.status(error.status).json({ error: { code: error.code, message: error.message } });
+      return;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Features or unfeatures a published listing on the homepage shelf. The change and its audit event are written
+ * together; asking for the state the listing is already in is a no-op (no event), so a double click is harmless.
+ */
+export async function setMarketplaceListingFeatured(req: Request, res: Response) {
+  const productId = String(req.params.id);
+  const userId = res.locals.reader.id as string;
+  const actorType = res.locals.reader.marketplaceRoles.includes("administrator") ? "ADMINISTRATOR" : "MODERATOR";
+  const wanted = req.body.featured as boolean;
+  const correlationId = randomUUID();
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${productId}, 2))`;
+      const product = await tx.marketplaceProduct.findUnique({
+        where: { id: productId },
+        select: { id: true, published: true, lifecycleState: true, lifecycleVersion: true, featured: true, approvedSnapshotId: true, creator: { select: { ownerUserId: true } } },
+      });
+      if (!product) throw new ModerationRequestError(404, "LISTING_NOT_FOUND", "Marketplace listing not found");
+      if (product.creator.ownerUserId === userId) throw new ModerationRequestError(403, "SELF_MODERATION_FORBIDDEN", "Staff cannot feature a listing they own");
+      if (product.lifecycleVersion !== req.body.expectedVersion) throw new ModerationRequestError(409, "LISTING_VERSION_CONFLICT", "The listing changed; reload it before changing the homepage");
+      if (wanted && !(product.published && product.lifecycleState === "PUBLISHED")) throw new ModerationRequestError(409, "LISTING_NOT_PUBLISHED", "Only a published listing can be featured");
+      if (product.featured === wanted) return { featured: product.featured, changed: false };
+      await tx.marketplaceProduct.update({ where: { id: productId }, data: { featured: wanted, featuredAt: wanted ? new Date() : null } });
+      await tx.marketplaceListingLifecycleEvent.create({
+        data: {
+          productId,
+          snapshotId: product.approvedSnapshotId,
+          previousState: product.lifecycleState,
+          resultingState: product.lifecycleState,
+          action: wanted ? "FEATURED" : "UNFEATURED",
+          actorType,
+          actorUserId: userId,
+          reasonCode: wanted ? "FEATURED" : "UNFEATURED",
+          internalNote: req.body.internalNote,
+          correlationId,
+        },
+      });
+      return { featured: wanted, changed: true };
+    });
+    res.json({ data: { ...result, correlationId: result.changed ? correlationId : null } });
   } catch (error) {
     if (error instanceof ModerationRequestError) {
       res.status(error.status).json({ error: { code: error.code, message: error.message } });

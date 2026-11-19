@@ -72,7 +72,8 @@ for (const [width, height] of [[1280, 900], [1920, 1080], [2560, 1440]]) {
           await expect(page.locator("#dashboard-search")).toBeFocused();
           await expect.poll(() => focusedControlIsVisible(page)).toBe(true);
 
-          const first = route.endsWith("/settings") ? page.locator('main input[type="password"]').first()
+          // Settings forms open on demand, so walk from the section links through the summary rows.
+          const first = route.endsWith("/settings") ? page.locator("main nav a").first()
             : route.endsWith("/saved") ? page.locator('main a[href*="/products/"]').first() : null;
           if (first) {
             await first.focus();

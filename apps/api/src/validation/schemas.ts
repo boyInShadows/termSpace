@@ -258,6 +258,14 @@ export const reviewVisibilitySchema = z.object({
   reason: z.string().trim().min(5).max(500).optional(),
 }).strict().refine((value) => value.action === "restore" || Boolean(value.reason), { message: "A reason is required to hide a review", path: ["reason"] });
 
+// Homepage shelf: staff feature or unfeature a published listing. Not a lifecycle transition, so it carries the
+// listing's current version only as a stale-page guard.
+export const moderatedFeaturedSchema = z.object({
+  expectedVersion: z.number().int().min(0),
+  featured: z.boolean(),
+  internalNote: z.string().trim().min(2).max(4000).optional(),
+}).strict();
+
 export const moderationNoteSchema = z.object({
   expectedVersion: z.number().int().min(0),
   note: z.string().trim().min(2).max(4000),
@@ -344,3 +352,23 @@ export const commentSchema = z.object({
   body: z.string().trim().min(3).max(2000),
   website: z.string().max(200).optional(),
 });
+
+export const supportCategorySchema = z.enum(["TECHNICAL", "LISTING", "GENERAL"]);
+export const supportStatusSchema = z.enum(["WAITING_FOR_SUPPORT", "WAITING_FOR_MEMBER", "RESOLVED"]);
+export const supportCreateSchema = z.object({
+  category: supportCategorySchema,
+  subject: z.string().trim().min(1).max(120),
+  message: z.string().trim().min(1).max(5000),
+}).strict();
+export const supportReplySchema = z.object({
+  message: z.string().trim().min(1).max(5000),
+  version: z.number().int().min(0),
+}).strict();
+export const supportResolveSchema = z.object({ version: z.number().int().min(0) }).strict();
+export const supportListSchema = z.object({
+  q: z.string().trim().max(120).optional(),
+  category: supportCategorySchema.optional(),
+  status: supportStatusSchema.optional(),
+  page: z.coerce.number().int().min(1).max(10000).default(1),
+}).strict();
+export const supportMessagesSchema = z.object({ before: routeIdSchema.optional() }).strict();

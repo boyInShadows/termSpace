@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ContextHelp } from "@/components/ui/context-help";
 import type { HelpTopic } from "@/components/ui/context-help-copy";
+import { draftRowPath } from "./draft-validation";
 
 type Column = { label: string; type?: "checkbox" | "url"; optional?: boolean; options?: string[] };
 
@@ -24,7 +25,7 @@ export function DeclarationRows({ name, label, help, hint, columns, initialRows,
   const [rows, setRows] = useState(() => initialRows.length ? initialRows : required ? [columns.map(() => "")] : []);
   function update(next: string[][]) { setRows(next); onChange(); }
 
-  return <fieldset className="min-w-0 border-t py-4">
+  return <fieldset className="min-w-0 border-t py-4" data-draft-optional-group={!required || undefined}>
     <legend className="w-full text-sm font-semibold"><span className="flex min-h-11 items-center justify-between gap-2"><span>{label}{required && <span aria-hidden="true"> *</span>}</span>{help && <ContextHelp label={label} topic={help} />}</span></legend>
     {hint && <p className="mb-3 text-xs text-muted-foreground">{hint}</p>}
     <input type="hidden" name={name} value={JSON.stringify(rows)} />
@@ -33,11 +34,11 @@ export function DeclarationRows({ name, label, help, hint, columns, initialRows,
         const fieldId = `${id}-${rowIndex}-${columnIndex}`;
         const value = row[columnIndex] ?? "";
         const change = (next: string) => update(rows.map((item, index) => index === rowIndex ? item.map((cell, col) => col === columnIndex ? next : cell) : item));
-        return <div key={columnIndex}>
+        return <div key={columnIndex} data-draft-feedback>
           <label htmlFor={fieldId} className="mb-2 block text-sm font-medium">{column.label}</label>
           {column.type === "checkbox" ? <input id={fieldId} className="size-6" type="checkbox" checked={value === "true"} onChange={(event) => change(String(event.target.checked))} />
-            : column.options ? <select id={fieldId} className="min-h-11 w-full border bg-surface px-3 text-base" required={!column.optional} value={value} onChange={(event) => change(event.target.value)}><option value="">{copy.choose}</option>{column.options.map((option) => <option key={option} value={option}>{option.replaceAll("_", " ")}</option>)}</select>
-              : <Input id={fieldId} type={column.type ?? "text"} pattern={column.type === "url" ? "https://.+" : undefined} required={!column.optional} value={value} onChange={(event) => change(event.target.value)} dir="auto" />}
+            : column.options ? <select id={fieldId} data-draft-path={draftRowPath(name, rowIndex, columnIndex)} className="min-h-11 w-full border bg-surface px-3 text-base" required={!column.optional} value={value} onChange={(event) => change(event.target.value)}><option value="">{copy.choose}</option>{column.options.map((option) => <option key={option} value={option}>{option.replaceAll("_", " ")}</option>)}</select>
+              : <Input id={fieldId} data-draft-path={draftRowPath(name, rowIndex, columnIndex)} type={column.type ?? "text"} pattern={column.type === "url" ? "https://.+" : undefined} required={!column.optional} value={value} onChange={(event) => change(event.target.value)} dir="auto" />}
         </div>;
       })}</div>
       <Button type="button" size="sm" variant="secondary" disabled={required && rows.length === 1} onClick={() => update(rows.filter((_, index) => index !== rowIndex))}>{copy.removeRow} {rowIndex + 1}</Button>

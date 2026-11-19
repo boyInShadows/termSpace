@@ -6,6 +6,7 @@ import { DashboardCard } from "./dashboard-card";
 import { savedCopy } from "@/features/library/saved-copy";
 import { libraryCopy } from "@/features/library/library-copy";
 import { ContextHelp } from "@/components/ui/context-help";
+import { supportTitle } from "@/features/support/support-entry";
 
 /** Ghost rows only — the sidebar's Publish is the page's one primary button. */
 export function QuickActions() {
@@ -17,6 +18,7 @@ export function QuickActions() {
     { label: libraryCopy[locale].quickAction, href: "/dashboard/library" },
     { label: savedCopy[locale].title, href: "/dashboard/library/saved" },
     { label: t.profile, href: "/dashboard/settings" },
+    { label: supportTitle[locale], href: "/dashboard/tickets" },
   ];
 
   return (
@@ -26,7 +28,7 @@ export function QuickActions() {
           <li key={item.href}>
             <Link
               href={localePath(item.href, locale)}
-              className="flex min-h-10 items-center justify-between gap-3 rounded-control border border-border px-3 text-sm transition-colors hover:border-border-strong hover:bg-surface-raised"
+              className="flex min-h-11 items-center justify-between gap-3 rounded-nav px-3 text-sm transition-colors duration-(--duration-hover) hover:bg-surface-raised"
             >
               {item.label}
               <span aria-hidden className="font-mono text-muted-foreground rtl:-scale-x-100">↗</span>

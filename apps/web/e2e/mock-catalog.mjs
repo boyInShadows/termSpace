@@ -155,7 +155,11 @@ export function releaseOf(slug, version) {
       kind: "github_repository", url: `https://github.com/termspace-fixtures/${product.slug}`, ref,
       path: null, integrityDigest: current ? null : older.digest, artifactSizeBytes: null, status: "verified", checkedAt: product.updatedAt,
     },
-    installation: { method: "git", url: `https://github.com/termspace-fixtures/${product.slug}/archive/${ref}.tar.gz` },
+    installation: {
+      method: "git", url: `https://github.com/termspace-fixtures/${product.slug}/archive/${ref}.tar.gz`,
+      instructions: [`Clone the repository at ${ref}.`, "Copy the skill folder into your agent's skills directory."],
+      commands: [{ os: "any", command: `git clone https://github.com/termspace-fixtures/${product.slug}.git` }],
+    },
     permissions: current ? [{ capability: "filesystem_read", required: true, scope: "The current selection", destinations: [], purpose: "Reads the diff it reviews." }] : older.permissions,
     environment: [],
     license: "MIT",

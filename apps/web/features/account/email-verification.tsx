@@ -7,6 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { useLocale } from "@/lib/locale-context";
 import { localePath } from "@/lib/i18n";
 import { useMarketplaceSession } from "./marketplace-session";
+import { supportTitle } from "@/features/support/support-entry";
 
 type VerificationState = "idle" | "verifying" | "invalid" | "mismatch" | "error";
 
@@ -94,6 +95,7 @@ export function EmailVerification() {
     <p className="mt-3 text-muted-foreground" role="status" aria-live="polite">{message}</p>
     {resent && <p className="mt-3 text-sm text-primary" role="status">{t.verificationSent}</p>}
     <div className="mt-7 flex flex-wrap gap-3">
+      {session.email && <Link href={localePath("/dashboard/tickets", locale)} className={buttonVariants({ variant: "secondary" })}>{supportTitle[locale]}</Link>}
       {session.email && !session.emailVerified && state !== "verifying" && <Button onClick={resend} disabled={resending || resent}>{resending ? t.wait : t.resendVerification}</Button>}
       {state === "mismatch" && <Button disabled={signingOut} onClick={logOutAndContinue}>{signingOut ? t.wait : t.logOutAndContinue}</Button>}
       {(state === "invalid" || !session.email) && <Link className={buttonVariants()} href={localePath("/account", locale)}>{t.signIn}</Link>}

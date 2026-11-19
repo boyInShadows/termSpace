@@ -71,43 +71,29 @@ describe("ConsoleSearch", () => {
     expect(screen.getByRole("button", { name: "Prompts" })).toBeInTheDocument();
   });
 
-  it("offers popular queries on focus and fills the field with one", async () => {
+  it("invents no suggestions: focusing an empty field with no history opens nothing", async () => {
     const user = userEvent.setup();
     render(<ConsoleSearch />);
-    const field = screen.getByRole("combobox");
-
+    await user.click(screen.getByRole("combobox"));
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(screen.queryByText(/popular searches/i)).not.toBeInTheDocument();
+  });
+
+  it("offers this browser's recent searches on focus and fills the field with one", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem("termspace:recent-searches", JSON.stringify(["audit a migration"]));
+    render(<ConsoleSearch />);
+    const field = screen.getByRole("combobox");
     await user.click(field);
-
-    const listbox = await screen.findByRole("listbox", {
-      name: "Popular searches",
-    });
-    const suggestion = screen.getByText(
-      "review my pull request like a staff engineer",
-    );
-    await user.click(suggestion);
-
-    expect(field).toHaveValue("review my pull request like a staff engineer");
+    const listbox = await screen.findByRole("listbox", { name: "Recent searches" });
+    await user.click(screen.getByText("audit a migration"));
+    expect(field).toHaveValue("audit a migration");
     expect(listbox).not.toBeInTheDocument();
   });
 
-  it("prefers this browser's recent searches over the popular list", async () => {
+  it("navigates, selects and dismisses recent searches with the keyboard", async () => {
     const user = userEvent.setup();
-    window.localStorage.setItem(
-      "termspace:recent-searches",
-      JSON.stringify(["audit a migration"]),
-    );
-    render(<ConsoleSearch />);
-
-    await user.click(screen.getByRole("combobox"));
-    expect(
-      await screen.findByRole("listbox", { name: "Recent searches" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("audit a migration")).toBeInTheDocument();
-  });
-
-  it("navigates, selects and dismisses suggestions with the keyboard", async () => {
-    const user = userEvent.setup();
+    window.localStorage.setItem("termspace:recent-searches", JSON.stringify(["audit a migration"]));
     render(<ConsoleSearch />);
     const field = screen.getByRole("combobox");
     await user.click(field);
@@ -115,7 +101,7 @@ describe("ConsoleSearch", () => {
     const selected = screen.getByRole("option", { selected: true });
     expect(field).toHaveAttribute("aria-activedescendant", selected.id);
     await user.keyboard("{Enter}");
-    expect(field).toHaveValue("review my pull request like a staff engineer");
+    expect(field).toHaveValue("audit a migration");
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     await user.clear(field);
     await user.keyboard("{ArrowDown}{Escape}");
@@ -129,8 +115,6 @@ describe("ConsoleSearch", () => {
     render(<ConsoleSearch />);
 
     await user.click(screen.getByRole("combobox"));
-    expect(
-      await screen.findByRole("listbox", { name: "Popular searches" }),
-    ).toBeInTheDocument();
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 });

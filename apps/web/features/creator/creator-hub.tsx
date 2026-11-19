@@ -38,9 +38,9 @@ export function CreatorHub() {
   if (profile && !profile.accessActive) return <StatusCard title={t.creatorHub.editTitle} message={t.creatorHub.accessRevoked} />;
 
   if (!profile) {
-    return <section className="mx-auto max-w-2xl rounded-card border bg-surface p-7" aria-labelledby="creator-profile-title">
+    return <div className="mx-auto max-w-6xl"><section className="max-w-2xl" aria-labelledby="creator-profile-title">
       <CreatorProfileForm profile={null} onSaved={setProfile} headingLevel="h1" notice={error} />
-    </section>;
+    </section></div>;
   }
   return <div className="mx-auto max-w-6xl">
     <Link className="mb-4 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4" href={`${localePath("/dashboard/settings", locale)}#creator-profile`}>{t.creatorHub.editTitle}</Link>

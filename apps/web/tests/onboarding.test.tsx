@@ -11,7 +11,7 @@ const { onboardingCopy } = await import("@/features/account/onboarding-copy");
 const empty = { required: true, role: null, goal: null, tools: [], intent: null };
 const complete = { required: false, role: "developer", goal: "discover", tools: ["codex"], intent: "explore" };
 
-describe("account onboarding and profile editing", () => {
+describe("first-run account onboarding", () => {
   afterEach(cleanup);
   beforeEach(() => { vi.clearAllMocks(); mocks.locale = "en"; mocks.get.mockResolvedValue(empty); mocks.save.mockResolvedValue(complete); });
 
@@ -25,7 +25,7 @@ describe("account onboarding and profile editing", () => {
   }
 
   it.each([["Explore tools and skills", "/explore", "explore"], ["Create and publish skills", "/dashboard/studio", "create"]])("saves before sending %s to %s", async (label, path, intent) => {
-    render(<AccountOnboarding setup />);
+    render(<AccountOnboarding />);
     await reachLastQuestion();
     fireEvent.click(screen.getByLabelText(label));
     expect(mocks.replace).not.toHaveBeenCalled();
@@ -36,7 +36,7 @@ describe("account onboarding and profile editing", () => {
 
   it("validates each question and keeps answers after a failed save and back navigation", async () => {
     mocks.save.mockRejectedValueOnce(new TypeError("offline")).mockResolvedValueOnce(complete);
-    render(<AccountOnboarding setup />);
+    render(<AccountOnboarding />);
     fireEvent.click(await screen.findByRole("button", { name: "Continue" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Choose an answer");
     await reachLastQuestion();
@@ -51,22 +51,13 @@ describe("account onboarding and profile editing", () => {
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/explore"));
   });
 
-  it("lets every member edit the same answers in Profile without redirecting", async () => {
-    mocks.get.mockResolvedValue(complete);
-    render(<AccountOnboarding />);
-    expect(await screen.findByLabelText("Developer")).toBeChecked();
-    fireEvent.click(screen.getByLabelText("Cursor"));
-    fireEvent.click(screen.getByLabelText("Create and publish skills"));
-    fireEvent.click(screen.getByRole("button", { name: "Save profile details" }));
-    await screen.findByText("Your profile details have been saved.");
-    expect(mocks.save).toHaveBeenCalledWith({ role: "developer", goal: "discover", tools: ["codex", "cursor"], intent: "create" });
-    expect(mocks.replace).not.toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: "Open Studio" })).toHaveAttribute("href", "/dashboard/studio");
-  });
-
   it("keeps Just getting started exclusive from actual tools", async () => {
     render(<AccountOnboarding />);
-    fireEvent.click(await screen.findByLabelText("Codex"));
+    fireEvent.click(await screen.findByLabelText("Developer"));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByLabelText("Discover useful tools"));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByLabelText("Codex"));
     fireEvent.click(screen.getByLabelText("Just getting started"));
     expect(screen.getByLabelText("Codex")).not.toBeChecked();
     fireEvent.click(screen.getByLabelText("Cursor"));
@@ -76,7 +67,7 @@ describe("account onboarding and profile editing", () => {
   it("retries a load failure and uses the saved destination for a completed setup", async () => {
     mocks.locale = "fa";
     mocks.get.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce({ ...complete, intent: "create" });
-    render(<AccountOnboarding setup />);
+    render(<AccountOnboarding />);
     await screen.findByRole("alert");
     fireEvent.click(screen.getByRole("button", { name: onboardingCopy.fa.retry }));
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/fa/dashboard/studio"));

@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { CopyBlock } from "@/components/patterns/copy-block";
 import { intlLocale } from "@/lib/format";
 import { useLocale } from "@/lib/locale-context";
-import type { InstallCommand, MarketplaceInstallation } from "@/lib/types";
+import type { InstallCommand, ProductRelease } from "@/lib/types";
 
 const OS_ORDER: InstallCommand["os"][] = ["macos", "linux", "windows", "any"];
 
@@ -48,11 +48,21 @@ function InstallCommands({ commands, copy }: { commands: InstallCommand[]; copy:
   );
 }
 
-/** Loaded only once a reader opens their installation, so it stays out of the page's first-load JS. */
-export function InstallDialogContent({ installation, onOpenChange, trigger }: { installation: MarketplaceInstallation; onOpenChange: (open: boolean) => void; trigger: RefObject<HTMLButtonElement | null> }) {
+/** The parts of a release the dialog shows. */
+export type InstallableRelease = Pick<ProductRelease, "version" | "source" | "installation">;
+
+/** Loaded only once a visitor opens it, so it stays out of the page's first-load JS. Needs no account. */
+export function InstallDialogContent({ release, acquired = false, onOpenChange, trigger }: {
+  release: InstallableRelease;
+  /** The reader's pinned library release rather than the one shown on the page. */
+  acquired?: boolean;
+  onOpenChange: (open: boolean) => void;
+  trigger: RefObject<HTMLButtonElement | null>;
+}) {
   const { fa, locale } = useLocale();
   const copy = fa ? {
-    title: "نصب نسخهٔ دریافت‌شده", intro: "این اطلاعات به همان نسخه‌ای متصل است که به کتابخانهٔ شما افزوده شد.", close: "بستن",
+    title: acquired ? "نصب نسخهٔ دریافت‌شده" : "نصب این نسخه",
+    intro: acquired ? "این اطلاعات به همان نسخه‌ای متصل است که به کتابخانهٔ شما افزوده شد." : "این اطلاعات به همان نسخه و منبعی تعلق دارد که در این صفحه می‌بینید.", close: "بستن",
     exactVersion: "نسخهٔ دقیق", sourceStatus: "وضعیت منبع", immutableRef: "مرجع تغییرناپذیر", checked: "آخرین بررسی",
     linkOnly: "این نسخه فقط یک پیوند است. مالکیت تأیید نشده و محتوا ممکن است پس از بررسی تغییر کرده باشد.",
     stale: "بررسی ارائه‌دهنده موقتاً قدیمی است؛ آخرین مرجع تأییدشده بدون تغییر باقی مانده است.", steps: "مراحل نصب",
@@ -60,7 +70,8 @@ export function InstallDialogContent({ installation, onOpenChange, trigger }: { 
     copyCommand: "کپی", commandCopied: "کپی شد",
     openPackage: "باز کردن بستهٔ تأییدشده", copyUrl: "کپی", copied: "کپی شد", sourceLink: "پیوند منبع", statusLinkOnly: "فقط پیوند", statusStale: "قدیمی", statusVerified: "تأییدشده", failed: "کپی خودکار انجام نشد. متن را انتخاب کنید و Ctrl+C را بزنید.",
   } : {
-    title: "Install acquired release", intro: "These details are pinned to the exact version added to your library.", close: "Close",
+    title: acquired ? "Install acquired release" : "Install this release",
+    intro: acquired ? "These details are pinned to the exact version added to your library." : "These details belong to the exact version and source shown on this page.", close: "Close",
     exactVersion: "Exact version", sourceStatus: "Source status", immutableRef: "Immutable reference", checked: "Last checked",
     linkOnly: "This release is a plain link. Ownership is not verified, and the content may have changed since review.",
     stale: "The provider check is temporarily stale; the last verified reference remains unchanged.", steps: "Installation steps",
@@ -68,7 +79,6 @@ export function InstallDialogContent({ installation, onOpenChange, trigger }: { 
     copyCommand: "Copy", commandCopied: "Copied",
     openPackage: "Open verified package", copyUrl: "Copy", copied: "Copied", sourceLink: "Source link", statusLinkOnly: "Link only", statusStale: "Stale", statusVerified: "Verified", failed: "Couldn’t copy automatically. Select the text and press Ctrl+C.",
   };
-  const { release } = installation;
   const sourceStatus = release.source.status === "link_only" ? copy.statusLinkOnly : release.source.status === "stale" ? copy.statusStale : copy.statusVerified;
   const notice = release.source.status === "link_only" ? copy.linkOnly : release.source.status === "stale" ? copy.stale : null;
   return (
@@ -91,14 +101,14 @@ export function InstallDialogContent({ installation, onOpenChange, trigger }: { 
           </div>
           {notice && <p role="note" className="mt-4 rounded-control border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">{notice}</p>}
           {release.installation.commands && release.installation.commands.length > 0 && <InstallCommands commands={release.installation.commands} copy={copy} />}
-          <div className="mt-6">
+          {release.installation.instructions.length > 0 && <div className="mt-6">
             <p className="eyebrow">{copy.steps}</p>
             <ol className="mt-3 space-y-3">
               {release.installation.instructions.map((step, index) => (
                 <li className="flex gap-3 text-sm" key={`${index}-${step}`}><span className="font-mono text-xs text-primary">{String(index + 1).padStart(2, "0")}</span><span className="ts-bidi min-w-0 break-words">{step}</span></li>
               ))}
             </ol>
-          </div>
+          </div>}
           <div className="mt-6">
             <CopyBlock label={`${copy.sourceLink} · ${release.installation.method} · ${release.source.kind}`} text={release.installation.url} copyLabel={copy.copyUrl} copiedLabel={copy.copied} failedLabel={copy.failed} wrap />
             <a className={`${buttonVariants({ size: "sm", variant: "secondary" })} mt-1`} href={release.installation.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="size-4" />{copy.openPackage}</a>

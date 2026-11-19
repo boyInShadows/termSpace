@@ -5,11 +5,17 @@ import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { READER_SESSION_COOKIE } from "../middleware/auth.js";
 import { lockProductReviews, recomputeRating } from "./marketplaceReviewController.js";
+import { lockSupportAccounts, SupportError } from "../lib/supportAccess.js";
+import { removeSupportImages } from "../lib/supportImageCleanup.js";
 
 const googleClient = new OAuth2Client();
 
 /** A creator must withdraw or archive these before the account can be deleted. */
 const LIVE_LISTING_STATES: MarketplaceListingState[] = ["SUBMITTED", "CHANGES_REQUESTED", "APPROVED", "PUBLISHED", "SUSPENDED"];
+const supportMessageExport = {
+  id: true, body: true, kind: true, authorRole: true, createdAt: true,
+  attachments: { select: { id: true, bytes: true, width: true, height: true } },
+} as const;
 
 class AccountError extends Error {
   constructor(readonly status: number, readonly code: string, message: string) { super(message); }
@@ -47,7 +53,7 @@ export async function revokeOtherReaderSessions(_req: Request, res: Response) {
 export async function exportReaderData(_req: Request, res: Response) {
   const userId = res.locals.reader.id as string;
   const user = await prisma.readerUser.findUnique({
-    where: { id: userId },
+    where: { id: userId, deletedAt: null },
     select: {
       email: true, createdAt: true, emailVerifiedAt: true, passwordHash: true, googleSubject: true,
       onboardingRole: true, onboardingGoal: true, onboardingTools: true, onboardingIntent: true,
@@ -61,6 +67,19 @@ export async function exportReaderData(_req: Request, res: Response) {
         orderBy: { createdAt: "asc" },
       },
       marketplaceReports: { select: { explanation: true, createdAt: true, case: { select: { reason: true } } } },
+      supportTickets: {
+        select: { id: true, subject: true, category: true, status: true, createdAt: true, updatedAt: true,
+          messages: { select: supportMessageExport, orderBy: [{ createdAt: "asc" }, { id: "asc" }] } },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      },
+      supportMessages: {
+        where: { ticket: { ownerId: { not: userId } } },
+        select: { ...supportMessageExport, ticketId: true }, orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      },
+      supportNotifications: {
+        where: res.locals.reader.emailVerified && res.locals.reader.marketplaceRoles.some((role: string) => ["administrator", "moderator"].includes(role)) ? {} : { ticket: { ownerId: userId } },
+        select: { id: true, type: true, ticketId: true, readAt: true, createdAt: true }, orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      },
       marketplaceCreator: {
         select: {
           name: true, handle: true, bio: true, createdAt: true,
@@ -88,6 +107,9 @@ export async function exportReaderData(_req: Request, res: Response) {
       reviews: rest.marketplaceReviews.map(({ product, ...review }) => ({ ...product, ...review })),
       reportsFiled: marketplaceReports.map(({ case: moderationCase, ...report }) => ({ reason: moderationCase.reason, ...report })),
       creatorProfile: rest.marketplaceCreator,
+      supportTickets: rest.supportTickets,
+      supportMessages: rest.supportMessages,
+      supportNotifications: rest.supportNotifications,
       profileDetails: { role: rest.onboardingRole, goal: rest.onboardingGoal, tools: rest.onboardingTools, intent: rest.onboardingIntent },
     },
   });
@@ -99,6 +121,7 @@ export async function exportReaderData(_req: Request, res: Response) {
  */
 export async function deleteReaderAccount(req: Request, res: Response) {
   const userId = res.locals.reader.id as string;
+  let supportImageKeys: string[] = [];
   try {
     const user = await prisma.readerUser.findUnique({ where: { id: userId }, select: { email: true, passwordHash: true, googleSubject: true, deletedAt: true } });
     if (!user || user.deletedAt) throw new AccountError(404, "NOT_FOUND", "Reader account not found");
@@ -112,6 +135,7 @@ export async function deleteReaderAccount(req: Request, res: Response) {
     }
 
     await prisma.$transaction(async (tx) => {
+      await lockSupportAccounts(tx, [userId]);
       const creator = await tx.marketplaceCreator.findUnique({ where: { ownerUserId: userId }, select: { id: true } });
       if (creator && await tx.marketplaceProduct.count({ where: { creatorId: creator.id, lifecycleState: { in: LIVE_LISTING_STATES } } })) {
         throw new AccountError(409, "CREATOR_LISTINGS_ACTIVE", "Withdraw or archive your submitted and published listings before deleting this account");
@@ -139,6 +163,14 @@ export async function deleteReaderAccount(req: Request, res: Response) {
         });
       }
 
+      const images = await tx.supportAttachment.findMany({
+        where: { OR: [{ message: { ticket: { ownerId: userId } } }, { message: { authorId: userId } }] }, select: { storageKey: true },
+      });
+      supportImageKeys = images.map(image => image.storageKey);
+      await tx.supportNotification.deleteMany({ where: { userId } });
+      await tx.supportAttachment.deleteMany({ where: { message: { authorId: userId } } });
+      await tx.supportMessage.updateMany({ where: { authorId: userId, ticket: { ownerId: { not: userId } } }, data: { authorId: null, body: "" } });
+      await tx.supportTicket.deleteMany({ where: { ownerId: userId } });
       await tx.readerSession.deleteMany({ where: { userId } });
       await tx.readerBookmark.deleteMany({ where: { userId } });
       await tx.readerReadingProgress.deleteMany({ where: { userId } });
@@ -155,10 +187,13 @@ export async function deleteReaderAccount(req: Request, res: Response) {
       });
     });
   } catch (error) {
+    if (error instanceof SupportError) { fail(res, new AccountError(404, "NOT_FOUND", "Reader account not found")); return; }
     if (error instanceof AccountError) { fail(res, error); return; }
     throw error;
   }
 
+  try { await removeSupportImages(supportImageKeys); }
+  catch { req.log?.error({ event: "support_cleanup_deferred" }, "Retry private image erasure with jobs/cleanupSupportImages.ts"); }
   res.clearCookie(READER_SESSION_COOKIE, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/" });
   res.status(204).send();
 }
