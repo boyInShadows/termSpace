@@ -10,6 +10,14 @@ project; [contributors and history](https://github.com/boyInShadows/termSpace/gr
 retain attribution. **Ramtin Farzane's contribution:** web presentation, landing
 page and dashboard shell (confirmed by Ramtin).
 
+**Deployment status (2026-11-19):** `main` deploys itself to the production VPS. A
+timer there polls `origin/main` every 2 minutes and releases a commit once its
+`CI` workflow is green: database dump, image build, migrations, health check, and
+automatic rollback of the images if the check fails. `Web e2e and performance` is
+not a deploy gate while its eight known failures stand. Cloudflare already serves
+hashed assets as `immutable` and HTML as `no-store`, so no cache purge is needed.
+See [automatic deployment](docs/development.md#automatic-deployment).
+
 [Run locally](docs/development.md#local-development) |
 [Verification](docs/development.md#verification) |
 [Deployment](docs/development.md#production-subdomain-deployment) |
