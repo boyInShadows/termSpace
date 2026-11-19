@@ -1,0 +1,12 @@
+[Unit]
+Description=Deploy origin/main to the TermSpace stack when its CI is green
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/bin/bash /opt/termspace/deploy/vps/deploy.sh
+TimeoutStartSec=30min
+Nice=10

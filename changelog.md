@@ -2,6 +2,30 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-19 — Auto-deploy main to the VPS; merge ramtin into v.3
+
+- **Merged** `origin/ramtin` into `v.3` (fast-forward, 22 commits, 69 files): private
+  support tickets, notifications, profile and editorial UI work. Brings migration
+  `202611120001_support_text_release` (additive: new types/tables/indexes only; no
+  DROP, TRUNCATE or UPDATE) and `schema.prisma` / `package-lock.json` changes.
+- **CD.** `deploy/vps/deploy.sh` + `termspace-deploy.{service,timer}`: the VPS polls
+  `origin/main` every 2 minutes and deploys a commit only once its CI and Web e2e
+  workflows are green. It dumps the DB, builds, migrates, health-checks, rolls the
+  images back on failure and prunes the Docker build cache (12.8 GB on a 38 GB disk).
+  Pull-based because the agent account cannot add Actions secrets. See
+  `docs/development.md#automatic-deployment`.
+- **CI.** `ci.yml` gained concurrency (cancels superseded PR runs, never main), a
+  `bash -n` of the deployer, and a `docker-build` job for the api and web images.
+- **CDN.** Checked, unchanged: hashed assets are `immutable` and Cloudflare-cached,
+  HTML is `no-store`. No purge step needed.
+- **Verified locally.** Typecheck, API tests (325), blog tests (45), web tests (573,
+  35 only pass with `NODE_OPTIONS=--no-experimental-webstorage` on this machine's
+  Node 26 because Node's own `localStorage` shadows jsdom's; CI uses Node 22),
+  web lint, production build. Not run locally: e2e, lhci, api-integration (PR CI).
+- **Not done.** Branch protection / required checks on `main` (needs repo admin);
+  Cloudflare purge (no token, not needed); blog deployment; deploy notifications
+  beyond `journalctl -u termspace-deploy`.
+
 ## 2026-11-15 — Capture dashboard follow-ups and reconcile Ramtin queue
 
 - Recorded the owner's four requests in `docs/dashboard-follow-ups.md`: private

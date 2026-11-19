@@ -232,6 +232,31 @@ Set the public web origin (`WEB_PUBLIC_URL` in Compose,
 sitemaps, and social metadata use the deployed domain. Keep
 `LOCAL_AUTO_VERIFY_EMAIL=false` outside loopback development.
 
+## Automatic deployment
+
+A merge to `main` deploys itself. `termspace-deploy.timer` on the VPS runs
+`deploy/vps/deploy.sh` every 2 minutes (units are copied to `/etc/systemd/system/`).
+For a new `origin/main` commit it:
+
+1. waits until the **CI** and **Web e2e and performance** workflows for that commit
+   have both passed (pending: retries on the next tick; failed: does nothing);
+2. dumps the database to `/opt/backups/termspace-auto-*.sql.gz` (last 10 kept);
+3. tags the running images `rollback-<oldsha>`, builds `api` then `web`, runs the
+   `migrate` service and restarts the stack;
+4. health-checks the API, the web app and the public `/backend/api/health`, and
+   restores the previous images if that fails. Migrations are forward-only: a rollback
+   restores code, not data, so migrations must stay additive or backward compatible.
+
+```bash
+ssh termspace journalctl -u termspace-deploy -n 50 --no-pager   # what happened
+ssh termspace systemctl stop termspace-deploy.timer              # pause deploys
+ssh termspace systemctl start termspace-deploy.service           # deploy now
+ssh termspace rm /var/lib/termspace-deploy/failed-sha            # retry a failed commit
+```
+
+Pushes to `v.3`, `v.2` or `ramtin` deploy nothing. Cloudflare needs no purge: build
+assets are content-hashed and served `immutable`, and HTML is `no-store`.
+
 ## Existing database migration
 
 The monorepo adds the previously missing initial content migration. Before the
