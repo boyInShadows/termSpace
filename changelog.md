@@ -2,6 +2,26 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-24 — Cookie consent and GA4 for the marketplace and journal
+
+- Added bilingual consent controls, separate host-only choices, and optional
+  GA4 web streams for the marketplace and journal. The Google tag loads after
+  opt-in on allowlisted public pages. Withdrawal clears analytics cookies.
+- Added public page category views, marketplace listing clicks, and successful
+  install-command copies. The shared tracker sends route templates and controlled
+  labels. The consent panel and tracker load separately from the initial UI.
+- Updated the shared privacy policy and documented the runtime IDs, GA4 settings,
+  verification, and separate journal deployment in `docs/development.md`.
+  Production IDs and live GA4 DebugView verification are pending.
+- Root typecheck, unit tests (950 passed, 54 API integration cases skipped),
+  web lint, production build, and Compose validation passed. Chromium fixture
+  checks covered both apps, English and Persian, light and dark marketplace
+  panels, keyboard focus, protected routes, discovery events, and withdrawal
+  across tabs. Playwright reported 606 passed, 52 skipped and 8 failures in the
+  previously recorded password-reset, hero-suggestions and bundle-budget areas.
+  Both home JavaScript budgets and all nine Lighthouse runs passed. Dashboard
+  and listing JavaScript measured 174.7 kB against 170 and 171 kB against 165.
+
 ## 2026-11-19 — Auto-deploy main to the VPS; merge ramtin into v.3
 
 - **Merged** `origin/ramtin` into `v.3` (fast-forward, 22 commits, 69 files): private

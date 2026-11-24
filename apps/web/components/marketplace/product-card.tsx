@@ -20,6 +20,7 @@ import {
 } from "./product-parts";
 import { useMarketplaceSession } from "@/features/account/marketplace-session";
 import { localePath } from "@/lib/i18n";
+import { reportDiscovery } from "../../../../shared/analytics/discovery";
 
 /**
  * A listing card.
@@ -96,6 +97,7 @@ export function ProductCard({
             <ListingLink
               href={href}
               listingId={product.id}
+              onListingClick={() => reportDiscovery("listing_click")}
               className="inline-block rounded-sm transition-colors group-hover:text-primary after:absolute after:inset-0 after:rounded-card after:content-['']"
             >
               {product.name}

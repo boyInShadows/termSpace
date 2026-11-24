@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import "@/styles/globals.css";
 import { preloadedFonts } from "@/lib/fonts";
 import { SITE_URL } from "@/lib/site";
@@ -9,6 +10,8 @@ import { getLocale } from "@/lib/serverLocale";
 import { sharedMessages } from "@/lib/i18n";
 import { getServerSession } from "@/lib/server-session";
 import { ChatWidget } from "@/components/support/chat-widget";
+import { AnalyticsConsent } from "../../../shared/analytics/loader";
+import { privacySignal, validMeasurementId } from "../../../shared/analytics/policy";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const fa = locale === "fa";
@@ -19,7 +22,8 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [locale, initialSession] = await Promise.all([getLocale(), getServerSession()]);
+  const [locale, initialSession, requestHeaders] = await Promise.all([getLocale(), getServerSession(), headers()]);
+  const measurementId = validMeasurementId(process.env.GA4_MEASUREMENT_ID);
   return (
     <html lang={locale} dir={locale === "fa" ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
@@ -38,6 +42,7 @@ export default async function RootLayout({
             tokenEn={process.env.CHATWOOT_TOKEN_EN}
             tokenFa={process.env.CHATWOOT_TOKEN_FA}
           />
+          {measurementId && <AnalyticsConsent site="marketplace" locale={locale} privacyHref={locale === "fa" ? "/fa/privacy" : "/privacy"} headerSignal={privacySignal(requestHeaders)} measurementId={measurementId} />}
         </Providers>
       </body>
     </html>

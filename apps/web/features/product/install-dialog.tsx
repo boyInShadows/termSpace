@@ -41,7 +41,7 @@ function InstallCommands({ commands, copy }: { commands: InstallCommand[]; copy:
       )}
       <div className="mt-3 space-y-3">
         {shown.map((item, index) => (
-          <CopyBlock key={`${selected}-${index}`} label={item.label ?? copy[`os_${item.os}`]} text={item.command} copyLabel={copy.copyCommand} copiedLabel={copy.commandCopied} failedLabel={copy.failed} wrap />
+          <CopyBlock key={`${selected}-${index}`} label={item.label ?? copy[`os_${item.os}`]} text={item.command} copyLabel={copy.copyCommand} copiedLabel={copy.commandCopied} failedLabel={copy.failed} wrap installCommand />
         ))}
       </div>
     </div>

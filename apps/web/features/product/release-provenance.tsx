@@ -123,7 +123,7 @@ export function ReleaseProvenance({ release, slug, locale }: { release: ProductR
 
       {command && (
         <div className="space-y-2">
-          <CopyBlock label={t.fetch} text={command} {...copyProps} />
+          <CopyBlock label={t.fetch} text={command} {...copyProps} installCommand />
           <p className="text-xs">{t.fetchHint}</p>
         </div>
       )}

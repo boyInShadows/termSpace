@@ -232,6 +232,30 @@ Set the public web origin (`WEB_PUBLIC_URL` in Compose,
 sitemaps, and social metadata use the deployed domain. Keep
 `LOCAL_AUTO_VERIFY_EMAIL=false` outside loopback development.
 
+### Cookie consent and Google Analytics
+
+- Create one GA4 property with two web streams, one per production host. Turn
+  off Enhanced Measurement on both streams. Leave cross-domain linking,
+  Google Signals, advertising personalization and Ads destinations off. Set
+  user and event data retention to two months and turn off reset on new activity.
+- Set `WEB_GA4_MEASUREMENT_ID` and `BLOG_GA4_MEASUREMENT_ID` in the Compose
+  environment. For a standalone Next.js process use `GA4_MEASUREMENT_ID`.
+  Each ID is read at runtime. An unset ID leaves its site disabled. Use test
+  stream IDs in non-production environments.
+- The marketplace's deployment includes the new web image. The VPS timer does
+  not build or restart the journal. On the journal host, deploy the new blog
+  image through its existing release process (`docker compose up -d --build
+  --no-deps blog` for the Compose deployment). To toggle an ID without a new
+  build, recreate the affected container so it receives the new environment.
+- Before enabling production streams, use browser network and cookie inspection
+  on both hosts for no choice, rejection, acceptance and withdrawal. Check
+  GA4 DebugView with a test stream for one page view per public navigation and
+  `listing_click` / `install_command_copy` on the marketplace. If desired,
+  register `page_type` and `site_locale` as event-scoped custom dimensions.
+  Route categories are aggregated. External referrers and query-string
+  attribution are omitted. To disable analytics for new page loads on either
+  host, clear its ID and recreate that container.
+
 ## Automatic deployment
 
 A merge to `main` deploys itself. `termspace-deploy.timer` on the VPS runs

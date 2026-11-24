@@ -3,8 +3,9 @@
 import Link from "next/link";
 import {useLocale} from "next-intl";
 import {copy, localePath, type Locale} from "@/lib/i18n";
+import { cookieSettingsLabel } from "../../../shared/analytics/policy";
 
-export function SiteFooter() {
+export function SiteFooter({ analyticsEnabled = false }: { analyticsEnabled?: boolean }) {
   const locale = useLocale() as Locale;
   const t = copy[locale];
   const topics = locale === "fa"
@@ -43,6 +44,9 @@ export function SiteFooter() {
         <div className="mt-10 border-t border-line-soft pt-6 text-sm text-ink-faint">
           <ul className="mb-3 flex flex-wrap gap-x-5">
             {legal.map(([slug, label]) => <li key={slug}><a href={`${webUrl}${locale === "fa" ? "/fa" : ""}/${slug}`} className="inline-block py-2 text-ink-soft hover:text-ink">{label}</a></li>)}
+            {analyticsEnabled && (
+              <li><button type="button" data-cookie-settings className="inline-flex min-h-11 items-center rounded text-ink-soft hover:text-ink hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">{cookieSettingsLabel(locale)}</button></li>
+            )}
           </ul>
           <p>© {new Date().getFullYear()} Termspace. {t.crafted}</p>
         </div>

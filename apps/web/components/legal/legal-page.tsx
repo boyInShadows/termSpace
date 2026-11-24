@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/layout/footer";
 import { pageAlternates } from "@/lib/alternates";
 import { getLocale } from "@/lib/serverLocale";
-import { legalContact, legalDocs, legalEntity, legalLabels, LEGAL_UPDATED, type LegalSlug } from "@/lib/legal";
+import { legalContact, legalDocs, legalEntity, legalLabels, LEGAL_UPDATED, PRIVACY_UPDATED, type LegalSlug } from "@/lib/legal";
 
 export async function legalMetadata(slug: LegalSlug): Promise<Metadata> {
   const locale = await getLocale();
@@ -15,12 +15,13 @@ export async function LegalPage({ slug }: { slug: LegalSlug }) {
   const doc = legalDocs[locale][slug];
   const labels = legalLabels[locale];
   const contact = legalContact();
+  const updated = slug === "privacy" ? PRIVACY_UPDATED : LEGAL_UPDATED;
   return <>
     <main id="content" tabIndex={-1} className="container-page py-12 sm:py-16">
       <article className="max-w-3xl">
         <p className="eyebrow">{legalEntity()}</p>
         <h1 className="editorial mt-3 text-4xl sm:text-5xl">{doc.title}</h1>
-        <p className="mt-3 font-mono text-xs text-muted-foreground">{labels.updated}: <time dateTime={LEGAL_UPDATED}>{LEGAL_UPDATED}</time></p>
+        <p className="mt-3 font-mono text-xs text-muted-foreground">{labels.updated}: <time dateTime={updated}>{updated}</time></p>
         <p className="mt-6 leading-7 text-muted-foreground">{doc.intro}</p>
         {doc.sections.map((section) => <section key={section.heading} className="mt-10">
           <h2 className="editorial text-2xl">{section.heading}</h2>

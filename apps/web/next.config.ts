@@ -6,11 +6,11 @@ import type { NextConfig } from "next";
 const enforcedCsp = "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'";
 const reportOnlyCsp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client https://chat.termspace.dev",
+  "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client https://chat.termspace.dev https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://accounts.google.com/gsi/ https://chat.termspace.dev",
+  "connect-src 'self' https://accounts.google.com/gsi/ https://chat.termspace.dev https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com",
   "frame-src https://accounts.google.com/gsi/ https://chat.termspace.dev",
 ].join("; ");
 const securityHeaders = [

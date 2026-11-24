@@ -7,6 +7,7 @@ import type { Locale } from "@/lib/i18n";
  * (runtime env, required by docker-compose.yml) so no placeholder ships.
  */
 export const LEGAL_UPDATED = "2026-11-01";
+export const PRIVACY_UPDATED = "2026-11-24";
 
 export const legalEntity = () => process.env.LEGAL_ENTITY_NAME?.trim() || "TermSpace";
 export const legalContact = () => process.env.LEGAL_CONTACT_EMAIL?.trim() || undefined;
@@ -34,9 +35,12 @@ export const legalDocs: Record<Locale, Record<LegalSlug, LegalDoc>> = {
         ] },
         { heading: "Cookies and local storage", body: [
           "We set first-party session cookies to keep you signed in. They are not readable by scripts on the page. Your browser also stores preferences such as theme, language and dismissed notices.",
-          "We do not run analytics or advertising trackers. If you choose Google sign-in, your browser loads Google's sign-in script and Google handles that sign-in under its own policy.",
+          "When analytics is available, each site remembers your choice in its own cookie for up to 180 days. If you accept, Google Analytics 4 uses first-party cookies on that site for up to 180 days to distinguish browsers and visits. Use Cookie settings in either footer to withdraw consent for that site and remove its analytics cookies.",
+          "Google Analytics processes public page categories, site language, basic browser and device information, and approximate location. On the marketplace it also measures listing clicks and successful copies of install commands. We do not send account details, search terms or the contents of commands, and we do not use analytics for advertising. We configure Google Analytics to retain individual event data for two months.",
+          "If you choose Google sign-in, your browser loads Google's sign-in script and Google handles that sign-in under its own policy.",
         ] },
         { heading: "Who else handles data", list: [
+          "Google processes optional analytics data when you consent on the marketplace or journal.",
           "An email delivery provider (Cloudflare) sends verification and password-reset messages.",
           "Our hosting and database providers process data on our behalf.",
           "Source checks for submitted listings read public information from GitHub and npm.",
@@ -101,9 +105,12 @@ export const legalDocs: Record<Locale, Record<LegalSlug, LegalDoc>> = {
         ] },
         { heading: "کوکی‌ها و ذخیرهٔ محلی", body: [
           "برای حفظ ورود شما از کوکی‌های نشست درون‌سایتی استفاده می‌کنیم که اسکریپت‌های صفحه به آن‌ها دسترسی ندارند. مرورگر شما همچنین تنظیماتی مانند پوسته، زبان و اعلان‌های بسته‌شده را نگه می‌دارد.",
-          "ما ابزار تحلیل رفتار یا ردیاب تبلیغاتی به کار نمی‌بریم. اگر ورود با گوگل را انتخاب کنید، مرورگر شما اسکریپت ورود گوگل را بارگذاری می‌کند و آن ورود تابع سیاست خود گوگل است.",
+          "در صورت فعال بودن امکان تحلیل بازدید، هر سایت انتخاب شما را تا ۱۸۰ روز در کوکی مختص همان سایت نگه می‌دارد. اگر اجازه دهید، گوگل آنالیتیکس ۴ برای تشخیص مرورگرها و بازدیدها تا ۱۸۰ روز از کوکی‌های همان سایت استفاده می‌کند. برای پس گرفتن رضایت و حذف کوکی‌های تحلیلی هر سایت، از گزینهٔ «تنظیمات کوکی‌ها» در پایین همان سایت استفاده کنید.",
+          "گوگل آنالیتیکس دستهٔ صفحه‌های عمومی، زبان سایت، اطلاعات پایهٔ مرورگر و دستگاه و موقعیت تقریبی را پردازش می‌کند. در بازارچه، کلیک روی فهرست‌ها و کپی موفق دستورهای نصب نیز ثبت می‌شود. اطلاعات حساب، عبارت‌های جست‌وجو و متن دستورها را ارسال نمی‌کنیم و داده‌های تحلیلی را برای تبلیغات به کار نمی‌بریم. دورهٔ نگهداری داده‌های رویداد در گوگل آنالیتیکس را روی دو ماه تنظیم می‌کنیم.",
+          "اگر ورود با گوگل را انتخاب کنید، مرورگر شما اسکریپت ورود گوگل را بارگذاری می‌کند و آن ورود تابع سیاست خود گوگل است.",
         ] },
         { heading: "چه کسانی دیگر داده را پردازش می‌کنند", list: [
+          "گوگل با رضایت شما داده‌های تحلیلی اختیاری بازارچه یا مجله را پردازش می‌کند.",
           "یک ارائه‌دهندهٔ ارسال ایمیل (Cloudflare) پیام‌های تأیید و بازیابی گذرواژه را می‌فرستد.",
           "ارائه‌دهندگان میزبانی و پایگاه داده از طرف ما داده را پردازش می‌کنند.",
           "بررسی منبع فهرست‌های ارسال‌شده، اطلاعات عمومی GitHub و npm را می‌خواند.",

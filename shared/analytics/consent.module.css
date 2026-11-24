@@ -1,0 +1,59 @@
+.panel {
+  --consent-surface: var(--surface);
+  --consent-ink: var(--foreground);
+  --consent-muted: var(--muted-foreground);
+  --consent-line: var(--border-strong);
+  --consent-accent: var(--primary);
+  --consent-hover: var(--muted);
+  position: fixed;
+  z-index: 45;
+  inset-inline-start: max(1rem, env(safe-area-inset-left), env(safe-area-inset-right));
+  inset-block-end: max(1rem, env(safe-area-inset-bottom));
+  inline-size: min(27rem, calc(100vw - 2rem));
+  max-block-size: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: 1.125rem 1.125rem 0.5rem;
+  border-radius: 1rem;
+  background: var(--consent-surface);
+  color: var(--consent-ink);
+  box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 24%);
+}
+
+.panel[data-site="journal"] {
+  --consent-surface: #fff;
+  --consent-ink: #1a1a1a;
+  --consent-muted: #4a4a4a;
+  --consent-line: #8a847b;
+  --consent-accent: #92400e;
+  --consent-hover: #f4f1ec;
+}
+
+.panel h2 { font-size: 1.125rem; font-weight: 650; line-height: 1.4; }
+.panel p { margin-block-start: 0.375rem; font-size: 0.875rem; line-height: 1.55; color: var(--consent-muted); }
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-block-start: 0.875rem; }
+.actions button {
+  flex: 1 1 9rem;
+  min-block-size: 2.75rem;
+  padding: 0.375rem 0.625rem;
+  border: 1px solid var(--consent-line);
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.actions button:hover { background: var(--consent-hover); }
+.links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 1rem; }
+.links a, .links button {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2.75rem;
+  text-underline-offset: 0.2em;
+}
+.links a, .links button { font-size: 0.8125rem; color: var(--consent-accent); text-decoration: underline; }
+.panel :is(a, button, h2):focus-visible {
+  outline: 2px solid var(--consent-accent, currentColor);
+  outline-offset: 2px;
+}
+
+@media (max-width: 40rem) {
+  .panel { inset-block-end: calc(4.75rem + env(safe-area-inset-bottom)); max-block-size: calc(100dvh - 6rem); }
+}

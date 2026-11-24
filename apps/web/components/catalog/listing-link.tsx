@@ -20,11 +20,12 @@ const POLL_MS = 16;
  * document, or after MORPH_WAIT_MS, whichever comes first. Browsers without
  * the API, and modified clicks, get a plain navigation.
  */
-export function ListingLink({ href, listingId, className, children }: { href: string; listingId: string; className?: string; children: ReactNode }) {
+export function ListingLink({ href, listingId, className, children, onListingClick }: { href: string; listingId: string; className?: string; children: ReactNode; onListingClick?: () => void }) {
   const router = useRouter();
 
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    onListingClick?.();
     if (typeof document.startViewTransition !== "function") return;
     event.preventDefault();
     document.startViewTransition(() => navigateAndWait(() => router.push(href), listingId));

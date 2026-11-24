@@ -4,6 +4,7 @@ import { Logo } from "./logo";
 import { copy, footerLabels, localePath } from "@/lib/i18n";
 import { getLocale } from "@/lib/serverLocale";
 import { legalLabels } from "@/lib/legal";
+import { cookieSettingsLabel, validMeasurementId } from "../../../../shared/analytics/policy";
 
 export async function Footer() {
   const locale = await getLocale();
@@ -20,7 +21,7 @@ export async function Footer() {
       { label: labels.journal, href: `${blogUrl.replace(/\/$/, "")}${locale === "fa" ? "/fa/blog" : "/blog"}` },
       { label: labels.support, href: localePath("/account", locale) },
     ] },
-    { heading: legalLabels[locale].legal, links: (["privacy", "terms", "content-policy"] as const).map((slug) => (
+    { heading: legalLabels[locale].legal, settings: true, links: (["privacy", "terms", "content-policy"] as const).map((slug) => (
       { label: legalLabels[locale][slug], href: localePath(`/${slug}`, locale) }
     )) },
   ];
@@ -54,6 +55,9 @@ export async function Footer() {
                   </Link>
                 </li>
               ))}
+              {column.settings && validMeasurementId(process.env.GA4_MEASUREMENT_ID) && (
+                <li><button type="button" data-cookie-settings className="inline-flex min-h-11 items-center rounded-sm text-muted-foreground hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{cookieSettingsLabel(locale)}</button></li>
+              )}
             </ul>
           </div>
         ))}

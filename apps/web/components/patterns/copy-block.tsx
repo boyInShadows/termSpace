@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { reportDiscovery } from "../../../../shared/analytics/discovery";
 
 type Status = "idle" | "copied" | "failed";
 
@@ -20,16 +21,18 @@ export async function copyToClipboard(value: string): Promise<boolean> {
  * denied or missing (insecure origin, embedded browsers), so a failure selects
  * the text and says so rather than silently doing nothing.
  */
-export function CopyBlock({ label, text, copyLabel, copiedLabel, failedLabel, wrap = false }: {
+export function CopyBlock({ label, text, copyLabel, copiedLabel, failedLabel, wrap = false, installCommand = false }: {
   label: string; text: string; copyLabel: string; copiedLabel: string; failedLabel: string;
   /** Wrap long commands instead of scrolling sideways, so the whole command is readable before it is copied. */
   wrap?: boolean;
+  installCommand?: boolean;
 }) {
   const code = useRef<HTMLElement>(null);
   const [status, setStatus] = useState<Status>("idle");
 
   async function copy() {
     if (await copyToClipboard(text)) {
+      if (installCommand) reportDiscovery("install_command_copy");
       setStatus("copied");
       window.setTimeout(() => setStatus("idle"), 2000);
       return;

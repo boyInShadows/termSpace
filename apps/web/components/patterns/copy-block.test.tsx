@@ -4,28 +4,35 @@ import userEvent from "@testing-library/user-event";
 import { CopyBlock } from "./copy-block";
 
 const labels = { label: "Command", copyLabel: "Copy", copiedLabel: "Copied", failedLabel: "Couldn't copy" };
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock("../../../../shared/analytics/discovery", () => ({ reportDiscovery: track }));
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  track.mockClear();
+});
 
 describe("CopyBlock", () => {
   it("copies the text and confirms", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { clipboard: { writeText } });
-    render(<CopyBlock {...labels} text="npm install x@1.0.0" />);
+    render(<CopyBlock {...labels} text="npm install x@1.0.0" installCommand />);
 
     await userEvent.click(screen.getByRole("button", { name: "Copy" }));
 
     expect(writeText).toHaveBeenCalledWith("npm install x@1.0.0");
     expect(await screen.findByRole("button", { name: "Copied" })).toBeInTheDocument();
+    expect(track).toHaveBeenCalledExactlyOnceWith("install_command_copy");
   });
 
   it("says so when the clipboard is denied instead of pretending it worked", async () => {
     vi.stubGlobal("navigator", { clipboard: { writeText: vi.fn().mockRejectedValue(new Error("denied")) } });
-    render(<CopyBlock {...labels} text="npm install x@1.0.0" />);
+    render(<CopyBlock {...labels} text="npm install x@1.0.0" installCommand />);
 
     await userEvent.click(screen.getByRole("button", { name: "Copy" }));
 
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Couldn't copy"));
+    expect(track).not.toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: "Copied" })).not.toBeInTheDocument();
   });
 

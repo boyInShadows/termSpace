@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import "@fontsource-variable/estedad";
 import "@fontsource-variable/manrope";
 import "@fontsource-variable/newsreader";
@@ -8,6 +9,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { getLocale } from "@/lib/serverLocale";
 import {NextIntlClientProvider} from "next-intl";
 import {getMessages} from "next-intl/server";
+import { AnalyticsConsent } from "../../../shared/analytics/loader";
+import { privacySignal, validMeasurementId } from "../../../shared/analytics/policy";
 import {
   SITE_DESCRIPTION,
   SITE_DESCRIPTION_FA,
@@ -59,8 +62,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const locale = await getLocale();
-  const messages = await getMessages();
+  const [locale, messages, requestHeaders] = await Promise.all([getLocale(), getMessages(), headers()]);
+  const measurementId = validMeasurementId(process.env.GA4_MEASUREMENT_ID);
+  const webUrl = (process.env.NEXT_PUBLIC_WEB_URL ?? "http://localhost:3000").replace(/\/$/, "");
   return (
     <html lang={locale} dir={locale === "fa" ? "rtl" : "ltr"}>
       <body className="flex min-h-screen flex-col bg-paper text-ink antialiased">
@@ -68,7 +72,8 @@ export default async function RootLayout({
           <a href="#content" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-paper-card focus:px-4 focus:py-3 focus:text-ink">{locale === "fa" ? "رفتن به محتوا" : "Skip to content"}</a>
           <SiteHeader />
           <main id="content" tabIndex={-1} className="flex-1">{children}</main>
-          <SiteFooter />
+          <SiteFooter analyticsEnabled={Boolean(measurementId)} />
+          {measurementId && <AnalyticsConsent site="journal" locale={locale} privacyHref={`${webUrl}${locale === "fa" ? "/fa" : ""}/privacy`} headerSignal={privacySignal(requestHeaders)} measurementId={measurementId} />}
         </NextIntlClientProvider>
       </body>
     </html>

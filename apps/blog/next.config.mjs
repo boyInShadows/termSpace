@@ -8,11 +8,11 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 const enforcedCsp = "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'";
 const reportOnlyCsp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client",
+  "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://accounts.google.com/gsi/",
+  "connect-src 'self' https://accounts.google.com/gsi/ https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com",
   "frame-src https://accounts.google.com/gsi/",
 ].join("; ");
 const securityHeaders = [
