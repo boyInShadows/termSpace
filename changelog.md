@@ -2,6 +2,15 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-24 — Refresh the project README
+
+- Updated the project overview, public installs, creator and support workflows,
+  editorial boundaries, local setup, verification commands, and deployment
+  paths. Documented optional analytics and kept the mock screenshots and
+  contributor attribution.
+- Verified all 17 relative README links and image paths. Root typecheck, unit
+  tests, web lint, and production build passed.
+
 ## 2026-11-24 — Cookie consent and GA4 for the marketplace and journal
 
 - Added bilingual consent controls, separate host-only choices, and optional
