@@ -1,87 +1,118 @@
 # TermSpace
 
-An English/Persian community library for agentic coding tools. Discover skills,
-agents, MCP servers, prompts and workflows; inspect their declared access and
-source before adding a pinned release to your library.
+TermSpace is a free, bilingual marketplace for agentic coding tools. Discover
+skills, agents, MCP servers, prompts, rules, hooks, and workflows in English or
+Persian. Check what a tool can access, where its release comes from, and whether
+it fits your platform before you install it.
 
-**Status:** implemented platform with launch work still open. Resources are free;
-paid checkout and creator payouts are not implemented. This is a collaborative
-project; [contributors and history](https://github.com/boyInShadows/termSpace/graphs/contributors)
-retain attribution. **Ramtin Farzane's contribution:** web presentation, landing
-page and dashboard shell (confirmed by Ramtin).
+[Marketplace](https://termspace.dev) ·
+[Local setup](docs/development.md#local-development) ·
+[Deployment](docs/development.md#production-subdomain-deployment) ·
+[Contributing](docs/CONTRIBUTING.md) ·
+[Changelog](changelog.md) ·
+[Open work](pending.md)
 
-[Run locally](docs/development.md#local-development) |
-[Verification](docs/development.md#verification) |
-[Deployment](docs/development.md#production-subdomain-deployment) |
-[Product direction](docs/product-direction.md) | [Open work](pending.md)
+## What you can do
 
-![TermSpace homepage with synthetic example listings](docs/artifacts/showcase/termspace-home.png)
+- **Discover and install.** Search by item type, community, or compatible
+  platform. Inspect a release's source, declared permissions, and installation
+  instructions. You can install a published release without an account.
+- **Build your library.** Sign in to save favorites and add pinned releases to
+  your library. Verified users can rate and review releases they've added.
+- **Publish as a creator.** Manage a public profile, draft listings, verify
+  GitHub or npm sources, and submit releases for review from Creator Studio.
+- **Get support or report a listing.** Readers can report a listing from its
+  detail page and open private text support tickets in the dashboard. Staff
+  have a role-gated inbox and moderation queues for submissions, reports,
+  and reviews.
+- **Read the TermSpace Blog.** The editorial app publishes articles, series,
+  editions, and resources. Its publishing tools are reserved for editorial staff.
 
-![Persian catalog and filters in the running application](docs/artifacts/showcase/termspace-catalog-fa.png)
+Every listing is free. Published releases pin an external artifact from GitHub
+or npm. TermSpace presents source and permission information and leaves
+installation to the reader's environment. [Product direction](docs/product-direction.md)
 
-Actual production-build captures with the repository's synthetic mock catalog.
-Names, ratings and listing counts are example data; these images do not establish
-live users, provider verification or production deployment.
+## Repository map
 
-## Implemented journeys
+| Path | Role | Local URL |
+| --- | --- | --- |
+| `apps/web` | Next.js marketplace, reader dashboard, Creator Studio, and moderation | [localhost:3000](http://localhost:3000) |
+| `apps/blog` | Next.js editorial publication and staff publishing tools | [localhost:3001](http://localhost:3001) |
+| `apps/api` | Express REST API with Prisma and PostgreSQL | [API health](http://localhost:4001/api/health) |
+| `shared/analytics` | Cookie consent and public-page measurement for both frontends | |
+| `deploy/` | VPS deployment and support-widget operations | |
+| `docs/` | Product direction, architecture decisions, and operational guides | |
 
-- Browse and search the bilingual catalog by type, community and platform, with
-  Persian RTL, themes, listing details and public creator profiles.
-- Create owner-scoped drafts, manage immutable release snapshots and submit them
-  to a role-gated moderation workspace with audit events.
-- Acquire a free, approved release, view its pinned installation information and
-  submit acquisition-backed ratings/reviews from a verified account.
-- Publish editorial content in the separate staff-managed Blog. Marketplace
-  creator/moderator roles do not grant Blog publishing access.
+Both frontends share reader accounts through the API. Reader sessions use
+host-only cookies, and editorial permissions are separate from marketplace
+creator and moderator roles. Redis supports rate limiting. Compose also runs
+workers for verification email, source checks, and scheduled Blog publication.
+[Architecture decisions](docs/architecture)
 
-The first milestone references external GitHub/npm sources rather than executing
-uploaded community packages. Source ingestion and free acquisition are implemented;
-real provider credentials and workers are required for those flows. The current
-[launch queue](pending.md) covers notification preferences, Studio onboarding and
-feedback, moderation notifications, real email delivery, Redis limiter startup
-reliability and final signed-in acceptance. Those items remain open.
-Detailed operations remain in [development and deployment](docs/development.md).
+## Run locally
 
-## Start here
+Use Node.js 22 or newer, npm, Docker, and Docker Compose.
 
-Requires Node.js 22+, npm and PostgreSQL (Docker Compose is supported).
-
-```bash
+```sh
 git clone https://github.com/boyInShadows/termSpace.git
 cd termSpace
 npm ci
 npm run prisma:generate
 ```
 
-Then follow [environment, database and startup steps](docs/development.md#local-development).
-Copying the templates alone is insufficient: align database settings and supply
-runtime secrets. The web app runs on `3000`, Blog on `3001`, and API on `4001`.
-The browser-test fixture can run without PostgreSQL; it does not verify real provider flows.
+Copy the environment templates and match the API's database URL to the
+Compose database credentials and host port. [Environment setup](docs/development.md#local-development)
 
-## Code map
+```sh
+npm run db:up
+npm run prisma:deploy
+```
 
-| Path | Responsibility |
-| --- | --- |
-| `apps/web` | Next.js community catalog, reader dashboard and creator interface |
-| `apps/blog` | Separate Next.js editorial publication |
-| `apps/api` | Express API, authentication, authorization, Prisma and PostgreSQL |
-| `docs` | Product boundaries, architecture and operational guides |
+Start each app in its own terminal with `npm run dev:api`, `npm run dev:web`,
+or `npm run dev:blog`. Persian pages use the `/fa` prefix and right-to-left
+layouts. Demo data is opt-in via `npm run seed`. To run all services together,
+follow the [Docker Compose guide](docs/development.md#run-the-complete-stack-with-docker).
 
-The API hashes stored session tokens, checks expiry and explicit marketplace roles,
-and keeps creator operations owner-scoped. These are inspected boundaries, not a
-complete security-audit claim. See [creator ownership](docs/creator-onboarding.md)
-and [role operations](docs/marketplace-roles.md).
+## Checks and deployment
 
-## Verification
+```sh
+npm run typecheck
+npm test
+npm run lint -w apps/web
+npm run build
+```
 
-Use the [documented checks](docs/development.md#verification) and inspect the
-[CI](.github/workflows/ci.yml) and [browser/performance runs](.github/workflows/web.yml).
-The 2026-10-30 review started from public source `4701126`. After the bounded
-serializer typing change, type-checks, 779 tests, web lint (two existing warnings)
-and all three builds passed, including tests on a fresh migrated PostgreSQL 16
-database. One Redis integration case was skipped without Redis. A focused browser pass
-completed 90 checks with six intentional device-specific skips using the mock API.
+CI also runs database-backed API tests. Playwright and Lighthouse use a mock
+API and cover web behavior and performance. The changelog records scoped test
+results, and the launch queue records open work.
+[Verification guide](docs/development.md#verification) ·
+[CI](.github/workflows/ci.yml) ·
+[Web checks](.github/workflows/web.yml)
 
-Production email/source-provider access, real device acceptance and launch readiness
-remain separate from these local checks. [Changelog](changelog.md) records scoped
-changes and verification.
+The VPS deployer waits for CI to pass on `main` before deploying the marketplace
+and API. The Blog has a separate release process. Production email and source
+verification require provider credentials and their corresponding workers.
+[Automatic deployment](docs/development.md#automatic-deployment) ·
+[Worker setup](docs/development.md#accounts-and-background-workers)
+
+### Optional analytics
+
+Each frontend has independent English and Persian cookie controls. GA4 loads
+after opt-in and measures public page views on both sites, plus listing clicks
+and successful install-command copies on the marketplace. Visitors can withdraw
+consent in **Cookie settings** in either footer. Analytics stays off on each
+site until its GA4 measurement ID is configured. [GA4 setup](docs/development.md#cookie-consent-and-google-analytics)
+
+## Screenshots
+
+Production-build screenshots from the local mock catalog show the homepage and
+Persian discovery view with example listings and ratings.
+
+![TermSpace homepage with example listings](docs/artifacts/showcase/termspace-home.png)
+
+![Persian catalog and filters with example listings](docs/artifacts/showcase/termspace-catalog-fa.png)
+
+## Contributors
+
+Ramtin Farzane contributed the web presentation, landing page, and dashboard shell.
+[Contributors and history](https://github.com/boyInShadows/termSpace/graphs/contributors)
