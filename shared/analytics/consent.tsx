@@ -9,27 +9,27 @@ import styles from "./consent.module.css";
 
 const copy = {
   en: {
-    heading: "Analytics cookies",
-    description: "Allow Google Analytics to help us understand how visitors use this site.",
-    allow: "Accept analytics",
-    deny: "Reject analytics",
+    heading: "Cookies on TermSpace",
+    description: "Essential cookies keep the site working. Optional cookies help us measure visits with Google Analytics.",
+    allow: "Accept cookies",
+    deny: "Only necessary",
     privacy: "Privacy policy",
     close: "Close",
-    accepted: "Analytics is allowed on this site.",
-    rejected: "Analytics is off on this site.",
-    blocked: "Analytics is off because of your browser’s privacy settings.",
+    accepted: "Optional cookies are on for this site.",
+    rejected: "Optional cookies are off for this site.",
+    blocked: "Your browser’s privacy settings keep optional cookies off.",
     error: "Your browser couldn’t save your choice. Check whether this site can store cookies and try again.",
   },
   fa: {
-    heading: "کوکی‌های تحلیل بازدید",
-    description: "با اجازهٔ شما، از گوگل آنالیتیکس برای بررسی نحوهٔ استفاده از این سایت کمک می‌گیریم.",
-    allow: "پذیرفتن کوکی‌های تحلیلی",
-    deny: "رد کردن کوکی‌های تحلیلی",
+    heading: "کوکی‌های ترم‌اسپیس",
+    description: "کوکی‌های ضروری برای کارکرد سایت لازم‌اند. با کوکی‌های اختیاری، بازدیدها را با گوگل آنالیتیکس بررسی می‌کنیم.",
+    allow: "پذیرش کوکی‌ها",
+    deny: "فقط ضروری",
     privacy: "سیاست حریم خصوصی",
     close: "بستن",
-    accepted: "تحلیل بازدید در این سایت فعال است.",
-    rejected: "تحلیل بازدید در این سایت غیرفعال است.",
-    blocked: "تحلیل بازدید به‌دلیل تنظیمات حریم خصوصی مرورگر شما غیرفعال است.",
+    accepted: "کوکی‌های اختیاری در این سایت فعال‌اند.",
+    rejected: "کوکی‌های اختیاری در این سایت غیرفعال‌اند.",
+    blocked: "تنظیمات حریم خصوصی مرورگر شما کوکی‌های اختیاری را غیرفعال کرده است.",
     error: "مرورگر نتوانست انتخاب شما را ذخیره کند. بررسی کنید که ذخیرهٔ کوکی برای این سایت مجاز باشد و دوباره تلاش کنید.",
   },
 } as const;
@@ -137,21 +137,23 @@ export function ConsentPanel({ site, locale, privacyHref, headerSignal, measurem
     <aside className={styles.panel} data-site={site} aria-labelledby={titleId} aria-describedby={statusId} onKeyDown={(event) => {
       if (settings && event.key === "Escape") closeSettings();
     }}>
-      <h2 id={titleId} ref={heading} tabIndex={-1}>{settings ? cookieSettingsLabel(locale) : text.heading}</h2>
-      <p id={statusId}>
-        {blocked ? text.blocked : choice === "allow" ? text.accepted : choice === "deny" ? text.rejected : text.description}
-      </p>
-      {saveError && <p role="alert">{text.error}</p>}
+      <div className={styles.content}>
+        <h2 id={titleId} ref={heading} tabIndex={-1}>{settings ? cookieSettingsLabel(locale) : text.heading}</h2>
+        <p id={statusId}>
+          {blocked ? text.blocked : choice === "allow" ? text.accepted : choice === "deny" ? text.rejected : text.description}
+        </p>
+        {saveError && <p role="alert">{text.error}</p>}
+        <div className={styles.links}>
+          <a href={privacyHref}>{text.privacy}</a>
+          {settings && <button type="button" onClick={closeSettings}>{text.close}</button>}
+        </div>
+      </div>
       {!blocked && (
         <div className={styles.actions}>
           <button type="button" onClick={() => choose("deny")}>{text.deny}</button>
           <button type="button" onClick={() => choose("allow")}>{text.allow}</button>
         </div>
       )}
-      <div className={styles.links}>
-        <a href={privacyHref}>{text.privacy}</a>
-        {settings && <button type="button" onClick={closeSettings}>{text.close}</button>}
-      </div>
     </aside>
   );
 }

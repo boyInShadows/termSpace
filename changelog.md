@@ -2,6 +2,19 @@
 
 Project changes completed from `pending.md` should be recorded here with the date, a short summary, and any verification performed.
 
+## 2026-11-25 — Refine the cookie banner
+
+- Changed both frontends to use “Accept cookies” and “Only necessary,” with
+  corresponding Persian labels. The banner explains essential and optional
+  cookies and groups the two choices in a compact, evenly weighted action row.
+- Root typecheck, unit tests, lint, and production build passed. Verified the
+  rendered panel in both apps with English and Persian, 320 px mobile, both
+  marketplace themes, keyboard focus, and consent withdrawal through the footer.
+- Lighthouse passed all nine runs. Full Playwright reported 604 passed, 52
+  skipped, and 10 failures. It reproduced the eight known failures, plus a
+  moderation test that passed on its own and a catalog assertion that also
+  failed on the pre-GA4 baseline.
+
 ## 2026-11-24 — Refresh the project README
 
 - Updated the project overview, public installs, creator and support workflows,
